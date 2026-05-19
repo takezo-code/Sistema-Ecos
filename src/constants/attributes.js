@@ -1,5 +1,5 @@
 import { getXpRequiredForLevel } from './progression'
-import { migrateEntityStates } from '../services/stateModifiers'
+import { migrateGameEntityExtras } from '../models/gameEntity'
 
 export const ATTRIBUTES = [
   { key: 'forca', label: 'Força', color: '#dc2626', max: 10 },
@@ -66,6 +66,8 @@ export function normalizeGameEntity(entity) {
     unspent = Math.max(0, STARTING_ATTRIBUTE_POINTS - spent)
   }
 
+  const extras = migrateGameEntityExtras(entity)
+
   return {
     ...entity,
     level,
@@ -73,13 +75,15 @@ export function normalizeGameEntity(entity) {
     xpToNextLevel: getXpRequiredForLevel(level),
     ecoPoints: entity.ecoPoints ?? 0,
     pendingAttributePoints: entity.pendingAttributePoints ?? 0,
-    skills: Array.isArray(entity.skills) ? entity.skills : [],
+    skills: extras.skills ?? [],
     attributes,
     unspentAttributePoints: unspent,
-    ...migrateEntityStates(entity),
+    ...extras,
     inventory: Array.isArray(entity.inventory) ? entity.inventory : [],
     equipped: Array.isArray(entity.equipped) ? entity.equipped : [],
     backpackCapacity: entity.backpackCapacity ?? null,
+    combatNotes: entity.combatNotes ?? '',
+    damageMarks: entity.damageMarks ?? 0,
   }
 }
 

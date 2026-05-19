@@ -27,6 +27,9 @@ export const ECO_UNLOCK_SKILL_COST = 1
  * Bônus Ultra XP — fim de sessão (grupo inteiro).
  * Valores calibrados para nível×150: recompensa extra sem pular vários níveis de uma vez.
  */
+/** Bônus pontual no combate (bom desempenho em ação/ataque) — mestre concede manualmente */
+export const COMBAT_HIGHLIGHT_XP = 50
+
 export const SESSION_ULTRA_XP_TIERS = [
   {
     id: 'ruim',

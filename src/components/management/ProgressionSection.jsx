@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Star, Sparkles, ChevronUp, ChevronDown } from 'lucide-react'
+import { Sparkles, ChevronUp, ChevronDown } from 'lucide-react'
 import { Input } from '../ui/Field'
 import { MAX_LEVEL } from '../../constants/progression'
 import { getXpProgress } from '../../services/progressionService'
@@ -28,7 +28,6 @@ function AdminStepper({ label, value, min, max, onChange, color = '#e5e5e5' }) {
 
 export function ProgressionSection({
   entity,
-  onAddXp,
   levelUps = [],
   adminMode = false,
   onMasterProgression,
@@ -37,7 +36,6 @@ export function ProgressionSection({
   onScaleAttributes,
   masterError,
 }) {
-  const [xpGain, setXpGain] = useState('')
   const [xpDirect, setXpDirect] = useState(String(entity.xp ?? 0))
   useEffect(() => {
     setXpDirect(String(entity.xp ?? 0))
@@ -47,13 +45,6 @@ export function ProgressionSection({
   const atMax = level >= MAX_LEVEL
   const snapshot = adminMode ? getProgressionSnapshot(entity) : null
   const validation = adminMode ? validateProgression(entity) : null
-
-  const handleAddXp = () => {
-    const amount = parseInt(xpGain, 10)
-    if (!amount || amount <= 0 || atMax) return
-    onAddXp?.(amount)
-    setXpGain('')
-  }
 
   const applyXpDirect = () => {
     const xp = Math.max(0, parseInt(xpDirect, 10) || 0)
@@ -218,24 +209,6 @@ export function ProgressionSection({
         <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', marginBottom: '0.75rem' }}>
           Orçamento nv.{level}: {snapshot.budget} pts status · {snapshot.ecoBudget} Ecos
           {snapshot.ecoSpent > 0 && ` (${snapshot.ecoSpent} em habilidades)`}
-        </div>
-      )}
-
-      {!atMax && (
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: levelUps.length ? '0.75rem' : 0 }}>
-          <Star size={13} style={{ color: '#d97706', flexShrink: 0 }} />
-          <Input
-            type="number"
-            min="1"
-            value={xpGain}
-            onChange={e => setXpGain(e.target.value)}
-            placeholder="XP recebido..."
-            onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddXp())}
-            style={{ flex: 1 }}
-          />
-          <button type="button" className="btn-primary" onClick={handleAddXp} style={{ fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
-            Registrar XP
-          </button>
         </div>
       )}
 

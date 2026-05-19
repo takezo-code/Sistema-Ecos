@@ -77,6 +77,11 @@ export function ManageCharacters({ embedded = false }) {
     spendPendingAttribute,
     unlockSkill,
     upgradeSkill,
+    useEcoSkill,
+    restEcoOverload,
+    setEcoOverloadLevel,
+    lastOverloadEvents,
+    clearOverloadEvents,
     addInventoryItem,
     updateInventoryItem,
     removeInventoryItem,
@@ -111,7 +116,7 @@ export function ManageCharacters({ embedded = false }) {
         )}
       </div>
 
-      <Modal open={!!current} onClose={() => { setManaging(null); clearLevelUps(); clearMasterError() }} title={`Gerenciar — ${current?.name}`} maxWidth="720px">
+      <Modal open={!!current} onClose={() => { setManaging(null); clearLevelUps(); clearOverloadEvents(); clearMasterError() }} title={`Gerenciar — ${current?.name}`} maxWidth="720px">
         {current && (
           <EntityManagePanel
             entity={current}
@@ -133,6 +138,11 @@ export function ManageCharacters({ embedded = false }) {
             onEditProfile={() => setEditingProfile(current)}
             onUnlockSkill={() => unlockSkill(current.id)}
             onUpgradeSkill={skillId => upgradeSkill(current.id, skillId)}
+            onUseSkill={(skillId, opts) => useEcoSkill(current.id, skillId, opts)}
+            onRestOverload={() => restEcoOverload(current.id)}
+            onSetOverload={level => setEcoOverloadLevel(current.id, level)}
+            lastOverloadEvents={lastOverloadEvents}
+            onClearOverloadEvents={clearOverloadEvents}
             onAddItem={item => addInventoryItem(current.id, item)}
             onUpdateItem={(itemId, data) => updateInventoryItem(current.id, itemId, data)}
             onRemoveItem={itemId => removeInventoryItem(current.id, itemId)}

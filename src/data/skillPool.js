@@ -1,11 +1,15 @@
+import { ECO_SKILL_TYPES } from '../constants/skillTypes'
+
 /**
- * Pool de habilidades de Ruptura — narrativas, temporais, pé no chão.
+ * Pool de habilidades de Eco — narrativas, temporais, pé no chão.
  * Sem classes. Sorteadas ao gastar 1 Eco.
+ * skillType: ativa | passiva | ruptura
  */
 export const SKILL_POOL = [
   {
     templateId: 'eco_premonitorio',
     name: 'Eco Premonitório',
+    skillType: ECO_SKILL_TYPES.RUPTURA,
     description: 'Um fragmento do futuro ecoa antes do presente se solidificar.',
     effect: 'Permite refazer uma rolagem por sessão.',
     sideEffect: 'Após usar, o personagem sente desorientação temporal leve por alguns minutos.',
@@ -14,6 +18,7 @@ export const SKILL_POOL = [
   {
     templateId: 'vozes_ruptura',
     name: 'Vozes da Ruptura',
+    skillType: ECO_SKILL_TYPES.ATIVA,
     description: 'Sussurros vindos de linhas temporais quebradas.',
     effect: 'Detecta rupturas temporais em alcance próximo.',
     sideEffect: 'Escuta ecos de eventos que nunca aconteceram — ou que ainda acontecerão.',
@@ -22,6 +27,7 @@ export const SKILL_POOL = [
   {
     templateId: 'memoria_futura',
     name: 'Memória Futura',
+    skillType: ECO_SKILL_TYPES.RUPTURA,
     description: 'Lembranças de algo que ainda não ocorreu.',
     effect: 'Recebe pistas enigmáticas sobre eventos futuros próximos.',
     sideEffect: 'Confunde memórias reais com visões — difícil saber o que é verdade.',
@@ -30,6 +36,7 @@ export const SKILL_POOL = [
   {
     templateId: 'deja_vu',
     name: 'Déjà Vu',
+    skillType: ECO_SKILL_TYPES.ATIVA,
     description: 'Este momento já aconteceu. Ou vai acontecer.',
     effect: 'Pequena chance de prever a ação imediata de um inimigo ou NPC hostil.',
     sideEffect: 'Paralisia momentânea ao reconhecer o padrão repetido.',
@@ -38,6 +45,7 @@ export const SKILL_POOL = [
   {
     templateId: 'marca_temporal',
     name: 'Marca Temporal',
+    skillType: ECO_SKILL_TYPES.ATIVA,
     description: 'O tempo deixa cicatrizes visíveis só para quem carrega ruptura.',
     effect: 'Identifica objetos ou lugares tocados por anomalias temporais recentes.',
     sideEffect: 'Marcas persistem na percepção por horas, mesmo após sair do local.',
@@ -46,6 +54,7 @@ export const SKILL_POOL = [
   {
     templateId: 'eco_silencioso',
     name: 'Eco Silencioso',
+    skillType: ECO_SKILL_TYPES.ATIVA,
     description: 'O mundo para por um instante — só para você.',
     effect: 'Ganha vantagem narrativa em uma ação de furtividade ou investigação por cena.',
     sideEffect: 'Ao retornar ao fluxo normal, um som alto ou movimento brusco pode denunciar.',
@@ -54,6 +63,7 @@ export const SKILL_POOL = [
   {
     templateId: 'sangue_lento',
     name: 'Sangue Lento',
+    skillType: ECO_SKILL_TYPES.PASSIVA,
     description: 'Seu corpo lembra de ferimentos que ainda não existem.',
     effect: 'Resiste melhor a choque, dor extrema ou efeitos de medo por uma cena.',
     sideEffect: 'Emoções ficam amortecidas até o efeito passar.',
@@ -62,6 +72,7 @@ export const SKILL_POOL = [
   {
     templateId: 'olhar_entre',
     name: 'Olhar Entre',
+    skillType: ECO_SKILL_TYPES.ATIVA,
     description: 'Vê o que fica no vão entre um segundo e outro.',
     effect: 'Percebe detalhes ocultos em uma cena de investigação.',
     sideEffect: 'Dificuldade em focar em conversas longas — a mente divaga entre tempos.',
@@ -70,6 +81,7 @@ export const SKILL_POOL = [
   {
     templateId: 'ligacao_fraca',
     name: 'Ligação Fraca',
+    skillType: ECO_SKILL_TYPES.PASSIVA,
     description: 'Um fio invisível liga você a outro ponto no tempo.',
     effect: 'Sente quando alguém conhecido entra em perigo grave (alcance narrativo).',
     sideEffect: 'A ligação funciona nos dois sentidos — eles também podem sentir você.',
@@ -78,6 +90,7 @@ export const SKILL_POOL = [
   {
     templateId: 'passo_atrasado',
     name: 'Passo Atrasado',
+    skillType: ECO_SKILL_TYPES.RUPTURA,
     description: 'Seu reflexo chega um instante antes do perigo.',
     effect: 'Uma vez por sessão, evita consequência grave de um erro de destreza ou força.',
     sideEffect: 'O corpo paga o preço depois — fadiga ou tremor nas horas seguintes.',
@@ -86,6 +99,7 @@ export const SKILL_POOL = [
   {
     templateId: 'sussurro_morto',
     name: 'Sussurro do Morto',
+    skillType: ECO_SKILL_TYPES.RUPTURA,
     description: 'Os que morreram deixam ecos que ainda vibram.',
     effect: 'Extrai uma informação vaga de um local onde houve morte recente.',
     sideEffect: 'Pesadelos com o falecido na noite seguinte.',
@@ -94,6 +108,7 @@ export const SKILL_POOL = [
   {
     templateId: 'ancora_presente',
     name: 'Âncora no Presente',
+    skillType: ECO_SKILL_TYPES.PASSIVA,
     description: 'Você se agarra ao agora quando tudo puxa para outro quando.',
     effect: 'Resiste a efeitos que deslocam ou desorientam no tempo.',
     sideEffect: 'Dificuldade em planejar o futuro — só o agora parece real.',

@@ -5,6 +5,14 @@ import {
   normalizePhysicalState,
   normalizeMentalState,
 } from '../constants/states'
+import {
+  calculateEffectiveAttributes,
+  resolveMentalPenalties,
+  formatEcoOverloadPenalty,
+  formatMentalPenaltiesSummary,
+  formatSkillPowerPenalty,
+  formatMentalAttrPenalty,
+} from '../mechanics/ecoOverload/overloadPenalties'
 
 export function getPhysicalMultiplier(physicalState) {
   return getPhysicalStateOption(physicalState).multiplier
@@ -22,38 +30,34 @@ export function hasTemporalInstability(mentalState) {
   return normalizeMentalState(mentalState) === 'perdido_no_tempo'
 }
 
-/** Atributos físicos efetivos (força, destreza, vitalidade) após penalidade física */
-export function calculatePhysicalAttributes(attributes = {}, physicalState = 'bem') {
-  const mult = getPhysicalMultiplier(physicalState)
-  const effective = { ...attributes }
-
-  PHYSICAL_AFFECTED_KEYS.forEach(key => {
-    const base = Number(attributes[key]) || 0
-    effective[key] = Math.max(0, Math.round(base * mult))
-  })
-
+/** @deprecated use calculateEffectiveAttributes — mantido por compatibilidade */
+export function calculatePhysicalAttributes(attributes = {}, physicalState = 'bem', ecoOverload = 0, mentalState = 'estavel') {
+  const result = calculateEffectiveAttributes(attributes, { physicalState, ecoOverload, mentalState })
   return {
-    base: attributes,
-    effective,
-    multiplier: mult,
+    base: result.base,
+    effective: result.effective,
+    multiplier: result.physicalMultiplier,
     penaltyPercent: getPhysicalStateOption(physicalState).penaltyPercent,
+    globalAttributeMultiplier: result.globalAttributeMultiplier,
+    ecoPowerMultiplier: result.ecoPowerMultiplier,
   }
 }
 
-/** Eficiência de Ecos / habilidades temporais (ruptura + estado mental) */
+/** Eficiência de Ecos / habilidades temporais (ruptura + estado mental + sobrecarga) */
 export function calculateEcoEfficiency({
   basePower = 0,
   rupturePoints = 0,
   mentalState = 'estavel',
   tier = 1,
+  ecoOverload = 0,
 } = {}) {
-  const mentalMult = getMentalMultiplier(mentalState)
+  const { ecoPowerMultiplier } = resolveMentalPenalties(ecoOverload, mentalState)
   const ruptureMult = 1 + Math.max(0, Number(rupturePoints) || 0) / 100
   const tierMult = 1 + (Math.max(1, tier) - 1) * 0.15
-  const combined = mentalMult * ruptureMult * tierMult
+  const combined = ecoPowerMultiplier * ruptureMult * tierMult
 
   return {
-    mentalMultiplier: mentalMult,
+    ecoPowerMultiplier,
     ruptureMultiplier: ruptureMult,
     tierMultiplier: tierMult,
     combinedMultiplier: combined,
@@ -63,7 +67,6 @@ export function calculateEcoEfficiency({
   }
 }
 
-/** Testa se uma habilidade de Eco falha neste turno/sessão (aleatório) */
 export function rollEcoSkillFailure(mentalState) {
   const chance = getEcoFailureChance(mentalState)
   if (chance <= 0) return { failed: false, chance: 0 }
@@ -71,10 +74,12 @@ export function rollEcoSkillFailure(mentalState) {
   return { failed: roll < chance, chance, roll }
 }
 
-export function getEffectiveAttributeValue(attributes, attrKey, physicalState) {
-  const base = Number(attributes?.[attrKey]) || 0
-  if (!PHYSICAL_AFFECTED_KEYS.includes(attrKey)) return base
-  return Math.max(0, Math.round(base * getPhysicalMultiplier(physicalState)))
+export function getEffectiveAttributeValue(attributes, attrKey, physicalState, ecoOverload = 0) {
+  const opts = typeof physicalState === 'object' && physicalState !== null
+    ? physicalState
+    : { physicalState, ecoOverload: arguments[3] ?? 0 }
+  const { effective } = calculateEffectiveAttributes(attributes, opts)
+  return effective[attrKey] ?? 0
 }
 
 export function formatPhysicalPenalty(physicalState) {
@@ -82,9 +87,19 @@ export function formatPhysicalPenalty(physicalState) {
   return pct > 0 ? `−${pct}% físico` : null
 }
 
-export function formatMentalPenalty(mentalState) {
-  const pct = getMentalStateOption(mentalState).penaltyPercent
-  return pct > 0 ? `−${pct}% Ecos` : null
+/** @deprecated use formatMentalPenaltiesSummary */
+export function formatMentalPenalty(mentalState, ecoOverload = 0) {
+  const { ecoPowerPercent } = resolveMentalPenalties(ecoOverload, mentalState)
+  return formatSkillPowerPenalty(ecoPowerPercent)
+}
+
+export {
+  formatEcoOverloadPenalty,
+  calculateEffectiveAttributes,
+  formatMentalPenaltiesSummary,
+  formatSkillPowerPenalty,
+  formatMentalAttrPenalty,
+  resolveMentalPenalties,
 }
 
 export function migrateEntityStates(entity = {}) {

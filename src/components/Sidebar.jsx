@@ -8,10 +8,12 @@ import {
   Dices,
   ChevronLeft,
   ChevronRight,
+  Zap,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'skills', label: 'Skills', icon: Zap, highlight: true },
   { id: 'campaigns', label: 'Campanhas', icon: BookOpen },
   { id: 'creation', label: 'Criação', icon: Sparkles },
   { id: 'management', label: 'Gerenciamento', icon: Users },
@@ -96,9 +98,13 @@ export function Sidebar({ collapsed, onToggle, activePage, onNavigate, footer })
                 width: '100%',
                 padding: collapsed ? '0.625rem 0' : '0.625rem 1rem',
                 justifyContent: collapsed ? 'center' : 'flex-start',
-                background: isActive ? 'rgba(220,38,38,0.08)' : 'transparent',
+                background: isActive
+                  ? (item.highlight ? 'rgba(168,85,247,0.08)' : 'rgba(220,38,38,0.08)')
+                  : 'transparent',
                 border: 'none',
-                borderLeft: isActive ? '2px solid #dc2626' : '2px solid transparent',
+                borderLeft: isActive
+                  ? `2px solid ${item.highlight ? '#a855f7' : '#dc2626'}`
+                  : '2px solid transparent',
                 color: isActive ? '#e5e5e5' : '#555',
                 cursor: 'pointer',
                 fontSize: '0.8rem',
@@ -122,7 +128,7 @@ export function Sidebar({ collapsed, onToggle, activePage, onNavigate, footer })
               }}
               title={collapsed ? item.label : ''}
             >
-              <Icon size={15} style={{ minWidth: '15px', color: isActive ? '#dc2626' : 'inherit' }} />
+              <Icon size={15} style={{ minWidth: '15px', color: isActive ? (item.highlight ? '#a855f7' : '#dc2626') : 'inherit' }} />
               {!collapsed && <span>{item.label}</span>}
             </button>
           )

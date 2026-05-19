@@ -130,10 +130,10 @@ export function applyAttributePointSpend(entity, attrKey, newValue) {
   if (delta === 0) return { attributes: { ...entity.attributes, [attrKey]: value } }
 
   if (delta < 0) {
-    const pool = (entity.unspentAttributePoints ?? 0) + Math.abs(delta)
+    const returned = Math.abs(delta)
     return {
       attributes: { ...entity.attributes, [attrKey]: value },
-      unspentAttributePoints: pool,
+      pendingAttributePoints: (entity.pendingAttributePoints ?? 0) + returned,
     }
   }
 
@@ -221,7 +221,7 @@ export function applyMasterAttributeChange(entity, attrKey, newValue) {
     attributes: { ...entity.attributes, [attrKey]: value },
   }
   if (!overBudget) {
-    patch.unspentAttributePoints = (entity.unspentAttributePoints ?? 0) + returned
+    patch.pendingAttributePoints = (entity.pendingAttributePoints ?? 0) + returned
   }
   return { patch }
 }

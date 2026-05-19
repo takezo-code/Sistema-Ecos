@@ -9,6 +9,7 @@ import { Creation } from './pages/Creation'
 import { Management } from './pages/Management'
 import { Sessions } from './pages/Sessions'
 import { Dice } from './pages/Dice'
+import { Skills } from './pages/Skills'
 import { isAppBootstrapped, persistUiState, autoSave } from './services/saveService'
 import { storage, KEYS } from './services/storage'
 
@@ -19,6 +20,7 @@ const PAGES = {
   management: Management,
   sessions: Sessions,
   dice: Dice,
+  skills: Skills,
 }
 
 function loadUiState() {
@@ -28,7 +30,8 @@ function loadUiState() {
 export default function App() {
   const [inApp, setInApp] = useState(() => isAppBootstrapped())
   const savedUi = loadUiState()
-  const [activePage, setActivePage] = useState(savedUi.activePage || 'dashboard')
+  const savedPage = savedUi.activePage === 'character' ? 'skills' : (savedUi.activePage || 'dashboard')
+  const [activePage, setActivePage] = useState(savedPage)
   const [creationView, setCreationView] = useState(savedUi.creationView || 'npcs')
   const [managementView, setManagementView] = useState(savedUi.managementView || 'characters')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(savedUi.sidebarCollapsed ?? false)

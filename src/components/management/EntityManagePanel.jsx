@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
-import { Pencil } from 'lucide-react'
+import { Pencil, Sparkles } from 'lucide-react'
 import { EntityThumb } from '../ui/EntityThumb'
+import { Modal } from '../ui/Modal'
 import { AttributeGrid } from './AttributeGrid'
 import { ProgressionSection } from './ProgressionSection'
 import { StatesSection } from './StatesSection'
+import { EntitySkillsPanel } from './EntitySkillsPanel'
 import { STARTING_ATTRIBUTE_POINTS, getTotalAttributePoints } from '../../constants/attributes'
 import { getPhysicalStateOption, getMentalStateOption } from '../../constants/states'
 
@@ -18,12 +20,20 @@ export function EntityManagePanel({
   onClampAuxiliary,
   onScaleAttributes,
   onEditProfile,
+  onUnlockSkill,
+  onUpgradeSkill,
+  onUseSkill,
+  onRestOverload,
+  onSetOverload,
+  lastOverloadEvents,
+  onClearOverloadEvents,
   masterError,
   showProgression = true,
   adminMode = false,
   levelUps = [],
 }) {
   const [localLevelUps, setLocalLevelUps] = useState(levelUps)
+  const [skillsOpen, setSkillsOpen] = useState(false)
   const isCreation = (entity.unspentAttributePoints ?? 0) > 0 && getTotalAttributePoints(entity.attributes) < STARTING_ATTRIBUTE_POINTS
 
   const physicalState = entity.physicalState ?? 'bem'
@@ -51,15 +61,27 @@ export function EntityManagePanel({
             <span style={{ color: mentalOpt.color }}> · {mentalOpt.label.toUpperCase()}</span>
           </div>
         </div>
-        {onEditProfile && (
-          <button type="button" className="btn-ghost" onClick={onEditProfile}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem', flexShrink: 0 }}>
-            <Pencil size={12} /> Editar ficha
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => setSkillsOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}
+          >
+            <Sparkles size={12} style={{ color: '#a855f7' }} />
+            Skills
           </button>
-        )}
+          {onEditProfile && (
+            <button type="button" className="btn-ghost" onClick={onEditProfile}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}>
+              <Pencil size={12} /> Editar ficha
+            </button>
+          )}
+        </div>
       </div>
 
       <StatesSection
+        entity={entity}
         physicalState={physicalState}
         mentalState={mentalState}
         onPhysicalChange={v => onUpdate?.({ physicalState: v })}
@@ -92,6 +114,20 @@ export function EntityManagePanel({
         onChange={(key, val, opts) => onChangeAttribute?.(key, val, opts)}
         onSpendPending={adminMode ? undefined : onSpendPendingAttribute}
       />
+
+      <Modal open={skillsOpen} onClose={() => setSkillsOpen(false)} title={`Skills — ${entity.name}`} maxWidth="720px">
+        <EntitySkillsPanel
+          entity={entity}
+          adminMode={adminMode}
+          onUnlockSkill={onUnlockSkill}
+          onUpgradeSkill={onUpgradeSkill}
+          onUseSkill={onUseSkill}
+          onRestOverload={onRestOverload}
+          onSetOverload={onSetOverload}
+          lastOverloadEvents={lastOverloadEvents}
+          onClearOverloadEvents={onClearOverloadEvents}
+        />
+      </Modal>
     </div>
   )
 }

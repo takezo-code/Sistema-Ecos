@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import {
-  UsersRound, Plus, Pencil, Trash2, Star, ChevronRight, UserPlus, X, Sparkles,
+  UsersRound, Plus, Pencil, Trash2, Star, ChevronRight, UserPlus, X, Sparkles, Swords, RotateCcw,
 } from 'lucide-react'
 import { SESSION_ULTRA_XP_TIERS } from '../constants/progression'
 import { EntityThumb } from '../components/ui/EntityThumb'
@@ -12,8 +12,10 @@ import { Field, Input, Textarea, Select } from '../components/ui/Field'
 import { EmptyState } from '../components/ui/EmptyState'
 import { EntityManagePanel } from '../components/management/EntityManagePanel'
 import { ATTRIBUTES } from '../constants/attributes'
-import { getPhysicalStateOption } from '../constants/states'
+import { getPhysicalStateOption, getMentalStateOption } from '../constants/states'
+import { formatOverloadDisplay } from '../constants/ecoOverload'
 import { filterByActiveCampaign } from '../utils/campaignScope'
+import { useCombatStore } from '../store/useCombatStore'
 import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
 
 function GroupForm({ initial, onSave, onCancel }) {
@@ -39,7 +41,10 @@ function GroupForm({ initial, onSave, onCancel }) {
 
 function MemberRow({ character, onManage, onRemove }) {
   const attrs = character.attributes || {}
-  const cond = getPhysicalStateOption(character.physicalState ?? character.condition)
+  const physical = getPhysicalStateOption(character.physicalState ?? character.condition)
+  const mental = getMentalStateOption(character.mentalState)
+  const marks = character.damageMarks ?? 0
+  const overload = character.ecoOverload ?? 0
 
   return (
     <div
@@ -78,12 +83,34 @@ function MemberRow({ character, onManage, onRemove }) {
               fontSize: '0.6rem',
               padding: '2px 6px',
               borderRadius: '2px',
-              background: `${cond.color}15`,
-              color: cond.color,
+              background: `${physical.color}15`,
+              color: physical.color,
               fontFamily: 'monospace',
             }}>
-              {cond.label.toUpperCase()}
+              {physical.label.toUpperCase()}
             </span>
+            {mental.value !== 'estavel' && (
+              <span style={{
+                fontSize: '0.6rem',
+                padding: '2px 6px',
+                borderRadius: '2px',
+                background: `${mental.color}15`,
+                color: mental.color,
+                fontFamily: 'monospace',
+              }}>
+                {mental.label.toUpperCase()}
+              </span>
+            )}
+            {marks > 0 && (
+              <span style={{ fontSize: '0.55rem', color: physical.color, fontFamily: 'monospace' }}>
+                {marks}M
+              </span>
+            )}
+            {overload > 0 && (
+              <span style={{ fontSize: '0.55rem', color: '#a855f7', fontFamily: 'monospace' }}>
+                {formatOverloadDisplay(overload)}
+              </span>
+            )}
             <span style={{ fontSize: '0.6rem', color: '#a855f7', fontFamily: 'monospace' }}>NVL {character.level || 1}</span>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -109,6 +136,7 @@ function MemberRow({ character, onManage, onRemove }) {
 
 export function ManageGroups() {
   const { activeCampaignId } = useCampaignStore()
+  const { combatGroupId, setCombatGroup } = useCombatStore()
   const { groups, addGroup, updateGroup, deleteGroup, addMember, removeMember } = useGroupStore()
   const {
     characters,
@@ -126,6 +154,13 @@ export function ManageGroups() {
     spendPendingAttribute,
     unlockSkill,
     upgradeSkill,
+    useEcoSkill,
+    restEcoOverload,
+    recoverCharacter,
+    recoverGroupMembers,
+    setEcoOverloadLevel,
+    lastOverloadEvents,
+    clearOverloadEvents,
     addInventoryItem,
     updateInventoryItem,
     removeInventoryItem,
@@ -229,7 +264,12 @@ export function ManageGroups() {
                   transition: 'all 0.15s',
                 }}
               >
-                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#e5e5e5', marginBottom: '2px' }}>{g.name}</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#e5e5e5', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  {g.name}
+                  {combatGroupId === g.id && (
+                    <span style={{ fontSize: '0.5rem', color: '#dc2626', fontFamily: 'monospace' }}>COMBATE</span>
+                  )}
+                </div>
                 <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace' }}>
                   {g.memberIds.length} {g.memberIds.length === 1 ? 'membro' : 'membros'}
                 </div>
@@ -266,6 +306,32 @@ export function ManageGroups() {
               </button>
               <button className="btn-secondary" onClick={() => setAddMemberOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}>
                 <UserPlus size={12} /> Membro
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setCombatGroup(selectedGroup.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  fontSize: '0.7rem',
+                  borderColor: combatGroupId === selectedGroup.id ? 'rgba(220,38,38,0.45)' : undefined,
+                  color: combatGroupId === selectedGroup.id ? '#dc2626' : undefined,
+                }}
+              >
+                <Swords size={12} />
+                {combatGroupId === selectedGroup.id ? 'Grupo no combate' : 'Usar no combate'}
+              </button>
+              <button
+                type="button"
+                className="btn-ghost"
+                disabled={members.length === 0}
+                onClick={() => recoverGroupMembers(selectedGroup.memberIds)}
+                title="Zera sobrecarga Eco, limpa marcas e volta estados ao estável"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}
+              >
+                <RotateCcw size={12} /> Descansar grupo
               </button>
             </div>
           </div>
@@ -446,7 +512,7 @@ export function ManageGroups() {
         )}
       </Modal>
 
-      <Modal open={!!currentChar} onClose={() => { setManagingChar(null); clearLevelUps(); clearMasterError() }} title={`Ficha — ${currentChar?.name}`} maxWidth="720px">
+      <Modal open={!!currentChar} onClose={() => { setManagingChar(null); clearLevelUps(); clearOverloadEvents(); clearMasterError() }} title={`Ficha — ${currentChar?.name}`} maxWidth="720px">
         {currentChar && (
           <EntityManagePanel
             entity={currentChar}
@@ -467,6 +533,11 @@ export function ManageGroups() {
             onSpendPendingAttribute={key => spendPendingAttribute(currentChar.id, key)}
             onUnlockSkill={() => unlockSkill(currentChar.id)}
             onUpgradeSkill={skillId => upgradeSkill(currentChar.id, skillId)}
+            onUseSkill={(skillId, opts) => useEcoSkill(currentChar.id, skillId, opts)}
+            onRestOverload={() => restEcoOverload(currentChar.id)}
+            onSetOverload={level => setEcoOverloadLevel(currentChar.id, level)}
+            lastOverloadEvents={lastOverloadEvents}
+            onClearOverloadEvents={clearOverloadEvents}
             onAddItem={item => addInventoryItem(currentChar.id, item)}
             onUpdateItem={(itemId, data) => updateInventoryItem(currentChar.id, itemId, data)}
             onRemoveItem={itemId => removeInventoryItem(currentChar.id, itemId)}

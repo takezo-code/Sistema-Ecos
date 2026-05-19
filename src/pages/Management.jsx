@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react'
-import { Users, Skull, Sword, UsersRound } from 'lucide-react'
+import { Users, Skull, Sword, Swords, UsersRound } from 'lucide-react'
 import { PageHeader } from '../components/ui/PageHeader'
 import { ManageCharacters } from './ManageCharacters'
 import { ManageNPCs } from './ManageNPCs'
 import { ManageGroups } from './ManageGroups'
+import { ManageCombat } from './ManageCombat'
 
 const SUB_VIEWS = [
   { id: 'characters', label: 'Personagens', icon: Sword, color: '#9ca3af' },
   { id: 'npcs', label: 'NPCs', icon: Skull, color: '#06b6d4' },
   { id: 'groups', label: 'Grupos', icon: UsersRound, color: '#e5e5e5' },
+  { id: 'combat', label: 'Combate', icon: Swords, color: '#dc2626' },
 ]
 
 function ManagementSubNav({ activeView, onViewChange }) {
@@ -71,6 +73,7 @@ export function Management({ initialView = 'characters', onViewChange }) {
     characters: 'STATUS · NÍVEL · XP · MOCHILA',
     npcs: 'STATUS · NÍVEL · XP · MOCHILA',
     groups: 'PARTY · NÍVEIS · CONDIÇÃO · XP EM GRUPO',
+    combat: 'TURNO · DADOS · ESTADOS · SKILLS',
   }
 
   return (
@@ -86,6 +89,7 @@ export function Management({ initialView = 'characters', onViewChange }) {
         {activeView === 'characters' && <ManageCharacters embedded />}
         {activeView === 'npcs' && <ManageNPCs embedded />}
         {activeView === 'groups' && <ManageGroups />}
+        {activeView === 'combat' && <ManageCombat embedded />}
       </div>
     </div>
   )

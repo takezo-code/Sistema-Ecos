@@ -7,8 +7,11 @@ import {
   getAttributeMax,
   getInitialAttributeMax,
 } from '../../constants/attributes'
-import { PHYSICAL_AFFECTED_KEYS } from '../../constants/states'
-import { calculatePhysicalAttributes, formatPhysicalPenalty } from '../../services/stateModifiers'
+import {
+  calculateEffectiveAttributes,
+  formatPhysicalPenalty,
+  formatMentalPenaltiesSummary,
+} from '../../services/stateModifiers'
 import { getProgressionSnapshot, validateProgression } from '../../services/progressionBudget'
 
 function AttributeInput({ attr, value, effectiveValue, max, showMax, onChange, canIncrease }) {
@@ -78,8 +81,15 @@ export function AttributeGrid({ entity, onChange, isCreation = false, onSpendPen
   const validation = adminMode ? validateProgression(entity) : null
   const rupture = entity.attributes?.ruptura ?? 0
   const physicalState = entity.physicalState ?? 'bem'
-  const { effective: effectiveAttrs } = calculatePhysicalAttributes(entity.attributes, physicalState)
+  const mentalState = entity.mentalState ?? 'estavel'
+  const ecoOverload = entity.ecoOverload ?? 0
+  const { effective: effectiveAttrs } = calculateEffectiveAttributes(entity.attributes, {
+    physicalState,
+    ecoOverload,
+    mentalState,
+  })
   const physicalPenalty = formatPhysicalPenalty(physicalState)
+  const mentalPenalties = formatMentalPenaltiesSummary({ ecoOverload, mentalState })
 
   const handleChange = (key, newVal) => {
     if (adminMode) {
@@ -139,6 +149,9 @@ export function AttributeGrid({ entity, onChange, isCreation = false, onSpendPen
               {pool > 0 && <span style={{ color: '#16a34a' }}>{pool} criação · </span>}
               <span style={{ color: '#d97706' }}>Ruptura +{rupture}% Ecos</span>
               {physicalPenalty && <span style={{ color: '#ea580c' }}> · {physicalPenalty}</span>}
+              {mentalPenalties.compactLine && (
+                <span style={{ color: '#06b6d4' }}> · {mentalPenalties.compactLine}</span>
+              )}
             </>
           )}
         </div>
@@ -160,9 +173,8 @@ export function AttributeGrid({ entity, onChange, isCreation = false, onSpendPen
         {ATTRIBUTES.map(attr => {
           const value = entity.attributes?.[attr.key] || 0
           const max = isCreation ? getInitialAttributeMax() : getAttributeMax(attr.key)
-          const effectiveValue = PHYSICAL_AFFECTED_KEYS.includes(attr.key)
-            ? effectiveAttrs[attr.key]
-            : null
+          const baseVal = entity.attributes?.[attr.key] || 0
+          const effectiveValue = effectiveAttrs[attr.key] !== baseVal ? effectiveAttrs[attr.key] : null
           return (
             <AttributeInput
               key={attr.key}

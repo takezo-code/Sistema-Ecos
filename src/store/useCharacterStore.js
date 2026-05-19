@@ -14,7 +14,19 @@ import {
   scaleAttributesToBudget,
 } from '../services/progressionService'
 import { unlockRandomSkill, upgradeSkillTier } from '../services/skillService'
+import { useEcoSkill, restEcoOverload, masterSetEcoOverload } from '../services/ecoOverloadService'
+import {
+  activateCharacterSkill,
+  advanceCharacterTurn,
+  buildSkillInstanceFromCatalog,
+} from '../services/ecoSkillRuntimeService'
+import { getCatalogSkill } from '../services/skillsCatalogService'
 import { enforceProgressionCaps } from '../services/progressionBudget'
+import {
+  applyDamageMarks as applyDamageMarksEngine,
+  clearDamageMarks as clearDamageMarksEngine,
+  healDamageMarks as healDamageMarksEngine,
+} from '../mechanics/combat/damageMarksEngine'
 
 const load = () => (storage.get(KEYS.characters) || []).map(normalizeGameEntity)
 
@@ -36,9 +48,15 @@ const patchCharacter = (get, set, id, patcher) => {
 export const useCharacterStore = create((set, get) => ({
   characters: load(),
   lastLevelUps: [],
+  lastOverloadEvents: [],
+  lastSkillError: null,
   lastMasterError: null,
 
   clearLevelUps: () => set({ lastLevelUps: [] }),
+
+  clearOverloadEvents: () => set({ lastOverloadEvents: [] }),
+
+  clearSkillError: () => set({ lastSkillError: null }),
 
   clearMasterError: () => set({ lastMasterError: null }),
 
@@ -85,6 +103,47 @@ export const useCharacterStore = create((set, get) => ({
 
   setMentalState(characterId, mentalState) {
     patchCharacter(get, set, characterId, { mentalState })
+  },
+
+  /** Aplica marcas de dano e recalcula estado físico automaticamente */
+  applyDamageMarks(characterId, markType, options = {}) {
+    const c = get().characters.find(ch => ch.id === characterId)
+    if (!c) return null
+    const result = applyDamageMarksEngine(c, markType, options)
+    patchCharacter(get, set, characterId, ch => ({ ...ch, ...result.patch }))
+    return result
+  },
+
+  /** Cura parcial: remove N marcas e recalcula estado */
+  healDamageMarks(characterId, amount = 1) {
+    const c = get().characters.find(ch => ch.id === characterId)
+    if (!c) return null
+    const result = healDamageMarksEngine(c, amount)
+    patchCharacter(get, set, characterId, ch => ({ ...ch, ...result.patch }))
+    return result
+  },
+
+  /** Limpa todas as marcas e volta ao estado Estável */
+  clearDamageMarks(characterId) {
+    const c = get().characters.find(ch => ch.id === characterId)
+    if (!c) return
+    const result = clearDamageMarksEngine(c)
+    patchCharacter(get, set, characterId, ch => ({ ...ch, ...result.patch }))
+  },
+
+  /** Descanso completo: zera sobrecarga Eco + limpa marcas de dano */
+  recoverCharacter(characterId) {
+    const c = get().characters.find(ch => ch.id === characterId)
+    if (!c) return false
+    const ecoPatch = restEcoOverload(c).patch
+    const marksPatch = clearDamageMarksEngine(c).patch
+    patchCharacter(get, set, characterId, ch => ({ ...ch, ...ecoPatch, ...marksPatch }))
+    set({ lastOverloadEvents: [] })
+    return true
+  },
+
+  recoverGroupMembers(memberIds = []) {
+    memberIds.forEach(id => get().recoverCharacter(id))
   },
 
   addXp(characterId, amount) {
@@ -203,6 +262,85 @@ export const useCharacterStore = create((set, get) => ({
     const patch = upgradeSkillTier(c, skillId)
     if (!patch) return false
     patchCharacter(get, set, characterId, ch => ({ ...ch, ...patch }))
+    return true
+  },
+
+  useEcoSkill(characterId, skillId, options = {}) {
+    const c = get().characters.find(ch => ch.id === characterId)
+    if (!c) return { ok: false }
+    const result = useEcoSkill(c, skillId, options)
+    if (!result.ok) return result
+    if (result.patch && Object.keys(result.patch).length > 0) {
+      patchCharacter(get, set, characterId, ch => ({ ...ch, ...result.patch }))
+    }
+    if (result.events?.length) {
+      set({ lastOverloadEvents: result.events })
+    }
+    return result
+  },
+
+  restEcoOverload(characterId) {
+    const c = get().characters.find(ch => ch.id === characterId)
+    if (!c) return false
+    const { patch } = restEcoOverload(c)
+    patchCharacter(get, set, characterId, ch => ({ ...ch, ...patch }))
+    set({ lastOverloadEvents: [] })
+    return true
+  },
+
+  setEcoOverloadLevel(characterId, level) {
+    const c = get().characters.find(ch => ch.id === characterId)
+    if (!c) return false
+    const { patch } = masterSetEcoOverload(c, level)
+    patchCharacter(get, set, characterId, ch => ({ ...ch, ...patch }))
+    return true
+  },
+
+  activateSkill(characterId, skillId) {
+    const c = get().characters.find(ch => ch.id === characterId)
+    if (!c) return { ok: false, message: 'Personagem não encontrado' }
+    const result = activateCharacterSkill(c, skillId)
+    if (!result.ok) {
+      set({ lastSkillError: result.error })
+      return { ok: false, message: result.error?.message }
+    }
+    patchCharacter(get, set, characterId, ch => ({ ...ch, ...result.patch }))
+    if (result.events?.length) set({ lastOverloadEvents: result.events })
+    set({ lastSkillError: null })
+    return { ok: true, warnings: result.warnings, historyEntry: result.historyEntry }
+  },
+
+  advanceTurn(characterId) {
+    const c = get().characters.find(ch => ch.id === characterId)
+    if (!c) return { ok: false }
+    const result = advanceCharacterTurn(c)
+    patchCharacter(get, set, characterId, ch => ({ ...ch, ...result.patch }))
+    return { ok: true, warnings: result.warnings }
+  },
+
+  learnCatalogSkill(characterId, templateId) {
+    const c = get().characters.find(ch => ch.id === characterId)
+    if (!c) return { ok: false, message: 'Personagem não encontrado' }
+    if (!getCatalogSkill(templateId)) {
+      return { ok: false, message: 'Habilidade não existe no catálogo.' }
+    }
+    if ((c.skills || []).some(s => s.templateId === templateId)) {
+      return { ok: false, message: 'Personagem já possui esta habilidade.' }
+    }
+    const instance = buildSkillInstanceFromCatalog(templateId)
+    if (!instance) return { ok: false, message: 'Erro ao criar habilidade.' }
+    patchCharacter(get, set, characterId, ch => ({
+      ...ch,
+      skills: [...(ch.skills || []), instance],
+    }))
+    return { ok: true, skill: instance }
+  },
+
+  removeSkill(characterId, skillId) {
+    patchCharacter(get, set, characterId, c => ({
+      ...c,
+      skills: (c.skills || []).filter(s => s.id !== skillId),
+    }))
     return true
   },
 

@@ -152,7 +152,7 @@ export function Dice() {
     const sides = parseInt(contextDice) || 20
     const char = campChars.find(c => c.id === contextChar)
     const attrVal = char
-      ? getEffectiveAttributeValue(char.attributes, contextAttr, char.physicalState ?? char.condition ?? 'bem')
+      ? getEffectiveAttributeValue(char.attributes, contextAttr, char.physicalState ?? char.condition ?? 'bem', char.ecoOverload ?? 0)
       : 0
     const charName = char ? char.name : ''
     const label = charName
@@ -245,7 +245,7 @@ export function Dice() {
                   {(() => {
                     const c = campChars.find(ch => ch.id === contextChar)
                     if (!c) return ''
-                    const eff = getEffectiveAttributeValue(c.attributes, contextAttr, c.physicalState ?? c.condition ?? 'bem')
+                    const eff = getEffectiveAttributeValue(c.attributes, contextAttr, c.physicalState ?? c.condition ?? 'bem', c.ecoOverload ?? 0)
                     const base = c.attributes?.[contextAttr] || 0
                     return eff !== base
                       ? `${c.name} · ${ATTRIBUTE_LABELS[contextAttr]}: ${eff} (${base})`
