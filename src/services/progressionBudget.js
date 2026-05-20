@@ -1,22 +1,36 @@
-import { MAX_LEVEL, getXpRequiredForLevel } from '../constants/progression'
+import { MAX_LEVEL, getXpRequiredForLevel, getSocialPointsFromLevel } from '../constants/progression'
 import {
   ATTRIBUTES,
   STARTING_ATTRIBUTE_POINTS,
   getTotalAttributePoints,
+  isInCreationPhase,
+  STARTING_SOCIAL_POINTS,
+  getTotalSocialPoints,
 } from '../constants/attributes'
+import { entityHasEcoPowers } from '../constants/entityProgression'
 
-/** Pontos de atributo ganhos em níveis pares (2, 4, 6…) */
-export function getAttributePointsFromLevel(level) {
-  return Math.floor(Math.max(1, level) / 2)
+/** Pontos de atributo de nível: pares + (sem Eco) também os slots que seriam Eco */
+export function getAttributePointsFromLevel(level, entity = null) {
+  const l = Math.max(1, level)
+  const fromEven = Math.floor(l / 2)
+  if (!entity || entityHasEcoPowers(entity)) return fromEven
+  const ecoSlots = l < 3 ? 0 : Math.floor((l - 1) / 2)
+  return fromEven + ecoSlots
 }
 
 /** Total de pontos de status permitidos (criação + nível) */
-export function getAttributeBudget(level) {
-  return STARTING_ATTRIBUTE_POINTS + getAttributePointsFromLevel(level)
+export function getAttributeBudget(level, entity = null) {
+  return STARTING_ATTRIBUTE_POINTS + getAttributePointsFromLevel(level, entity)
 }
 
-/** Ecos ganhos em níveis ímpares a partir do 3 (3, 5, 7…) */
-export function getEcoPointsFromLevel(level) {
+/** Orçamento total de pontos sociais para um nível */
+export function getSocialBudget(level) {
+  return STARTING_SOCIAL_POINTS + getSocialPointsFromLevel(level)
+}
+
+/** Ecos ganhos em níveis ímpares a partir do 3 — zero se entidade sem poderes de Eco */
+export function getEcoPointsFromLevel(level, entity = null) {
+  if (entity && !entityHasEcoPowers(entity)) return 0
   const l = Math.max(1, level)
   if (l < 3) return 0
   return Math.floor((l - 1) / 2)
@@ -29,19 +43,19 @@ export function getEcoSpentOnSkills(skills = []) {
 
 export function getProgressionSnapshot(entity) {
   const level = Math.min(MAX_LEVEL, Math.max(1, entity.level ?? 1))
-  const spent = getTotalAttributePoints(entity.attributes)
-  const budget = getAttributeBudget(level)
+  const spent = getTotalAttributePoints(entity.attributes, entity)
+  const budget = getAttributeBudget(level, entity)
   const unspent = entity.unspentAttributePoints ?? 0
   const pending = entity.pendingAttributePoints ?? 0
   const poolTotal = unspent + pending
   const available = Math.max(0, budget - spent)
 
-  const ecoBudget = getEcoPointsFromLevel(level)
+  const ecoBudget = getEcoPointsFromLevel(level, entity)
   const ecoSpent = getEcoSpentOnSkills(entity.skills)
   const ecoFree = entity.ecoPoints ?? 0
   const ecoTotal = ecoFree + ecoSpent
 
-  const fromLevel = getAttributePointsFromLevel(level)
+  const fromLevel = getAttributePointsFromLevel(level, entity)
   const spentFromLevel = Math.max(0, spent - STARTING_ATTRIBUTE_POINTS)
   const maxPending = Math.max(0, fromLevel - spentFromLevel)
 
@@ -115,11 +129,17 @@ export function enforceProgressionCaps(entity) {
     return { patch: null, error: validateProgression({ ...entity, level }).errors[0] }
   }
 
-  const available = budget - spent
+  const available = Math.max(0, budget - spent)
+  const inCreation = isInCreationPhase(entity)
   let pending = Math.min(entity.pendingAttributePoints ?? 0, s.maxPending, available)
-  let unspent = Math.min(entity.unspentAttributePoints ?? 0, available - pending)
-  if (pending + unspent > available) {
+  let unspent = inCreation
+    ? Math.min(entity.unspentAttributePoints ?? 0, Math.max(0, available - pending))
+    : 0
+  if (inCreation && pending + unspent > available) {
     unspent = Math.max(0, available - pending)
+  } else if (!inCreation) {
+    pending = Math.min(pending, s.maxPending, available)
+    unspent = 0
   }
 
   const ecoPoints = Math.min(entity.ecoPoints ?? 0, s.maxEcoFree)
@@ -142,8 +162,8 @@ export function enforceProgressionCaps(entity) {
  */
 export function syncProgressionToLevel(entity) {
   const level = Math.min(MAX_LEVEL, Math.max(1, entity.level ?? 1))
-  const spent = getTotalAttributePoints(entity.attributes)
-  const budget = getAttributeBudget(level)
+  const spent = getTotalAttributePoints(entity.attributes, entity)
+  const budget = getAttributeBudget(level, entity)
 
   if (spent > budget) {
     return {
@@ -155,21 +175,33 @@ export function syncProgressionToLevel(entity) {
     }
   }
 
-  const available = budget - spent
-  const fromLevel = getAttributePointsFromLevel(level)
+  const available = Math.max(0, budget - spent)
+  const fromLevel = getAttributePointsFromLevel(level, entity)
   const spentFromLevel = Math.max(0, spent - STARTING_ATTRIBUTE_POINTS)
-  const pending = Math.max(0, Math.min(fromLevel - spentFromLevel, available))
-  const unspent = available - pending
+  const maxPendingFromLevel = Math.max(0, fromLevel - spentFromLevel)
+  const inCreation = isInCreationPhase(entity)
 
-  const ecoBudget = getEcoPointsFromLevel(level)
+  let pending = Math.max(0, Math.min(maxPendingFromLevel, available))
+  let unspent = inCreation
+    ? Math.max(0, Math.min(entity.unspentAttributePoints ?? 0, available - pending))
+    : 0
+
+  const ecoBudget = getEcoPointsFromLevel(level, entity)
   const ecoSpent = getEcoSpentOnSkills(entity.skills)
   const ecoPoints = Math.max(0, ecoBudget - ecoSpent)
+
+  // Social progression
+  const socialBudgetFromLevel = getSocialPointsFromLevel(level)
+  const totalSocialSpent = getTotalSocialPoints(entity.socialAttributes)
+  const spentSocialFromLevel = Math.max(0, totalSocialSpent - STARTING_SOCIAL_POINTS)
+  const pendingSocial = Math.max(0, socialBudgetFromLevel - spentSocialFromLevel)
 
   return {
     patch: {
       pendingAttributePoints: pending,
       unspentAttributePoints: unspent,
       ecoPoints,
+      pendingSocialPoints: pendingSocial,
     },
     error: null,
   }
@@ -190,12 +222,22 @@ export function clampMasterAuxiliary(entity) {
   let pending = 0
   let unspent = 0
   if (s.spent <= s.budget) {
-    const available = s.budget - s.spent
-    const fromLevel = getAttributePointsFromLevel(level)
+    const available = Math.max(0, s.budget - s.spent)
+    const fromLevel = getAttributePointsFromLevel(level, entity)
     const spentFromLevel = Math.max(0, s.spent - STARTING_ATTRIBUTE_POINTS)
-    pending = Math.max(0, Math.min(fromLevel - spentFromLevel, available))
-    unspent = Math.max(0, available - pending)
+    const maxPendingFromLevel = Math.max(0, fromLevel - spentFromLevel)
+    pending = Math.max(0, Math.min(maxPendingFromLevel, available))
+    unspent = isInCreationPhase(entity)
+      ? Math.max(0, Math.min(entity.unspentAttributePoints ?? 0, available - pending))
+      : 0
   }
+
+  // Social pending
+  const socialBudgetFromLevel = getSocialPointsFromLevel(level)
+  const totalSocialSpent = getTotalSocialPoints(entity.socialAttributes)
+  const spentSocialFromLevel = Math.max(0, totalSocialSpent - STARTING_SOCIAL_POINTS)
+  const maxSocialPending = Math.max(0, socialBudgetFromLevel - spentSocialFromLevel)
+  const pendingSocial = Math.min(entity.pendingSocialPoints ?? 0, maxSocialPending)
 
   return {
     patch: {
@@ -204,6 +246,7 @@ export function clampMasterAuxiliary(entity) {
       ecoPoints,
       pendingAttributePoints: pending,
       unspentAttributePoints: unspent,
+      pendingSocialPoints: pendingSocial,
       xpToNextLevel: needed,
     },
     error: null,
@@ -216,9 +259,9 @@ export function clampMasterAuxiliary(entity) {
  */
 export function scaleAttributesToBudget(entity) {
   const level = Math.min(MAX_LEVEL, Math.max(1, entity.level ?? 1))
-  const budget = getAttributeBudget(level)
+  const budget = getAttributeBudget(level, entity)
   const attributes = { ...(entity.attributes || {}) }
-  let spent = getTotalAttributePoints(attributes)
+  let spent = getTotalAttributePoints(attributes, entity)
 
   if (spent <= budget) {
     return {

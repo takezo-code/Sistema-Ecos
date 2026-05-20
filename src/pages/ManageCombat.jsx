@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react'
-import { Swords, RotateCcw } from 'lucide-react'
+import { Swords, RotateCcw, Skull } from 'lucide-react'
 import { useCharacterStore } from '../store/useCharacterStore'
+import { useNPCStore } from '../store/useNPCStore'
 import { useCampaignStore } from '../store/useCampaignStore'
 import { useCombatStore } from '../store/useCombatStore'
 import { useGroupStore } from '../store/useGroupStore'
@@ -9,6 +10,7 @@ import { resolveCombatRoster } from '../utils/combatRoster'
 import { listCharacterSkillsRuntime } from '../services/ecoSkillRuntimeService'
 import { COMBAT_HIGHLIGHT_XP } from '../constants/progression'
 import { CombatCharacterColumn } from '../components/combat/CombatCharacterColumn'
+import { CombatEnemyCard } from '../components/combat/CombatEnemyCard'
 import { CombatSkillDetailModal } from '../components/combat/CombatSkillDetailModal'
 import { EmptyState } from '../components/ui/EmptyState'
 import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
@@ -123,15 +125,20 @@ export function ManageCombat() {
     characters, updateCharacter, activateSkill, advanceTurn, addXp,
     applyDamageMarks, healDamageMarks, clearDamageMarks, recoverGroupMembers,
   } = useCharacterStore()
+  const {
+    npcs, updateNPC,
+    applyDamageWithResistance, applyDamageMarks: applyNPCDamageMarks,
+    healDamageMarks: healNPCMarks, clearDamageMarks: clearNPCMarks,
+  } = useNPCStore()
   const { groups } = useGroupStore()
   const activeCampaignId = useCampaignStore(s => s.activeCampaignId)
   const {
-    globalNotes,
     turn,
     combatGroupId,
+    activeEnemyId,
     setCampaign,
     setCombatGroup,
-    setGlobalNotes,
+    setActiveEnemy,
     incrementTurn,
   } = useCombatStore()
 
@@ -159,6 +166,17 @@ export function ManageCombat() {
       _skillRuntimes: listCharacterSkillsRuntime(c),
     })),
     [roster]
+  )
+
+  // Inimigos da campanha que podem combater
+  const campaignEnemies = useMemo(
+    () => filterByActiveCampaign(npcs, activeCampaignId).filter(n => n.podeCombater),
+    [npcs, activeCampaignId]
+  )
+
+  const activeEnemy = useMemo(
+    () => activeEnemyId ? campaignEnemies.find(n => n.id === activeEnemyId) ?? null : null,
+    [campaignEnemies, activeEnemyId]
   )
 
   const activeGroup = combatGroupId ? groups.find(g => g.id === combatGroupId) : null
@@ -214,6 +232,23 @@ export function ManageCombat() {
     }
   }, [addXp])
 
+  const handleEnemyRollAttribute = useCallback((enemy, _attrKey, attrLabel, eff) => {
+    const dice = Math.floor(Math.random() * 20) + 1
+    const total = dice + eff
+    setRollResult({ dice, bonus: eff, total, characterName: enemy.name, attrLabel })
+  }, [])
+
+  const handleEnemyApplyDamage = useCallback((markType, { mental = false } = {}) => {
+    if (!activeEnemyId) return
+    const result = applyDamageWithResistance(activeEnemyId, markType, { mental })
+    if (result) {
+      const msg = result.damageReduced > 0
+        ? `${activeEnemy?.name}: ${result.effectiveDamage > 0 ? `+${result.effectiveDamage} marca(s) efetivas` : 'dano absorvido'} (resist. reduziu ${result.damageReduced})`
+        : `${activeEnemy?.name}: +${result.effectiveDamage} marca(s)`
+      setCombatNotice(msg)
+    }
+  }, [activeEnemyId, activeEnemy, applyDamageWithResistance])
+
   const handleActivateSkill = useCallback((characterId, skillId) => {
     const res = activateSkill(characterId, skillId)
     if (res?.warnings?.length) {
@@ -267,8 +302,8 @@ export function ManageCombat() {
             className="input-base"
             value={combatGroupId || ''}
             onChange={e => setCombatGroup(e.target.value || null)}
-            style={{ fontSize: '0.65rem', padding: '3px 6px', maxWidth: '220px' }}
-            title="Escolha o grupo em Gerenciamento → Grupos ou aqui"
+            style={{ fontSize: '0.65rem', padding: '3px 6px', maxWidth: '180px' }}
+            title="Escolha o grupo em Em jogo → Ficha ou aqui"
           >
             <option value="">Todos os personagens</option>
             {campaignGroups.map(g => (
@@ -277,6 +312,26 @@ export function ManageCombat() {
               </option>
             ))}
           </select>
+
+          {/* Seletor de inimigo ativo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Skull size={13} style={{ color: '#dc2626', flexShrink: 0 }} />
+            <select
+              className="input-base"
+              value={activeEnemyId || ''}
+              onChange={e => setActiveEnemy(e.target.value || null)}
+              style={{ fontSize: '0.65rem', padding: '3px 6px', maxWidth: '200px',
+                borderColor: activeEnemyId ? 'rgba(220,38,38,0.4)' : undefined }}
+              title="Inimigo ativo neste combate"
+            >
+              <option value="">Sem inimigo</option>
+              {campaignEnemies.map(n => (
+                <option key={n.id} value={n.id}>
+                  {n.papelCombate === 'boss' ? '★ ' : ''}{n.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
           <span style={{ fontSize: '0.65rem', fontFamily: 'monospace', color: '#444' }}>
@@ -332,7 +387,7 @@ export function ManageCombat() {
           icon={Swords}
           title={activeGroup ? 'Grupo sem membros' : 'Nenhum personagem'}
           description={activeGroup
-            ? 'Adicione personagens ao grupo em Gerenciamento → Grupos, ou escolha outro grupo no seletor acima.'
+            ? 'Adicione personagens ao grupo em Em jogo → Ficha, ou escolha outro grupo no seletor acima.'
             : 'Cadastre personagens na campanha ativa ou selecione um grupo com membros.'}
         />
       ) : (
@@ -372,34 +427,45 @@ export function ManageCombat() {
             ))}
           </div>
 
-          {/* Painel de notas da cena */}
-          <aside style={{
-            width: '220px',
-            flexShrink: 0,
-            borderLeft: '1px solid #1a1a1a',
-            padding: '0.875rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem',
-            overflowY: 'auto',
-          }}>
-            <div style={{ fontSize: '0.5rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-              NOTAS DA CENA
+          {/* Card do inimigo ativo — mesmo tamanho dos jogadores, centralizado */}
+          {activeEnemy && (
+            <div style={{
+              flex: 1,
+              minWidth: 0,
+              borderLeft: '1px solid rgba(220,38,38,0.25)',
+              padding: '0.875rem',
+              overflowY: 'auto',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+            }}>
+              <div style={{
+                width: '230px',
+                flexShrink: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem',
+              }}>
+                <div style={{
+                  fontSize: '0.45rem',
+                  color: '#dc2626',
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.1em',
+                  textAlign: 'center',
+                }}>
+                  INIMIGO ATIVO
+                </div>
+                <CombatEnemyCard
+                  enemy={activeEnemy}
+                  onUpdate={data => updateNPC(activeEnemy.id, data)}
+                  onApplyDamageWithResistance={(markType, opts) => handleEnemyApplyDamage(markType, opts)}
+                  onHealMarks={(amount) => healNPCMarks(activeEnemy.id, amount)}
+                  onClearMarks={() => { clearNPCMarks(activeEnemy.id); setCombatNotice(`${activeEnemy.name}: marcas limpas.`) }}
+                  onRollAttribute={handleEnemyRollAttribute}
+                />
+              </div>
             </div>
-            <textarea
-              className="input-base"
-              value={globalNotes}
-              onChange={e => setGlobalNotes(e.target.value)}
-              placeholder="Iniciativa, ambiente, lembretes do mestre…"
-              style={{
-                flex: 1,
-                minHeight: '300px',
-                fontSize: '0.8rem',
-                lineHeight: 1.55,
-                resize: 'none',
-              }}
-            />
-          </aside>
+          )}
         </div>
       )}
 

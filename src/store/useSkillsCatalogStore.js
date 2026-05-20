@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import {
   getMergedCatalog,
-  loadCustomSkills,
   addCustomSkill,
   updateCustomSkill,
   deleteCustomSkill,
@@ -39,5 +38,4 @@ export const useSkillsCatalogStore = create((set, get) => ({
   },
 }))
 
-// Hidrata ao importar
 useSkillsCatalogStore.getState().reload()

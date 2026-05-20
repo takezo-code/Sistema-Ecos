@@ -1,27 +1,260 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   LayoutDashboard,
   BookOpen,
-  Sparkles,
   Users,
   ScrollText,
   Dices,
   ChevronLeft,
   ChevronRight,
-  Zap,
+  ChevronDown,
+  ChevronUp,
+  Swords,
+  Trash2,
+  Sparkles,
+  Skull,
+  Building2,
+  ShieldAlert,
+  Sword,
+  UsersRound,
+  Clapperboard,
 } from 'lucide-react'
+import { SKILL_AUDIENCE } from '../constants/skillAudience'
+
+const MANAGEMENT_CHILDREN = [
+  { id: 'characters', label: 'Personagens', icon: Sword },
+  { id: 'npcs', label: 'NPCs', icon: Skull },
+  { id: 'boss', label: 'Boss', icon: ShieldAlert },
+  { id: 'organizations', label: 'Organizações', icon: Building2 },
+  { id: 'creation', label: 'Criação', icon: Sparkles },
+]
+
+const SKILLS_CHILDREN = [
+  { id: SKILL_AUDIENCE.CHARACTER, label: 'Skills Personagem', icon: Sword },
+  { id: SKILL_AUDIENCE.NPC, label: 'Skills NPC', icon: Skull },
+  { id: SKILL_AUDIENCE.BOSS, label: 'Skills Boss', icon: ShieldAlert },
+  { id: 'creation', label: 'Criação', icon: Sparkles },
+]
+
+const EMJOGO_CHILDREN = [
+  { id: 'ficha', label: 'Ficha', icon: UsersRound },
+  { id: 'cena', label: 'Cena', icon: Clapperboard },
+  { id: 'combat', label: 'Combate', icon: Swords },
+]
+
+const CAMPANHA_CHILDREN = [
+  { id: 'historia', label: 'História', icon: BookOpen },
+  { id: 'sessoes', label: 'Sessões', icon: ScrollText },
+]
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'skills', label: 'Skills', icon: Zap, highlight: true },
-  { id: 'campaigns', label: 'Campanhas', icon: BookOpen },
-  { id: 'creation', label: 'Criação', icon: Sparkles },
-  { id: 'management', label: 'Gerenciamento', icon: Users },
-  { id: 'sessions', label: 'Sessões', icon: ScrollText },
+  {
+    id: 'campanha',
+    label: 'Campanha',
+    icon: BookOpen,
+    children: CAMPANHA_CHILDREN,
+    defaultSubView: 'historia',
+  },
+  {
+    id: 'management',
+    label: 'Gerenciamento',
+    icon: Users,
+    children: MANAGEMENT_CHILDREN,
+    defaultSubView: 'characters',
+  },
+  {
+    id: 'skills',
+    label: 'Skills',
+    icon: Sparkles,
+    children: SKILLS_CHILDREN,
+    defaultSubView: SKILL_AUDIENCE.CHARACTER,
+  },
+  {
+    id: 'emjogo',
+    label: 'Em jogo',
+    icon: Swords,
+    children: EMJOGO_CHILDREN,
+    defaultSubView: 'ficha',
+  },
   { id: 'dice', label: 'Dados', icon: Dices },
+  { id: 'trash', label: 'Lixeira', icon: Trash2 },
 ]
 
-export function Sidebar({ collapsed, onToggle, activePage, onNavigate, footer }) {
+const navBtnBase = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.75rem',
+  width: '100%',
+  border: 'none',
+  cursor: 'pointer',
+  fontSize: '0.8rem',
+  letterSpacing: '0.01em',
+  transition: 'all 0.15s',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+}
+
+function NavItemButton({ item, isActive, collapsed, onClick, indent = 0 }) {
+  const Icon = item.icon
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={collapsed ? item.label : ''}
+      style={{
+        ...navBtnBase,
+        padding: collapsed ? '0.625rem 0' : `0.5rem 1rem 0.5rem ${1 + indent * 0.85}rem`,
+        justifyContent: collapsed ? 'center' : 'flex-start',
+        background: isActive ? 'rgba(220,38,38,0.08)' : 'transparent',
+        borderLeft: isActive ? '2px solid #dc2626' : '2px solid transparent',
+        color: isActive ? '#e5e5e5' : '#555',
+        fontWeight: isActive ? 500 : 400,
+      }}
+      onMouseEnter={e => {
+        if (!isActive) {
+          e.currentTarget.style.color = '#999'
+          e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+        }
+      }}
+      onMouseLeave={e => {
+        if (!isActive) {
+          e.currentTarget.style.color = '#555'
+          e.currentTarget.style.background = 'transparent'
+        }
+      }}
+    >
+      <Icon size={indent > 0 ? 14 : 15} style={{ minWidth: indent > 0 ? '14px' : '15px', color: isActive ? '#dc2626' : 'inherit' }} />
+      {!collapsed && <span>{item.label}</span>}
+    </button>
+  )
+}
+
+function NavGroup({
+  group,
+  pageId,
+  collapsed,
+  isGroupActive,
+  activeSubView,
+  expanded,
+  onToggleExpand,
+  onNavigate,
+}) {
+  const GroupIcon = group.icon
+  const defaultSub = group.defaultSubView
+
+  if (collapsed) {
+    return (
+      <NavItemButton
+        item={group}
+        isActive={isGroupActive}
+        collapsed
+        onClick={() => onNavigate(pageId, activeSubView || defaultSub)}
+      />
+    )
+  }
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggleExpand}
+        style={{
+          ...navBtnBase,
+          padding: '0.5rem 1rem',
+          justifyContent: 'flex-start',
+          background: isGroupActive ? 'rgba(220,38,38,0.05)' : 'transparent',
+          borderLeft: isGroupActive ? '2px solid rgba(220,38,38,0.35)' : '2px solid transparent',
+          color: isGroupActive ? '#ccc' : '#555',
+          fontWeight: 500,
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.color = '#999'
+          e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.color = isGroupActive ? '#ccc' : '#555'
+          e.currentTarget.style.background = isGroupActive ? 'rgba(220,38,38,0.05)' : 'transparent'
+        }}
+      >
+        <GroupIcon size={15} style={{ minWidth: '15px', color: isGroupActive ? '#dc2626' : 'inherit' }} />
+        <span style={{ flex: 1, textAlign: 'left' }}>{group.label}</span>
+        {expanded
+          ? <ChevronUp size={13} style={{ color: '#444', flexShrink: 0 }} />
+          : <ChevronDown size={13} style={{ color: '#444', flexShrink: 0 }} />
+        }
+      </button>
+      {expanded && group.children.map(child => (
+        <NavItemButton
+          key={child.id}
+          item={child}
+          isActive={isGroupActive && activeSubView === child.id}
+          collapsed={false}
+          indent={1}
+          onClick={() => onNavigate(pageId, child.id)}
+        />
+      ))}
+    </div>
+  )
+}
+
+export function Sidebar({
+  collapsed,
+  onToggle,
+  activePage,
+  managementView = 'characters',
+  skillsView = SKILL_AUDIENCE.CHARACTER,
+  emjogoView = 'ficha',
+  campanhaView = 'historia',
+  onNavigate,
+  footer,
+}) {
+  const [managementExpanded, setManagementExpanded] = useState(activePage === 'management')
+  const [skillsExpanded, setSkillsExpanded] = useState(activePage === 'skills')
+  const [emjogoExpanded, setEmjogoExpanded] = useState(activePage === 'emjogo')
+  const [campanhaExpanded, setCampanhaExpanded] = useState(activePage === 'campanha')
+
+  useEffect(() => {
+    if (activePage === 'management') setManagementExpanded(true)
+    if (activePage === 'skills') setSkillsExpanded(true)
+    if (activePage === 'emjogo') setEmjogoExpanded(true)
+    if (activePage === 'campanha') setCampanhaExpanded(true)
+  }, [activePage])
+
+  const getSubView = (pageId) => {
+    if (pageId === 'management') return managementView
+    if (pageId === 'skills') return skillsView
+    if (pageId === 'emjogo') return emjogoView
+    if (pageId === 'campanha') return campanhaView
+    return null
+  }
+
+  const getExpanded = (pageId) => {
+    if (pageId === 'management') return managementExpanded
+    if (pageId === 'skills') return skillsExpanded
+    if (pageId === 'emjogo') return emjogoExpanded
+    if (pageId === 'campanha') return campanhaExpanded
+    return false
+  }
+
+  const setExpanded = (pageId, value) => {
+    if (pageId === 'management') setManagementExpanded(value)
+    if (pageId === 'skills') setSkillsExpanded(value)
+    if (pageId === 'emjogo') setEmjogoExpanded(value)
+    if (pageId === 'campanha') setCampanhaExpanded(value)
+  }
+
+  const toggleExpanded = (pageId, item) => {
+    const subView = getSubView(pageId)
+    const defaultSub = item.defaultSubView
+    if (activePage !== pageId) {
+      onNavigate(pageId, subView || defaultSub)
+      setExpanded(pageId, true)
+    } else {
+      setExpanded(pageId, !getExpanded(pageId))
+    }
+  }
+
   return (
     <aside
       style={{
@@ -36,7 +269,6 @@ export function Sidebar({ collapsed, onToggle, activePage, onNavigate, footer })
         zIndex: 10,
       }}
     >
-      {/* Header */}
       <div
         style={{
           padding: collapsed ? '1rem 0' : '1rem',
@@ -61,6 +293,7 @@ export function Sidebar({ collapsed, onToggle, activePage, onNavigate, footer })
           <div style={{ color: '#dc2626', fontSize: '0.65rem', fontFamily: 'monospace', fontWeight: 700 }}>RM</div>
         )}
         <button
+          type="button"
           onClick={onToggle}
           style={{
             background: 'transparent',
@@ -72,47 +305,48 @@ export function Sidebar({ collapsed, onToggle, activePage, onNavigate, footer })
             padding: '2px',
             transition: 'color 0.15s',
           }}
-          onMouseEnter={e => e.currentTarget.style.color = '#666'}
-          onMouseLeave={e => e.currentTarget.style.color = '#333'}
+          onMouseEnter={e => { e.currentTarget.style.color = '#666' }}
+          onMouseLeave={e => { e.currentTarget.style.color = '#333' }}
         >
-          {collapsed
-            ? <ChevronRight size={14} />
-            : <ChevronLeft size={14} />
-          }
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
       </div>
 
-      {/* Nav */}
       <nav style={{ flex: 1, padding: '0.5rem 0', overflowY: 'auto', overflowX: 'hidden' }}>
         {NAV_ITEMS.map(item => {
+          if (item.children) {
+            const pageId = item.id
+            return (
+              <NavGroup
+                key={item.id}
+                group={item}
+                pageId={pageId}
+                collapsed={collapsed}
+                isGroupActive={activePage === pageId}
+                activeSubView={getSubView(pageId)}
+                expanded={getExpanded(pageId)}
+                onToggleExpand={() => toggleExpanded(pageId, item)}
+                onNavigate={onNavigate}
+              />
+            )
+          }
+
           const Icon = item.icon
           const isActive = activePage === item.id
           return (
             <button
               key={item.id}
+              type="button"
               onClick={() => onNavigate(item.id)}
+              title={collapsed ? item.label : ''}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                width: '100%',
+                ...navBtnBase,
                 padding: collapsed ? '0.625rem 0' : '0.625rem 1rem',
                 justifyContent: collapsed ? 'center' : 'flex-start',
-                background: isActive
-                  ? (item.highlight ? 'rgba(168,85,247,0.08)' : 'rgba(220,38,38,0.08)')
-                  : 'transparent',
-                border: 'none',
-                borderLeft: isActive
-                  ? `2px solid ${item.highlight ? '#a855f7' : '#dc2626'}`
-                  : '2px solid transparent',
+                background: isActive ? 'rgba(220,38,38,0.08)' : 'transparent',
+                borderLeft: isActive ? '2px solid #dc2626' : '2px solid transparent',
                 color: isActive ? '#e5e5e5' : '#555',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
                 fontWeight: isActive ? 500 : 400,
-                letterSpacing: '0.01em',
-                transition: 'all 0.15s',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
               }}
               onMouseEnter={e => {
                 if (!isActive) {
@@ -126,9 +360,8 @@ export function Sidebar({ collapsed, onToggle, activePage, onNavigate, footer })
                   e.currentTarget.style.background = 'transparent'
                 }
               }}
-              title={collapsed ? item.label : ''}
             >
-              <Icon size={15} style={{ minWidth: '15px', color: isActive ? (item.highlight ? '#a855f7' : '#dc2626') : 'inherit' }} />
+              <Icon size={15} style={{ minWidth: '15px', color: isActive ? '#dc2626' : 'inherit' }} />
               {!collapsed && <span>{item.label}</span>}
             </button>
           )

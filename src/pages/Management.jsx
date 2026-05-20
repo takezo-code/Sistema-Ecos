@@ -1,63 +1,27 @@
 import React, { useEffect, useState } from 'react'
-import { Users, Skull, Sword, Swords, UsersRound } from 'lucide-react'
+import { Skull, Sword, Building2, Sparkles, ShieldAlert } from 'lucide-react'
 import { PageHeader } from '../components/ui/PageHeader'
 import { ManageCharacters } from './ManageCharacters'
 import { ManageNPCs } from './ManageNPCs'
-import { ManageGroups } from './ManageGroups'
-import { ManageCombat } from './ManageCombat'
+import { ManageBoss } from './ManageBoss'
+import { ManageOrganizations } from './ManageOrganizations'
+import { ManagementCreationHub } from './ManagementCreationHub'
 
-const SUB_VIEWS = [
-  { id: 'characters', label: 'Personagens', icon: Sword, color: '#9ca3af' },
-  { id: 'npcs', label: 'NPCs', icon: Skull, color: '#06b6d4' },
-  { id: 'groups', label: 'Grupos', icon: UsersRound, color: '#e5e5e5' },
-  { id: 'combat', label: 'Combate', icon: Swords, color: '#dc2626' },
-]
-
-function ManagementSubNav({ activeView, onViewChange }) {
-  return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.35rem',
-      background: '#0d0d0d',
-      border: '1px solid #1a1a1a',
-      borderRadius: '4px',
-      padding: '3px',
-    }}>
-      {SUB_VIEWS.map(item => {
-        const Icon = item.icon
-        const isActive = activeView === item.id
-        return (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => onViewChange(item.id)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.4rem 0.75rem',
-              background: isActive ? 'rgba(220,38,38,0.1)' : 'transparent',
-              border: isActive ? '1px solid rgba(220,38,38,0.25)' : '1px solid transparent',
-              borderRadius: '3px',
-              color: isActive ? '#e5e5e5' : '#555',
-              cursor: 'pointer',
-              fontSize: '0.7rem',
-              fontWeight: isActive ? 600 : 400,
-              transition: 'all 0.15s',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <Icon size={14} style={{ color: isActive ? item.color : 'inherit' }} />
-            <span>{item.label}</span>
-          </button>
-        )
-      })}
-    </div>
-  )
+const VIEW_META = {
+  characters: { title: 'Personagens', icon: Sword },
+  npcs: { title: 'NPCs', icon: Skull },
+  boss: { title: 'Boss', icon: ShieldAlert },
+  organizations: { title: 'Organizações', icon: Building2 },
+  creation: { title: 'Criação', icon: Sparkles },
 }
 
-export function Management({ initialView = 'characters', onViewChange }) {
+export function Management({
+  initialView = 'characters',
+  initialCreationType,
+  onCreationTypeConsumed,
+  onViewChange,
+  onNavigate,
+}) {
   const [activeView, setActiveView] = useState(initialView)
 
   useEffect(() => {
@@ -67,29 +31,41 @@ export function Management({ initialView = 'characters', onViewChange }) {
   const handleViewChange = (view) => {
     setActiveView(view)
     onViewChange?.(view)
+    if (view !== 'creation') onCreationTypeConsumed?.()
   }
 
   const subtitles = {
     characters: 'STATUS · NÍVEL · XP · MOCHILA',
     npcs: 'STATUS · NÍVEL · XP · MOCHILA',
-    groups: 'PARTY · NÍVEIS · CONDIÇÃO · XP EM GRUPO',
-    combat: 'TURNO · DADOS · ESTADOS · SKILLS',
+    boss: 'RESISTÊNCIAS · MARCAS · PAPEL DE COMBATE',
+    organizations: 'FAÇÕES · ALIADOS · INIMIGOS',
+    creation: 'PERSONAGEM · NPC · BOSS · ORGANIZAÇÃO',
   }
+
+  const meta = VIEW_META[activeView] || VIEW_META.characters
+  const HeaderIcon = meta.icon
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <PageHeader
-        icon={Users}
-        title="Gerenciamento"
-        subtitle={subtitles[activeView]}
-        action={<ManagementSubNav activeView={activeView} onViewChange={handleViewChange} />}
+        icon={HeaderIcon}
+        title={meta.title}
+        subtitle={subtitles[activeView] || ''}
       />
 
       <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {activeView === 'characters' && <ManageCharacters embedded />}
         {activeView === 'npcs' && <ManageNPCs embedded />}
-        {activeView === 'groups' && <ManageGroups />}
-        {activeView === 'combat' && <ManageCombat embedded />}
+        {activeView === 'boss' && <ManageBoss embedded />}
+        {activeView === 'organizations' && <ManageOrganizations />}
+        {activeView === 'creation' && (
+          <ManagementCreationHub
+            onNavigate={onNavigate}
+            onViewChange={handleViewChange}
+            initialCreationType={initialCreationType}
+            onCreationTypeConsumed={onCreationTypeConsumed}
+          />
+        )}
       </div>
     </div>
   )

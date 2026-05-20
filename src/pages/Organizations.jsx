@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Building2, Plus, Pencil, Trash2, Shield } from 'lucide-react'
 import { useOrganizationStore } from '../store/useOrganizationStore'
 import { useCampaignStore } from '../store/useCampaignStore'
@@ -148,7 +148,13 @@ function OrgCard({ org, onEdit, onDelete }) {
   )
 }
 
-export function Organizations({ embedded = false, onNavigate }) {
+export function Organizations({
+  embedded = false,
+  onNavigate,
+  autoOpenCreate = false,
+  onCreateFlowClose,
+  onCreateFlowSuccess,
+}) {
   const { activeCampaignId } = useCampaignStore()
   const { organizations, addOrganization, updateOrganization, deleteOrganization } = useOrganizationStore()
   const [modalOpen, setModalOpen] = useState(false)
@@ -161,13 +167,35 @@ export function Organizations({ embedded = false, onNavigate }) {
   const openEdit = (o) => { setEditing(o); setModalOpen(true) }
   const closeModal = () => { setModalOpen(false); setEditing(null) }
 
+  const handleModalClose = () => {
+    const wasNewCreate = autoOpenCreate && !editing
+    closeModal()
+    if (wasNewCreate) onCreateFlowClose?.()
+  }
+
+  useEffect(() => {
+    if (autoOpenCreate && activeCampaignId) openCreate()
+  }, [autoOpenCreate, activeCampaignId])
+
   const handleSave = (data) => {
+    const isNew = !editing
     if (editing) {
       updateOrganization(editing.id, data)
     } else {
       addOrganization(withActiveCampaign(data, activeCampaignId))
     }
     closeModal()
+    if (autoOpenCreate && isNew) onCreateFlowSuccess?.()
+  }
+
+  const creationFlowOnly = embedded && autoOpenCreate
+
+  if (creationFlowOnly) {
+    return (
+      <Modal open={modalOpen} onClose={handleModalClose} title="Nova Organização" maxWidth="600px">
+        <OrgForm initial={null} onSave={handleSave} onCancel={handleModalClose} />
+      </Modal>
+    )
   }
 
   return (
@@ -211,13 +239,14 @@ export function Organizations({ embedded = false, onNavigate }) {
         )}
       </div>
 
-      <Modal open={modalOpen} onClose={closeModal} title={editing ? 'Editar Organização' : 'Nova Organização'} maxWidth="600px">
-        <OrgForm initial={editing} onSave={handleSave} onCancel={closeModal} />
+      <Modal open={modalOpen} onClose={handleModalClose} title={editing ? 'Editar Organização' : 'Nova Organização'} maxWidth="600px">
+        <OrgForm initial={editing} onSave={handleSave} onCancel={handleModalClose} />
       </Modal>
 
       <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Confirmar Exclusão" maxWidth="380px">
         <p style={{ fontSize: '0.85rem', color: '#999', marginBottom: '1.25rem' }}>
-          Excluir a organização <strong style={{ color: '#e5e5e5' }}>{deleteConfirm?.name}</strong>?
+          Enviar a organização <strong style={{ color: '#e5e5e5' }}>{deleteConfirm?.name}</strong> para a lixeira?
+          Você pode restaurá-la em Lixeira.
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>

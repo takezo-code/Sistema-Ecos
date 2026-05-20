@@ -4,7 +4,7 @@ import { COMBAT_HIGHLIGHT_XP } from '../../constants/progression'
 import { DamageMarksPanel } from './DamageMarksPanel'
 import { EntityThumb } from '../ui/EntityThumb'
 import { PHYSICAL_STATES, MENTAL_STATES } from '../../constants/states'
-import { ATTRIBUTES } from '../../constants/attributes'
+import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
 import { formatOverloadDisplay, ECO_OVERLOAD_DISPLAY_CAP } from '../../constants/ecoOverload'
 import { getEffectiveAttributeValue } from '../../services/stateModifiers'
 import { listActiveMentalStatusDetails } from '../../services/mentalStatusService'
@@ -21,6 +21,7 @@ export function CombatCharacterColumn({
   onHealMarks,
   onClearMarks,
   onNotice,
+  attributeList = null,
 }) {
   const [skillsOpen, setSkillsOpen] = useState(false)
   const [xpFlash, setXpFlash] = useState(false)
@@ -193,52 +194,67 @@ export function CombatCharacterColumn({
         <div style={{ fontSize: '0.45rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.375rem' }}>
           ATRIBUTOS · CLIQUE PARA ROLAR
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.25rem' }}>
-          {ATTRIBUTES.map(attr => {
-            const base = character.attributes?.[attr.key] ?? 0
-            const eff = getEffectiveAttributeValue(character.attributes, attr.key, {
-              physicalState: physical,
-              ecoOverload: overload,
-              mentalState: mental,
-            })
-            const reduced = eff < base
-            return (
-              <button
-                key={attr.key}
-                type="button"
-                onClick={() => onRollAttribute?.(character, attr.key, attr.label, eff)}
-                title={`Rolar d20 + ${attr.label} (${eff})`}
-                style={{
-                  background: '#111',
-                  border: `1px solid #1e1e1e`,
-                  borderRadius: '4px',
-                  padding: '0.35rem 0.25rem',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  transition: 'border-color 0.12s, background 0.12s',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = attr.color
-                  e.currentTarget.style.background = `${attr.color}11`
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = '#1e1e1e'
-                  e.currentTarget.style.background = '#111'
-                }}
-              >
-                <div style={{ fontSize: '0.45rem', color: attr.color, fontFamily: 'monospace', marginBottom: '1px' }}>
-                  {attr.key === 'inteligencia' ? 'INT' : attr.key === 'vitalidade' ? 'VIT' : attr.key === 'ruptura' ? 'RUP' : attr.label.slice(0, 3).toUpperCase()}
-                </div>
-                <div style={{ fontSize: '1rem', fontWeight: 800, color: reduced ? '#ea580c' : '#e5e5e5', lineHeight: 1 }}>
-                  {eff}
-                </div>
-                {reduced && (
-                  <div style={{ fontSize: '0.4rem', color: '#444', fontFamily: 'monospace' }}>{base}</div>
-                )}
-              </button>
-            )
-          })}
-        </div>
+        {(() => {
+          const isSocial = attributeList && attributeList[0] && SOCIAL_ATTRIBUTES.some(a => a.key === attributeList[0].key)
+          const attrs = isSocial ? (character.socialAttributes || {}) : (character.attributes || {})
+          const list = attributeList ?? ATTRIBUTES
+          return (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.25rem' }}>
+              {list.map(attr => {
+                const base = attrs[attr.key] ?? 0
+                const eff = isSocial
+                  ? base
+                  : getEffectiveAttributeValue(character.attributes, attr.key, {
+                    physicalState: physical,
+                    ecoOverload: overload,
+                    mentalState: mental,
+                  })
+                const reduced = eff < base
+                const shortKey = attr.key === 'inteligencia' ? 'INT'
+                  : attr.key === 'vitalidade' ? 'VIT'
+                  : attr.key === 'ruptura' ? 'RUP'
+                  : attr.key === 'percepcao' ? 'PER'
+                  : attr.key === 'sabedoria' ? 'SAB'
+                  : attr.label.slice(0, 3).toUpperCase()
+                return (
+                  <button
+                    key={attr.key}
+                    type="button"
+                    onClick={() => onRollAttribute?.(character, attr.key, attr.label, eff)}
+                    title={`Rolar d20 + ${attr.label} (${eff})`}
+                    style={{
+                      background: '#111',
+                      border: `1px solid #1e1e1e`,
+                      borderRadius: '4px',
+                      padding: '0.35rem 0.25rem',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'border-color 0.12s, background 0.12s',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = attr.color
+                      e.currentTarget.style.background = `${attr.color}11`
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = '#1e1e1e'
+                      e.currentTarget.style.background = '#111'
+                    }}
+                  >
+                    <div style={{ fontSize: '0.45rem', color: attr.color, fontFamily: 'monospace', marginBottom: '1px' }}>
+                      {shortKey}
+                    </div>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: reduced ? '#ea580c' : '#e5e5e5', lineHeight: 1 }}>
+                      {eff}
+                    </div>
+                    {reduced && (
+                      <div style={{ fontSize: '0.4rem', color: '#444', fontFamily: 'monospace' }}>{base}</div>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          )
+        })()}
       </section>
 
       {/* Skills colapsável */}

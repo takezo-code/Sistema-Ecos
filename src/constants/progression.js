@@ -1,4 +1,5 @@
-export const MAX_LEVEL = 15
+export const MAX_LEVEL = 20
+export const MAX_SOCIAL_LEVEL = 15
 export const XP_PER_LEVEL_MULTIPLIER = 150
 
 /** XP necessário para subir do nível atual ao próximo */
@@ -7,9 +8,20 @@ export function getXpRequiredForLevel(currentLevel) {
   return currentLevel * XP_PER_LEVEL_MULTIPLIER
 }
 
-export function getLevelRewardType(newLevel) {
+/** @param {{ hasEcoPowers?: boolean }} options — false: só pontos de atributo em cada nível */
+export function getLevelRewardType(newLevel, { hasEcoPowers = true } = {}) {
   if (newLevel <= 1) return null
+  if (!hasEcoPowers) return 'attribute'
   return newLevel % 2 === 0 ? 'attribute' : 'eco'
+}
+
+/**
+ * Pontos sociais ganhos por nível: +1 por nível de 2 a 15.
+ * Após nível 15, nenhum ponto social adicional.
+ */
+export function getSocialPointsFromLevel(level) {
+  const l = Math.max(1, level)
+  return Math.max(0, Math.min(l - 1, MAX_SOCIAL_LEVEL - 1))
 }
 
 export const MAX_SKILL_TIER = 3

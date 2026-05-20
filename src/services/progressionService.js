@@ -1,16 +1,29 @@
 import {
   MAX_LEVEL,
+  MAX_SOCIAL_LEVEL,
   getXpRequiredForLevel,
   getLevelRewardType,
 } from '../constants/progression'
 import {
   STARTING_ATTRIBUTE_POINTS,
+  STARTING_SOCIAL_POINTS,
+  INITIAL_SOCIAL_MAX,
+  defaultAttributes,
+  defaultSocialAttributes,
   getAttributeMax,
+  getSocialAttributeMax,
   getInitialAttributeMax,
+  getInitialSocialMax,
   getTotalAttributePoints,
+  getTotalSocialPoints,
+  getCreationAttributeFloor,
+  getCreationSocialFloor,
+  isInCreationPhase,
 } from '../constants/attributes'
+import { entityHasEcoPowers } from '../constants/entityProgression'
 import {
   getAttributeBudget,
+  getSocialBudget,
   getEcoPointsFromLevel,
   getEcoSpentOnSkills,
   getProgressionSnapshot,
@@ -23,6 +36,7 @@ import {
 
 export {
   getAttributeBudget,
+  getSocialBudget,
   getAttributePointsFromLevel,
   getEcoPointsFromLevel,
   getEcoSpentOnSkills,
@@ -57,6 +71,7 @@ export function applyXpGain(character, amount) {
   let xp = (character.xp ?? 0) + gain
   let ecoPoints = character.ecoPoints ?? 0
   let pendingAttributePoints = character.pendingAttributePoints ?? 0
+  let pendingSocialPoints = character.pendingSocialPoints ?? 0
   const levelUps = []
 
   while (level < MAX_LEVEL) {
@@ -66,7 +81,7 @@ export function applyXpGain(character, amount) {
     xp -= needed
     level += 1
 
-    const rewardType = getLevelRewardType(level)
+    const rewardType = getLevelRewardType(level, { hasEcoPowers: entityHasEcoPowers(character) })
     if (rewardType === 'attribute') {
       pendingAttributePoints += 1
       levelUps.push({ level, type: 'attribute', message: `Nível ${level}: +1 ponto de atributo` })
@@ -76,6 +91,11 @@ export function applyXpGain(character, amount) {
     } else {
       levelUps.push({ level, type: 'none', message: `Nível ${level}` })
     }
+
+    if (level <= MAX_SOCIAL_LEVEL) {
+      pendingSocialPoints += 1
+      levelUps.push({ level, type: 'social', message: `Nível ${level}: +1 ponto de cena` })
+    }
   }
 
   return {
@@ -84,6 +104,7 @@ export function applyXpGain(character, amount) {
       xp,
       ecoPoints,
       pendingAttributePoints,
+      pendingSocialPoints,
       xpToNextLevel: getXpRequiredForLevel(level),
     },
     levelUps,
@@ -92,6 +113,7 @@ export function applyXpGain(character, amount) {
 
 /** Gasta 1 ponto pendente de level-up em um atributo */
 export function applyPendingAttributePoint(character, attrKey) {
+  if (attrKey === 'ruptura' && !entityHasEcoPowers(character)) return null
   const pending = character.pendingAttributePoints ?? 0
   if (pending <= 0) return null
 
@@ -105,8 +127,47 @@ export function applyPendingAttributePoint(character, attrKey) {
   }
 }
 
-/** Valida distribuição inicial (pool de 10, máx 4 por atributo) */
+/** Criação: exige os 6 pontos sociais iniciais totalmente distribuídos. */
+export function validateStartingSocialDistributed(entity) {
+  const pool = entity.unspentSocialPoints ?? 0
+  const spent = getTotalSocialPoints(entity.socialAttributes)
+  if (pool > 0) {
+    return {
+      ok: false,
+      message: `Distribua os ${pool} ponto(s) restante(s) dos ${STARTING_SOCIAL_POINTS} pontos de cena antes de salvar.`,
+    }
+  }
+  if (spent !== STARTING_SOCIAL_POINTS) {
+    return {
+      ok: false,
+      message: `Distribua exatamente ${STARTING_SOCIAL_POINTS} pontos de cena (você colocou ${spent}).`,
+    }
+  }
+  return { ok: true }
+}
+
+/** Criação: exige os 10 pontos iniciais totalmente distribuídos (pool zerado). */
+export function validateStartingAttributesDistributed(entity) {
+  const pool = entity.unspentAttributePoints ?? 0
+  const spent = getTotalAttributePoints(entity.attributes, entity)
+  if (pool > 0) {
+    return {
+      ok: false,
+      message: `Distribua os ${pool} ponto(s) restante(s) dos ${STARTING_ATTRIBUTE_POINTS} iniciais antes de salvar.`,
+    }
+  }
+  if (spent !== STARTING_ATTRIBUTE_POINTS) {
+    return {
+      ok: false,
+      message: `Distribua exatamente ${STARTING_ATTRIBUTE_POINTS} pontos iniciais (você colocou ${spent}).`,
+    }
+  }
+  return { ok: true }
+}
+
+/** Valida distribuição inicial (pool de 10, máx 4 por atributo). Na criação pode subir e descer redistribuindo o pool. */
 export function applyInitialAttributeChange(entity, attrKey, newValue) {
+  if (attrKey === 'ruptura' && !entityHasEcoPowers(entity)) return null
   const value = Math.max(0, Math.min(getInitialAttributeMax(), Number(newValue) || 0))
   const current = entity.attributes?.[attrKey] ?? 0
   const delta = value - current
@@ -121,60 +182,122 @@ export function applyInitialAttributeChange(entity, attrKey, newValue) {
   }
 }
 
-/** Alteração de atributo fora da criação (pool inicial ou pendente de level) */
+/** Criação social: distribui os 6 pontos iniciais nos atributos de cena. */
+export function applyInitialSocialChange(entity, attrKey, newValue) {
+  const value = Math.max(0, Math.min(getInitialSocialMax(), Number(newValue) || 0))
+  const current = entity.socialAttributes?.[attrKey] ?? 0
+  const delta = value - current
+  const pool = entity.unspentSocialPoints ?? 0
+  if (delta > 0 && pool < delta) return null
+  return {
+    socialAttributes: { ...entity.socialAttributes, [attrKey]: value },
+    unspentSocialPoints: pool - delta,
+  }
+}
+
+/** Gasta 1 ponto social pendente de nível num atributo de cena. */
+export function applyPendingSocialPoint(entity, attrKey) {
+  const pending = entity.pendingSocialPoints ?? 0
+  if (pending <= 0) return null
+  const current = entity.socialAttributes?.[attrKey] ?? 0
+  const max = getSocialAttributeMax(attrKey)
+  if (current >= max) return null
+  return {
+    socialAttributes: { ...entity.socialAttributes, [attrKey]: current + 1 },
+    pendingSocialPoints: pending - 1,
+  }
+}
+
+/**
+ * Fora da criação: só aumenta com pontos pendentes de nível.
+ * Os 10 pts de criação ficam fixos (creationAttributeFloors) — não dá para diminuir.
+ */
 export function applyAttributePointSpend(entity, attrKey, newValue) {
-  const value = Math.max(0, Math.min(getAttributeMax(attrKey), Number(newValue) || 0))
+  if (attrKey === 'ruptura' && !entityHasEcoPowers(entity)) return null
+  const floor = getCreationAttributeFloor(entity, attrKey)
+  const value = Math.max(floor, Math.min(getAttributeMax(attrKey), Number(newValue) || 0))
   const current = entity.attributes?.[attrKey] ?? 0
   const delta = value - current
 
   if (delta === 0) return { attributes: { ...entity.attributes, [attrKey]: value } }
 
-  if (delta < 0) {
-    const returned = Math.abs(delta)
-    return {
-      attributes: { ...entity.attributes, [attrKey]: value },
-      pendingAttributePoints: (entity.pendingAttributePoints ?? 0) + returned,
-    }
-  }
+  if (delta < 0) return null
 
   const pending = entity.pendingAttributePoints ?? 0
-  const creationPool = entity.unspentAttributePoints ?? 0
-  const totalAvailable = pending + creationPool
-
-  if (delta > totalAvailable) return null
-  if (value > getAttributeMax(attrKey)) return null
-
-  let usePending = Math.min(delta, pending)
-  let useCreation = delta - usePending
+  if (delta > pending) return null
 
   return {
     attributes: { ...entity.attributes, [attrKey]: value },
-    pendingAttributePoints: pending - usePending,
-    unspentAttributePoints: creationPool - useCreation,
+    pendingAttributePoints: pending - delta,
   }
 }
 
 export function isCreationPhase(entity) {
-  const spent = Object.values(entity.attributes || {}).reduce((s, v) => s + (Number(v) || 0), 0)
+  return isInCreationPhase(entity)
+}
+
+/**
+ * Congela a distribuição atual dos atributos ao salvar personagem.
+ * Os valores definidos na criação não podem ser reduzidos depois.
+ */
+export function finalizeCreationAttributes(entity, { isNew = false } = {}) {
+  const attrs = { ...defaultAttributes(), ...(entity.attributes || {}) }
   const pool = entity.unspentAttributePoints ?? 0
-  return pool > 0 || spent < STARTING_ATTRIBUTE_POINTS
+  const hasFloors = entity.creationAttributeFloors
+    && typeof entity.creationAttributeFloors === 'object'
+    && getTotalAttributePoints(entity.creationAttributeFloors) > 0
+
+  const socialAttrs = { ...defaultSocialAttributes(), ...(entity.socialAttributes || {}) }
+  const socialPool = entity.unspentSocialPoints ?? 0
+  const hasSocialFloors = entity.creationSocialFloors
+    && typeof entity.creationSocialFloors === 'object'
+
+  const patch = {}
+
+  if (isNew || pool > 0 || !hasFloors) {
+    patch.creationAttributeFloors = attrs
+    patch.unspentAttributePoints = 0
+  } else {
+    patch.unspentAttributePoints = 0
+  }
+
+  if (isNew || socialPool > 0 || !hasSocialFloors) {
+    patch.creationSocialFloors = socialAttrs
+    patch.unspentSocialPoints = 0
+  } else {
+    patch.unspentSocialPoints = 0
+  }
+
+  return patch
 }
 
 /**
  * Modo mestre: altera atributo respeitando orçamento do nível e consumindo/devolvendo pools.
  */
 export function applyMasterAttributeChange(entity, attrKey, newValue) {
+  if (attrKey === 'ruptura' && !entityHasEcoPowers(entity)) return { patch: null, error: { message: 'NPC sem poderes de Eco não possui Ruptura.' } }
   const max = getAttributeMax(attrKey)
-  const value = Math.max(0, Math.min(max, Number(newValue) || 0))
+  const floor = getCreationAttributeFloor(entity, attrKey)
+  const value = Math.max(floor, Math.min(max, Number(newValue) || 0))
   const current = entity.attributes?.[attrKey] ?? 0
   const delta = value - current
+
+  if (value < floor) {
+    return {
+      patch: null,
+      error: {
+        code: 'CREATION_FLOOR',
+        message: `Os ${STARTING_ATTRIBUTE_POINTS} pontos de criação não podem ficar abaixo de ${floor} neste atributo.`,
+      },
+    }
+  }
 
   if (delta === 0) {
     return { patch: { attributes: { ...entity.attributes, [attrKey]: value } } }
   }
 
-  const spent = getTotalAttributePoints(entity.attributes)
-  const budget = getAttributeBudget(entity.level ?? 1)
+  const spent = getTotalAttributePoints(entity.attributes, entity)
+  const budget = getAttributeBudget(entity.level ?? 1, entity)
   const newSpent = spent + delta
 
   if (newSpent > budget) {
@@ -235,23 +358,10 @@ export function buildMasterProgressionPatch(entity, data = {}) {
     xpVal = Math.max(0, neededXp - 1)
   }
 
-  const draft = {
-    ...entity,
-    level,
-    xp: xpVal,
-    ecoPoints: data.ecoPoints !== undefined ? Math.max(0, Number(data.ecoPoints) || 0) : entity.ecoPoints ?? 0,
-    pendingAttributePoints: data.pendingAttributePoints !== undefined
-      ? Math.max(0, Number(data.pendingAttributePoints) || 0)
-      : entity.pendingAttributePoints ?? 0,
-    unspentAttributePoints: data.unspentAttributePoints !== undefined
-      ? Math.max(0, Number(data.unspentAttributePoints) || 0)
-      : entity.unspentAttributePoints ?? 0,
-  }
-
   const levelChanged = level !== (entity.level ?? 1)
   if (levelChanged) {
-    const spent = getTotalAttributePoints(entity.attributes)
-    const newBudget = getAttributeBudget(level)
+    const spent = getTotalAttributePoints(entity.attributes, entity)
+    const newBudget = getAttributeBudget(level, entity)
     if (spent > newBudget) {
       return {
         patch: null,
@@ -263,6 +373,35 @@ export function buildMasterProgressionPatch(entity, data = {}) {
     }
   }
 
+  const explicitPools = data.pendingAttributePoints !== undefined
+    || data.unspentAttributePoints !== undefined
+    || data.ecoPoints !== undefined
+
+  let draft
+  if (levelChanged && !explicitPools) {
+    const synced = syncProgressionToLevel({ ...entity, level, xp: xpVal })
+    if (synced.error) return { patch: null, error: synced.error }
+    draft = {
+      ...entity,
+      level,
+      xp: xpVal,
+      ...synced.patch,
+    }
+  } else {
+    draft = {
+      ...entity,
+      level,
+      xp: xpVal,
+      ecoPoints: data.ecoPoints !== undefined ? Math.max(0, Number(data.ecoPoints) || 0) : entity.ecoPoints ?? 0,
+      pendingAttributePoints: data.pendingAttributePoints !== undefined
+        ? Math.max(0, Number(data.pendingAttributePoints) || 0)
+        : entity.pendingAttributePoints ?? 0,
+      unspentAttributePoints: data.unspentAttributePoints !== undefined
+        ? Math.max(0, Number(data.unspentAttributePoints) || 0)
+        : entity.unspentAttributePoints ?? 0,
+    }
+  }
+
   const { patch: capped, error: capError } = enforceProgressionCaps(draft)
   if (capError) return { patch: null, error: capError }
 
@@ -271,7 +410,7 @@ export function buildMasterProgressionPatch(entity, data = {}) {
     return { patch: null, error: validation.errors[0] }
   }
 
-  const ecoBudget = getEcoPointsFromLevel(level)
+  const ecoBudget = getEcoPointsFromLevel(level, entity)
   const ecoSpent = getEcoSpentOnSkills(entity.skills)
   const maxEco = Math.max(0, ecoBudget - ecoSpent)
 

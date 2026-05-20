@@ -1,12 +1,20 @@
 import { create } from 'zustand'
 import { storage, KEYS } from '../services/storage'
 import { genId } from '../utils/id'
-import { normalizeGameEntity, STARTING_ATTRIBUTE_POINTS, defaultAttributes } from '../constants/attributes'
+import {
+  normalizeGameEntity,
+  STARTING_ATTRIBUTE_POINTS,
+  STARTING_SOCIAL_POINTS,
+  defaultAttributes,
+  defaultSocialAttributes,
+} from '../constants/attributes'
 import {
   applyXpGain,
   applyPendingAttributePoint,
+  applyPendingSocialPoint,
   applyInitialAttributeChange,
   applyAttributePointSpend,
+  validateStartingAttributesDistributed,
   applyMasterAttributeChange,
   buildMasterProgressionPatch,
   syncProgressionToLevel,
@@ -20,8 +28,9 @@ import {
   advanceCharacterTurn,
   buildSkillInstanceFromCatalog,
 } from '../services/ecoSkillRuntimeService'
-import { getCatalogSkill } from '../services/skillsCatalogService'
+import { catalogSkillAllowedForEntity, getCatalogSkill } from '../services/skillsCatalogService'
 import { enforceProgressionCaps } from '../services/progressionBudget'
+import { archiveEntity, TRASH_TYPES } from '../services/trashService'
 import {
   applyDamageMarks as applyDamageMarksEngine,
   clearDamageMarks as clearDamageMarksEngine,
@@ -65,20 +74,28 @@ export const useCharacterStore = create((set, get) => ({
   },
 
   addCharacter(data) {
+    const preCheck = validateStartingAttributesDistributed(data)
+    if (!preCheck.ok) return null
     const character = normalizeGameEntity({
+      ...data,
       id: genId(),
       campaignId: data.campaignId || null,
       name: data.name || 'Novo Personagem',
       image: data.image || '',
       description: data.description || '',
       narrativeStatus: data.narrativeStatus || '',
-      level: 1,
-      xp: 0,
-      ecoPoints: 0,
-      pendingAttributePoints: 0,
-      skills: [],
-      attributes: defaultAttributes(),
-      unspentAttributePoints: STARTING_ATTRIBUTE_POINTS,
+      level: data.level ?? 1,
+      xp: data.xp ?? 0,
+      ecoPoints: data.ecoPoints ?? 0,
+      pendingAttributePoints: data.pendingAttributePoints ?? 0,
+      pendingSocialPoints: data.pendingSocialPoints ?? 0,
+      skills: data.skills ?? [],
+      attributes: { ...defaultAttributes(), ...(data.attributes || {}) },
+      unspentAttributePoints: data.unspentAttributePoints ?? 0,
+      creationAttributeFloors: data.creationAttributeFloors,
+      socialAttributes: { ...defaultSocialAttributes(), ...(data.socialAttributes || {}) },
+      unspentSocialPoints: data.unspentSocialPoints ?? 0,
+      creationSocialFloors: data.creationSocialFloors,
       physicalState: data.physicalState || 'bem',
       mentalState: data.mentalState || 'estavel',
       inventory: data.inventory || [],
@@ -170,6 +187,27 @@ export const useCharacterStore = create((set, get) => ({
     const patch = applyPendingAttributePoint(c, attrKey)
     if (!patch) return false
     patchCharacter(get, set, characterId, ch => ({ ...ch, ...patch }))
+    return true
+  },
+
+  spendPendingSocialAttribute(characterId, attrKey) {
+    const c = get().characters.find(ch => ch.id === characterId)
+    if (!c) return false
+    const patch = applyPendingSocialPoint(c, attrKey)
+    if (!patch) return false
+    patchCharacter(get, set, characterId, ch => ({ ...ch, ...patch }))
+    return true
+  },
+
+  changeSocialAttribute(characterId, attrKey, newValue) {
+    const c = get().characters.find(ch => ch.id === characterId)
+    if (!c) return false
+    const max = 8
+    const value = Math.max(0, Math.min(max, Number(newValue) || 0))
+    patchCharacter(get, set, characterId, ch => ({
+      ...ch,
+      socialAttributes: { ...ch.socialAttributes, [attrKey]: value },
+    }))
     return true
   },
 
@@ -324,6 +362,9 @@ export const useCharacterStore = create((set, get) => ({
     if (!getCatalogSkill(templateId)) {
       return { ok: false, message: 'Habilidade não existe no catálogo.' }
     }
+    if (!catalogSkillAllowedForEntity(templateId, c)) {
+      return { ok: false, message: 'Esta habilidade é exclusiva de NPCs.' }
+    }
     if ((c.skills || []).some(s => s.templateId === templateId)) {
       return { ok: false, message: 'Personagem já possui esta habilidade.' }
     }
@@ -345,9 +386,9 @@ export const useCharacterStore = create((set, get) => ({
   },
 
   deleteCharacter(id) {
-    const characters = get().characters.filter(c => c.id !== id)
-    persist(characters)
-    set({ characters })
+    const character = get().characters.find(c => c.id === id)
+    if (!character) return
+    archiveEntity(TRASH_TYPES.character, character)
   },
 
   addInventoryItem(characterId, item) {

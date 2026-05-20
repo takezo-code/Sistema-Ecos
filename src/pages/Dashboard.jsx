@@ -147,7 +147,7 @@ export function Dashboard({ onNavigate }) {
             <div style={{ fontSize: '0.8rem', color: '#333' }}>
               Nenhuma campanha ativa. Selecione uma em <span style={{ color: '#555' }}>Campanhas</span>.
             </div>
-            <button className="btn-primary" style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }} onClick={() => onNavigate('campaigns')}>
+            <button className="btn-primary" style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }} onClick={() => onNavigate('campanha', 'historia')}>
               <Plus size={12} style={{ display: 'inline', marginRight: '4px' }} />
               Criar
             </button>
@@ -172,7 +172,7 @@ export function Dashboard({ onNavigate }) {
                 <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#999' }}>ÚLTIMAS SESSÕES</span>
               </div>
               <button
-                onClick={() => onNavigate('sessions')}
+                onClick={() => onNavigate('campanha', 'sessoes')}
                 style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', fontSize: '0.65rem', fontFamily: 'monospace' }}
                 onMouseEnter={e => e.currentTarget.style.color = '#666'}
                 onMouseLeave={e => e.currentTarget.style.color = '#333'}
@@ -209,7 +209,7 @@ export function Dashboard({ onNavigate }) {
                 <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#999' }}>PRÓXIMOS EVENTOS</span>
               </div>
               <button
-                onClick={() => onNavigate('campaigns')}
+                onClick={() => onNavigate('campanha', 'historia')}
                 style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', fontSize: '0.65rem', fontFamily: 'monospace' }}
                 onMouseEnter={e => e.currentTarget.style.color = '#666'}
                 onMouseLeave={e => e.currentTarget.style.color = '#333'}
@@ -245,7 +245,7 @@ export function Dashboard({ onNavigate }) {
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#999' }}>NPCs RECENTES</span>
             </div>
             <button
-              onClick={() => onNavigate('creation', 'npcs')}
+              onClick={() => onNavigate('management', 'npcs')}
               style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', fontSize: '0.65rem', fontFamily: 'monospace' }}
               onMouseEnter={e => e.currentTarget.style.color = '#666'}
               onMouseLeave={e => e.currentTarget.style.color = '#333'}
@@ -285,13 +285,13 @@ export function Dashboard({ onNavigate }) {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.5rem' }}>
             <QuickCard icon={UserCircle} label="Skills" color="#a855f7" onClick={() => onNavigate('skills')} />
-            <QuickCard icon={BookOpen} label="Nova Campanha" color="#dc2626" onClick={() => onNavigate('campaigns')} />
-            <QuickCard icon={Skull} label="Novo NPC" color="#06b6d4" onClick={() => onNavigate('creation', 'npcs')} />
-            <QuickCard icon={Sword} label="Novo Personagem" color="#9ca3af" onClick={() => onNavigate('creation', 'characters')} />
-            <QuickCard icon={Building2} label="Nova Organização" color="#d97706" onClick={() => onNavigate('creation', 'organizations')} />
-            <QuickCard icon={ScrollText} label="Nova Sessão" color="#16a34a" onClick={() => onNavigate('sessions')} />
+            <QuickCard icon={BookOpen} label="Nova Campanha" color="#dc2626" onClick={() => onNavigate('campanha', 'historia')} />
+            <QuickCard icon={Skull} label="Novo NPC" color="#06b6d4" onClick={() => onNavigate('management', 'creation', 'npcs')} />
+            <QuickCard icon={Sword} label="Novo Personagem" color="#9ca3af" onClick={() => onNavigate('management', 'creation', 'characters')} />
+            <QuickCard icon={Building2} label="Nova Organização" color="#d97706" onClick={() => onNavigate('management', 'creation', 'organizations')} />
+            <QuickCard icon={ScrollText} label="Nova Sessão" color="#16a34a" onClick={() => onNavigate('campanha', 'sessoes')} />
             <QuickCard icon={Dices} label="Rolar Dados" color="#a855f7" onClick={() => onNavigate('dice')} />
-            <QuickCard icon={Users} label="Gerenciar Fichas" color="#e5e5e5" onClick={() => onNavigate('management')} />
+            <QuickCard icon={Users} label="Gerenciar" color="#e5e5e5" onClick={() => onNavigate('management')} />
           </div>
         </div>
       </div>

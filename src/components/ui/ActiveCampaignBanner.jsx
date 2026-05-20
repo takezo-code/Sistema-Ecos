@@ -36,7 +36,7 @@ export function ActiveCampaignBanner({ onNavigate }) {
       {onNavigate && (
         <button
           type="button"
-          onClick={() => onNavigate('campaigns')}
+          onClick={() => onNavigate('campanha', 'historia')}
           style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', textDecoration: 'underline', fontSize: 'inherit' }}
         >
           Selecione uma em Campanhas

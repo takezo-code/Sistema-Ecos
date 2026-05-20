@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Sparkles, ChevronUp, ChevronDown } from 'lucide-react'
 import { Input } from '../ui/Field'
-import { MAX_LEVEL } from '../../constants/progression'
+import { MAX_LEVEL, COMBAT_HIGHLIGHT_XP } from '../../constants/progression'
 import { getXpProgress } from '../../services/progressionService'
 import { getProgressionSnapshot, validateProgression } from '../../services/progressionBudget'
+import { entityHasEcoPowers, isNpcEntity } from '../../constants/entityProgression'
+import { isInCreationPhase, STARTING_ATTRIBUTE_POINTS } from '../../constants/attributes'
 
 function AdminStepper({ label, value, min, max, onChange, color = '#e5e5e5' }) {
   const atMin = value <= min
@@ -30,6 +32,7 @@ export function ProgressionSection({
   entity,
   levelUps = [],
   adminMode = false,
+  onAddXp,
   onMasterProgression,
   onSyncProgression,
   onClampAuxiliary,
@@ -37,18 +40,39 @@ export function ProgressionSection({
   masterError,
 }) {
   const [xpDirect, setXpDirect] = useState(String(entity.xp ?? 0))
+  const [levelDirect, setLevelDirect] = useState(String(entity.level ?? 1))
   useEffect(() => {
     setXpDirect(String(entity.xp ?? 0))
   }, [entity.id, entity.xp])
+  useEffect(() => {
+    setLevelDirect(String(entity.level ?? 1))
+  }, [entity.id, entity.level])
   const level = entity.level ?? 1
   const progress = getXpProgress(entity)
   const atMax = level >= MAX_LEVEL
-  const snapshot = adminMode ? getProgressionSnapshot(entity) : null
+  const snapshot = getProgressionSnapshot(entity)
   const validation = adminMode ? validateProgression(entity) : null
+  const pending = entity.pendingAttributePoints ?? 0
+  const pool = entity.unspentAttributePoints ?? 0
+  const hasEco = entityHasEcoPowers(entity)
+  const inCreation = isInCreationPhase(entity)
+  const showCreationPool = inCreation && pool > 0
+  const isNpc = isNpcEntity(entity)
+
+  const applyLevelAndSync = (nextLevel) => {
+    const next = Math.min(MAX_LEVEL, Math.max(1, nextLevel))
+    setLevelDirect(String(next))
+    onMasterProgression?.({ level: next })
+    queueMicrotask(() => onSyncProgression?.())
+  }
 
   const applyXpDirect = () => {
     const xp = Math.max(0, parseInt(xpDirect, 10) || 0)
     onMasterProgression?.({ xp })
+  }
+
+  const applyLevelDirect = () => {
+    applyLevelAndSync(parseInt(levelDirect, 10) || 1)
   }
 
   return (
@@ -87,107 +111,195 @@ export function ProgressionSection({
           )}
         </div>
 
-        <div style={{ background: '#0d0d0d', border: '1px solid rgba(168,85,247,0.15)', borderRadius: '4px', padding: '0.75rem 1rem', minWidth: '80px' }}>
-          <div style={{ fontSize: '0.6rem', color: '#a855f7', fontFamily: 'monospace', marginBottom: '4px' }}>ECOS</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#e5e5e5' }}>{entity.ecoPoints ?? 0}</div>
-        </div>
+        {hasEco && (
+          <div style={{ background: '#0d0d0d', border: '1px solid rgba(168,85,247,0.15)', borderRadius: '4px', padding: '0.75rem 1rem', minWidth: '80px' }}>
+            <div style={{ fontSize: '0.6rem', color: '#a855f7', fontFamily: 'monospace', marginBottom: '4px' }}>ECOS</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#e5e5e5' }}>{entity.ecoPoints ?? 0}</div>
+          </div>
+        )}
       </div>
 
-      {adminMode && snapshot && (
+      {!adminMode && (pending > 0 || pool > 0 || (entity.ecoPoints ?? 0) > 0 || (entity.pendingSocialPoints ?? 0) > 0) && (
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
           gap: '0.5rem',
+          marginBottom: '0.75rem',
+          padding: '0.625rem 0.75rem',
+          background: '#0d0d0d',
+          border: '1px solid #1a1a1a',
+          borderRadius: '4px',
+        }}>
+          <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', width: '100%', marginBottom: '2px' }}>
+            PONTOS DISPONÍVEIS
+          </div>
+          {pending > 0 && (
+            <span style={{ fontSize: '0.7rem', color: '#d97706', fontFamily: 'monospace' }}>
+              {pending} ponto(s) de atributo pendente(s)
+            </span>
+          )}
+          {(entity.pendingSocialPoints ?? 0) > 0 && (
+            <span style={{ fontSize: '0.7rem', color: '#e879f9', fontFamily: 'monospace' }}>
+              {entity.pendingSocialPoints} ponto(s) de cena pendente(s)
+            </span>
+          )}
+          {pool > 0 && (
+            <span style={{ fontSize: '0.7rem', color: '#16a34a', fontFamily: 'monospace' }}>
+              {pool} ponto(s) de criação
+            </span>
+          )}
+          {hasEco && (entity.ecoPoints ?? 0) > 0 && (
+            <span style={{ fontSize: '0.7rem', color: '#a855f7', fontFamily: 'monospace' }}>
+              {entity.ecoPoints} Eco(s) para skills
+            </span>
+          )}
+        </div>
+      )}
+
+      {adminMode && snapshot && (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
           marginBottom: '1rem',
           padding: '0.75rem',
           background: 'rgba(217,119,6,0.05)',
           border: '1px solid rgba(217,119,6,0.15)',
           borderRadius: '4px',
         }}>
-          <AdminStepper
-            label="NÍVEL"
-            value={level}
-            min={1}
-            max={MAX_LEVEL}
-            color="#a855f7"
-            onChange={v => onMasterProgression?.({ level: v })}
-          />
-          <AdminStepper
-            label={`ECOS (máx ${snapshot.maxEcoFree})`}
-            value={entity.ecoPoints ?? 0}
-            min={0}
-            max={snapshot.maxEcoFree}
-            color="#a855f7"
-            onChange={v => onMasterProgression?.({ ecoPoints: v })}
-          />
-          <AdminStepper
-            label={`PTS PEND. (máx ${snapshot.maxPending})`}
-            value={entity.pendingAttributePoints ?? 0}
-            min={0}
-            max={snapshot.maxPending}
-            color="#d97706"
-            onChange={v => onMasterProgression?.({ pendingAttributePoints: v })}
-          />
-          <AdminStepper
-            label="PTS CRIAÇÃO"
-            value={entity.unspentAttributePoints ?? 0}
-            min={0}
-            max={Math.max(0, snapshot.available - (entity.pendingAttributePoints ?? 0))}
-            color="#16a34a"
-            onChange={v => onMasterProgression?.({ unspentAttributePoints: v })}
-          />
-          <div style={{ flex: '1 1 180px', minWidth: '180px' }}>
-            <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', marginBottom: '4px' }}>XP ATUAL</div>
-            <div style={{ display: 'flex', gap: '0.35rem' }}>
-              <Input
-                type="number"
-                min="0"
-                value={xpDirect}
-                onChange={e => setXpDirect(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), applyXpDirect())}
-                style={{ flex: 1 }}
-              />
-              <button type="button" className="btn-ghost" onClick={applyXpDirect} style={{ fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
-                Aplicar
-              </button>
-            </div>
-          </div>
-          <div style={{ flex: '1 1 100%', display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.25rem' }}>
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={onSyncProgression}
-              disabled={validation?.valid === false && snapshot.spent > snapshot.budget}
-              style={{ flex: 1, fontSize: '0.7rem', minWidth: '140px' }}
-              title="Recalcula pools e ecos (requer atributos válidos)"
-            >
-              Sincronizar pontos ao nível
-            </button>
-            {validation && !validation.valid && (
-              <>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'flex-end' }}>
+            <div style={{ flex: '1 1 140px', minWidth: '140px' }}>
+              <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', marginBottom: '4px' }}>ALTERAR NÍVEL</div>
+              <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
                 <button
                   type="button"
-                  className="btn-ghost"
-                  onClick={onClampAuxiliary}
-                  style={{ flex: 1, fontSize: '0.7rem', minWidth: '140px', color: '#d97706' }}
-                  title="Ajusta XP, Ecos e pools ao teto do nível"
+                  disabled={level <= 1}
+                  onClick={() => applyLevelAndSync(level - 1)}
+                  style={{ background: '#1a1a1a', border: 'none', color: level <= 1 ? '#222' : '#666', cursor: level <= 1 ? 'not-allowed' : 'pointer', padding: '6px 8px', borderRadius: '2px', display: 'flex' }}
                 >
-                  Corrigir XP / Ecos / pools
+                  <ChevronDown size={14} />
                 </button>
-                {snapshot.spent > snapshot.budget && (
+                <Input
+                  type="number"
+                  min="1"
+                  max={MAX_LEVEL}
+                  value={levelDirect}
+                  onChange={e => setLevelDirect(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), applyLevelDirect())}
+                  style={{ width: '56px', textAlign: 'center' }}
+                />
+                <button
+                  type="button"
+                  disabled={level >= MAX_LEVEL}
+                  onClick={() => applyLevelAndSync(level + 1)}
+                  style={{ background: '#1a1a1a', border: 'none', color: level >= MAX_LEVEL ? '#222' : '#666', cursor: level >= MAX_LEVEL ? 'not-allowed' : 'pointer', padding: '6px 8px', borderRadius: '2px', display: 'flex' }}
+                >
+                  <ChevronUp size={14} />
+                </button>
+                <button type="button" className="btn-secondary" onClick={applyLevelDirect} style={{ fontSize: '0.7rem' }}>
+                  Aplicar
+                </button>
+              </div>
+            </div>
+            <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
+              <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', marginBottom: '4px' }}>XP ATUAL</div>
+              <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                <Input
+                  type="number"
+                  min="0"
+                  value={xpDirect}
+                  onChange={e => setXpDirect(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), applyXpDirect())}
+                  style={{ flex: 1, minWidth: '72px' }}
+                />
+                <button type="button" className="btn-ghost" onClick={applyXpDirect} style={{ fontSize: '0.7rem' }}>
+                  Aplicar
+                </button>
+                {onAddXp && (
                   <button
                     type="button"
                     className="btn-primary"
-                    onClick={onScaleAttributes}
-                    style={{ flex: '1 1 100%', fontSize: '0.7rem' }}
-                    title="Reduz atributos excedentes e sincroniza"
+                    onClick={() => onAddXp(COMBAT_HIGHLIGHT_XP)}
+                    disabled={atMax}
+                    style={{ fontSize: '0.7rem', opacity: atMax ? 0.5 : 1 }}
                   >
-                    Ajustar atributos ao teto ({snapshot.budget} pts)
+                    +{COMBAT_HIGHLIGHT_XP} XP
                   </button>
                 )}
-              </>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.5rem' }}>
+            <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '4px', padding: '0.625rem 0.75rem' }}>
+              <div style={{ fontSize: '0.55rem', color: '#444', fontFamily: 'monospace' }}>ATRIBUTOS (NÍVEL)</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: snapshot.spent > snapshot.budget ? '#dc2626' : '#e5e5e5' }}>
+                {snapshot.spent}<span style={{ fontSize: '0.7rem', color: '#555' }}> / {snapshot.budget}</span>
+              </div>
+              <div style={{ fontSize: '0.55rem', color: '#333', marginTop: '2px' }}>
+                {STARTING_ATTRIBUTE_POINTS} criação + {Math.max(0, snapshot.budget - STARTING_ATTRIBUTE_POINTS)} nível
+              </div>
+            </div>
+            <div style={{
+              background: pending > 0 ? 'rgba(217,119,6,0.08)' : '#0d0d0d',
+              border: `1px solid ${pending > 0 ? 'rgba(217,119,6,0.25)' : '#1a1a1a'}`,
+              borderRadius: '4px',
+              padding: '0.625rem 0.75rem',
+            }}>
+              <div style={{ fontSize: '0.55rem', color: '#d97706', fontFamily: 'monospace' }}>PARA DISTRIBUIR</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: pending > 0 ? '#d97706' : '#555' }}>{pending}</div>
+              <div style={{ fontSize: '0.55rem', color: '#333', marginTop: '2px' }}>máx. {snapshot.maxPending} pelo nv.{level}</div>
+            </div>
+            {hasEco && (
+              <div style={{ background: '#0d0d0d', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '4px', padding: '0.625rem 0.75rem' }}>
+                <div style={{ fontSize: '0.55rem', color: '#a855f7', fontFamily: 'monospace' }}>ECOS LIVRES</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e5e5e5' }}>{snapshot.ecoFree}</div>
+                <div style={{ fontSize: '0.55rem', color: '#333', marginTop: '2px' }}>máx. {snapshot.maxEcoFree} · {snapshot.ecoSpent} em skills</div>
+              </div>
             )}
           </div>
+
+          {pending > 0 && !showCreationPool && (
+            <p style={{ fontSize: '0.75rem', color: '#888', margin: 0, lineHeight: 1.5 }}>
+              Use as setas na <strong style={{ color: '#d97706' }}>grade de atributos abaixo</strong> para gastar os {pending} ponto(s) pendentes.
+              {isNpc && ' Os pontos de criação já foram definidos ao criar o NPC.'}
+            </p>
+          )}
+
+          {showCreationPool && (
+            <AdminStepper
+              label="PTS DE CRIAÇÃO (ficha nova)"
+              value={pool}
+              min={0}
+              max={Math.max(0, STARTING_ATTRIBUTE_POINTS - snapshot.spent + pool)}
+              color="#16a34a"
+              onChange={v => onMasterProgression?.({ unspentAttributePoints: v })}
+            />
+          )}
+
+          {hasEco && snapshot.maxEcoFree > 0 && (
+            <AdminStepper
+              label={`AJUSTAR ECOS (máx ${snapshot.maxEcoFree})`}
+              value={entity.ecoPoints ?? 0}
+              min={0}
+              max={snapshot.maxEcoFree}
+              color="#a855f7"
+              onChange={v => onMasterProgression?.({ ecoPoints: v })}
+            />
+          )}
+
+          {validation && !validation.valid && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+              <button type="button" className="btn-ghost" onClick={onClampAuxiliary} style={{ fontSize: '0.7rem', color: '#d97706' }}>
+                Corrigir XP / Ecos
+              </button>
+              {snapshot.spent > snapshot.budget && (
+                <button type="button" className="btn-primary" onClick={onScaleAttributes} style={{ fontSize: '0.7rem' }}>
+                  Ajustar atributos ({snapshot.budget} pts)
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -207,8 +319,9 @@ export function ProgressionSection({
 
       {adminMode && snapshot && (
         <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', marginBottom: '0.75rem' }}>
-          Orçamento nv.{level}: {snapshot.budget} pts status · {snapshot.ecoBudget} Ecos
-          {snapshot.ecoSpent > 0 && ` (${snapshot.ecoSpent} em habilidades)`}
+          Nv.{level}: até {snapshot.budget} pts em atributos
+          {hasEco ? ` · ${snapshot.ecoBudget} Ecos no nível` : ' · sem Ecos (só atributos)'}
+          {snapshot.ecoSpent > 0 && ` · ${snapshot.ecoSpent} Eco(s) em skills`}
         </div>
       )}
 
@@ -217,7 +330,7 @@ export function ProgressionSection({
           {levelUps.map((lu, i) => (
             <div key={i} style={{
               fontSize: '0.75rem',
-              color: lu.type === 'eco' ? '#a855f7' : '#16a34a',
+              color: lu.type === 'eco' ? '#a855f7' : lu.type === 'social' ? '#e879f9' : '#16a34a',
               background: 'rgba(255,255,255,0.03)',
               border: '1px solid #1a1a1a',
               borderRadius: '3px',

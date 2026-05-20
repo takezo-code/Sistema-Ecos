@@ -1,20 +1,30 @@
 import React from 'react'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import {
-  ATTRIBUTES,
   STARTING_ATTRIBUTE_POINTS,
+  STARTING_SOCIAL_POINTS,
+  SOCIAL_ATTRIBUTES,
   getTotalAttributePoints,
+  getTotalSocialPoints,
   getAttributeMax,
+  getSocialAttributeMax,
   getInitialAttributeMax,
+  getInitialSocialMax,
+  getCreationAttributeFloor,
+  getCreationSocialFloor,
+  isInCreationPhase,
+  isInSocialCreationPhase,
 } from '../../constants/attributes'
+import { getAttributesForEntity } from '../../constants/entityProgression'
 import {
   calculateEffectiveAttributes,
   formatPhysicalPenalty,
   formatMentalPenaltiesSummary,
 } from '../../services/stateModifiers'
-import { getProgressionSnapshot, validateProgression } from '../../services/progressionBudget'
+import { getProgressionSnapshot, validateProgression, getSocialBudget } from '../../services/progressionBudget'
+import { getSocialPointsFromLevel } from '../../constants/progression'
 
-function AttributeInput({ attr, value, effectiveValue, max, showMax, onChange, canIncrease }) {
+function AttributeInput({ attr, value, effectiveValue, max, showMax, onChange, canIncrease, canDecrease }) {
   const modified = effectiveValue != null && effectiveValue !== value
 
   return (
@@ -57,12 +67,12 @@ function AttributeInput({ attr, value, effectiveValue, max, showMax, onChange, c
           <ChevronUp size={12} />
         </button>
         <button type="button"
-          onClick={() => onChange(value - 1)}
-          disabled={value <= 0}
+          onClick={() => canDecrease && onChange(value - 1)}
+          disabled={!canDecrease}
           style={{
             background: '#1a1a1a', border: 'none',
-            color: value > 0 ? '#666' : '#222',
-            cursor: value > 0 ? 'pointer' : 'not-allowed',
+            color: canDecrease ? '#666' : '#222',
+            cursor: canDecrease ? 'pointer' : 'not-allowed',
             padding: '3px 6px', borderRadius: '2px', display: 'flex',
           }}
         >
@@ -73,13 +83,26 @@ function AttributeInput({ attr, value, effectiveValue, max, showMax, onChange, c
   )
 }
 
-export function AttributeGrid({ entity, onChange, isCreation = false, onSpendPending, adminMode = false }) {
+export function AttributeGrid({
+  entity,
+  onChange,
+  onChangeSocial,
+  isCreation = false,
+  onSpendPending,
+  onSpendPendingSocial,
+  adminMode = false,
+}) {
   const pool = entity.unspentAttributePoints ?? 0
   const pending = entity.pendingAttributePoints ?? 0
-  const spent = getTotalAttributePoints(entity.attributes)
+  const pendingSocial = entity.pendingSocialPoints ?? 0
+  const socialPool = entity.unspentSocialPoints ?? 0
+  const attrList = getAttributesForEntity(entity)
+  const spent = getTotalAttributePoints(entity.attributes, entity)
+  const socialSpent = getTotalSocialPoints(entity.socialAttributes)
   const snapshot = adminMode ? getProgressionSnapshot(entity) : null
   const validation = adminMode ? validateProgression(entity) : null
-  const rupture = entity.attributes?.ruptura ?? 0
+  const level = entity.level ?? 1
+  const socialBudget = adminMode ? getSocialBudget(level) : null
   const physicalState = entity.physicalState ?? 'bem'
   const mentalState = entity.mentalState ?? 'estavel'
   const ecoOverload = entity.ecoOverload ?? 0
@@ -106,6 +129,21 @@ export function AttributeGrid({ entity, onChange, isCreation = false, onSpendPen
     onChange?.(key, newVal, { isCreation })
   }
 
+  const handleSocialChange = (key, newVal) => {
+    if (adminMode) {
+      onChangeSocial?.(key, newVal, { admin: true })
+      return
+    }
+    if (onSpendPendingSocial && pendingSocial > 0) {
+      const current = entity.socialAttributes?.[key] ?? 0
+      if (newVal === current + 1 && newVal <= getSocialAttributeMax(key)) {
+        onSpendPendingSocial(key)
+        return
+      }
+    }
+    onChangeSocial?.(key, newVal, { isCreation })
+  }
+
   const canIncreaseAttr = (key, value) => {
     const max = isCreation ? getInitialAttributeMax() : getAttributeMax(key)
     if (value >= max) return false
@@ -113,14 +151,39 @@ export function AttributeGrid({ entity, onChange, isCreation = false, onSpendPen
       return (pool + pending) > 0 && spent < snapshot.budget
     }
     if (isCreation) return pool > 0
-    return pending > 0 || pool > 0
+    return pending > 0
+  }
+
+  const canIncreaseSocialAttr = (key, value) => {
+    const max = isCreation ? getInitialSocialMax() : getSocialAttributeMax(key)
+    if (value >= max) return false
+    if (adminMode) {
+      return socialSpent < socialBudget
+    }
+    if (isCreation) return socialPool > 0
+    return pendingSocial > 0
+  }
+
+  const getCanDecrease = (key, value) => {
+    if (isCreation) return value > 0
+    const floor = getCreationAttributeFloor(entity, key)
+    if (adminMode) return value > floor
+    return false
+  }
+
+  const getCanDecreaseSocial = (key, value) => {
+    if (isCreation) return value > 0
+    const floor = getCreationSocialFloor(entity, key)
+    if (adminMode) return value > floor
+    return false
   }
 
   return (
     <div>
+      {/* ATRIBUTOS FÍSICOS */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
         <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-          PONTOS DE STATUS
+          ATRIBUTOS FÍSICOS
           {adminMode && (
             <span style={{ marginLeft: '0.5rem', color: '#d97706', fontSize: '0.6rem' }}>· MODO MESTRE</span>
           )}
@@ -131,26 +194,27 @@ export function AttributeGrid({ entity, onChange, isCreation = false, onSpendPen
               <span style={{ color: '#16a34a' }}>{pool}</span>
               <span style={{ color: '#333' }}> livres · </span>
               <span style={{ color: '#888' }}>{spent}/{STARTING_ATTRIBUTE_POINTS}</span>
-              <span style={{ color: '#333' }}> · máx {getInitialAttributeMax()}/atributo na criação</span>
+              <span style={{ color: '#333' }}> · máx {getInitialAttributeMax()}/atrib.</span>
             </>
           ) : adminMode && snapshot ? (
             <>
               <span style={{ color: spent > snapshot.budget ? '#dc2626' : '#888' }}>
                 {spent}/{snapshot.budget} usados
               </span>
-              <span style={{ color: '#333' }}> · </span>
-              <span style={{ color: '#16a34a' }}>{snapshot.available} livre(s)</span>
               {pending > 0 && <span style={{ color: '#d97706' }}> · {pending} pend.</span>}
-              {pool > 0 && <span style={{ color: '#16a34a' }}> · {pool} criação</span>}
             </>
           ) : (
             <>
-              {pending > 0 && <span style={{ color: '#d97706' }}>{pending} pendente(s) · </span>}
-              {pool > 0 && <span style={{ color: '#16a34a' }}>{pool} criação · </span>}
-              <span style={{ color: '#d97706' }}>Ruptura +{rupture}% Ecos</span>
-              {physicalPenalty && <span style={{ color: '#ea580c' }}> · {physicalPenalty}</span>}
-              {mentalPenalties.compactLine && (
-                <span style={{ color: '#06b6d4' }}> · {mentalPenalties.compactLine}</span>
+              {physicalPenalty && <span style={{ color: '#ea580c' }}>{physicalPenalty}</span>}
+              {mentalPenalties.skillPowerLine && (
+                <span style={{ color: '#06b6d4' }}>
+                  {physicalPenalty ? ' · ' : ''}{mentalPenalties.skillPowerLine}
+                </span>
+              )}
+              {mentalPenalties.mentalAttrLine && (
+                <span style={{ color: '#06b6d4' }}>
+                  {(physicalPenalty || mentalPenalties.skillPowerLine) ? ' · ' : ''}{mentalPenalties.mentalAttrLine}
+                </span>
               )}
             </>
           )}
@@ -169,8 +233,8 @@ export function AttributeGrid({ entity, onChange, isCreation = false, onSpendPen
           {validation.errors[0]?.message}
         </div>
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.5rem' }}>
-        {ATTRIBUTES.map(attr => {
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.5rem', marginBottom: '1.25rem' }}>
+        {attrList.map(attr => {
           const value = entity.attributes?.[attr.key] || 0
           const max = isCreation ? getInitialAttributeMax() : getAttributeMax(attr.key)
           const baseVal = entity.attributes?.[attr.key] || 0
@@ -184,7 +248,59 @@ export function AttributeGrid({ entity, onChange, isCreation = false, onSpendPen
               max={max}
               showMax={!isCreation}
               canIncrease={canIncreaseAttr(attr.key, value)}
-              onChange={v => handleChange(attr.key, Math.max(0, Math.min(max, v)))}
+              canDecrease={getCanDecrease(attr.key, value)}
+              onChange={v => {
+                const floor = isCreation ? 0 : getCreationAttributeFloor(entity, attr.key)
+                handleChange(attr.key, Math.max(floor, Math.min(max, v)))
+              }}
+            />
+          )
+        })}
+      </div>
+
+      {/* ATRIBUTOS DE CENA (SOCIAL) */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+          ATRIBUTOS DE CENA
+        </div>
+        <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', textAlign: 'right' }}>
+          {isCreation ? (
+            <>
+              <span style={{ color: '#e879f9' }}>{socialPool}</span>
+              <span style={{ color: '#333' }}> livres · </span>
+              <span style={{ color: '#888' }}>{socialSpent}/{STARTING_SOCIAL_POINTS}</span>
+              <span style={{ color: '#333' }}> · máx {getInitialSocialMax()}/atrib.</span>
+            </>
+          ) : adminMode && socialBudget != null ? (
+            <>
+              <span style={{ color: socialSpent > socialBudget ? '#dc2626' : '#888' }}>
+                {socialSpent}/{socialBudget} usados
+              </span>
+              {pendingSocial > 0 && <span style={{ color: '#e879f9' }}> · {pendingSocial} pend.</span>}
+            </>
+          ) : pendingSocial > 0 ? (
+            <span style={{ color: '#e879f9' }}>{pendingSocial} pend.</span>
+          ) : null}
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.5rem' }}>
+        {SOCIAL_ATTRIBUTES.map(attr => {
+          const value = entity.socialAttributes?.[attr.key] || 0
+          const max = isCreation ? getInitialSocialMax() : getSocialAttributeMax(attr.key)
+          return (
+            <AttributeInput
+              key={attr.key}
+              attr={attr}
+              value={value}
+              effectiveValue={null}
+              max={max}
+              showMax={!isCreation}
+              canIncrease={canIncreaseSocialAttr(attr.key, value)}
+              canDecrease={getCanDecreaseSocial(attr.key, value)}
+              onChange={v => {
+                const floor = isCreation ? 0 : getCreationSocialFloor(entity, attr.key)
+                handleSocialChange(attr.key, Math.max(floor, Math.min(max, v)))
+              }}
             />
           )
         })}

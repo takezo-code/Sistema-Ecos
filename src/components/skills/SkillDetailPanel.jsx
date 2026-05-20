@@ -3,6 +3,7 @@ import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
 import { getSkillTypeMeta } from '../../constants/skillTypes'
 import { SKILL_CATEGORY_META } from '../../constants/skillCategories'
 import { ECO_SKILL_TYPES } from '../../constants/skillTypes'
+import { SKILL_AUDIENCE_META, getSkillAudience } from '../../constants/skillAudience'
 
 function DetailBlock({ label, color, children }) {
   return (
@@ -33,6 +34,7 @@ export function SkillDetailPanel({ skill, onBack, onEdit, onDelete }) {
 
   const typeMeta = getSkillTypeMeta(skill.skillType)
   const catMeta = SKILL_CATEGORY_META[skill.category]
+  const audienceMeta = SKILL_AUDIENCE_META[getSkillAudience(skill)]
   const isPassiva = skill.skillType === ECO_SKILL_TYPES.PASSIVA
 
   return (
@@ -92,6 +94,16 @@ export function SkillDetailPanel({ skill, onBack, onEdit, onDelete }) {
               {skill.name}
             </h1>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span style={{
+                fontSize: '0.65rem',
+                fontFamily: 'monospace',
+                color: audienceMeta.color,
+                border: `1px solid ${audienceMeta.color}44`,
+                padding: '2px 8px',
+                borderRadius: '2px',
+              }}>
+                {audienceMeta.label.toUpperCase()}
+              </span>
               <span style={{
                 fontSize: '0.65rem',
                 fontFamily: 'monospace',

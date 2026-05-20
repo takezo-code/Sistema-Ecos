@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { storage, KEYS } from '../services/storage'
 import { genId } from '../utils/id'
+import { archiveEntity, TRASH_TYPES } from '../services/trashService'
 
 const normalizeEvent = (e) => ({
   ...e,
@@ -59,9 +60,9 @@ export const useNarrativeStore = create((set, get) => ({
   },
 
   deleteEvent(id) {
-    const events = get().events.filter(e => e.id !== id)
-    storage.set(KEYS.narrative, events)
-    set({ events })
+    const event = get().events.find(e => e.id === id)
+    if (!event) return
+    archiveEntity(TRASH_TYPES.flow, event)
   },
 
   reorderEvents(campaignId, orderedIds) {

@@ -1,21 +1,28 @@
-import React from 'react'
-import { Zap } from 'lucide-react'
+import React, { useState } from 'react'
+import { Zap, Plus } from 'lucide-react'
 import { ECO_UNLOCK_SKILL_COST } from '../../constants/progression'
+import { Modal } from '../ui/Modal'
 import { EcoOverloadSection } from './EcoOverloadSection'
 import { EcoSkillsSection } from './EcoSkillsSection'
+import { SkillGrimoirePicker } from './SkillGrimoirePicker'
+import { getCatalogAudienceForEntity } from '../../services/skillsCatalogService'
 
 /** Conteúdo de habilidades + sobrecarga de Eco (uso de skills) */
 export function EntitySkillsPanel({
   entity,
   onUnlockSkill,
   onUpgradeSkill,
-  onUseSkill,
+  onLearnCatalogSkill,
+  onRemoveSkill,
   onRestOverload,
   onSetOverload,
   lastOverloadEvents,
   onClearOverloadEvents,
   adminMode = false,
+  manualSkillPick = false,
 }) {
+  const [grimoireOpen, setGrimoireOpen] = useState(false)
+  const catalogAudience = getCatalogAudienceForEntity(entity)
   const eco = entity.ecoPoints ?? 0
   const hasEcoToSpend = eco >= ECO_UNLOCK_SKILL_COST
 
@@ -56,7 +63,9 @@ export function EntitySkillsPanel({
           fontWeight: hasEcoToSpend ? 600 : 400,
           textAlign: 'right',
         }}>
-          {hasEcoToSpend ? 'Pode descobrir ou evoluir' : 'Ganhe em níveis ímpares'}
+          {manualSkillPick
+            ? (hasEcoToSpend ? 'Pode evoluir skills' : 'Ganhe Eco em níveis ímpares')
+            : (hasEcoToSpend ? 'Pode descobrir ou evoluir' : 'Ganhe em níveis ímpares')}
         </span>
       </div>
 
@@ -68,13 +77,37 @@ export function EntitySkillsPanel({
         onClearEvents={onClearOverloadEvents}
       />
 
+      {adminMode && onLearnCatalogSkill && (
+        <>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => setGrimoireOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', fontSize: '0.75rem' }}
+          >
+            <Plus size={14} style={{ color: '#a855f7' }} />
+            Adicionar skill
+          </button>
+          <Modal open={grimoireOpen} onClose={() => setGrimoireOpen(false)} title="Grimório de skills" maxWidth="560px">
+            <SkillGrimoirePicker
+              selectedSkills={entity.skills || []}
+              onAdd={instance => onLearnCatalogSkill(instance.templateId)}
+              onRemove={onRemoveSkill}
+              freePick
+              compact
+              audience={catalogAudience}
+            />
+          </Modal>
+        </>
+      )}
+
       <hr className="divide-line" />
 
       <EcoSkillsSection
         entity={entity}
-        onUnlockSkill={onUnlockSkill}
+        onUnlockSkill={manualSkillPick ? undefined : onUnlockSkill}
         onUpgradeSkill={onUpgradeSkill}
-        onUseSkill={onUseSkill}
+        manualSkillPick={manualSkillPick}
       />
     </div>
   )

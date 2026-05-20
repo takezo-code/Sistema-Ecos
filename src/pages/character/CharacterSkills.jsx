@@ -4,7 +4,8 @@ import { PageHeader } from '../../components/ui/PageHeader'
 import { SkillCard } from '../../components/skills/SkillCard'
 import { TurnControlBar } from '../../components/skills/TurnControlBar'
 import { listCharacterSkillsRuntime } from '../../services/ecoSkillRuntimeService'
-import { ECO_SKILLS_CATALOG } from '../../data/ecoSkillsCatalog'
+import { getMergedCatalog } from '../../services/skillsCatalogService'
+import { SKILL_AUDIENCE } from '../../constants/skillAudience'
 import { ECO_SKILL_TYPES } from '../../constants/skillTypes'
 import { Modal } from '../../components/ui/Modal'
 import { EmptyState } from '../../components/ui/EmptyState'
@@ -34,8 +35,10 @@ export function CharacterSkills({
     return runtimes
   }, [runtimes, typeFilter])
 
-  const ownedIds = new Set((character.skills || []).map(s => s.templateId))
-  const catalogAvailable = ECO_SKILLS_CATALOG.filter(c => !ownedIds.has(c.templateId))
+  const catalogAvailable = useMemo(() => {
+    const ownedIds = new Set((character.skills || []).map(s => s.templateId))
+    return getMergedCatalog(SKILL_AUDIENCE.CHARACTER).filter(c => !ownedIds.has(c.templateId))
+  }, [character.skills])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>

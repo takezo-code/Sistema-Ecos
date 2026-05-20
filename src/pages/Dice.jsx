@@ -5,8 +5,10 @@ import { useCharacterStore } from '../store/useCharacterStore'
 import { useCampaignStore } from '../store/useCampaignStore'
 import { PageHeader } from '../components/ui/PageHeader'
 import { formatDateTime } from '../utils/id'
-import { getAttributeLabels } from '../constants/attributes'
+import { getAllAttributeLabels, SOCIAL_ATTRIBUTES } from '../constants/attributes'
 import { getEffectiveAttributeValue } from '../services/stateModifiers'
+
+const SOCIAL_ATTR_KEYS = new Set(SOCIAL_ATTRIBUTES.map(a => a.key))
 
 const DICE_TYPES = [
   { sides: 4, label: 'd4', color: '#a855f7' },
@@ -18,7 +20,7 @@ const DICE_TYPES = [
   { sides: 100, label: 'd100', color: '#9ca3af' },
 ]
 
-const ATTRIBUTE_LABELS = getAttributeLabels()
+const ATTRIBUTE_LABELS = getAllAttributeLabels()
 
 function DiceButton({ dice, onClick, rolling }) {
   return (
@@ -151,8 +153,11 @@ export function Dice() {
   const handleContextRoll = () => {
     const sides = parseInt(contextDice) || 20
     const char = campChars.find(c => c.id === contextChar)
+    const isSocial = SOCIAL_ATTR_KEYS.has(contextAttr)
     const attrVal = char
-      ? getEffectiveAttributeValue(char.attributes, contextAttr, char.physicalState ?? char.condition ?? 'bem', char.ecoOverload ?? 0)
+      ? isSocial
+        ? (char.socialAttributes?.[contextAttr] ?? 0)
+        : getEffectiveAttributeValue(char.attributes, contextAttr, char.physicalState ?? char.condition ?? 'bem', char.ecoOverload ?? 0)
       : 0
     const charName = char ? char.name : ''
     const label = charName
@@ -245,8 +250,11 @@ export function Dice() {
                   {(() => {
                     const c = campChars.find(ch => ch.id === contextChar)
                     if (!c) return ''
-                    const eff = getEffectiveAttributeValue(c.attributes, contextAttr, c.physicalState ?? c.condition ?? 'bem', c.ecoOverload ?? 0)
-                    const base = c.attributes?.[contextAttr] || 0
+                    const isSoc = SOCIAL_ATTR_KEYS.has(contextAttr)
+                    const eff = isSoc
+                      ? (c.socialAttributes?.[contextAttr] ?? 0)
+                      : getEffectiveAttributeValue(c.attributes, contextAttr, c.physicalState ?? c.condition ?? 'bem', c.ecoOverload ?? 0)
+                    const base = isSoc ? (c.socialAttributes?.[contextAttr] || 0) : (c.attributes?.[contextAttr] || 0)
                     return eff !== base
                       ? `${c.name} · ${ATTRIBUTE_LABELS[contextAttr]}: ${eff} (${base})`
                       : `${c.name} · ${ATTRIBUTE_LABELS[contextAttr]}: ${eff}`

@@ -156,7 +156,7 @@ function CampaignCard({ campaign, isActive, onOpen, onEdit, onDelete, onActivate
   )
 }
 
-export function Campaigns() {
+export function Campaigns({ pageTitle = 'História' }) {
   const { campaigns, activeCampaignId, addCampaign, updateCampaign, deleteCampaign, setActiveCampaign } = useCampaignStore()
   const [viewingCampaign, setViewingCampaign] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
@@ -203,7 +203,7 @@ export function Campaigns() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <PageHeader
         icon={BookOpen}
-        title="Campanhas"
+        title={pageTitle}
         subtitle={`${campaigns.length} CAMPANHAS REGISTRADAS`}
         action={
           <button className="btn-primary" onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}>
@@ -245,10 +245,10 @@ export function Campaigns() {
         />
       </Modal>
 
-      <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Confirmar Exclusão" maxWidth="380px">
+      <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Enviar para a lixeira" maxWidth="380px">
         <p style={{ fontSize: '0.85rem', color: '#999', marginBottom: '1.25rem' }}>
-          Tem certeza que deseja excluir a campanha <strong style={{ color: '#e5e5e5' }}>{deleteConfirm?.name}</strong>?
-          Esta ação não pode ser desfeita.
+          Enviar a campanha <strong style={{ color: '#e5e5e5' }}>{deleteConfirm?.name}</strong> para a lixeira?
+          Você poderá restaurá-la depois.
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>

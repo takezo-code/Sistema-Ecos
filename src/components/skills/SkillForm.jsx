@@ -3,12 +3,25 @@ import { Field, Input, Textarea, Select } from '../ui/Field'
 import { ECO_SKILL_TYPES } from '../../constants/skillTypes'
 import { SKILL_CATEGORIES, SKILL_CATEGORY_META } from '../../constants/skillCategories'
 import { createEmptySkillDraft } from '../../services/skillsCatalogService'
+import { SKILL_AUDIENCE, SKILL_AUDIENCE_META } from '../../constants/skillAudience'
 
-export function SkillForm({ initial, onSubmit, onCancel, submitLabel = 'Salvar' }) {
-  const [form, setForm] = useState(() => ({ ...createEmptySkillDraft(), ...initial }))
+export function SkillForm({
+  initial,
+  defaultAudience = SKILL_AUDIENCE.CHARACTER,
+  onSubmit,
+  onCancel,
+  submitLabel = 'Salvar',
+  lockAudience = false,
+}) {
+  const [form, setForm] = useState(() => ({
+    ...createEmptySkillDraft(defaultAudience),
+    ...initial,
+  }))
 
   useEffect(() => {
-    if (initial) setForm({ ...createEmptySkillDraft(), ...initial })
+    if (initial) {
+      setForm({ ...createEmptySkillDraft(initial.audience), ...initial })
+    }
   }, [initial])
 
   const isPassiva = form.skillType === ECO_SKILL_TYPES.PASSIVA
@@ -23,6 +36,18 @@ export function SkillForm({ initial, onSubmit, onCancel, submitLabel = 'Salvar' 
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <Field label="Nome" required>
         <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Ex.: Foco Fragmentado" required />
+      </Field>
+
+      <Field label="Destino">
+        <Select
+          value={form.audience ?? SKILL_AUDIENCE.CHARACTER}
+          onChange={e => set('audience', e.target.value)}
+          disabled={lockAudience}
+        >
+          {Object.entries(SKILL_AUDIENCE_META).map(([key, meta]) => (
+            <option key={key} value={key}>{meta.label}</option>
+          ))}
+        </Select>
       </Field>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>

@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
-import { Sparkles, ChevronUp, Zap, Play, Search, ArrowLeft } from 'lucide-react'
+import { Sparkles, ChevronUp, Zap, Search, ArrowLeft } from 'lucide-react'
 import { ECO_UNLOCK_SKILL_COST, MAX_SKILL_TIER } from '../../constants/progression'
-import { skillTypeIncrementsOverload } from '../../constants/skillTypes'
 import {
   canUnlockRandomSkill,
   canAffordAnySkillUpgrade,
@@ -67,26 +66,18 @@ function EcoPointsBar({ eco, hasEcoToSpend }) {
   )
 }
 
-export function EcoSkillsSection({ entity, onUnlockSkill, onUpgradeSkill, onUseSkill }) {
+export function EcoSkillsSection({ entity, onUnlockSkill, onUpgradeSkill, manualSkillPick = false }) {
   const eco = entity.ecoPoints ?? 0
   const skills = entity.skills || []
   const rupture = entity.attributes?.ruptura ?? 0
   const mentalState = entity.mentalState ?? 'estavel'
   const ecoOverload = entity.ecoOverload ?? 0
-  const canUnlock = canUnlockRandomSkill(entity)
+  const canUnlock = !manualSkillPick && canUnlockRandomSkill(entity)
   const canUpgradeAny = canAffordAnySkillUpgrade(entity)
   const upgradeable = listUpgradeableSkills(entity)
   const hasEcoToSpend = eco >= ECO_UNLOCK_SKILL_COST
 
   const [choiceMode, setChoiceMode] = useState(CHOICE.NONE)
-  const [ruptureAlert, setRuptureAlert] = useState(null)
-
-  const handleUse = (skillId) => {
-    if (!onUseSkill) return
-    const result = onUseSkill(skillId)
-    const ruptureEv = result?.events?.find(e => e.type === 'rupture_total')
-    if (ruptureEv) setRuptureAlert(ruptureEv)
-  }
 
   const handleUnlock = () => {
     onUnlockSkill?.()
@@ -115,24 +106,10 @@ export function EcoSkillsSection({ entity, onUnlockSkill, onUpgradeSkill, onUseS
       <EcoPointsBar eco={eco} hasEcoToSpend={hasEcoToSpend} />
 
       <p style={{ fontSize: '0.75rem', color: '#555', lineHeight: 1.6, marginBottom: '0.75rem' }}>
-        Cada uso de habilidade Ativa ou Ruptura aumenta a Sobrecarga de Eco (+1). Passivas não incrementam.
-        Gaste um Eco para descobrir uma habilidade nova ou evoluir uma que já possui.
+        {manualSkillPick
+          ? 'Adicione habilidades pelo grimório do mestre. Gaste Eco apenas para evoluir o tier das que já possui.'
+          : 'Gaste um Eco para descobrir uma habilidade nova ou evoluir uma que já possui.'}
       </p>
-
-      {ruptureAlert && (
-        <div style={{
-          background: 'rgba(220,38,38,0.12)',
-          border: '1px solid rgba(220,38,38,0.35)',
-          borderRadius: '4px',
-          padding: '0.75rem',
-          marginBottom: '0.75rem',
-        }}>
-          <div style={{ fontSize: '0.6rem', color: '#dc2626', fontFamily: 'monospace', marginBottom: '0.35rem' }}>RUPTURA TOTAL</div>
-          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#e5e5e5' }}>{ruptureAlert.outcome?.label}</div>
-          <p style={{ fontSize: '0.75rem', color: '#888', margin: '0.35rem 0 0.5rem' }}>{ruptureAlert.outcome?.description}</p>
-          <button type="button" className="btn-ghost" style={{ fontSize: '0.65rem' }} onClick={() => setRuptureAlert(null)}>Fechar</button>
-        </div>
-      )}
 
       <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', marginBottom: '0.5rem' }}>
         {skills.length} HABILIDADE(S) DESBLOQUEADA(S)
@@ -140,25 +117,27 @@ export function EcoSkillsSection({ entity, onUnlockSkill, onUpgradeSkill, onUseS
 
       {choiceMode === CHOICE.NONE && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '1rem' }}>
-          <button
-            type="button"
-            className="btn-primary"
-            disabled={!canUnlock || !onUnlockSkill}
-            onClick={() => setChoiceMode(CHOICE.UNLOCK)}
-            title={canUnlock ? `Gasta ${ECO_UNLOCK_SKILL_COST} Eco` : 'Precisa de pelo menos 1 Eco'}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              width: '100%',
-              fontSize: '0.8rem',
-              opacity: canUnlock ? 1 : 0.5,
-            }}
-          >
-            <Search size={14} />
-            Descobrir habilidade ({ECO_UNLOCK_SKILL_COST} Eco)
-          </button>
+          {!manualSkillPick && (
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={!canUnlock || !onUnlockSkill}
+              onClick={() => setChoiceMode(CHOICE.UNLOCK)}
+              title={canUnlock ? `Gasta ${ECO_UNLOCK_SKILL_COST} Eco` : 'Precisa de pelo menos 1 Eco'}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                width: '100%',
+                fontSize: '0.8rem',
+                opacity: canUnlock ? 1 : 0.5,
+              }}
+            >
+              <Search size={14} />
+              Descobrir habilidade ({ECO_UNLOCK_SKILL_COST} Eco)
+            </button>
+          )}
           <button
             type="button"
             className="btn-secondary"
@@ -181,7 +160,7 @@ export function EcoSkillsSection({ entity, onUnlockSkill, onUpgradeSkill, onUseS
         </div>
       )}
 
-      {choiceMode === CHOICE.UNLOCK && (
+      {!manualSkillPick && choiceMode === CHOICE.UNLOCK && (
         <div style={{
           marginBottom: '1rem',
           padding: '0.75rem',
@@ -265,7 +244,9 @@ export function EcoSkillsSection({ entity, onUnlockSkill, onUpgradeSkill, onUseS
           fontSize: '0.775rem',
         }}>
           Nenhuma habilidade desbloqueada.
-          {canUnlock && choiceMode === CHOICE.NONE && (
+          {manualSkillPick ? (
+            <div style={{ marginTop: '0.5rem', color: '#555' }}>Use &quot;Adicionar skill&quot; no grimório acima.</div>
+          ) : canUnlock && choiceMode === CHOICE.NONE && (
             <div style={{ marginTop: '0.5rem', color: '#555' }}>Use o botão &quot;Descobrir habilidade&quot; acima.</div>
           )}
         </div>
@@ -273,7 +254,6 @@ export function EcoSkillsSection({ entity, onUnlockSkill, onUpgradeSkill, onUseS
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {skills.map(skill => {
             const display = getSkillDisplay(skill, rupture, mentalState, ecoOverload)
-            const canUse = skillTypeIncrementsOverload(skill.skillType) && onUseSkill
             const atMaxTier = skill.tier >= MAX_SKILL_TIER
             return (
               <div
@@ -305,24 +285,6 @@ export function EcoSkillsSection({ entity, onUnlockSkill, onUpgradeSkill, onUseS
                     <div style={{ fontSize: '0.55rem', color: '#dc2626', fontFamily: 'monospace', marginBottom: '2px' }}>EFEITO COLATERAL</div>
                     <div style={{ fontSize: '0.7rem', color: '#666', lineHeight: 1.5 }}>{skill.sideEffect}</div>
                   </div>
-                )}
-                {canUse && (
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => handleUse(skill.id)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.35rem',
-                      width: '100%',
-                      fontSize: '0.7rem',
-                      marginTop: '0.35rem',
-                    }}
-                  >
-                    <Play size={12} /> Usar habilidade (+1 sobrecarga)
-                  </button>
                 )}
               </div>
             )

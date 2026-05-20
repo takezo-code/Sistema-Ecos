@@ -1,35 +1,85 @@
 import { ECO_SKILLS_CATALOG } from '../data/ecoSkillsCatalog'
+import { NPC_SKILLS_CATALOG } from '../data/npcSkillsCatalog'
 import { ECO_SKILL_TYPES } from '../constants/skillTypes'
 import { SKILL_CATEGORIES } from '../constants/skillCategories'
 import { normalizeSkillType } from '../constants/skillTypes'
+import {
+  SKILL_AUDIENCE,
+  normalizeSkillAudience,
+  getSkillAudience,
+  skillMatchesAudience,
+} from '../constants/skillAudience'
+import { isNpcEntity } from '../constants/entityProgression'
 import { storage, KEYS } from './storage'
 import { genId } from '../utils/id'
+import { archiveEntity, TRASH_TYPES } from './trashService'
 
-const BUILTIN = ECO_SKILLS_CATALOG.map(s => ({ ...s, isBuiltin: true }))
+const CHARACTER_BUILTIN = ECO_SKILLS_CATALOG.map(s => ({
+  ...s,
+  audience: normalizeSkillAudience(s.audience ?? SKILL_AUDIENCE.CHARACTER),
+  isBuiltin: true,
+}))
+const NPC_BUILTIN = NPC_SKILLS_CATALOG.map(s => ({
+  ...s,
+  audience: SKILL_AUDIENCE.NPC,
+  isBuiltin: true,
+}))
+const BUILTIN = [...CHARACTER_BUILTIN, ...NPC_BUILTIN]
+
+export { SKILL_AUDIENCE, normalizeSkillAudience, getSkillAudience, skillMatchesAudience }
 
 export function loadCustomSkills() {
   const raw = storage.get(KEYS.skillsCatalog)
   return Array.isArray(raw) ? raw : []
 }
 
+/** Remove todas as skills custom persistidas no navegador */
+export function purgeCustomSkillsCatalog() {
+  saveCustomSkills([])
+}
+
 export function saveCustomSkills(skills) {
   storage.set(KEYS.skillsCatalog, skills)
 }
 
-export function getMergedCatalog() {
+function normalizeCatalogEntry(skill) {
+  return {
+    ...skill,
+    audience: normalizeSkillAudience(skill.audience),
+  }
+}
+
+export function getMergedCatalog(audience = null) {
   const custom = loadCustomSkills()
   const builtinIds = new Set(BUILTIN.map(s => s.templateId))
-  const mergedCustom = custom.filter(s => s?.templateId && !builtinIds.has(s.templateId))
-  return [...BUILTIN, ...mergedCustom]
+  const mergedCustom = custom
+    .filter(s => s?.templateId && !builtinIds.has(s.templateId))
+    .map(normalizeCatalogEntry)
+  const all = [...BUILTIN, ...mergedCustom]
+  if (!audience) return all
+  return all.filter(s => skillMatchesAudience(s, audience))
+}
+
+export function getCatalogAudienceForEntity(entity) {
+  if (!isNpcEntity(entity)) return SKILL_AUDIENCE.CHARACTER
+  if (entity.papelCombate === 'boss') return SKILL_AUDIENCE.BOSS
+  return SKILL_AUDIENCE.NPC
+}
+
+export function catalogSkillAllowedForEntity(templateId, entity) {
+  const def = getCatalogSkill(templateId)
+  if (!def || !entity) return false
+  return skillMatchesAudience(def, getCatalogAudienceForEntity(entity))
 }
 
 export function getCatalogSkill(templateId) {
   return getMergedCatalog().find(s => s.templateId === templateId) || null
 }
 
-export function createEmptySkillDraft() {
+export function createEmptySkillDraft(audience = SKILL_AUDIENCE.CHARACTER) {
   return {
     name: '',
+    audience: normalizeSkillAudience(audience),
     skillType: ECO_SKILL_TYPES.ATIVA,
     category: SKILL_CATEGORIES.PERCEPCAO,
     cooldownTurns: 3,
@@ -57,6 +107,7 @@ export function buildSkillFromDraft(draft, existingId = null) {
     description: String(draft.description || '').trim(),
     narrativeConsequence: String(draft.narrativeConsequence || '').trim(),
     mechanicalEffect: String(draft.mechanicalEffect || '').trim(),
+    audience: normalizeSkillAudience(draft.audience),
     isBuiltin: false,
     createdAt: draft.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -87,7 +138,8 @@ export function updateCustomSkill(templateId, draft) {
 export function deleteCustomSkill(templateId) {
   const builtin = BUILTIN.some(s => s.templateId === templateId)
   if (builtin) return { ok: false, message: 'Habilidades do sistema não podem ser excluídas.' }
-  const custom = loadCustomSkills().filter(s => s.templateId !== templateId)
-  saveCustomSkills(custom)
+  const skill = loadCustomSkills().find(s => s.templateId === templateId)
+  if (!skill) return { ok: false, message: 'Skill não encontrada.' }
+  archiveEntity(TRASH_TYPES.skill, skill)
   return { ok: true }
 }

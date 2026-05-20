@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Skull, Plus, Pencil, Trash2, Search, Eye } from 'lucide-react'
 import { useNPCStore } from '../store/useNPCStore'
 import { useCampaignStore } from '../store/useCampaignStore'
@@ -11,18 +11,93 @@ import { Field, Input, Textarea, Select } from '../components/ui/Field'
 import { ImageUpload } from '../components/ui/ImageUpload'
 import { StatusTag } from '../components/ui/StatusTag'
 import { EmptyState } from '../components/ui/EmptyState'
+import { AttributePointsEditor } from '../components/creation/AttributePointsEditor'
+import {
+  defaultAttributes,
+  defaultSocialAttributes,
+  STARTING_ATTRIBUTE_POINTS,
+  STARTING_SOCIAL_POINTS,
+} from '../constants/attributes'
+import { MAX_LEVEL } from '../constants/progression'
+import { finalizeCreationAttributes, buildMasterProgressionPatch } from '../services/progressionService'
+import { normalizeGameEntity } from '../constants/attributes'
+import { entityHasEcoPowers, getAttributesForEntity } from '../constants/entityProgression'
 
 const EMPTY_FORM = {
-  name: '', image: '', description: '', motivation: '', secret: '', organization: '', status: 'vivo'
+  name: '',
+  image: '',
+  description: '',
+  motivation: '',
+  secret: '',
+  organization: '',
+  status: 'vivo',
+  level: 1,
+  attributes: defaultAttributes(),
+  unspentAttributePoints: STARTING_ATTRIBUTE_POINTS,
+  hasEcoPowers: false,
+  ecoPoints: 0,
+  socialAttributes: defaultSocialAttributes(),
+  unspentSocialPoints: STARTING_SOCIAL_POINTS,
+  podeCombater: false,
+  papelCombate: 'nenhum',
+  resistenciaFisica: 0,
+  resistenciaMental: 0,
+  marcasMaximas: 0,
+  bonusAtaque: 0,
+  xpRecompensa: 0,
+  fraquezas: '',
+}
+
+const PAPEL_OPTIONS = [
+  { value: 'nenhum', label: 'Nenhum (narrativo)' },
+  { value: 'capanga', label: 'Capanga' },
+  { value: 'elite', label: 'Elite' },
+  { value: 'boss', label: 'Boss' },
+]
+
+const BOSS_DEFAULTS = {
+  podeCombater: true,
+  papelCombate: 'boss',
+  resistenciaFisica: 6,
+  resistenciaMental: 4,
+  marcasMaximas: 15,
+  bonusAtaque: 3,
+  xpRecompensa: 500,
 }
 
 function NPCForm({ initial, onSave, onCancel, campaignId, organizations }) {
-  const [form, setForm] = useState({ ...EMPTY_FORM, ...(initial || {}), campaignId })
+  const isNew = !initial?.id
+  const [form, setForm] = useState(() => ({
+    ...EMPTY_FORM,
+    ...(initial || {}),
+    campaignId,
+    attributes: { ...defaultAttributes(), ...(initial?.attributes || {}) },
+    unspentAttributePoints: initial?.unspentAttributePoints ?? (isNew ? STARTING_ATTRIBUTE_POINTS : 0),
+    hasEcoPowers: initial?.hasEcoPowers ?? false,
+    level: initial?.level ?? 1,
+    ecoPoints: initial?.ecoPoints ?? 0,
+    socialAttributes: { ...defaultSocialAttributes(), ...(initial?.socialAttributes || {}) },
+    unspentSocialPoints: initial?.unspentSocialPoints ?? (isNew ? STARTING_SOCIAL_POINTS : 0),
+    podeCombater: initial?.podeCombater ?? false,
+    papelCombate: initial?.papelCombate ?? 'nenhum',
+    resistenciaFisica: initial?.resistenciaFisica ?? 0,
+    resistenciaMental: initial?.resistenciaMental ?? 0,
+    marcasMaximas: initial?.marcasMaximas ?? 0,
+    bonusAtaque: initial?.bonusAtaque ?? 0,
+    xpRecompensa: initial?.xpRecompensa ?? 0,
+    fraquezas: initial?.fraquezas ?? '',
+  }))
   const set = (f, v) => setForm(p => ({ ...p, [f]: v }))
 
   return (
-    <form onSubmit={e => { e.preventDefault(); if (!form.name.trim()) return; onSave(form) }}
-      style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <form
+      onSubmit={e => {
+        e.preventDefault()
+        if (!form.name.trim()) return
+        onSave(form)
+      }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+    >
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <Field label="Nome" required>
           <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Nome do NPC" autoFocus />
@@ -35,21 +110,33 @@ function NPCForm({ initial, onSave, onCancel, campaignId, organizations }) {
           </Select>
         </Field>
       </div>
-      <ImageUpload
-        value={form.image}
-        onChange={v => set('image', v)}
-        label="Foto do NPC"
-      />
-      <Field label="Organização">
-        {organizations.length > 0 ? (
-          <Select value={form.organization} onChange={e => set('organization', e.target.value)}>
-            <option value="">Nenhuma</option>
-            {organizations.map(o => <option key={o.id} value={o.name}>{o.name}</option>)}
-          </Select>
-        ) : (
-          <Input value={form.organization} onChange={e => set('organization', e.target.value)} placeholder="Nome da organização..." />
+
+      <div style={{ display: 'grid', gridTemplateColumns: isNew ? '1fr' : '1fr 1fr', gap: '1rem' }}>
+        {!isNew && (
+          <Field label="Nível">
+            <Input
+              type="number"
+              min={1}
+              max={MAX_LEVEL}
+              value={form.level ?? 1}
+              onChange={e => set('level', Math.min(MAX_LEVEL, Math.max(1, parseInt(e.target.value, 10) || 1)))}
+            />
+          </Field>
         )}
-      </Field>
+        <Field label="Organização">
+          {organizations.length > 0 ? (
+            <Select value={form.organization} onChange={e => set('organization', e.target.value)}>
+              <option value="">Nenhuma</option>
+              {organizations.map(o => <option key={o.id} value={o.name}>{o.name}</option>)}
+            </Select>
+          ) : (
+            <Input value={form.organization} onChange={e => set('organization', e.target.value)} placeholder="Nome da organização..." />
+          )}
+        </Field>
+      </div>
+
+      <ImageUpload value={form.image} onChange={v => set('image', v)} label="Foto do NPC" />
+
       <Field label="Descrição">
         <Textarea value={form.description} onChange={e => set('description', e.target.value)} placeholder="Aparência, personalidade, história..." rows={3} />
       </Field>
@@ -61,6 +148,130 @@ function NPCForm({ initial, onSave, onCancel, campaignId, organizations }) {
           <Textarea value={form.secret} onChange={e => set('secret', e.target.value)} placeholder="O que ele esconde..." rows={2} />
         </Field>
       </div>
+
+      <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        fontSize: '0.8rem',
+        color: '#888',
+        cursor: 'pointer',
+        padding: '0.5rem 0',
+      }}>
+        <input
+          type="checkbox"
+          checked={!!form.hasEcoPowers}
+          onChange={e => {
+            const checked = e.target.checked
+            setForm(p => ({
+              ...p,
+              hasEcoPowers: checked,
+              ...(checked ? {} : {
+                attributes: { ...p.attributes, ruptura: 0 },
+                skills: [],
+                ecoPoints: 0,
+              }),
+            }))
+          }}
+          style={{ accentColor: '#a855f7' }}
+        />
+        Este NPC possui poderes de Eco / Ruptura
+      </label>
+
+      <AttributePointsEditor
+        form={form}
+        onFormChange={setForm}
+        showRuptureHint={form.hasEcoPowers}
+      />
+
+      {/* ── Seção de Combate ─────────────────────────── */}
+      <hr className="divide-line" />
+      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+        COMBATE
+      </div>
+
+      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#888', cursor: 'pointer', padding: '0.25rem 0' }}>
+        <input
+          type="checkbox"
+          checked={!!form.podeCombater}
+          onChange={e => {
+            const checked = e.target.checked
+            setForm(p => ({
+              ...p,
+              podeCombater: checked,
+              papelCombate: checked ? (p.papelCombate === 'nenhum' ? 'capanga' : p.papelCombate) : 'nenhum',
+            }))
+          }}
+          style={{ accentColor: '#dc2626' }}
+        />
+        Este NPC pode entrar em combate como inimigo
+      </label>
+
+      {form.podeCombater && (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <Field label="Papel no Combate">
+              <Select value={form.papelCombate} onChange={e => set('papelCombate', e.target.value)}>
+                {PAPEL_OPTIONS.filter(o => o.value !== 'nenhum').map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="XP de Recompensa">
+              <Input
+                type="number" min={0}
+                value={form.xpRecompensa}
+                onChange={e => set('xpRecompensa', Math.max(0, parseInt(e.target.value, 10) || 0))}
+              />
+            </Field>
+          </div>
+
+          <div style={{ fontSize: '0.6rem', color: '#555', fontFamily: 'monospace', margin: '0.25rem 0 0.25rem' }}>
+            RESISTÊNCIAS — reduzem o dano antes de virar marcas (dano − resistência = dano efetivo)
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+            <Field label="Resist. Física">
+              <Input
+                type="number" min={0} max={20}
+                value={form.resistenciaFisica}
+                onChange={e => set('resistenciaFisica', Math.max(0, Math.min(20, parseInt(e.target.value, 10) || 0)))}
+              />
+            </Field>
+            <Field label="Resist. Mental">
+              <Input
+                type="number" min={0} max={20}
+                value={form.resistenciaMental}
+                onChange={e => set('resistenciaMental', Math.max(0, Math.min(20, parseInt(e.target.value, 10) || 0)))}
+              />
+            </Field>
+            <Field label="Marcas Máximas (0 = sem limite)">
+              <Input
+                type="number" min={0}
+                value={form.marcasMaximas}
+                onChange={e => set('marcasMaximas', Math.max(0, parseInt(e.target.value, 10) || 0))}
+              />
+            </Field>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
+            <Field label="Bônus de Ataque">
+              <Input
+                type="number" min={0} max={10}
+                value={form.bonusAtaque}
+                onChange={e => set('bonusAtaque', Math.max(0, Math.min(10, parseInt(e.target.value, 10) || 0)))}
+              />
+            </Field>
+            <Field label="Fraquezas (texto livre)">
+              <Input
+                value={form.fraquezas}
+                onChange={e => set('fraquezas', e.target.value)}
+                placeholder="ex: fogo, luz intensa, sonic..."
+              />
+            </Field>
+          </div>
+        </>
+      )}
+
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
         <button type="submit" className="btn-primary">Salvar</button>
@@ -187,7 +398,14 @@ function NPCCard({ npc, onEdit, onDelete, onView }) {
   )
 }
 
-export function NPCs({ embedded = false, onNavigate }) {
+export function NPCs({
+  embedded = false,
+  onNavigate,
+  autoOpenCreate = false,
+  onCreateFlowClose,
+  onCreateFlowSuccess,
+  bossMode = false,
+}) {
   const { activeCampaignId } = useCampaignStore()
   const { npcs, addNPC, updateNPC, deleteNPC } = useNPCStore()
   const { organizations } = useOrganizationStore()
@@ -211,13 +429,64 @@ export function NPCs({ embedded = false, onNavigate }) {
   const openEdit = (n) => { setEditing(n); setModalOpen(true); setViewing(null) }
   const closeModal = () => { setModalOpen(false); setEditing(null) }
 
+  const handleModalClose = () => {
+    const wasNewCreate = autoOpenCreate && !editing
+    closeModal()
+    if (wasNewCreate) onCreateFlowClose?.()
+  }
+
+  useEffect(() => {
+    if (autoOpenCreate && activeCampaignId) openCreate()
+  }, [autoOpenCreate, activeCampaignId])
+
+  const buildNpcPayload = (data, isNewEntity) => {
+    let payload = {
+      ...data,
+      ...(isNewEntity ? { level: 1, xp: 0, ecoPoints: 0, skills: [] } : {}),
+      ...finalizeCreationAttributes(data, { isNew: isNewEntity && (data.unspentAttributePoints ?? 0) > 0 }),
+    }
+    if (!entityHasEcoPowers(data)) {
+      payload = {
+        ...payload,
+        skills: [],
+        ecoPoints: 0,
+        attributes: { ...payload.attributes, ruptura: 0 },
+      }
+    }
+    let draft = normalizeGameEntity(payload)
+    if ((draft.level ?? 1) > 1) {
+      const { patch } = buildMasterProgressionPatch(draft, { level: draft.level })
+      if (patch) draft = { ...draft, ...patch }
+    }
+    return draft
+  }
+
   const handleSave = (data) => {
+    const isNew = !editing
     if (editing) {
-      updateNPC(editing.id, data)
+      updateNPC(editing.id, buildNpcPayload(data, false))
     } else {
-      addNPC(withActiveCampaign(data, activeCampaignId))
+      addNPC(withActiveCampaign(buildNpcPayload(data, true), activeCampaignId))
     }
     closeModal()
+    if (autoOpenCreate && isNew) onCreateFlowSuccess?.()
+  }
+
+  const creationFlowOnly = embedded && autoOpenCreate
+
+  if (creationFlowOnly) {
+    const bossInitial = bossMode ? BOSS_DEFAULTS : null
+    return (
+      <Modal open={modalOpen} onClose={handleModalClose} title={bossMode ? 'Novo Boss' : 'Novo NPC'} maxWidth="720px">
+        <NPCForm
+          initial={bossInitial}
+          campaignId={activeCampaignId}
+          organizations={orgsByCampaign}
+          onSave={handleSave}
+          onCancel={handleModalClose}
+        />
+      </Modal>
+    )
   }
 
   return (
@@ -283,13 +552,13 @@ export function NPCs({ embedded = false, onNavigate }) {
         )}
       </div>
 
-      <Modal open={modalOpen} onClose={closeModal} title={editing ? 'Editar NPC' : 'Novo NPC'} maxWidth="620px">
+      <Modal open={modalOpen} onClose={handleModalClose} title={editing ? 'Editar NPC' : 'Novo NPC'} maxWidth="720px">
         <NPCForm
           initial={editing}
           campaignId={activeCampaignId}
           organizations={orgsByCampaign}
           onSave={handleSave}
-          onCancel={closeModal}
+          onCancel={handleModalClose}
         />
       </Modal>
 
@@ -299,7 +568,8 @@ export function NPCs({ embedded = false, onNavigate }) {
 
       <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Confirmar Exclusão" maxWidth="380px">
         <p style={{ fontSize: '0.85rem', color: '#999', marginBottom: '1.25rem' }}>
-          Excluir o NPC <strong style={{ color: '#e5e5e5' }}>{deleteConfirm?.name}</strong>? Esta ação não pode ser desfeita.
+          Enviar o NPC <strong style={{ color: '#e5e5e5' }}>{deleteConfirm?.name}</strong> para a lixeira?
+          Você pode restaurá-lo em Lixeira.
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { storage, KEYS } from '../services/storage'
 import { genId } from '../utils/id'
+import { archiveEntity, TRASH_TYPES } from '../services/trashService'
 
 const load = () => storage.get(KEYS.campaigns) || []
 const loadActive = () => storage.get(KEYS.activeCampaign) || null
@@ -42,11 +43,9 @@ export const useCampaignStore = create((set, get) => ({
   },
 
   deleteCampaign(id) {
-    const campaigns = get().campaigns.filter(c => c.id !== id)
-    storage.set(KEYS.campaigns, campaigns)
-    const newActive = get().activeCampaignId === id ? null : get().activeCampaignId
-    storage.set(KEYS.activeCampaign, newActive)
-    set({ campaigns, activeCampaignId: newActive })
+    const campaign = get().campaigns.find(c => c.id === id)
+    if (!campaign) return
+    archiveEntity(TRASH_TYPES.campaign, campaign)
   },
 
   setActiveCampaign(id) {

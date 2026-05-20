@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Sword, Plus, Pencil, Trash2, Package, User, ChevronUp, ChevronDown } from 'lucide-react'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useCampaignStore } from '../store/useCampaignStore'
@@ -12,16 +12,29 @@ import { EntityThumb } from '../components/ui/EntityThumb'
 import { EmptyState } from '../components/ui/EmptyState'
 import {
   ATTRIBUTES,
+  SOCIAL_ATTRIBUTES,
   defaultAttributes,
+  defaultSocialAttributes,
   STARTING_ATTRIBUTE_POINTS,
   INITIAL_ATTRIBUTE_MAX,
+  STARTING_SOCIAL_POINTS,
+  INITIAL_SOCIAL_MAX,
 } from '../constants/attributes'
-import { applyInitialAttributeChange } from '../services/progressionService'
+import {
+  applyInitialAttributeChange,
+  applyInitialSocialChange,
+  finalizeCreationAttributes,
+  validateStartingAttributesDistributed,
+  validateStartingSocialDistributed,
+} from '../services/progressionService'
+import { getTotalAttributePoints, getTotalSocialPoints } from '../constants/attributes'
 
 const EMPTY_FORM = {
   name: '', image: '', description: '', narrativeStatus: '',
   attributes: defaultAttributes(),
   unspentAttributePoints: STARTING_ATTRIBUTE_POINTS,
+  socialAttributes: defaultSocialAttributes(),
+  unspentSocialPoints: STARTING_SOCIAL_POINTS,
 }
 
 function AttributeInput({ attr, value, onChange, canIncrease }) {
@@ -65,19 +78,38 @@ function AttributeInput({ attr, value, onChange, canIncrease }) {
 }
 
 export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }) {
+  const isNew = !initial?.id
   const [form, setForm] = useState(initial ? {
     ...initial,
     attributes: { ...defaultAttributes(), ...(initial.attributes || {}) },
     unspentAttributePoints: initial.unspentAttributePoints ?? STARTING_ATTRIBUTE_POINTS,
+    socialAttributes: { ...defaultSocialAttributes(), ...(initial.socialAttributes || {}) },
+    unspentSocialPoints: initial.unspentSocialPoints ?? STARTING_SOCIAL_POINTS,
   } : EMPTY_FORM)
+  const [attrError, setAttrError] = useState(null)
 
   const set = (f, v) => setForm(p => ({ ...p, [f]: v }))
   const setAttr = (key, val) => {
     const patch = applyInitialAttributeChange(form, key, val)
-    if (patch) setForm(p => ({ ...p, ...patch }))
+    if (patch) {
+      setForm(p => ({ ...p, ...patch }))
+      setAttrError(null)
+    }
+  }
+  const setSocialAttr = (key, val) => {
+    const patch = applyInitialSocialChange(form, key, val)
+    if (patch) {
+      setForm(p => ({ ...p, ...patch }))
+      setAttrError(null)
+    }
   }
 
   const pool = form.unspentAttributePoints ?? 0
+  const spent = getTotalAttributePoints(form.attributes)
+  const socialPool = form.unspentSocialPoints ?? 0
+  const socialSpent = getTotalSocialPoints(form.socialAttributes)
+  const creationReady = !isNew || profileOnly
+    || (validateStartingAttributesDistributed(form).ok && validateStartingSocialDistributed(form).ok)
 
   const handleSubmit = e => {
     e.preventDefault()
@@ -91,6 +123,19 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
       })
       return
     }
+    if (isNew) {
+      const checkPhysical = validateStartingAttributesDistributed(form)
+      if (!checkPhysical.ok) {
+        setAttrError(checkPhysical.message)
+        return
+      }
+      const checkSocial = validateStartingSocialDistributed(form)
+      if (!checkSocial.ok) {
+        setAttrError(checkSocial.message)
+        return
+      }
+    }
+    setAttrError(null)
     onSave(form)
   }
 
@@ -118,8 +163,28 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
         <>
           <hr className="divide-line" />
           <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-            PONTOS DE STATUS · <span style={{ color: '#16a34a' }}>{pool}</span> disponíveis · máx {INITIAL_ATTRIBUTE_MAX}/atributo
+            PONTOS DE STATUS · <span style={{ color: pool > 0 ? '#eab308' : '#16a34a' }}>{pool}</span> disponíveis
+            · <span style={{ color: '#666' }}>{spent}/{STARTING_ATTRIBUTE_POINTS} usados</span>
+            · máx {INITIAL_ATTRIBUTE_MAX}/atributo
           </div>
+          {isNew && pool > 0 && (
+            <p style={{ fontSize: '0.72rem', color: '#eab308', margin: '0 0 0.5rem', lineHeight: 1.45 }}>
+              Distribua todos os {STARTING_ATTRIBUTE_POINTS} pontos iniciais para criar o personagem.
+            </p>
+          )}
+          {attrError && (
+            <p style={{
+              fontSize: '0.72rem',
+              color: '#f87171',
+              margin: '0 0 0.5rem',
+              padding: '0.5rem 0.65rem',
+              background: 'rgba(220,38,38,0.08)',
+              border: '1px solid rgba(220,38,38,0.2)',
+              borderRadius: '3px',
+            }}>
+              {attrError}
+            </p>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem' }}>
             {ATTRIBUTES.map(attr => {
               const v = form.attributes[attr.key] || 0
@@ -134,12 +199,47 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
               )
             })}
           </div>
+
+          <hr className="divide-line" />
+          <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+            PONTOS DE CENA (SOCIAL) · <span style={{ color: socialPool > 0 ? '#e879f9' : '#16a34a' }}>{socialPool}</span> disponíveis
+            · <span style={{ color: '#666' }}>{socialSpent}/{STARTING_SOCIAL_POINTS} usados</span>
+            · máx {INITIAL_SOCIAL_MAX}/atributo
+          </div>
+          {isNew && socialPool > 0 && (
+            <p style={{ fontSize: '0.72rem', color: '#e879f9', margin: '0 0 0.5rem', lineHeight: 1.45 }}>
+              Distribua todos os {STARTING_SOCIAL_POINTS} pontos de cena para criar o personagem.
+            </p>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+            {SOCIAL_ATTRIBUTES.map(attr => {
+              const v = form.socialAttributes?.[attr.key] || 0
+              return (
+                <AttributeInput
+                  key={attr.key}
+                  attr={attr}
+                  value={v}
+                  canIncrease={socialPool > 0 && v < INITIAL_SOCIAL_MAX}
+                  onChange={val => setSocialAttr(attr.key, val)}
+                />
+              )
+            })}
+          </div>
         </>
       )}
 
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
-        <button type="submit" className="btn-primary">Salvar</button>
+        <button
+          type="submit"
+          className="btn-primary"
+          disabled={!profileOnly && isNew && !creationReady}
+          title={!profileOnly && isNew && !creationReady
+            ? `Distribua todos os pontos iniciais (${STARTING_ATTRIBUTE_POINTS} físicos e ${STARTING_SOCIAL_POINTS} de cena)`
+            : undefined}
+        >
+          Salvar
+        </button>
       </div>
     </form>
   )
@@ -298,7 +398,13 @@ function CharCard({ character, onEdit, onDelete, onInventory }) {
   )
 }
 
-export function Characters({ embedded = false, onNavigate }) {
+export function Characters({
+  embedded = false,
+  onNavigate,
+  autoOpenCreate = false,
+  onCreateFlowClose,
+  onCreateFlowSuccess,
+}) {
   const { activeCampaignId } = useCampaignStore()
   const { characters, addCharacter, updateCharacter, deleteCharacter, addInventoryItem, removeInventoryItem } = useCharacterStore()
   const [modalOpen, setModalOpen] = useState(false)
@@ -312,16 +418,46 @@ export function Characters({ embedded = false, onNavigate }) {
   const openEdit = (c) => { setEditing(c); setModalOpen(true) }
   const closeModal = () => { setModalOpen(false); setEditing(null) }
 
+  const handleModalClose = () => {
+    const wasNewCreate = autoOpenCreate && !editing
+    closeModal()
+    if (wasNewCreate) onCreateFlowClose?.()
+  }
+
+  useEffect(() => {
+    if (autoOpenCreate && activeCampaignId) openCreate()
+  }, [autoOpenCreate, activeCampaignId])
+
   const handleSave = (data) => {
+    const isNew = !editing
+    if (isNew) {
+      const check = validateStartingAttributesDistributed(data)
+      if (!check.ok) return
+    }
+    const payload = {
+      ...data,
+      ...finalizeCreationAttributes(data, { isNew }),
+    }
     if (editing) {
-      updateCharacter(editing.id, data)
+      updateCharacter(editing.id, payload)
     } else {
-      addCharacter(withActiveCampaign(data, activeCampaignId))
+      const created = addCharacter(withActiveCampaign(payload, activeCampaignId))
+      if (!created) return
     }
     closeModal()
+    if (autoOpenCreate && isNew) onCreateFlowSuccess?.()
   }
 
   const currentInventoryChar = inventoryChar ? characters.find(c => c.id === inventoryChar.id) : null
+  const creationFlowOnly = embedded && autoOpenCreate
+
+  if (creationFlowOnly) {
+    return (
+      <Modal open={modalOpen} onClose={handleModalClose} title="Novo Personagem" maxWidth="640px">
+        <CharacterForm initial={null} onSave={handleSave} onCancel={handleModalClose} />
+      </Modal>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
@@ -370,8 +506,8 @@ export function Characters({ embedded = false, onNavigate }) {
         )}
       </div>
 
-      <Modal open={modalOpen} onClose={closeModal} title={editing ? 'Editar Personagem' : 'Novo Personagem'} maxWidth="640px">
-        <CharacterForm initial={editing} onSave={handleSave} onCancel={closeModal} />
+      <Modal open={modalOpen} onClose={handleModalClose} title={editing ? 'Editar Personagem' : 'Novo Personagem'} maxWidth="640px">
+        <CharacterForm initial={editing} onSave={handleSave} onCancel={handleModalClose} />
       </Modal>
 
       <Modal open={!!inventoryChar} onClose={() => setInventoryChar(null)} title="Inventário" maxWidth="480px">
@@ -387,7 +523,8 @@ export function Characters({ embedded = false, onNavigate }) {
 
       <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Confirmar Exclusão" maxWidth="380px">
         <p style={{ fontSize: '0.85rem', color: '#999', marginBottom: '1.25rem' }}>
-          Excluir o personagem <strong style={{ color: '#e5e5e5' }}>{deleteConfirm?.name}</strong>?
+          Enviar o personagem <strong style={{ color: '#e5e5e5' }}>{deleteConfirm?.name}</strong> para a lixeira?
+          Você pode restaurá-lo em Lixeira.
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>

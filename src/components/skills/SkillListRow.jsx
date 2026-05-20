@@ -2,10 +2,12 @@ import React from 'react'
 import { ChevronRight } from 'lucide-react'
 import { getSkillTypeMeta } from '../../constants/skillTypes'
 import { SKILL_CATEGORY_META } from '../../constants/skillCategories'
+import { SKILL_AUDIENCE_META, getSkillAudience } from '../../constants/skillAudience'
 
 export function SkillListRow({ skill, onClick }) {
   const typeMeta = getSkillTypeMeta(skill.skillType)
   const catMeta = SKILL_CATEGORY_META[skill.category]
+  const audienceMeta = SKILL_AUDIENCE_META[getSkillAudience(skill)]
 
   return (
     <button
@@ -50,6 +52,7 @@ export function SkillListRow({ skill, onClick }) {
           )}
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', fontSize: '0.6rem', fontFamily: 'monospace' }}>
+          <span style={{ color: audienceMeta.color }}>{audienceMeta.shortLabel}</span>
           <span style={{ color: typeMeta.color }}>{typeMeta.label.toUpperCase()}</span>
           {skill.cooldownTurns > 0 && <span style={{ color: '#555' }}>CD {skill.cooldownTurns}T</span>}
           {catMeta && <span style={{ color: catMeta.color }}>{catMeta.label}</span>}

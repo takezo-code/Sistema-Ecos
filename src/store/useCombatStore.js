@@ -6,6 +6,7 @@ const load = () => storage.get(KEYS.combatSession) || {
   turn: 0,
   campaignId: null,
   combatGroupId: null,
+  activeEnemyId: null,
 }
 
 export const useCombatStore = create((set, get) => ({
@@ -13,11 +14,12 @@ export const useCombatStore = create((set, get) => ({
   turn: load().turn ?? 0,
   campaignId: load().campaignId ?? null,
   combatGroupId: load().combatGroupId ?? null,
+  activeEnemyId: load().activeEnemyId ?? null,
   lastRoll: null,
 
   persist() {
-    const { globalNotes, turn, campaignId, combatGroupId } = get()
-    storage.set(KEYS.combatSession, { globalNotes, turn, campaignId, combatGroupId })
+    const { globalNotes, turn, campaignId, combatGroupId, activeEnemyId } = get()
+    storage.set(KEYS.combatSession, { globalNotes, turn, campaignId, combatGroupId, activeEnemyId })
   },
 
   setCampaign(campaignId) {
@@ -47,6 +49,11 @@ export const useCombatStore = create((set, get) => ({
 
   incrementTurn() {
     set({ turn: get().turn + 1 })
+    get().persist()
+  },
+
+  setActiveEnemy(npcId) {
+    set({ activeEnemyId: npcId || null })
     get().persist()
   },
 

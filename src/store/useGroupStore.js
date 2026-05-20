@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { storage, KEYS } from '../services/storage'
 import { genId } from '../utils/id'
+import { archiveEntity, TRASH_TYPES } from '../services/trashService'
 
 const load = () => storage.get(KEYS.groups) || []
 
@@ -36,9 +37,9 @@ export const useGroupStore = create((set, get) => ({
   },
 
   deleteGroup(id) {
-    const groups = get().groups.filter(g => g.id !== id)
-    storage.set(KEYS.groups, groups)
-    set({ groups })
+    const group = get().groups.find(g => g.id === id)
+    if (!group) return
+    archiveEntity(TRASH_TYPES.group, group)
   },
 
   addMember(groupId, characterId) {

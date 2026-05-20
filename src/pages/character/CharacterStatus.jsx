@@ -2,11 +2,10 @@ import React from 'react'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { AttributeGrid } from '../../components/management/AttributeGrid'
 import { StatesSection } from '../../components/management/StatesSection'
-import { STARTING_ATTRIBUTE_POINTS, getTotalAttributePoints } from '../../constants/attributes'
+import { isInCreationPhase } from '../../constants/attributes'
 
 export function CharacterStatus({ character, onUpdate, onChangeAttribute, onSpendPending }) {
-  const isCreation = (character.unspentAttributePoints ?? 0) > 0
-    && getTotalAttributePoints(character.attributes) < STARTING_ATTRIBUTE_POINTS
+  const isCreation = isInCreationPhase(character)
 
   return (
     <div style={{ padding: '1rem 1.5rem', overflowY: 'auto', height: '100%' }}>

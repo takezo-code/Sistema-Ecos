@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { storage, KEYS } from '../services/storage'
 import { genId } from '../utils/id'
+import { archiveEntity, TRASH_TYPES } from '../services/trashService'
 
 const load = () => storage.get(KEYS.organizations) || []
 
@@ -36,9 +37,9 @@ export const useOrganizationStore = create((set, get) => ({
   },
 
   deleteOrganization(id) {
-    const organizations = get().organizations.filter(o => o.id !== id)
-    storage.set(KEYS.organizations, organizations)
-    set({ organizations })
+    const org = get().organizations.find(o => o.id === id)
+    if (!org) return
+    archiveEntity(TRASH_TYPES.organization, org)
   },
 
   getOrgsByCampaign(campaignId) {
