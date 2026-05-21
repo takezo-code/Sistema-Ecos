@@ -6,6 +6,7 @@ import { useCampaignStore } from '../store/useCampaignStore'
 import { Modal } from '../components/ui/Modal'
 import { EmptyState } from '../components/ui/EmptyState'
 import { filterByActiveCampaign } from '../utils/campaignScope'
+import { isNarrativeNpc } from '../utils/npcScope'
 import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
 import { EntityManagePanel } from '../components/management/EntityManagePanel'
 import { StatusTag } from '../components/ui/StatusTag'
@@ -138,7 +139,6 @@ export function ManageNPCs({ embedded = false }) {
     spendPendingAttribute,
     spendPendingSocialAttribute,
     changeSocialAttribute,
-    upgradeSkill,
     learnCatalogSkill,
     removeSkill,
     restEcoOverload,
@@ -157,7 +157,7 @@ export function ManageNPCs({ embedded = false }) {
   const [managing, setManaging] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [search, setSearch] = useState('')
-  let filtered = filterByActiveCampaign(npcs, activeCampaignId)
+  let filtered = filterByActiveCampaign(npcs, activeCampaignId).filter(isNarrativeNpc)
   if (search) filtered = filtered.filter(n => n.name.toLowerCase().includes(search.toLowerCase()))
 
   const current = managing ? npcs.find(n => n.id === managing.id) : null
@@ -199,7 +199,7 @@ export function ManageNPCs({ embedded = false }) {
           <EmptyState
             icon={Skull}
             title="Nenhum NPC para gerenciar"
-            description="Crie NPCs em Gerenciamento → Criação para gerenciar atributos, nível e skills aqui."
+            description="Crie NPCs narrativos em Gerenciamento → Criação → NPC. Inimigos de combate ficam em Boss."
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '720px' }}>
@@ -241,7 +241,6 @@ export function ManageNPCs({ embedded = false }) {
             onScaleAttributes={() => scaleMasterAttributesToBudget(current.id)}
             masterError={lastMasterError}
             onSpendPendingAttribute={key => spendPendingAttribute(current.id, key)}
-            onUpgradeSkill={showEcoProgression ? skillId => upgradeSkill(current.id, skillId) : undefined}
             onLearnCatalogSkill={showEcoProgression ? templateId => learnCatalogSkill(current.id, templateId, { free: true }) : undefined}
             onRemoveSkill={showEcoProgression ? skillId => removeSkill(current.id, skillId) : undefined}
             onRestOverload={showEcoProgression ? () => restEcoOverload(current.id) : undefined}

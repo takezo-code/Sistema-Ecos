@@ -21,7 +21,7 @@ import {
   clampMasterAuxiliary as buildClampMasterAuxiliaryPatch,
   scaleAttributesToBudget,
 } from '../services/progressionService'
-import { unlockRandomSkill, upgradeSkillTier } from '../services/skillService'
+import { unlockRandomSkill } from '../services/skillService'
 import { useEcoSkill, restEcoOverload, masterSetEcoOverload } from '../services/ecoOverloadService'
 import {
   activateCharacterSkill,
@@ -31,6 +31,7 @@ import {
 import { catalogSkillAllowedForEntity, getCatalogSkill } from '../services/skillsCatalogService'
 import { enforceProgressionCaps } from '../services/progressionBudget'
 import { archiveEntity, TRASH_TYPES } from '../services/trashService'
+import { useGroupStore } from './useGroupStore'
 import {
   applyDamageMarks as applyDamageMarksEngine,
   clearDamageMarks as clearDamageMarksEngine,
@@ -107,6 +108,17 @@ export const useCharacterStore = create((set, get) => ({
     const characters = [...get().characters, character]
     persist(characters)
     set({ characters })
+
+    if (character.campaignId) {
+      const campaignGroups = useGroupStore.getState().groups.filter(
+        g => g.campaignId === character.campaignId,
+      )
+      const group = campaignGroups[0]
+      if (group && !group.memberIds.includes(character.id)) {
+        useGroupStore.getState().addMember(group.id, character.id)
+      }
+    }
+
     return character
   },
 
@@ -292,15 +304,6 @@ export const useCharacterStore = create((set, get) => ({
     if (!patch) return null
     patchCharacter(get, set, characterId, ch => ({ ...ch, ...patch }))
     return patch.skills[patch.skills.length - 1]
-  },
-
-  upgradeSkill(characterId, skillId) {
-    const c = get().characters.find(ch => ch.id === characterId)
-    if (!c) return false
-    const patch = upgradeSkillTier(c, skillId)
-    if (!patch) return false
-    patchCharacter(get, set, characterId, ch => ({ ...ch, ...patch }))
-    return true
   },
 
   useEcoSkill(characterId, skillId, options = {}) {

@@ -1,19 +1,12 @@
 import React, { useState } from 'react'
-import { Sparkles, ChevronUp, Zap, Search, ArrowLeft } from 'lucide-react'
+import { Sparkles, Zap, Search, ArrowLeft } from 'lucide-react'
 import { ECO_UNLOCK_SKILL_COST, MAX_SKILL_TIER } from '../../constants/progression'
-import {
-  canUnlockRandomSkill,
-  canAffordAnySkillUpgrade,
-  listUpgradeableSkills,
-  getSkillDisplay,
-  getTierUpgradeCostLabel,
-} from '../../services/skillService'
+import { canUnlockRandomSkill, getSkillDisplay } from '../../services/skillService'
 import { formatRuptureBonus } from '../../services/ruptureBonus'
 
 const CHOICE = Object.freeze({
   NONE: null,
   UNLOCK: 'unlock',
-  UPGRADE: 'upgrade',
 })
 
 function EcoPointsBar({ eco, hasEcoToSpend }) {
@@ -55,7 +48,7 @@ function EcoPointsBar({ eco, hasEcoToSpend }) {
           fontWeight: 600,
           textAlign: 'right',
         }}>
-          Pronto para gastar
+          Pronto para descobrir
         </span>
       ) : (
         <span style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', textAlign: 'right', maxWidth: '140px', lineHeight: 1.4 }}>
@@ -66,26 +59,19 @@ function EcoPointsBar({ eco, hasEcoToSpend }) {
   )
 }
 
-export function EcoSkillsSection({ entity, onUnlockSkill, onUpgradeSkill, manualSkillPick = false }) {
+export function EcoSkillsSection({ entity, onUnlockSkill, manualSkillPick = false }) {
   const eco = entity.ecoPoints ?? 0
   const skills = entity.skills || []
   const rupture = entity.attributes?.ruptura ?? 0
   const mentalState = entity.mentalState ?? 'estavel'
   const ecoOverload = entity.ecoOverload ?? 0
   const canUnlock = !manualSkillPick && canUnlockRandomSkill(entity)
-  const canUpgradeAny = canAffordAnySkillUpgrade(entity)
-  const upgradeable = listUpgradeableSkills(entity)
   const hasEcoToSpend = eco >= ECO_UNLOCK_SKILL_COST
 
   const [choiceMode, setChoiceMode] = useState(CHOICE.NONE)
 
   const handleUnlock = () => {
     onUnlockSkill?.()
-    setChoiceMode(CHOICE.NONE)
-  }
-
-  const handleUpgrade = (skillId) => {
-    onUpgradeSkill?.(skillId)
     setChoiceMode(CHOICE.NONE)
   }
 
@@ -107,55 +93,34 @@ export function EcoSkillsSection({ entity, onUnlockSkill, onUpgradeSkill, manual
 
       <p style={{ fontSize: '0.75rem', color: '#555', lineHeight: 1.6, marginBottom: '0.75rem' }}>
         {manualSkillPick
-          ? 'Adicione habilidades pelo grimório do mestre. Gaste Eco apenas para evoluir o tier das que já possui.'
-          : 'Gaste um Eco para descobrir uma habilidade nova ou evoluir uma que já possui.'}
+          ? 'Adicione habilidades pelo grimório do mestre.'
+          : 'Gaste um Eco para descobrir uma habilidade nova que você ainda não possui.'}
       </p>
 
       <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', marginBottom: '0.5rem' }}>
         {skills.length} HABILIDADE(S) DESBLOQUEADA(S)
       </div>
 
-      {choiceMode === CHOICE.NONE && (
+      {choiceMode === CHOICE.NONE && !manualSkillPick && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '1rem' }}>
-          {!manualSkillPick && (
-            <button
-              type="button"
-              className="btn-primary"
-              disabled={!canUnlock || !onUnlockSkill}
-              onClick={() => setChoiceMode(CHOICE.UNLOCK)}
-              title={canUnlock ? `Gasta ${ECO_UNLOCK_SKILL_COST} Eco` : 'Precisa de pelo menos 1 Eco'}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                width: '100%',
-                fontSize: '0.8rem',
-                opacity: canUnlock ? 1 : 0.5,
-              }}
-            >
-              <Search size={14} />
-              Descobrir habilidade ({ECO_UNLOCK_SKILL_COST} Eco)
-            </button>
-          )}
           <button
             type="button"
-            className="btn-secondary"
-            disabled={!canUpgradeAny || !onUpgradeSkill}
-            onClick={() => setChoiceMode(CHOICE.UPGRADE)}
-            title={canUpgradeAny ? 'Escolha qual habilidade evoluir' : 'Sem Eco ou nenhuma habilidade evoluível'}
+            className="btn-primary"
+            disabled={!canUnlock || !onUnlockSkill}
+            onClick={() => setChoiceMode(CHOICE.UNLOCK)}
+            title={canUnlock ? `Gasta ${ECO_UNLOCK_SKILL_COST} Eco` : 'Precisa de pelo menos 1 Eco'}
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.5rem',
               width: '100%',
-              fontSize: '0.75rem',
-              opacity: canUpgradeAny ? 1 : 0.5,
+              fontSize: '0.8rem',
+              opacity: canUnlock ? 1 : 0.5,
             }}
           >
-            <ChevronUp size={14} style={{ color: '#d97706' }} />
-            Evoluir habilidade existente
+            <Search size={14} />
+            Descobrir habilidade ({ECO_UNLOCK_SKILL_COST} Eco)
           </button>
         </div>
       )}
@@ -185,52 +150,6 @@ export function EcoSkillsSection({ entity, onUnlockSkill, onUpgradeSkill, manual
             <Zap size={13} />
             Confirmar descoberta ({ECO_UNLOCK_SKILL_COST} Eco)
           </button>
-        </div>
-      )}
-
-      {choiceMode === CHOICE.UPGRADE && (
-        <div style={{
-          marginBottom: '1rem',
-          padding: '0.75rem',
-          background: '#0d0d0d',
-          border: '1px solid rgba(217,119,6,0.25)',
-          borderRadius: '4px',
-        }}>
-          <button type="button" className="btn-ghost" onClick={() => setChoiceMode(CHOICE.NONE)}
-            style={{ fontSize: '0.65rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <ArrowLeft size={11} /> Voltar
-          </button>
-          <p style={{ fontSize: '0.75rem', color: '#888', marginBottom: '0.5rem', lineHeight: 1.5 }}>
-            Escolha qual habilidade evoluir de tier:
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-            {upgradeable.map(skill => (
-              <button
-                key={skill.id}
-                type="button"
-                className="btn-secondary"
-                onClick={() => handleUpgrade(skill.id)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '0.5rem 0.75rem',
-                  fontSize: '0.75rem',
-                  textAlign: 'left',
-                }}
-              >
-                <span>
-                  <strong style={{ color: '#e5e5e5' }}>{skill.name}</strong>
-                  <span style={{ color: '#666', fontFamily: 'monospace', marginLeft: '0.5rem' }}>
-                    Tier {skill.tier} → {skill.tier + 1}
-                  </span>
-                </span>
-                <span style={{ fontSize: '0.65rem', color: '#d97706', fontFamily: 'monospace', flexShrink: 0 }}>
-                  {getTierUpgradeCostLabel(skill.tier)}
-                </span>
-              </button>
-            ))}
-          </div>
         </div>
       )}
 

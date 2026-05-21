@@ -2,14 +2,16 @@ import React, { useEffect, useState } from 'react'
 import { Sword, Skull, Building2, ArrowLeft, ShieldAlert } from 'lucide-react'
 import { Characters } from './Characters'
 import { NPCs } from './NPCs'
+import { Bosses } from './Bosses'
 import { Organizations } from './Organizations'
 import { useCampaignStore } from '../store/useCampaignStore'
+import { CreationChoiceCard } from '../components/creation/CreationChoiceCard'
 
 const CREATION_TYPES = [
   {
     id: 'characters',
     label: 'Personagem',
-    description: 'Personagem jogável com atributos, progressão e habilidades.',
+    description: 'Personagem jogável com atributos, progressão e habilidades de Eco.',
     icon: Sword,
     color: '#9ca3af',
     border: 'rgba(156,163,175,0.2)',
@@ -18,7 +20,7 @@ const CREATION_TYPES = [
   {
     id: 'npcs',
     label: 'NPC',
-    description: 'Personagem não jogável: aliado, inimigo ou figura da narrativa.',
+    description: 'Figura da narrativa — aliado, informante ou personagem de cena, sem ficha de combate.',
     icon: Skull,
     color: '#06b6d4',
     border: 'rgba(6,182,212,0.2)',
@@ -27,7 +29,7 @@ const CREATION_TYPES = [
   {
     id: 'boss',
     label: 'Boss',
-    description: 'Inimigo poderoso com resistências físicas e mentais altas. Pronto para combate.',
+    description: 'Inimigo de combate — resistências física e mental, marcas e XP ao derrotar.',
     icon: ShieldAlert,
     color: '#dc2626',
     border: 'rgba(220,38,38,0.2)',
@@ -103,7 +105,6 @@ export function ManagementCreationHub({
               color: '#555',
               cursor: 'pointer',
               fontSize: '0.7rem',
-              transition: 'color 0.15s',
               padding: '2px 0',
             }}
             onMouseEnter={e => { e.currentTarget.style.color = '#e5e5e5' }}
@@ -116,7 +117,7 @@ export function ManagementCreationHub({
         <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           {selected === 'characters' && <Characters {...flowProps} />}
           {selected === 'npcs' && <NPCs {...flowProps} />}
-          {selected === 'boss' && <NPCs {...flowProps} bossMode />}
+          {selected === 'boss' && <Bosses {...flowProps} />}
           {selected === 'organizations' && <Organizations {...flowProps} />}
         </div>
       </div>
@@ -137,70 +138,17 @@ export function ManagementCreationHub({
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.75rem' }}>
-          {CREATION_TYPES.map(type => {
-            const Icon = type.icon
-            return (
-              <button
-                key={type.id}
-                type="button"
-                onClick={() => handleSelect(type.id)}
-                disabled={!activeCampaignId}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  gap: '0.75rem',
-                  padding: '1.25rem',
-                  background: type.bg,
-                  border: `1px solid ${type.border}`,
-                  borderRadius: '6px',
-                  cursor: activeCampaignId ? 'pointer' : 'not-allowed',
-                  opacity: activeCampaignId ? 1 : 0.4,
-                  textAlign: 'left',
-                  transition: 'border-color 0.15s, background 0.15s',
-                }}
-                onMouseEnter={e => {
-                  if (!activeCampaignId) return
-                  e.currentTarget.style.borderColor = type.color
-                  e.currentTarget.style.background = `rgba(${hexToRgb(type.color)}, 0.08)`
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = type.border
-                  e.currentTarget.style.background = type.bg
-                }}
-              >
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '6px',
-                  background: `rgba(${hexToRgb(type.color)}, 0.1)`,
-                  border: `1px solid rgba(${hexToRgb(type.color)}, 0.2)`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <Icon size={18} style={{ color: type.color }} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#e5e5e5', marginBottom: '0.3rem' }}>
-                    {type.label}
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: '#555', lineHeight: 1.5 }}>
-                    {type.description}
-                  </div>
-                </div>
-              </button>
-            )
-          })}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.75rem' }}>
+          {CREATION_TYPES.map(type => (
+            <CreationChoiceCard
+              key={type.id}
+              type={type}
+              disabled={!activeCampaignId}
+              onClick={handleSelect}
+            />
+          ))}
         </div>
       </div>
     </div>
   )
-}
-
-function hexToRgb(hex) {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  if (!result) return '255,255,255'
-  return `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}`
 }

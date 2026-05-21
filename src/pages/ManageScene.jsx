@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react'
-import { Clapperboard, RotateCcw } from 'lucide-react'
+import { Clapperboard, RotateCcw, Skull } from 'lucide-react'
 import { useCharacterStore } from '../store/useCharacterStore'
+import { useNPCStore } from '../store/useNPCStore'
 import { useCampaignStore } from '../store/useCampaignStore'
 import { useSceneStore } from '../store/useSceneStore'
 import { useGroupStore } from '../store/useGroupStore'
@@ -9,56 +10,14 @@ import { resolveCombatRoster } from '../utils/combatRoster'
 import { listCharacterSkillsRuntime } from '../services/ecoSkillRuntimeService'
 import { COMBAT_HIGHLIGHT_XP } from '../constants/progression'
 import { CombatCharacterColumn } from '../components/combat/CombatCharacterColumn'
-import { SOCIAL_ATTRIBUTES } from '../constants/attributes'
+import { CombatEnemyCard } from '../components/combat/CombatEnemyCard'
 import { CombatSkillDetailModal } from '../components/combat/CombatSkillDetailModal'
 import { EmptyState } from '../components/ui/EmptyState'
 import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
 
-const SCENE_ACCENT = '#d97706'
+import { getRollOutcome } from '../mechanics/combat/rollOutcome'
 
-function getRollOutcome(dice, bonus) {
-  const total = dice + bonus
-  if (dice === 1) return {
-    label: 'Falha Crítica',
-    desc: 'Algo dá terrivelmente errado. Consequência severa.',
-    color: '#ef4444',
-    bg: 'rgba(127,29,29,0.6)',
-    border: 'rgba(239,68,68,0.4)',
-    icon: '💀',
-  }
-  if (total <= 9) return {
-    label: 'Falha',
-    desc: 'A ação não funciona como esperado.',
-    color: '#f87171',
-    bg: 'rgba(153,27,27,0.4)',
-    border: 'rgba(248,113,113,0.3)',
-    icon: '✕',
-  }
-  if (total <= 17) return {
-    label: 'Sucesso Parcial',
-    desc: 'Consegue, mas há uma pequena consequência.',
-    color: '#fb923c',
-    bg: 'rgba(124,45,18,0.45)',
-    border: 'rgba(251,146,60,0.35)',
-    icon: '◑',
-  }
-  if (dice === 20) return {
-    label: 'Sucesso Crítico',
-    desc: 'Resultado excepcional. Além do esperado.',
-    color: '#c084fc',
-    bg: 'rgba(88,28,135,0.5)',
-    border: 'rgba(192,132,252,0.4)',
-    icon: '★',
-  }
-  return {
-    label: 'Sucesso',
-    desc: 'A ação é realizada com clareza.',
-    color: '#4ade80',
-    bg: 'rgba(20,83,45,0.45)',
-    border: 'rgba(74,222,128,0.3)',
-    icon: '✓',
-  }
-}
+const SCENE_ACCENT = '#d97706'
 
 function RollResultBanner({ result, onDismiss }) {
   if (!result) return null
@@ -113,17 +72,20 @@ function RollResultBanner({ result, onDismiss }) {
 export function ManageScene() {
   const {
     characters, updateCharacter, activateSkill, advanceTurn, addXp,
-    applyDamageMarks, healDamageMarks, clearDamageMarks, recoverGroupMembers,
+    recoverGroupMembers,
   } = useCharacterStore()
+  const { npcs, updateNPC } = useNPCStore()
   const { groups } = useGroupStore()
   const activeCampaignId = useCampaignStore(s => s.activeCampaignId)
   const {
     globalNotes,
     turn,
     sceneGroupId,
+    activeEnemyId,
     setCampaign,
     setSceneGroup,
     setGlobalNotes,
+    setActiveEnemy,
     incrementTurn,
   } = useSceneStore()
 
@@ -153,6 +115,16 @@ export function ManageScene() {
     [roster]
   )
 
+  const campaignEnemies = useMemo(
+    () => filterByActiveCampaign(npcs, activeCampaignId).filter(n => n.podeCombater),
+    [npcs, activeCampaignId]
+  )
+
+  const activeEnemy = useMemo(
+    () => activeEnemyId ? campaignEnemies.find(n => n.id === activeEnemyId) ?? null : null,
+    [campaignEnemies, activeEnemyId]
+  )
+
   const activeGroup = sceneGroupId ? groups.find(g => g.id === sceneGroupId) : null
 
   const skillDetail = useMemo(() => {
@@ -179,23 +151,6 @@ export function ManageScene() {
     })
   }, [])
 
-  const handleApplyMarks = useCallback((character, markType) => {
-    const result = applyDamageMarks(character.id, markType)
-    if (result?.stateChanged) {
-      setSceneNotice(`${character.name}: ${result.narratives?.join(' · ') || 'Estado alterado.'}`)
-    }
-    return result
-  }, [applyDamageMarks])
-
-  const handleHealMarks = useCallback((character, amount) => {
-    healDamageMarks(character.id, amount)
-  }, [healDamageMarks])
-
-  const handleClearMarks = useCallback((character) => {
-    clearDamageMarks(character.id)
-    setSceneNotice(`${character.name} se recuperou — marcas de dano limpas.`)
-  }, [clearDamageMarks])
-
   const handleGrantHighlightXp = useCallback((character) => {
     const { levelUps } = addXp(character.id, COMBAT_HIGHLIGHT_XP) || {}
     if (levelUps?.length) {
@@ -205,6 +160,12 @@ export function ManageScene() {
       setSceneNotice(`+${COMBAT_HIGHLIGHT_XP} XP para ${character.name} — destaque na cena`)
     }
   }, [addXp])
+
+  const handleEnemyRollAttribute = useCallback((enemy, _attrKey, attrLabel, eff) => {
+    const dice = Math.floor(Math.random() * 20) + 1
+    const total = dice + eff
+    setRollResult({ dice, bonus: eff, total, characterName: enemy.name, attrLabel })
+  }, [])
 
   const handleActivateSkill = useCallback((characterId, skillId) => {
     const res = activateSkill(characterId, skillId)
@@ -257,7 +218,7 @@ export function ManageScene() {
             className="input-base"
             value={sceneGroupId || ''}
             onChange={e => setSceneGroup(e.target.value || null)}
-            style={{ fontSize: '0.65rem', padding: '3px 6px', maxWidth: '220px' }}
+            style={{ fontSize: '0.65rem', padding: '3px 6px', maxWidth: '180px' }}
             title="Grupo presente nesta cena"
           >
             <option value="">Todos os personagens</option>
@@ -267,6 +228,29 @@ export function ManageScene() {
               </option>
             ))}
           </select>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Skull size={13} style={{ color: SCENE_ACCENT, flexShrink: 0 }} />
+            <select
+              className="input-base"
+              value={activeEnemyId || ''}
+              onChange={e => setActiveEnemy(e.target.value || null)}
+              style={{
+                fontSize: '0.65rem',
+                padding: '3px 6px',
+                maxWidth: '200px',
+                borderColor: activeEnemyId ? 'rgba(217,119,6,0.4)' : undefined,
+              }}
+              title="Inimigo enfrentado nesta cena"
+            >
+              <option value="">Sem inimigo</option>
+              {campaignEnemies.map(n => (
+                <option key={n.id} value={n.id}>
+                  {n.papelCombate === 'boss' ? '★ ' : ''}{n.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
           <span style={{ fontSize: '0.65rem', fontFamily: 'monospace', color: '#444' }}>
@@ -346,47 +330,81 @@ export function ManageScene() {
               <CombatCharacterColumn
                 key={c.id}
                 character={c}
-                attributeList={SOCIAL_ATTRIBUTES}
+                variant="scene"
                 onUpdate={data => updateCharacter(c.id, data)}
                 onRollAttribute={handleRollAttribute}
                 onActivateSkill={handleActivateSkill}
                 onGrantHighlightXp={handleGrantHighlightXp}
                 onSelectSkill={handleSelectSkill}
-                onApplyMarks={(markType) => handleApplyMarks(c, markType)}
-                onHealMarks={(amount) => handleHealMarks(c, amount)}
-                onClearMarks={() => handleClearMarks(c)}
                 onAdvanceTurn={() => advanceTurn(c.id)}
               />
             ))}
           </div>
 
-          <aside style={{
-            width: '220px',
-            flexShrink: 0,
-            borderLeft: '1px solid #1a1a1a',
-            padding: '0.875rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem',
-            overflowY: 'auto',
-          }}>
-            <div style={{ fontSize: '0.5rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-              NOTAS DA CENA
+          {activeEnemy ? (
+            <div style={{
+              flex: 1,
+              minWidth: 0,
+              borderLeft: `1px solid rgba(217,119,6,0.25)`,
+              padding: '0.875rem',
+              overflowY: 'auto',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+            }}>
+              <div style={{
+                width: '230px',
+                flexShrink: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem',
+              }}>
+                <div style={{
+                  fontSize: '0.45rem',
+                  color: SCENE_ACCENT,
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.1em',
+                  textAlign: 'center',
+                }}>
+                  INIMIGO NA CENA
+                </div>
+                <CombatEnemyCard
+                  enemy={activeEnemy}
+                  variant="scene"
+                  onUpdate={data => updateNPC(activeEnemy.id, data)}
+                  onRollAttribute={handleEnemyRollAttribute}
+                />
+              </div>
             </div>
-            <textarea
-              className="input-base"
-              value={globalNotes}
-              onChange={e => setGlobalNotes(e.target.value)}
-              placeholder="Ambiente, tensão, pistas, falas importantes…"
-              style={{
-                flex: 1,
-                minHeight: '300px',
-                fontSize: '0.8rem',
-                lineHeight: 1.55,
-                resize: 'none',
-              }}
-            />
-          </aside>
+          ) : (
+            <aside style={{
+              width: '220px',
+              flexShrink: 0,
+              borderLeft: '1px solid #1a1a1a',
+              padding: '0.875rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem',
+              overflowY: 'auto',
+            }}>
+              <div style={{ fontSize: '0.5rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+                NOTAS DA CENA
+              </div>
+              <textarea
+                className="input-base"
+                value={globalNotes}
+                onChange={e => setGlobalNotes(e.target.value)}
+                placeholder="Ambiente, tensão, pistas, falas importantes…"
+                style={{
+                  flex: 1,
+                  minHeight: '300px',
+                  fontSize: '0.8rem',
+                  lineHeight: 1.55,
+                  resize: 'none',
+                }}
+              />
+            </aside>
+          )}
         </div>
       )}
 

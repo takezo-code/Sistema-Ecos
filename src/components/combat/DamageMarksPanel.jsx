@@ -9,7 +9,7 @@ import {
 import { getPhysicalStateOption } from '../../constants/states'
 
 // Barra de progresso de marcas com segmentos por tier
-function MarksProgressBar({ marks }) {
+export function MarksProgressBar({ marks }) {
   const MAX_SHOWN = 12
   const progress = getMarkProgress(marks)
 
@@ -32,7 +32,7 @@ function MarksProgressBar({ marks }) {
                 borderRadius: '2px',
                 marginLeft: isThreshold ? '3px' : '0',
                 transition: 'background 0.2s',
-                opacity: filled ? 1 : 0.35,
+                opacity: filled ? 1 : 0.55,
               }}
             />
           )
@@ -59,6 +59,7 @@ function MarksProgressBar({ marks }) {
 
 export function DamageMarksPanel({
   character,
+  maxMarks = 0,
   onApplyMarks,
   onHealMarks,
   onClearMarks,
@@ -104,7 +105,7 @@ export function DamageMarksPanel({
           </span>
         </div>
         <span style={{ fontSize: '0.7rem', fontWeight: 800, color: stateOpt.color, fontFamily: 'monospace' }}>
-          {marks} marca{marks !== 1 ? 's' : ''}
+          {marks}{maxMarks > 0 ? `/${maxMarks}` : ''} marca{marks !== 1 ? 's' : ''}
         </span>
       </div>
 

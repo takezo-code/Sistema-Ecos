@@ -37,7 +37,15 @@ export function CombatStatsSection({ entity, onUpdate }) {
         </Field>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+      <p style={{ fontSize: '0.6rem', color: '#555', fontFamily: 'monospace', margin: 0, lineHeight: 1.5 }}>
+        RESISTÊNCIAS — reduzem o dano antes de virar marcas (dano − resistência = dano efetivo)
+      </p>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+        gap: '0.75rem',
+        alignItems: 'start',
+      }}>
         <Field label="Resist. Física">
           <Input
             type="number"
@@ -56,34 +64,19 @@ export function CombatStatsSection({ entity, onUpdate }) {
             onChange={e => set('resistenciaMental', Math.max(0, Math.min(20, parseInt(e.target.value, 10) || 0)))}
           />
         </Field>
-        <Field label="Marcas Máximas (0 = sem limite)">
+        <Field label="Marcas máx.">
           <Input
             type="number"
             min={0}
             value={entity.marcasMaximas ?? 0}
             onChange={e => set('marcasMaximas', Math.max(0, parseInt(e.target.value, 10) || 0))}
+            title="0 = sem limite"
           />
         </Field>
       </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
-        <Field label="Bônus de Ataque">
-          <Input
-            type="number"
-            min={0}
-            max={10}
-            value={entity.bonusAtaque ?? 0}
-            onChange={e => set('bonusAtaque', Math.max(0, Math.min(10, parseInt(e.target.value, 10) || 0)))}
-          />
-        </Field>
-        <Field label="Fraquezas">
-          <Input
-            value={entity.fraquezas ?? ''}
-            onChange={e => set('fraquezas', e.target.value)}
-            placeholder="ex: fogo, luz, sonic..."
-          />
-        </Field>
-      </div>
+      <p style={{ fontSize: '0.55rem', color: '#444', margin: 0 }}>
+        Marcas máx.: 0 = sem limite
+      </p>
 
       <div style={{ fontSize: '0.55rem', color: '#333', fontFamily: 'monospace' }}>
         Marcas atuais: {entity.damageMarks ?? 0}

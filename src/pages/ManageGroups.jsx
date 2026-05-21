@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   UsersRound, Pencil, Trash2, Star, UserPlus, X, Sparkles, Swords, RotateCcw, Plus,
 } from 'lucide-react'
@@ -10,7 +10,9 @@ import { useCampaignStore } from '../store/useCampaignStore'
 import { Modal } from '../components/ui/Modal'
 import { Field, Input, Textarea } from '../components/ui/Field'
 import { EmptyState } from '../components/ui/EmptyState'
-import { EntityManagePanel } from '../components/management/EntityManagePanel'
+import { CharacterFichaSheet } from '../components/character/CharacterFichaSheet'
+import { useCharacterManagementPanel } from '../hooks/useCharacterManagementPanel'
+import { useCharacterPanelStore } from '../store/useCharacterPanelStore'
 import { ATTRIBUTES } from '../constants/attributes'
 import { getPhysicalStateOption, getMentalStateOption } from '../constants/states'
 import { formatOverloadDisplay } from '../constants/ecoOverload'
@@ -40,7 +42,7 @@ function GroupForm({ initial, onSave, onCancel }) {
   )
 }
 
-function MemberRow({ character, onManage, onRemove }) {
+function MemberRow({ character, selected, onManage, onRemove }) {
   const attrs = character.attributes || {}
   const physical = getPhysicalStateOption(character.physicalState ?? character.condition)
   const mental = getMentalStateOption(character.mentalState)
@@ -53,8 +55,8 @@ function MemberRow({ character, onManage, onRemove }) {
       alignItems: 'center',
       gap: '0.75rem',
       padding: '0.75rem 1rem',
-      background: '#111',
-      border: '1px solid #1a1a1a',
+      background: selected ? '#151515' : '#111',
+      border: `1px solid ${selected ? 'rgba(168,85,247,0.35)' : '#1a1a1a'}`,
       borderRadius: '4px',
       transition: 'border-color 0.15s',
     }}>
@@ -124,26 +126,12 @@ export function ManageGroups() {
   const { activeCampaignId } = useCampaignStore()
   const { combatGroupId, setCombatGroup } = useCombatStore()
   const { groups, addGroup, updateGroup, deleteGroup, addMember, removeMember } = useGroupStore()
-  const {
-    characters,
-    updateCharacter,
-    addXpToMany,
-    changeAttribute,
-    clearMasterError,
-    spendPendingAttribute,
-    unlockSkill,
-    upgradeSkill,
-    restEcoOverload,
-    recoverGroupMembers,
-    lastOverloadEvents,
-    clearOverloadEvents,
-    lastLevelUps,
-    clearLevelUps,
-  } = useCharacterStore()
+  const { characters, addXpToMany, recoverGroupMembers } = useCharacterStore()
+  const selectCharacter = useCharacterPanelStore(s => s.selectCharacter)
 
   const [groupModal, setGroupModal] = useState(null)
   const [addMemberOpen, setAddMemberOpen] = useState(false)
-  const [managingChar, setManagingChar] = useState(null)
+  const [selectedMemberId, setSelectedMemberId] = useState(null)
   const [groupXp, setGroupXp] = useState('')
   const [ultraXpOpen, setUltraXpOpen] = useState(false)
   const [lastUltraXp, setLastUltraXp] = useState(null)
@@ -166,7 +154,15 @@ export function ManageGroups() {
     activeGroup ? !activeGroup.memberIds.includes(c.id) : false
   )
 
-  const currentChar = managingChar ? characters.find(c => c.id === managingChar.id) : null
+  const { entity: selectedChar, clearPanelSession } = useCharacterManagementPanel(selectedMemberId)
+
+  useEffect(() => {
+    if (!selectedMemberId) return
+    if (!members.some(m => m.id === selectedMemberId)) {
+      setSelectedMemberId(null)
+      clearPanelSession()
+    }
+  }, [members, selectedMemberId, clearPanelSession])
 
   const handleGroupXp = () => {
     const amount = parseInt(groupXp, 10)
@@ -369,31 +365,61 @@ export function ManageGroups() {
         )}
       </div>
 
-      {/* Lista de membros */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.25rem' }}>
-        {members.length === 0 ? (
-          <EmptyState
-            icon={UsersRound}
-            title="Grupo sem membros"
-            description="Adicione personagens jogáveis a este grupo."
-            action={
-              <button className="btn-primary" onClick={() => setAddMemberOpen(true)}>
-                Adicionar membro
-              </button>
-            }
-          />
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: '720px' }}>
-            {members.map(c => (
-              <MemberRow
-                key={c.id}
-                character={c}
-                onManage={() => setManagingChar(c)}
-                onRemove={() => removeMember(activeGroup.id, c.id)}
-              />
-            ))}
-          </div>
-        )}
+      {/* Membros + ficha (mesma fonte que Gerenciamento → Personagens) */}
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+        <div style={{
+          width: 'min(360px, 42%)',
+          flexShrink: 0,
+          overflowY: 'auto',
+          padding: '1rem 1.25rem',
+          borderRight: '1px solid #1a1a1a',
+        }}>
+          {members.length === 0 ? (
+            <EmptyState
+              icon={UsersRound}
+              title="Grupo sem membros"
+              description="Adicione personagens jogáveis a este grupo."
+              action={
+                <button className="btn-primary" onClick={() => setAddMemberOpen(true)}>
+                  Adicionar membro
+                </button>
+              }
+            />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {members.map(c => (
+                <MemberRow
+                  key={c.id}
+                  character={c}
+                  selected={selectedMemberId === c.id}
+                  onManage={() => {
+                    setSelectedMemberId(c.id)
+                    selectCharacter(c.id)
+                  }}
+                  onRemove={() => {
+                    removeMember(activeGroup.id, c.id)
+                    if (selectedMemberId === c.id) {
+                      setSelectedMemberId(null)
+                      clearPanelSession()
+                    }
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.25rem', minWidth: 0 }}>
+          {selectedMemberId && selectedChar ? (
+            <CharacterFichaSheet characterId={selectedMemberId} adminMode={false} />
+          ) : (
+            <EmptyState
+              icon={UsersRound}
+              title="Selecione um personagem"
+              description="Clique em um membro do grupo para ver a ficha. Alterações feitas em Gerenciamento → Personagens aparecem aqui na hora."
+            />
+          )}
+        </div>
       </div>
 
       {/* Modais */}
@@ -427,27 +453,6 @@ export function ManageGroups() {
               </button>
             ))}
           </div>
-        )}
-      </Modal>
-
-      <Modal open={!!currentChar}
-        onClose={() => { setManagingChar(null); clearLevelUps(); clearOverloadEvents(); clearMasterError() }}
-        title={`Ficha — ${currentChar?.name}`} maxWidth="720px">
-        {currentChar && (
-          <EntityManagePanel
-            entity={currentChar}
-            showProgression
-            adminMode={false}
-            levelUps={lastLevelUps}
-            onUpdate={data => updateCharacter(currentChar.id, data)}
-            onChangeAttribute={(key, val, opts) => changeAttribute(currentChar.id, key, val, opts)}
-            onSpendPendingAttribute={key => spendPendingAttribute(currentChar.id, key)}
-            onUnlockSkill={() => unlockSkill(currentChar.id)}
-            onUpgradeSkill={skillId => upgradeSkill(currentChar.id, skillId)}
-            onRestOverload={() => restEcoOverload(currentChar.id)}
-            lastOverloadEvents={lastOverloadEvents}
-            onClearOverloadEvents={clearOverloadEvents}
-          />
         )}
       </Modal>
 

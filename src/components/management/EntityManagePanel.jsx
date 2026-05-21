@@ -24,7 +24,6 @@ export function EntityManagePanel({
   onScaleAttributes,
   onEditProfile,
   onUnlockSkill,
-  onUpgradeSkill,
   onLearnCatalogSkill,
   onRemoveSkill,
   onUseSkill,
@@ -131,7 +130,6 @@ export function EntityManagePanel({
           adminMode={adminMode}
           manualSkillPick={isNpcEntity(entity)}
           onUnlockSkill={isNpcEntity(entity) ? undefined : onUnlockSkill}
-          onUpgradeSkill={onUpgradeSkill}
           onLearnCatalogSkill={onLearnCatalogSkill}
           onRemoveSkill={onRemoveSkill}
           onRestOverload={onRestOverload}

@@ -21,13 +21,14 @@ import {
   clampMasterAuxiliary as buildClampMasterAuxiliaryPatch,
   scaleAttributesToBudget,
 } from '../services/progressionService'
-import { unlockRandomSkill, upgradeSkillTier } from '../services/skillService'
+import { unlockRandomSkill } from '../services/skillService'
 import { useEcoSkill, restEcoOverload, masterSetEcoOverload } from '../services/ecoOverloadService'
 import { buildSkillInstanceFromCatalog } from '../services/ecoSkillRuntimeService'
 import { catalogSkillAllowedForEntity, getCatalogSkill } from '../services/skillsCatalogService'
 import { enforceProgressionCaps } from '../services/progressionBudget'
 import {
   applyDamageMarks as applyDamageMarksEngine,
+  applyMarksAmount as applyMarksAmountEngine,
   clearDamageMarks as clearDamageMarksEngine,
   healDamageMarks as healDamageMarksEngine,
   DAMAGE_MARK_VALUES,
@@ -76,15 +77,10 @@ export const useNPCStore = create((set, get) => ({
       return { stateChanged: false, narratives: [`Dano absorvido pela resistência (${resistance})`], effectiveDamage: 0, damageReduced }
     }
 
-    // Downgrade mark type to nearest that fits effective damage
-    let effectiveMarkType = markType
-    if (effectiveDamage < rawDamage) {
-      const entries = Object.entries(DAMAGE_MARK_VALUES).sort((a, b) => b[1] - a[1])
-      const found = entries.find(([, v]) => v <= effectiveDamage)
-      effectiveMarkType = found ? found[0] : 'leve'
+    const result = applyMarksAmountEngine(n, effectiveDamage)
+    if (!result.patch || Object.keys(result.patch).length === 0) {
+      return { stateChanged: false, narratives: [], effectiveDamage: 0, damageReduced }
     }
-
-    const result = applyDamageMarksEngine(n, effectiveMarkType)
     patchNPC(get, set, npcId, npc => ({ ...npc, ...result.patch }))
     return { ...result, effectiveDamage, damageReduced }
   },
@@ -284,15 +280,6 @@ export const useNPCStore = create((set, get) => ({
     if (!patch) return null
     patchNPC(get, set, npcId, npc => ({ ...npc, ...patch }))
     return patch.skills[patch.skills.length - 1]
-  },
-
-  upgradeSkill(npcId, skillId) {
-    const n = get().npcs.find(npc => npc.id === npcId)
-    if (!n) return false
-    const patch = upgradeSkillTier(n, skillId)
-    if (!patch) return false
-    patchNPC(get, set, npcId, npc => ({ ...npc, ...patch }))
-    return true
   },
 
   learnCatalogSkill(npcId, templateId, { free = false } = {}) {

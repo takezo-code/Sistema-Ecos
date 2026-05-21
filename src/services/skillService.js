@@ -1,7 +1,7 @@
 import { genId } from '../utils/id'
 import { SKILL_POOL } from '../data/skillPool'
 import { SKILL_AUDIENCE, skillMatchesAudience } from '../constants/skillAudience'
-import { ECO_UNLOCK_SKILL_COST, getSkillTierUpgradeCost, MAX_SKILL_TIER } from '../constants/progression'
+import { ECO_UNLOCK_SKILL_COST } from '../constants/progression'
 import { normalizeSkillType, getSkillTypeMeta } from '../constants/skillTypes'
 import { getEffectiveSkillPower } from './ruptureBonus'
 import { getMentalMultiplier, getEcoFailureChance } from './stateModifiers'
@@ -52,36 +52,6 @@ export function unlockRandomSkill(character) {
   }
 }
 
-export function canUpgradeSkillTier(character, skillId) {
-  const skill = (character.skills || []).find(s => s.id === skillId)
-  if (!skill || skill.tier >= MAX_SKILL_TIER) return false
-  const cost = getSkillTierUpgradeCost(skill.tier + 1)
-  return (character.ecoPoints ?? 0) >= cost
-}
-
-export function canAffordAnySkillUpgrade(character) {
-  return (character.skills || []).some(s => canUpgradeSkillTier(character, s.id))
-}
-
-/** Habilidades que podem subir de tier com os Ecos atuais */
-export function listUpgradeableSkills(character) {
-  return (character.skills || []).filter(s => canUpgradeSkillTier(character, s.id))
-}
-
-export function upgradeSkillTier(character, skillId) {
-  const skill = (character.skills || []).find(s => s.id === skillId)
-  if (!skill || skill.tier >= MAX_SKILL_TIER) return null
-  const cost = getSkillTierUpgradeCost(skill.tier + 1)
-  if ((character.ecoPoints ?? 0) < cost) return null
-
-  return {
-    ecoPoints: (character.ecoPoints ?? 0) - cost,
-    skills: (character.skills || []).map(s =>
-      s.id === skillId ? { ...s, tier: s.tier + 1 } : s
-    ),
-  }
-}
-
 export function getSkillDisplay(skill, rupturePoints = 0, mentalState = 'estavel', ecoOverload = 0) {
   const mentalMult = getMentalMultiplier(mentalState)
   const skillType = normalizeSkillType(skill?.skillType)
@@ -101,9 +71,4 @@ export function getSkillDisplay(skill, rupturePoints = 0, mentalState = 'estavel
     overloadPenaltyPercent: getEcoPowerPenaltyPercent(ecoOverload),
     ecoFailureChance: getEcoFailureChance(mentalState),
   }
-}
-
-export function getTierUpgradeCostLabel(currentTier) {
-  if (currentTier >= MAX_SKILL_TIER) return null
-  return `${getSkillTierUpgradeCost(currentTier + 1)} Eco → Tier ${currentTier + 1}`
 }

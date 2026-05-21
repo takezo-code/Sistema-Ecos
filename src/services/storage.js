@@ -63,4 +63,5 @@ export const KEYS = {
   combatSession: 'combat_session',
   sceneSession: 'scene_session',
   trash: 'trash',
+  equipment: 'equipment_catalog',
 }

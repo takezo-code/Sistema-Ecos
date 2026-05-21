@@ -9,6 +9,7 @@ import { Management } from './pages/Management'
 import { EmJogo } from './pages/EmJogo'
 import { Dice } from './pages/Dice'
 import { Trash } from './pages/Trash'
+import { Equipment } from './pages/Equipment'
 import { Skills } from './pages/Skills'
 import { isAppBootstrapped, persistUiState, autoSave } from './services/saveService'
 import { storage, KEYS } from './services/storage'
@@ -18,6 +19,7 @@ const PAGES = {
   campanha: Campanha,
   management: Management,
   emjogo: EmJogo,
+  equipamentos: Equipment,
   skills: Skills,
   dice: Dice,
   trash: Trash,
@@ -34,7 +36,7 @@ export default function App() {
   let migratedPage = legacyPage || 'dashboard'
   let migratedCampanhaView = savedUi.campanhaView || 'historia'
   if (legacyPage === 'character') migratedPage = 'emjogo'
-  else if (legacyPage === 'skills' || savedUi.emjogoView === 'skills') migratedPage = 'skills'
+  else if (savedUi.emjogoView === 'skills') migratedPage = 'emjogo'
   else if (legacyPage === 'campaigns') {
     migratedPage = 'campanha'
     migratedCampanhaView = 'historia'
@@ -45,6 +47,8 @@ export default function App() {
   const [activePage, setActivePage] = useState(migratedPage)
   const [managementView, setManagementView] = useState(savedUi.managementView || 'characters')
   const [managementCreationType, setManagementCreationType] = useState(null)
+  const [equipamentosView, setEquipamentosView] = useState(savedUi.equipamentosView || 'armas')
+  const [equipamentosCreationType, setEquipamentosCreationType] = useState(null)
   const [skillsView, setSkillsView] = useState(savedUi.skillsView || 'character')
   const [skillsCreationType, setSkillsCreationType] = useState(null)
   const [emjogoView, setEmjogoView] = useState(
@@ -58,12 +62,13 @@ export default function App() {
     persistUiState({
       activePage,
       managementView,
+      equipamentosView,
       skillsView,
       emjogoView,
       campanhaView,
       sidebarCollapsed,
     })
-  }, [inApp, activePage, managementView, skillsView, emjogoView, campanhaView, sidebarCollapsed])
+  }, [inApp, activePage, managementView, equipamentosView, skillsView, emjogoView, campanhaView, sidebarCollapsed])
 
   useEffect(() => {
     if (inApp) autoSave()
@@ -77,6 +82,14 @@ export default function App() {
         setManagementCreationType(creationType)
       } else if (subView !== 'creation') {
         setManagementCreationType(null)
+      }
+    }
+    if (page === 'equipamentos' && subView) {
+      setEquipamentosView(subView)
+      if (subView === 'creation' && creationType) {
+        setEquipamentosCreationType(creationType)
+      } else if (subView !== 'creation') {
+        setEquipamentosCreationType(null)
       }
     }
     if (page === 'skills' && subView) {
@@ -109,14 +122,22 @@ export default function App() {
         onViewChange: setManagementView,
         onNavigate: handleNavigate,
       }
-    : activePage === 'skills'
+    : activePage === 'equipamentos'
       ? {
-          initialView: skillsView,
-          initialCreationType: skillsCreationType,
-          onCreationTypeConsumed: () => setSkillsCreationType(null),
-          onViewChange: setSkillsView,
+          initialView: equipamentosView,
+          initialCreationType: equipamentosCreationType,
+          onCreationTypeConsumed: () => setEquipamentosCreationType(null),
+          onViewChange: setEquipamentosView,
           onNavigate: handleNavigate,
         }
+      : activePage === 'skills'
+        ? {
+            initialView: skillsView,
+            initialCreationType: skillsCreationType,
+            onCreationTypeConsumed: () => setSkillsCreationType(null),
+            onViewChange: setSkillsView,
+            onNavigate: handleNavigate,
+          }
       : activePage === 'emjogo'
         ? { initialView: emjogoView, onViewChange: setEmjogoView, onNavigate: handleNavigate }
         : activePage === 'campanha'
@@ -136,6 +157,7 @@ export default function App() {
         onToggle={() => setSidebarCollapsed(c => !c)}
         activePage={activePage}
         managementView={managementView}
+        equipamentosView={equipamentosView}
         skillsView={skillsView}
         emjogoView={emjogoView}
         campanhaView={campanhaView}

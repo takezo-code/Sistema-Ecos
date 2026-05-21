@@ -16,8 +16,10 @@ import {
   Building2,
   ShieldAlert,
   Sword,
+  Shield,
   UsersRound,
   Clapperboard,
+  Package,
 } from 'lucide-react'
 import { SKILL_AUDIENCE } from '../constants/skillAudience'
 
@@ -29,11 +31,17 @@ const MANAGEMENT_CHILDREN = [
   { id: 'creation', label: 'Criação', icon: Sparkles },
 ]
 
+const EQUIPMENT_CHILDREN = [
+  { id: 'armas',    label: 'Armas',    icon: Sword    },
+  { id: 'armadura', label: 'Armadura', icon: Shield   },
+  { id: 'creation', label: 'Criação',  icon: Sparkles },
+]
+
 const SKILLS_CHILDREN = [
   { id: SKILL_AUDIENCE.CHARACTER, label: 'Skills Personagem', icon: Sword },
-  { id: SKILL_AUDIENCE.NPC, label: 'Skills NPC', icon: Skull },
-  { id: SKILL_AUDIENCE.BOSS, label: 'Skills Boss', icon: ShieldAlert },
-  { id: 'creation', label: 'Criação', icon: Sparkles },
+  { id: SKILL_AUDIENCE.NPC,       label: 'Skills NPC',        icon: Skull },
+  { id: SKILL_AUDIENCE.BOSS,      label: 'Skills Boss',       icon: ShieldAlert },
+  { id: 'creation',               label: 'Criação',           icon: Sparkles },
 ]
 
 const EMJOGO_CHILDREN = [
@@ -62,6 +70,13 @@ const NAV_ITEMS = [
     icon: Users,
     children: MANAGEMENT_CHILDREN,
     defaultSubView: 'characters',
+  },
+  {
+    id: 'equipamentos',
+    label: 'Equipamentos',
+    icon: Package,
+    children: EQUIPMENT_CHILDREN,
+    defaultSubView: 'armas',
   },
   {
     id: 'skills',
@@ -203,6 +218,7 @@ export function Sidebar({
   onToggle,
   activePage,
   managementView = 'characters',
+  equipamentosView = 'armas',
   skillsView = SKILL_AUDIENCE.CHARACTER,
   emjogoView = 'ficha',
   campanhaView = 'historia',
@@ -210,38 +226,43 @@ export function Sidebar({
   footer,
 }) {
   const [managementExpanded, setManagementExpanded] = useState(activePage === 'management')
+  const [equipamentosExpanded, setEquipamentosExpanded] = useState(activePage === 'equipamentos')
   const [skillsExpanded, setSkillsExpanded] = useState(activePage === 'skills')
   const [emjogoExpanded, setEmjogoExpanded] = useState(activePage === 'emjogo')
   const [campanhaExpanded, setCampanhaExpanded] = useState(activePage === 'campanha')
 
   useEffect(() => {
-    if (activePage === 'management') setManagementExpanded(true)
-    if (activePage === 'skills') setSkillsExpanded(true)
-    if (activePage === 'emjogo') setEmjogoExpanded(true)
-    if (activePage === 'campanha') setCampanhaExpanded(true)
+    if (activePage === 'management')   setManagementExpanded(true)
+    if (activePage === 'equipamentos') setEquipamentosExpanded(true)
+    if (activePage === 'skills')       setSkillsExpanded(true)
+    if (activePage === 'emjogo')       setEmjogoExpanded(true)
+    if (activePage === 'campanha')     setCampanhaExpanded(true)
   }, [activePage])
 
   const getSubView = (pageId) => {
-    if (pageId === 'management') return managementView
-    if (pageId === 'skills') return skillsView
-    if (pageId === 'emjogo') return emjogoView
-    if (pageId === 'campanha') return campanhaView
+    if (pageId === 'management')   return managementView
+    if (pageId === 'equipamentos') return equipamentosView
+    if (pageId === 'skills')       return skillsView
+    if (pageId === 'emjogo')       return emjogoView
+    if (pageId === 'campanha')     return campanhaView
     return null
   }
 
   const getExpanded = (pageId) => {
-    if (pageId === 'management') return managementExpanded
-    if (pageId === 'skills') return skillsExpanded
-    if (pageId === 'emjogo') return emjogoExpanded
-    if (pageId === 'campanha') return campanhaExpanded
+    if (pageId === 'management')   return managementExpanded
+    if (pageId === 'equipamentos') return equipamentosExpanded
+    if (pageId === 'skills')       return skillsExpanded
+    if (pageId === 'emjogo')       return emjogoExpanded
+    if (pageId === 'campanha')     return campanhaExpanded
     return false
   }
 
   const setExpanded = (pageId, value) => {
-    if (pageId === 'management') setManagementExpanded(value)
-    if (pageId === 'skills') setSkillsExpanded(value)
-    if (pageId === 'emjogo') setEmjogoExpanded(value)
-    if (pageId === 'campanha') setCampanhaExpanded(value)
+    if (pageId === 'management')   setManagementExpanded(value)
+    if (pageId === 'equipamentos') setEquipamentosExpanded(value)
+    if (pageId === 'skills')       setSkillsExpanded(value)
+    if (pageId === 'emjogo')       setEmjogoExpanded(value)
+    if (pageId === 'campanha')     setCampanhaExpanded(value)
   }
 
   const toggleExpanded = (pageId, item) => {

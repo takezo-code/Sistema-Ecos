@@ -6,8 +6,8 @@ import { useCampaignStore } from '../store/useCampaignStore'
 import { Select } from '../components/ui/Field'
 import { Modal } from '../components/ui/Modal'
 import { EmptyState } from '../components/ui/EmptyState'
-import { EntityManagePanel } from '../components/management/EntityManagePanel'
-import { CharacterForm } from './Characters'
+import { CharacterFichaSheet } from '../components/character/CharacterFichaSheet'
+import { useCharacterManagementPanel } from '../hooks/useCharacterManagementPanel'
 import { ATTRIBUTES } from '../constants/attributes'
 import { filterByActiveCampaign } from '../utils/campaignScope'
 import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
@@ -109,55 +109,20 @@ function CharacterManageCard({ character, onManage, onDelete }) {
 
 export function ManageCharacters({ embedded = false }) {
   const { activeCampaignId } = useCampaignStore()
-  const {
-    characters,
-    deleteCharacter,
-    updateCharacter,
-    addXp,
-    changeAttribute,
-    setMasterAttribute,
-    setMasterProgression,
-    syncMasterProgression,
-    clampMasterAuxiliary,
-    scaleMasterAttributesToBudget,
-    lastMasterError,
-    clearMasterError,
-    spendPendingAttribute,
-    spendPendingSocialAttribute,
-    changeSocialAttribute,
-    unlockSkill,
-    upgradeSkill,
-    useEcoSkill,
-    restEcoOverload,
-    setEcoOverloadLevel,
-    lastOverloadEvents,
-    clearOverloadEvents,
-    addInventoryItem,
-    updateInventoryItem,
-    removeInventoryItem,
-    addEquippedItem,
-    removeEquippedItem,
-    lastLevelUps,
-    clearLevelUps,
-  } = useCharacterStore()
+  const { characters, deleteCharacter } = useCharacterStore()
   const refreshTrash = useTrashStore(s => s.refresh)
-  const [managing, setManaging] = useState(null)
-  const [editingProfile, setEditingProfile] = useState(null)
+  const [managingId, setManagingId] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const filtered = filterByActiveCampaign(characters, activeCampaignId)
-
-  const current = managing ? characters.find(c => c.id === managing.id) : null
+  const { entity: current, clearPanelSession } = useCharacterManagementPanel(managingId, { adminMode: true })
 
   const handleDelete = (character) => {
     deleteCharacter(character.id)
     refreshTrash()
-    if (managing?.id === character.id) {
-      setManaging(null)
-      clearLevelUps()
-      clearOverloadEvents()
-      clearMasterError()
+    if (managingId === character.id) {
+      setManagingId(null)
+      clearPanelSession()
     }
-    if (editingProfile?.id === character.id) setEditingProfile(null)
     setDeleteConfirm(null)
   }
 
@@ -178,7 +143,7 @@ export function ManageCharacters({ embedded = false }) {
               <CharacterManageCard
                 key={c.id}
                 character={c}
-                onManage={() => setManaging(c)}
+                onManage={() => setManagingId(c.id)}
                 onDelete={() => setDeleteConfirm(c)}
               />
             ))}
@@ -186,43 +151,13 @@ export function ManageCharacters({ embedded = false }) {
         )}
       </div>
 
-      <Modal open={!!current} onClose={() => { setManaging(null); clearLevelUps(); clearOverloadEvents(); clearMasterError() }} title={`Gerenciar — ${current?.name}`} maxWidth="720px">
-        {current && (
-          <EntityManagePanel
-            entity={current}
-            showProgression
-            adminMode
-            levelUps={lastLevelUps}
-            onUpdate={data => updateCharacter(current.id, data)}
-            onAddXp={amount => addXp(current.id, amount)}
-            onChangeAttribute={(key, val, opts) => {
-              if (opts?.admin) return setMasterAttribute(current.id, key, val)
-              return changeAttribute(current.id, key, val, opts)
-            }}
-            onChangeSocialAttribute={(key, val) => changeSocialAttribute(current.id, key, val)}
-            onSpendPendingSocialAttribute={key => spendPendingSocialAttribute(current.id, key)}
-            onMasterProgression={patch => setMasterProgression(current.id, patch)}
-            onSyncProgression={() => syncMasterProgression(current.id)}
-            onClampAuxiliary={() => clampMasterAuxiliary(current.id)}
-            onScaleAttributes={() => scaleMasterAttributesToBudget(current.id)}
-            masterError={lastMasterError}
-            onSpendPendingAttribute={key => spendPendingAttribute(current.id, key)}
-
-            onEditProfile={() => setEditingProfile(current)}
-            onUnlockSkill={() => unlockSkill(current.id)}
-            onUpgradeSkill={skillId => upgradeSkill(current.id, skillId)}
-            onUseSkill={(skillId, opts) => useEcoSkill(current.id, skillId, opts)}
-            onRestOverload={() => restEcoOverload(current.id)}
-            onSetOverload={level => setEcoOverloadLevel(current.id, level)}
-            lastOverloadEvents={lastOverloadEvents}
-            onClearOverloadEvents={clearOverloadEvents}
-            onAddItem={item => addInventoryItem(current.id, item)}
-            onUpdateItem={(itemId, data) => updateInventoryItem(current.id, itemId, data)}
-            onRemoveItem={itemId => removeInventoryItem(current.id, itemId)}
-            onAddEquipped={item => addEquippedItem(current.id, item)}
-            onRemoveEquipped={itemId => removeEquippedItem(current.id, itemId)}
-          />
-        )}
+      <Modal
+        open={!!current}
+        onClose={() => { setManagingId(null); clearPanelSession() }}
+        title={`Gerenciar — ${current?.name}`}
+        maxWidth="720px"
+      >
+        {managingId && <CharacterFichaSheet characterId={managingId} adminMode />}
       </Modal>
 
       <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Excluir personagem" maxWidth="380px">
@@ -236,24 +171,6 @@ export function ManageCharacters({ embedded = false }) {
         </div>
       </Modal>
 
-      <Modal
-        open={!!editingProfile}
-        onClose={() => setEditingProfile(null)}
-        title={`Editar ficha — ${editingProfile?.name}`}
-        maxWidth="640px"
-      >
-        {editingProfile && (
-          <CharacterForm
-            initial={editingProfile}
-            profileOnly
-            onSave={data => {
-              updateCharacter(editingProfile.id, data)
-              setEditingProfile(null)
-            }}
-            onCancel={() => setEditingProfile(null)}
-          />
-        )}
-      </Modal>
     </div>
   )
 }

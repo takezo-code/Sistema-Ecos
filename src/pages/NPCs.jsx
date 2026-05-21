@@ -22,6 +22,16 @@ import { MAX_LEVEL } from '../constants/progression'
 import { finalizeCreationAttributes, buildMasterProgressionPatch } from '../services/progressionService'
 import { normalizeGameEntity } from '../constants/attributes'
 import { entityHasEcoPowers, getAttributesForEntity } from '../constants/entityProgression'
+import { isNarrativeNpc } from '../utils/npcScope'
+
+export const BOSS_DEFAULTS = {
+  podeCombater: true,
+  papelCombate: 'boss',
+  resistenciaFisica: 6,
+  resistenciaMental: 4,
+  marcasMaximas: 15,
+  xpRecompensa: 500,
+}
 
 const EMPTY_FORM = {
   name: '',
@@ -43,9 +53,7 @@ const EMPTY_FORM = {
   resistenciaFisica: 0,
   resistenciaMental: 0,
   marcasMaximas: 0,
-  bonusAtaque: 0,
   xpRecompensa: 0,
-  fraquezas: '',
 }
 
 const PAPEL_OPTIONS = [
@@ -55,20 +63,34 @@ const PAPEL_OPTIONS = [
   { value: 'boss', label: 'Boss' },
 ]
 
-const BOSS_DEFAULTS = {
-  podeCombater: true,
-  papelCombate: 'boss',
-  resistenciaFisica: 6,
-  resistenciaMental: 4,
-  marcasMaximas: 15,
-  bonusAtaque: 3,
-  xpRecompensa: 500,
+export function buildNpcPayloadForSave(data, isNewEntity) {
+  let payload = {
+    ...data,
+    ...(isNewEntity ? { level: 1, xp: 0, ecoPoints: 0, skills: [] } : {}),
+    ...finalizeCreationAttributes(data, { isNew: isNewEntity && (data.unspentAttributePoints ?? 0) > 0 }),
+  }
+  if (!entityHasEcoPowers(data)) {
+    payload = {
+      ...payload,
+      skills: [],
+      ecoPoints: 0,
+      attributes: { ...payload.attributes, ruptura: 0 },
+    }
+  }
+  let draft = normalizeGameEntity(payload)
+  if ((draft.level ?? 1) > 1) {
+    const { patch } = buildMasterProgressionPatch(draft, { level: draft.level })
+    if (patch) draft = { ...draft, ...patch }
+  }
+  return draft
 }
 
-function NPCForm({ initial, onSave, onCancel, campaignId, organizations }) {
+export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, variant = 'npc' }) {
+  const isBoss = variant === 'boss'
   const isNew = !initial?.id
   const [form, setForm] = useState(() => ({
     ...EMPTY_FORM,
+    ...(isBoss && isNew ? BOSS_DEFAULTS : {}),
     ...(initial || {}),
     campaignId,
     attributes: { ...defaultAttributes(), ...(initial?.attributes || {}) },
@@ -83,9 +105,7 @@ function NPCForm({ initial, onSave, onCancel, campaignId, organizations }) {
     resistenciaFisica: initial?.resistenciaFisica ?? 0,
     resistenciaMental: initial?.resistenciaMental ?? 0,
     marcasMaximas: initial?.marcasMaximas ?? 0,
-    bonusAtaque: initial?.bonusAtaque ?? 0,
     xpRecompensa: initial?.xpRecompensa ?? 0,
-    fraquezas: initial?.fraquezas ?? '',
   }))
   const set = (f, v) => setForm(p => ({ ...p, [f]: v }))
 
@@ -184,30 +204,45 @@ function NPCForm({ initial, onSave, onCancel, campaignId, organizations }) {
         showRuptureHint={form.hasEcoPowers}
       />
 
-      {/* ── Seção de Combate ─────────────────────────── */}
-      <hr className="divide-line" />
-      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-        COMBATE
-      </div>
+      {/* ── Combate (opcional em NPC narrativo; sempre em Boss) ── */}
+      {!isBoss && (
+        <>
+          <hr className="divide-line" />
+          <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+            COMBATE (OPCIONAL)
+          </div>
+          <p style={{ fontSize: '0.7rem', color: '#555', marginBottom: '0.5rem', lineHeight: 1.5 }}>
+            Para inimigos de combate (Boss, elite), use Gerenciamento → Criação → Boss.
+          </p>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#888', cursor: 'pointer', padding: '0.25rem 0' }}>
+            <input
+              type="checkbox"
+              checked={!!form.podeCombater}
+              onChange={e => {
+                const checked = e.target.checked
+                setForm(p => ({
+                  ...p,
+                  podeCombater: checked,
+                  papelCombate: checked ? (p.papelCombate === 'nenhum' ? 'capanga' : p.papelCombate) : 'nenhum',
+                }))
+              }}
+              style={{ accentColor: '#dc2626' }}
+            />
+            Este NPC pode entrar em combate como inimigo
+          </label>
+        </>
+      )}
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#888', cursor: 'pointer', padding: '0.25rem 0' }}>
-        <input
-          type="checkbox"
-          checked={!!form.podeCombater}
-          onChange={e => {
-            const checked = e.target.checked
-            setForm(p => ({
-              ...p,
-              podeCombater: checked,
-              papelCombate: checked ? (p.papelCombate === 'nenhum' ? 'capanga' : p.papelCombate) : 'nenhum',
-            }))
-          }}
-          style={{ accentColor: '#dc2626' }}
-        />
-        Este NPC pode entrar em combate como inimigo
-      </label>
+      {isBoss && (
+        <>
+          <hr className="divide-line" />
+          <div style={{ fontSize: '0.65rem', color: '#dc2626', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+            COMBATE · BOSS
+          </div>
+        </>
+      )}
 
-      {form.podeCombater && (
+      {(isBoss || form.podeCombater) && (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <Field label="Papel no Combate">
@@ -226,10 +261,15 @@ function NPCForm({ initial, onSave, onCancel, campaignId, organizations }) {
             </Field>
           </div>
 
-          <div style={{ fontSize: '0.6rem', color: '#555', fontFamily: 'monospace', margin: '0.25rem 0 0.25rem' }}>
+          <p style={{ fontSize: '0.6rem', color: '#555', fontFamily: 'monospace', margin: '0 0 0.5rem', lineHeight: 1.5 }}>
             RESISTÊNCIAS — reduzem o dano antes de virar marcas (dano − resistência = dano efetivo)
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+          </p>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            gap: '0.75rem',
+            alignItems: 'start',
+          }}>
             <Field label="Resist. Física">
               <Input
                 type="number" min={0} max={20}
@@ -244,31 +284,18 @@ function NPCForm({ initial, onSave, onCancel, campaignId, organizations }) {
                 onChange={e => set('resistenciaMental', Math.max(0, Math.min(20, parseInt(e.target.value, 10) || 0)))}
               />
             </Field>
-            <Field label="Marcas Máximas (0 = sem limite)">
+            <Field label="Marcas máx.">
               <Input
                 type="number" min={0}
                 value={form.marcasMaximas}
                 onChange={e => set('marcasMaximas', Math.max(0, parseInt(e.target.value, 10) || 0))}
+                title="0 = sem limite"
               />
             </Field>
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
-            <Field label="Bônus de Ataque">
-              <Input
-                type="number" min={0} max={10}
-                value={form.bonusAtaque}
-                onChange={e => set('bonusAtaque', Math.max(0, Math.min(10, parseInt(e.target.value, 10) || 0)))}
-              />
-            </Field>
-            <Field label="Fraquezas (texto livre)">
-              <Input
-                value={form.fraquezas}
-                onChange={e => set('fraquezas', e.target.value)}
-                placeholder="ex: fogo, luz intensa, sonic..."
-              />
-            </Field>
-          </div>
+          <p style={{ fontSize: '0.55rem', color: '#444', marginTop: '0.25rem' }}>
+            Marcas máx.: 0 = sem limite
+          </p>
         </>
       )}
 
@@ -404,7 +431,6 @@ export function NPCs({
   autoOpenCreate = false,
   onCreateFlowClose,
   onCreateFlowSuccess,
-  bossMode = false,
 }) {
   const { activeCampaignId } = useCampaignStore()
   const { npcs, addNPC, updateNPC, deleteNPC } = useNPCStore()
@@ -418,7 +444,7 @@ export function NPCs({
 
   const orgsByCampaign = filterByActiveCampaign(organizations, activeCampaignId)
 
-  let filtered = filterByActiveCampaign(npcs, activeCampaignId)
+  let filtered = filterByActiveCampaign(npcs, activeCampaignId).filter(isNarrativeNpc)
   if (filterStatus !== 'todos') filtered = filtered.filter(n => n.status === filterStatus)
   if (search) filtered = filtered.filter(n =>
     n.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -439,34 +465,12 @@ export function NPCs({
     if (autoOpenCreate && activeCampaignId) openCreate()
   }, [autoOpenCreate, activeCampaignId])
 
-  const buildNpcPayload = (data, isNewEntity) => {
-    let payload = {
-      ...data,
-      ...(isNewEntity ? { level: 1, xp: 0, ecoPoints: 0, skills: [] } : {}),
-      ...finalizeCreationAttributes(data, { isNew: isNewEntity && (data.unspentAttributePoints ?? 0) > 0 }),
-    }
-    if (!entityHasEcoPowers(data)) {
-      payload = {
-        ...payload,
-        skills: [],
-        ecoPoints: 0,
-        attributes: { ...payload.attributes, ruptura: 0 },
-      }
-    }
-    let draft = normalizeGameEntity(payload)
-    if ((draft.level ?? 1) > 1) {
-      const { patch } = buildMasterProgressionPatch(draft, { level: draft.level })
-      if (patch) draft = { ...draft, ...patch }
-    }
-    return draft
-  }
-
   const handleSave = (data) => {
     const isNew = !editing
     if (editing) {
-      updateNPC(editing.id, buildNpcPayload(data, false))
+      updateNPC(editing.id, buildNpcPayloadForSave(data, false))
     } else {
-      addNPC(withActiveCampaign(buildNpcPayload(data, true), activeCampaignId))
+      addNPC(withActiveCampaign(buildNpcPayloadForSave(data, true), activeCampaignId))
     }
     closeModal()
     if (autoOpenCreate && isNew) onCreateFlowSuccess?.()
@@ -475,11 +479,11 @@ export function NPCs({
   const creationFlowOnly = embedded && autoOpenCreate
 
   if (creationFlowOnly) {
-    const bossInitial = bossMode ? BOSS_DEFAULTS : null
     return (
-      <Modal open={modalOpen} onClose={handleModalClose} title={bossMode ? 'Novo Boss' : 'Novo NPC'} maxWidth="720px">
+      <Modal open={modalOpen} onClose={handleModalClose} title="Novo NPC" maxWidth="720px">
         <NPCForm
-          initial={bossInitial}
+          variant="npc"
+          initial={null}
           campaignId={activeCampaignId}
           organizations={orgsByCampaign}
           onSave={handleSave}
@@ -554,6 +558,7 @@ export function NPCs({
 
       <Modal open={modalOpen} onClose={handleModalClose} title={editing ? 'Editar NPC' : 'Novo NPC'} maxWidth="720px">
         <NPCForm
+          variant="npc"
           initial={editing}
           campaignId={activeCampaignId}
           organizations={orgsByCampaign}

@@ -81,11 +81,6 @@ function BossManageCard({ npc, onManage, onDelete }) {
               <span style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: '#d97706', background: 'rgba(217,119,6,0.06)', border: '1px solid rgba(217,119,6,0.2)', borderRadius: '3px', padding: '2px 6px' }}>
                 MARCAS {marks}{maxMarks > 0 ? `/${maxMarks}` : ''}
               </span>
-              {(npc.bonusAtaque ?? 0) > 0 && (
-                <span style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: '#a855f7', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '3px', padding: '2px 6px' }}>
-                  ATK +{npc.bonusAtaque}
-                </span>
-              )}
             </div>
 
             <div style={{
@@ -125,11 +120,6 @@ function BossManageCard({ npc, onManage, onDelete }) {
           </button>
         </div>
       </div>
-      {npc.fraquezas && (
-        <div style={{ padding: '0 1.25rem 0.75rem', fontSize: '0.6rem', color: '#d97706', fontFamily: 'monospace' }}>
-          ⚡ {npc.fraquezas}
-        </div>
-      )}
     </div>
   )
 }
@@ -152,7 +142,6 @@ export function ManageBoss({ embedded = false }) {
     spendPendingAttribute,
     spendPendingSocialAttribute,
     changeSocialAttribute,
-    upgradeSkill,
     learnCatalogSkill,
     removeSkill,
     restEcoOverload,
@@ -257,7 +246,6 @@ export function ManageBoss({ embedded = false }) {
               onScaleAttributes={() => scaleMasterAttributesToBudget(current.id)}
               masterError={lastMasterError}
               onSpendPendingAttribute={key => spendPendingAttribute(current.id, key)}
-              onUpgradeSkill={showEcoProgression ? skillId => upgradeSkill(current.id, skillId) : undefined}
               onLearnCatalogSkill={showEcoProgression ? templateId => learnCatalogSkill(current.id, templateId, { free: true }) : undefined}
               onRemoveSkill={showEcoProgression ? skillId => removeSkill(current.id, skillId) : undefined}
               onRestOverload={showEcoProgression ? () => restEcoOverload(current.id) : undefined}

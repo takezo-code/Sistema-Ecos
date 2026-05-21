@@ -11,7 +11,6 @@ import { getCatalogAudienceForEntity } from '../../services/skillsCatalogService
 export function EntitySkillsPanel({
   entity,
   onUnlockSkill,
-  onUpgradeSkill,
   onLearnCatalogSkill,
   onRemoveSkill,
   onRestOverload,
@@ -64,8 +63,8 @@ export function EntitySkillsPanel({
           textAlign: 'right',
         }}>
           {manualSkillPick
-            ? (hasEcoToSpend ? 'Pode evoluir skills' : 'Ganhe Eco em níveis ímpares')
-            : (hasEcoToSpend ? 'Pode descobrir ou evoluir' : 'Ganhe em níveis ímpares')}
+            ? (hasEcoToSpend ? 'Eco disponível' : 'Ganhe Eco em níveis ímpares')
+            : (hasEcoToSpend ? 'Pode descobrir skill' : 'Ganhe em níveis ímpares')}
         </span>
       </div>
 
@@ -106,7 +105,6 @@ export function EntitySkillsPanel({
       <EcoSkillsSection
         entity={entity}
         onUnlockSkill={manualSkillPick ? undefined : onUnlockSkill}
-        onUpgradeSkill={onUpgradeSkill}
         manualSkillPick={manualSkillPick}
       />
     </div>

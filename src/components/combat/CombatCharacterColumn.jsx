@@ -9,6 +9,14 @@ import { formatOverloadDisplay, ECO_OVERLOAD_DISPLAY_CAP } from '../../constants
 import { getEffectiveAttributeValue } from '../../services/stateModifiers'
 import { listActiveMentalStatusDetails } from '../../services/mentalStatusService'
 
+function socialAttrShort(attr) {
+  if (attr.key === 'carisma') return 'CAR'
+  if (attr.key === 'percepcao') return 'PER'
+  if (attr.key === 'vontade') return 'VON'
+  if (attr.key === 'sabedoria') return 'SAB'
+  return attr.label.slice(0, 3).toUpperCase()
+}
+
 export function CombatCharacterColumn({
   character,
   onUpdate,
@@ -22,7 +30,9 @@ export function CombatCharacterColumn({
   onClearMarks,
   onNotice,
   attributeList = null,
+  variant = 'combat',
 }) {
+  const isScene = variant === 'scene'
   const [skillsOpen, setSkillsOpen] = useState(false)
   const [xpFlash, setXpFlash] = useState(false)
 
@@ -42,10 +52,10 @@ export function CombatCharacterColumn({
       display: 'flex',
       flexDirection: 'column',
       background: '#0d0d0d',
-      border: `1px solid ${physicalOpt.color}44`,
+      border: `1px solid ${(isScene ? mentalOpt : physicalOpt).color}44`,
       borderRadius: '8px',
       overflow: 'hidden',
-      boxShadow: physicalOpt.glow ? `0 0 20px ${physicalOpt.glow}` : 'none',
+      boxShadow: !isScene && physicalOpt.glow ? `0 0 20px ${physicalOpt.glow}` : 'none',
     }}>
 
       {/* Header compacto */}
@@ -124,38 +134,40 @@ export function CombatCharacterColumn({
           )}
         </div>
 
-        {/* Barra de sobrecarga */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-          <Zap size={10} style={{ color: '#a855f7', flexShrink: 0 }} />
-          <div style={{ flex: 1, height: '4px', background: '#1a1a1a', borderRadius: '2px', overflow: 'hidden' }}>
-            <div style={{
-              height: '100%',
-              width: `${overloadPct * 100}%`,
-              background: overloadPct >= 0.8 ? '#dc2626' : overloadPct >= 0.5 ? '#f97316' : '#a855f7',
-              borderRadius: '2px',
-              transition: 'width 0.3s',
-            }} />
+        {!isScene && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <Zap size={10} style={{ color: '#a855f7', flexShrink: 0 }} />
+            <div style={{ flex: 1, height: '4px', background: '#1a1a1a', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{
+                height: '100%',
+                width: `${overloadPct * 100}%`,
+                background: overloadPct >= 0.8 ? '#dc2626' : overloadPct >= 0.5 ? '#f97316' : '#a855f7',
+                borderRadius: '2px',
+                transition: 'width 0.3s',
+              }} />
+            </div>
+            <span style={{ fontSize: '0.55rem', color: '#a855f7', fontFamily: 'monospace', flexShrink: 0 }}>
+              {formatOverloadDisplay(overload)}
+            </span>
           </div>
-          <span style={{ fontSize: '0.55rem', color: '#a855f7', fontFamily: 'monospace', flexShrink: 0 }}>
-            {formatOverloadDisplay(overload)}
-          </span>
-        </div>
+        )}
 
-        {/* Estados */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem' }}>
-          <div>
-            <div style={{ fontSize: '0.45rem', color: physicalOpt.color, fontFamily: 'monospace', marginBottom: '2px' }}>FÍSICO</div>
-            <select
-              className="input-base"
-              value={physical}
-              onChange={e => onUpdate?.({ physicalState: e.target.value })}
-              style={{ fontSize: '0.7rem', padding: '3px 4px', borderColor: `${physicalOpt.color}55`, width: '100%' }}
-            >
-              {PHYSICAL_STATES.map(s => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: isScene ? '1fr' : '1fr 1fr', gap: '0.35rem' }}>
+          {!isScene && (
+            <div>
+              <div style={{ fontSize: '0.45rem', color: physicalOpt.color, fontFamily: 'monospace', marginBottom: '2px' }}>FÍSICO</div>
+              <select
+                className="input-base"
+                value={physical}
+                onChange={e => onUpdate?.({ physicalState: e.target.value })}
+                style={{ fontSize: '0.7rem', padding: '3px 4px', borderColor: `${physicalOpt.color}55`, width: '100%' }}
+              >
+                {PHYSICAL_STATES.map(s => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <div style={{ fontSize: '0.45rem', color: mentalOpt.color, fontFamily: 'monospace', marginBottom: '2px' }}>MENTAL</div>
             <select
@@ -178,26 +190,26 @@ export function CombatCharacterColumn({
         )}
       </header>
 
-      {/* Marcas de Dano */}
-      <section style={{ padding: '0.5rem 0.625rem', borderBottom: '1px solid #1a1a1a' }}>
-        <DamageMarksPanel
-          character={character}
-          onApplyMarks={onApplyMarks}
-          onHealMarks={onHealMarks}
-          onClearMarks={onClearMarks}
-          onNotice={onNotice}
-        />
-      </section>
+      {!isScene && (
+        <section style={{ padding: '0.5rem 0.625rem', borderBottom: '1px solid #1a1a1a' }}>
+          <DamageMarksPanel
+            character={character}
+            onApplyMarks={onApplyMarks}
+            onHealMarks={onHealMarks}
+            onClearMarks={onClearMarks}
+            onNotice={onNotice}
+          />
+        </section>
+      )}
 
-      {/* Atributos */}
       <section style={{ padding: '0.5rem 0.625rem', borderBottom: '1px solid #1a1a1a' }}>
         <div style={{ fontSize: '0.45rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.375rem' }}>
-          ATRIBUTOS · CLIQUE PARA ROLAR
+          {isScene ? 'ATRIBUTOS SOCIAIS · CLIQUE PARA ROLAR' : 'ATRIBUTOS · CLIQUE PARA ROLAR'}
         </div>
         {(() => {
-          const isSocial = attributeList && attributeList[0] && SOCIAL_ATTRIBUTES.some(a => a.key === attributeList[0].key)
+          const list = isScene ? SOCIAL_ATTRIBUTES : (attributeList ?? ATTRIBUTES)
+          const isSocial = isScene || (attributeList?.[0] && SOCIAL_ATTRIBUTES.some(a => a.key === attributeList[0].key))
           const attrs = isSocial ? (character.socialAttributes || {}) : (character.attributes || {})
-          const list = attributeList ?? ATTRIBUTES
           return (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.25rem' }}>
               {list.map(attr => {
@@ -210,12 +222,12 @@ export function CombatCharacterColumn({
                     mentalState: mental,
                   })
                 const reduced = eff < base
-                const shortKey = attr.key === 'inteligencia' ? 'INT'
-                  : attr.key === 'vitalidade' ? 'VIT'
-                  : attr.key === 'ruptura' ? 'RUP'
-                  : attr.key === 'percepcao' ? 'PER'
-                  : attr.key === 'sabedoria' ? 'SAB'
-                  : attr.label.slice(0, 3).toUpperCase()
+                const shortKey = isSocial
+                  ? socialAttrShort(attr)
+                  : (attr.key === 'inteligencia' ? 'INT'
+                    : attr.key === 'vitalidade' ? 'VIT'
+                    : attr.key === 'ruptura' ? 'RUP'
+                    : attr.label.slice(0, 3).toUpperCase())
                 return (
                   <button
                     key={attr.key}

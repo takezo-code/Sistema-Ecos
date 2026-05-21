@@ -26,13 +26,7 @@ export function getSocialPointsFromLevel(level) {
 
 export const MAX_SKILL_TIER = 3
 
-/** Custo em Ecos para subir um tier (T1→T2 e T2→T3 custam 1 cada) */
-export function getSkillTierUpgradeCost(targetTier) {
-  if (targetTier < 2 || targetTier > MAX_SKILL_TIER) return null
-  return 1
-}
-
-/** Desbloquear habilidade aleatória */
+/** Descobrir habilidade aleatória (1 Eco) */
 export const ECO_UNLOCK_SKILL_COST = 1
 
 /**

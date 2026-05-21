@@ -14,57 +14,8 @@ import { CombatEnemyCard } from '../components/combat/CombatEnemyCard'
 import { CombatSkillDetailModal } from '../components/combat/CombatSkillDetailModal'
 import { EmptyState } from '../components/ui/EmptyState'
 import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
+import { getRollOutcome } from '../mechanics/combat/rollOutcome'
 
-// ──────────────────────────────────────────────
-// Lógica de resultado da rolagem
-// ──────────────────────────────────────────────
-function getRollOutcome(dice, bonus) {
-  const total = dice + bonus
-  if (dice === 1) return {
-    label: 'Falha Crítica',
-    desc: 'Algo dá terrivelmente errado. Consequência severa.',
-    color: '#ef4444',
-    bg: 'rgba(127,29,29,0.6)',
-    border: 'rgba(239,68,68,0.4)',
-    icon: '💀',
-  }
-  if (total <= 9) return {
-    label: 'Falha',
-    desc: 'A ação não funciona como esperado.',
-    color: '#f87171',
-    bg: 'rgba(153,27,27,0.4)',
-    border: 'rgba(248,113,113,0.3)',
-    icon: '✕',
-  }
-  if (total <= 17) return {
-    label: 'Sucesso Parcial',
-    desc: 'Consegue, mas há uma pequena consequência.',
-    color: '#fb923c',
-    bg: 'rgba(124,45,18,0.45)',
-    border: 'rgba(251,146,60,0.35)',
-    icon: '◑',
-  }
-  if (dice === 20) return {
-    label: 'Sucesso Crítico',
-    desc: 'Resultado excepcional. Além do esperado.',
-    color: '#c084fc',
-    bg: 'rgba(88,28,135,0.5)',
-    border: 'rgba(192,132,252,0.4)',
-    icon: '★',
-  }
-  return {
-    label: 'Sucesso',
-    desc: 'A ação é realizada com clareza.',
-    color: '#4ade80',
-    bg: 'rgba(20,83,45,0.45)',
-    border: 'rgba(74,222,128,0.3)',
-    icon: '✓',
-  }
-}
-
-// ──────────────────────────────────────────────
-// Painel de resultado (exibido no topo do conteúdo)
-// ──────────────────────────────────────────────
 function RollResultBanner({ result, onDismiss }) {
   if (!result) return null
   const outcome = getRollOutcome(result.dice, result.bonus)
@@ -127,7 +78,7 @@ export function ManageCombat() {
   } = useCharacterStore()
   const {
     npcs, updateNPC,
-    applyDamageWithResistance, applyDamageMarks: applyNPCDamageMarks,
+    applyDamageMarks: applyNPCDamageMarks,
     healDamageMarks: healNPCMarks, clearDamageMarks: clearNPCMarks,
   } = useNPCStore()
   const { groups } = useGroupStore()
@@ -238,16 +189,15 @@ export function ManageCombat() {
     setRollResult({ dice, bonus: eff, total, characterName: enemy.name, attrLabel })
   }, [])
 
-  const handleEnemyApplyDamage = useCallback((markType, { mental = false } = {}) => {
+  const handleEnemyApplyMarks = useCallback((markType) => {
     if (!activeEnemyId) return
-    const result = applyDamageWithResistance(activeEnemyId, markType, { mental })
-    if (result) {
-      const msg = result.damageReduced > 0
-        ? `${activeEnemy?.name}: ${result.effectiveDamage > 0 ? `+${result.effectiveDamage} marca(s) efetivas` : 'dano absorvido'} (resist. reduziu ${result.damageReduced})`
-        : `${activeEnemy?.name}: +${result.effectiveDamage} marca(s)`
-      setCombatNotice(msg)
+    const result = applyNPCDamageMarks(activeEnemyId, markType)
+    if (result?.stateChanged) {
+      setCombatNotice(`${activeEnemy?.name}: ${result.narratives?.join(' · ') || 'Estado alterado.'}`)
+    } else if (result) {
+      setCombatNotice(`${activeEnemy?.name}: +${result.markAdded} marca(s)`)
     }
-  }, [activeEnemyId, activeEnemy, applyDamageWithResistance])
+  }, [activeEnemyId, activeEnemy, applyNPCDamageMarks])
 
   const handleActivateSkill = useCallback((characterId, skillId) => {
     const res = activateSkill(characterId, skillId)
@@ -458,9 +408,10 @@ export function ManageCombat() {
                 <CombatEnemyCard
                   enemy={activeEnemy}
                   onUpdate={data => updateNPC(activeEnemy.id, data)}
-                  onApplyDamageWithResistance={(markType, opts) => handleEnemyApplyDamage(markType, opts)}
+                  onApplyMarks={handleEnemyApplyMarks}
                   onHealMarks={(amount) => healNPCMarks(activeEnemy.id, amount)}
                   onClearMarks={() => { clearNPCMarks(activeEnemy.id); setCombatNotice(`${activeEnemy.name}: marcas limpas.`) }}
+                  onNotice={msg => setCombatNotice(msg)}
                   onRollAttribute={handleEnemyRollAttribute}
                 />
               </div>

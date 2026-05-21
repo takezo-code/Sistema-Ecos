@@ -44,11 +44,15 @@ export const MARK_STATE_THRESHOLDS = [
 
 /**
  * Retorna o estado físico determinado pelo total de marcas.
+ * @param vitalityBuffer - atraso de estado por Vitalidade (marcas extras suportadas)
  */
-export function getPhysicalStateFromMarks(marks) {
+export function getPhysicalStateFromMarks(marks, vitalityBuffer = 0) {
   const n = Math.max(0, Number(marks) || 0)
+  const buffer = Math.max(0, Math.floor(Number(vitalityBuffer) || 0))
   for (const tier of MARK_STATE_THRESHOLDS) {
-    if (n >= tier.min && n <= tier.max) return tier.state
+    const min = tier.min === 0 ? 0 : tier.min + buffer
+    const max = tier.max === Infinity ? Infinity : tier.max + buffer
+    if (n >= min && n <= max) return tier.state
   }
   return 'incapacitado'
 }
@@ -56,10 +60,14 @@ export function getPhysicalStateFromMarks(marks) {
 /**
  * Informação de progresso dentro do tier atual (para barra de UI).
  */
-export function getMarkProgress(marks) {
+export function getMarkProgress(marks, vitalityBuffer = 0) {
   const n = Math.max(0, Number(marks) || 0)
-  const tier = MARK_STATE_THRESHOLDS.find(t => n >= t.min && n <= t.max)
-    ?? MARK_STATE_THRESHOLDS[MARK_STATE_THRESHOLDS.length - 1]
+  const buffer = Math.max(0, Math.floor(Number(vitalityBuffer) || 0))
+  const tier = MARK_STATE_THRESHOLDS.find(t => {
+    const min = t.min === 0 ? 0 : t.min + buffer
+    const max = t.max === Infinity ? Infinity : t.max + buffer
+    return n >= min && n <= max
+  }) ?? MARK_STATE_THRESHOLDS[MARK_STATE_THRESHOLDS.length - 1]
 
   const isLast = tier.max === Infinity
   const posInTier  = n - tier.min
@@ -94,7 +102,8 @@ export function applyDamageMarks(entity, markType, { forceState = null, extraMar
   const markValue = meta.value + (Number(extraMarks) || 0)
   const currentMarks = Math.max(0, Number(entity.damageMarks) || 0)
   const newMarks = currentMarks + markValue
-  const derivedState = getPhysicalStateFromMarks(newMarks)
+  const vitBuffer = Math.floor((Number(entity?.attributes?.vitalidade) || 0) / 2)
+  const derivedState = getPhysicalStateFromMarks(newMarks, vitBuffer)
   const newState = forceState ?? derivedState
   const prevState = entity.physicalState ?? 'bem'
 
@@ -106,6 +115,44 @@ export function applyDamageMarks(entity, markType, { forceState = null, extraMar
       physicalState: newState,
     },
     markType,
+    markAdded: markValue,
+    marksTotal: newMarks,
+    prevState,
+    newState,
+    stateChanged: prevState !== newState,
+    narratives,
+  }
+}
+
+/**
+ * Adiciona N marcas diretamente (ex.: dano efetivo após resistência).
+ */
+export function applyMarksAmount(entity, amount) {
+  const markValue = Math.max(0, Math.floor(Number(amount) || 0))
+  const currentMarks = Math.max(0, Number(entity.damageMarks) || 0)
+  if (markValue <= 0) {
+    return {
+      patch: {},
+      markAdded: 0,
+      marksTotal: currentMarks,
+      prevState: entity.physicalState ?? 'bem',
+      newState: entity.physicalState ?? 'bem',
+      stateChanged: false,
+      narratives: [],
+    }
+  }
+  const newMarks = currentMarks + markValue
+  const vitBuffer = Math.floor((Number(entity?.attributes?.vitalidade) || 0) / 2)
+  const derivedState = getPhysicalStateFromMarks(newMarks, vitBuffer)
+  const prevState = entity.physicalState ?? 'bem'
+  const newState = derivedState
+  const narratives = buildNarrativeConsequences(prevState, newState, 'leve')
+
+  return {
+    patch: {
+      damageMarks: newMarks,
+      physicalState: newState,
+    },
     markAdded: markValue,
     marksTotal: newMarks,
     prevState,
@@ -143,7 +190,8 @@ export function clearDamageMarks(entity) {
 export function healDamageMarks(entity, amount) {
   const current = Math.max(0, Number(entity.damageMarks) || 0)
   const newMarks = Math.max(0, current - Math.max(1, Number(amount) || 1))
-  const newState = getPhysicalStateFromMarks(newMarks)
+  const vitBuffer = Math.floor((Number(entity?.attributes?.vitalidade) || 0) / 2)
+  const newState = getPhysicalStateFromMarks(newMarks, vitBuffer)
   return {
     patch: {
       damageMarks: newMarks,

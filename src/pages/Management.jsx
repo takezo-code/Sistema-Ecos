@@ -39,7 +39,7 @@ export function Management({
     npcs: 'STATUS · NÍVEL · XP · MOCHILA',
     boss: 'RESISTÊNCIAS · MARCAS · PAPEL DE COMBATE',
     organizations: 'FAÇÕES · ALIADOS · INIMIGOS',
-    creation: 'PERSONAGEM · NPC · BOSS · ORGANIZAÇÃO',
+    creation: 'PERSONAGEM · NPC NARRATIVO · BOSS · ORGANIZAÇÃO',
   }
 
   const meta = VIEW_META[activeView] || VIEW_META.characters
