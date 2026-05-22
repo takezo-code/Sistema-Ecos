@@ -1,9 +1,14 @@
-/** NPC de narrativa (não entra na aba Boss / combate). */
+/** NPC criado na aba NPC (não é Boss). */
 export function isNarrativeNpc(npc) {
-  return !npc?.podeCombater
+  return npc?.papelCombate !== 'boss'
 }
 
-/** Inimigo de combate (Boss, elite, capanga). */
+/** Boss — ficha de combate completa na aba Boss. */
 export function isCombatNpc(npc) {
-  return !!npc?.podeCombater
+  return npc?.papelCombate === 'boss'
+}
+
+/** Pode ser usado como inimigo contra jogadores (todos os NPCs por padrão). */
+export function canEnterCombat(npc) {
+  return npc?.papelCombate !== 'nenhum' || !!npc?.podeCombater
 }

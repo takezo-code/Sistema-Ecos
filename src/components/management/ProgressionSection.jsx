@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Sparkles, ChevronUp, ChevronDown } from 'lucide-react'
+import { ChevronUp, ChevronDown } from 'lucide-react'
 import { Input } from '../ui/Field'
 import { MAX_LEVEL, COMBAT_HIGHLIGHT_XP } from '../../constants/progression'
 import { getXpProgress } from '../../services/progressionService'
@@ -30,7 +30,6 @@ function AdminStepper({ label, value, min, max, onChange, color = '#e5e5e5' }) {
 
 export function ProgressionSection({
   entity,
-  levelUps = [],
   adminMode = false,
   onAddXp,
   onMasterProgression,
@@ -325,26 +324,6 @@ export function ProgressionSection({
         </div>
       )}
 
-      {levelUps.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-          {levelUps.map((lu, i) => (
-            <div key={i} style={{
-              fontSize: '0.75rem',
-              color: lu.type === 'eco' ? '#a855f7' : lu.type === 'social' ? '#e879f9' : '#16a34a',
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid #1a1a1a',
-              borderRadius: '3px',
-              padding: '0.5rem 0.75rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}>
-              <Sparkles size={12} />
-              {lu.message}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

@@ -28,13 +28,27 @@ import {
   validateStartingSocialDistributed,
 } from '../services/progressionService'
 import { getTotalAttributePoints, getTotalSocialPoints } from '../constants/attributes'
+import { resolveCharacterNarrative } from '../utils/entityNarrative'
 
 const EMPTY_FORM = {
-  name: '', image: '', description: '', narrativeStatus: '',
+  name: '',
+  image: '',
+  appearance: '',
+  personality: '',
+  history: '',
+  motivation: '',
   attributes: defaultAttributes(),
   unspentAttributePoints: STARTING_ATTRIBUTE_POINTS,
   socialAttributes: defaultSocialAttributes(),
   unspentSocialPoints: STARTING_SOCIAL_POINTS,
+}
+
+const narrativeSectionLabel = {
+  fontSize: '0.65rem',
+  color: '#444',
+  fontFamily: 'monospace',
+  letterSpacing: '0.1em',
+  marginBottom: '0.25rem',
 }
 
 function AttributeInput({ attr, value, onChange, canIncrease }) {
@@ -79,13 +93,17 @@ function AttributeInput({ attr, value, onChange, canIncrease }) {
 
 export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }) {
   const isNew = !initial?.id
-  const [form, setForm] = useState(initial ? {
-    ...initial,
-    attributes: { ...defaultAttributes(), ...(initial.attributes || {}) },
-    unspentAttributePoints: initial.unspentAttributePoints ?? STARTING_ATTRIBUTE_POINTS,
-    socialAttributes: { ...defaultSocialAttributes(), ...(initial.socialAttributes || {}) },
-    unspentSocialPoints: initial.unspentSocialPoints ?? STARTING_SOCIAL_POINTS,
-  } : EMPTY_FORM)
+  const [form, setForm] = useState(() => {
+    if (!initial) return EMPTY_FORM
+    return {
+      ...initial,
+      ...resolveCharacterNarrative(initial),
+      attributes: { ...defaultAttributes(), ...(initial.attributes || {}) },
+      unspentAttributePoints: initial.unspentAttributePoints ?? STARTING_ATTRIBUTE_POINTS,
+      socialAttributes: { ...defaultSocialAttributes(), ...(initial.socialAttributes || {}) },
+      unspentSocialPoints: initial.unspentSocialPoints ?? STARTING_SOCIAL_POINTS,
+    }
+  })
   const [attrError, setAttrError] = useState(null)
 
   const set = (f, v) => setForm(p => ({ ...p, [f]: v }))
@@ -115,11 +133,14 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
     e.preventDefault()
     if (!form.name.trim()) return
     if (profileOnly) {
+      const { description: _d, narrativeStatus: _s, ...profile } = form
       onSave({
-        name: form.name,
-        image: form.image,
-        description: form.description,
-        narrativeStatus: form.narrativeStatus,
+        name: profile.name,
+        image: profile.image,
+        appearance: profile.appearance,
+        personality: profile.personality,
+        history: profile.history,
+        motivation: profile.motivation,
       })
       return
     }
@@ -136,7 +157,8 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
       }
     }
     setAttrError(null)
-    onSave(form)
+    const { description: _d, narrativeStatus: _s, ...payload } = form
+    onSave(payload)
   }
 
   return (
@@ -151,12 +173,45 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
           onChange={v => set('image', v)}
           label="Foto do personagem"
         />
-        <Field label="Descrição / Histórico">
-          <Textarea value={form.description} onChange={e => set('description', e.target.value)} placeholder="Quem é este personagem..." rows={3} />
-        </Field>
-        <Field label="Status Narrativo">
-          <Input value={form.narrativeStatus} onChange={e => set('narrativeStatus', e.target.value)} placeholder="Ex: Buscando redenção, Foragido, Aliado..." />
-        </Field>
+        <div>
+          <div style={narrativeSectionLabel}>PERFIL NARRATIVO</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <Field label="Aparência">
+                <Textarea
+                  value={form.appearance}
+                  onChange={e => set('appearance', e.target.value)}
+                  placeholder="Físico, vestimenta, marcas, aura..."
+                  rows={2}
+                />
+              </Field>
+              <Field label="Personalidade">
+                <Textarea
+                  value={form.personality}
+                  onChange={e => set('personality', e.target.value)}
+                  placeholder="Temperamento, maneirismos, tom de voz..."
+                  rows={2}
+                />
+              </Field>
+            </div>
+            <Field label="História">
+              <Textarea
+                value={form.history}
+                onChange={e => set('history', e.target.value)}
+                placeholder="Passado, origem, eventos relevantes..."
+                rows={3}
+              />
+            </Field>
+            <Field label="Motivações">
+              <Textarea
+                value={form.motivation}
+                onChange={e => set('motivation', e.target.value)}
+                placeholder="Objetivos, medos, o que move este personagem..."
+                rows={2}
+              />
+            </Field>
+          </div>
+        </div>
       </div>
 
       {!profileOnly && (
@@ -336,13 +391,10 @@ function CharCard({ character, onEdit, onDelete, onInventory }) {
             <div style={{ fontSize: '0.65rem', color: '#a855f7', fontFamily: 'monospace', marginBottom: '4px' }}>
               NVL {character.level || 1} · {character.ecoPoints ?? 0} Ecos
             </div>
-            {character.narrativeStatus && (
-              <div style={{ fontSize: '0.7rem', color: '#06b6d4', marginBottom: '4px' }}>{character.narrativeStatus}</div>
-            )}
-            {character.description && (
+            {(character.personality || character.motivation || character.history) && (
               <div style={{ fontSize: '0.7rem', color: '#444', lineHeight: 1.5,
                 display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                {character.description}
+                {character.personality || character.motivation || character.history}
               </div>
             )}
           </div>

@@ -1,6 +1,6 @@
-import { genId } from '../utils/id'
-import { SKILL_POOL } from '../data/skillPool'
-import { SKILL_AUDIENCE, skillMatchesAudience } from '../constants/skillAudience'
+import { SKILL_AUDIENCE } from '../constants/skillAudience'
+import { getMergedCatalog } from './skillsCatalogService'
+import { buildSkillInstanceFromCatalog } from './ecoSkillRuntimeService'
 import { ECO_UNLOCK_SKILL_COST } from '../constants/progression'
 import { normalizeSkillType, getSkillTypeMeta } from '../constants/skillTypes'
 import { getEffectiveSkillPower } from './ruptureBonus'
@@ -23,10 +23,7 @@ export function createSkillFromTemplate(template, tier = 1) {
 }
 
 function getCharacterSkillPool() {
-  return SKILL_POOL.filter(t => skillMatchesAudience(
-    { audience: t.audience ?? SKILL_AUDIENCE.CHARACTER },
-    SKILL_AUDIENCE.CHARACTER,
-  ))
+  return getMergedCatalog(SKILL_AUDIENCE.CHARACTER)
 }
 
 export function rollRandomSkill(existingSkills = []) {
@@ -35,7 +32,8 @@ export function rollRandomSkill(existingSkills = []) {
   const available = base.filter(t => !owned.has(t.templateId))
   const pool = available.length > 0 ? available : base
   const template = pool[Math.floor(Math.random() * pool.length)]
-  return createSkillFromTemplate(template, 1)
+  if (!template) return null
+  return buildSkillInstanceFromCatalog(template.templateId)
 }
 
 export function canUnlockRandomSkill(character) {

@@ -31,7 +31,6 @@ import {
 import { catalogSkillAllowedForEntity, getCatalogSkill } from '../services/skillsCatalogService'
 import { enforceProgressionCaps } from '../services/progressionBudget'
 import { archiveEntity, TRASH_TYPES } from '../services/trashService'
-import { useGroupStore } from './useGroupStore'
 import {
   applyDamageMarks as applyDamageMarksEngine,
   clearDamageMarks as clearDamageMarksEngine,
@@ -41,6 +40,13 @@ import {
 const load = () => (storage.get(KEYS.characters) || []).map(normalizeGameEntity)
 
 const persist = (characters) => storage.set(KEYS.characters, characters)
+
+function buildRecoverPatch(character) {
+  const ecoPatch = restEcoOverload(character).patch
+  const merged = { ...character, ...ecoPatch }
+  const marksPatch = clearDamageMarksEngine(merged).patch
+  return { ...ecoPatch, ...marksPatch }
+}
 
 const patchCharacter = (get, set, id, patcher) => {
   const characters = get().characters.map(c => {
@@ -83,8 +89,10 @@ export const useCharacterStore = create((set, get) => ({
       campaignId: data.campaignId || null,
       name: data.name || 'Novo Personagem',
       image: data.image || '',
-      description: data.description || '',
-      narrativeStatus: data.narrativeStatus || '',
+      appearance: data.appearance || '',
+      personality: data.personality || '',
+      history: data.history || data.description || '',
+      motivation: data.motivation || data.narrativeStatus || '',
       level: data.level ?? 1,
       xp: data.xp ?? 0,
       ecoPoints: data.ecoPoints ?? 0,
@@ -108,16 +116,6 @@ export const useCharacterStore = create((set, get) => ({
     const characters = [...get().characters, character]
     persist(characters)
     set({ characters })
-
-    if (character.campaignId) {
-      const campaignGroups = useGroupStore.getState().groups.filter(
-        g => g.campaignId === character.campaignId,
-      )
-      const group = campaignGroups[0]
-      if (group && !group.memberIds.includes(character.id)) {
-        useGroupStore.getState().addMember(group.id, character.id)
-      }
-    }
 
     return character
   },
@@ -160,19 +158,37 @@ export const useCharacterStore = create((set, get) => ({
     patchCharacter(get, set, characterId, ch => ({ ...ch, ...result.patch }))
   },
 
-  /** Descanso completo: zera sobrecarga Eco + limpa marcas de dano */
+  /** Descanso completo: zera sobrecarga Eco + limpa marcas + estados estáveis */
   recoverCharacter(characterId) {
     const c = get().characters.find(ch => ch.id === characterId)
     if (!c) return false
-    const ecoPatch = restEcoOverload(c).patch
-    const marksPatch = clearDamageMarksEngine(c).patch
-    patchCharacter(get, set, characterId, ch => ({ ...ch, ...ecoPatch, ...marksPatch }))
+    patchCharacter(get, set, characterId, ch => ({ ...ch, ...buildRecoverPatch(ch) }))
     set({ lastOverloadEvents: [] })
     return true
   },
 
+  /** Descanso do grupo em uma única gravação (todos os memberIds). */
   recoverGroupMembers(memberIds = []) {
-    memberIds.forEach(id => get().recoverCharacter(id))
+    const idSet = new Set((memberIds || []).filter(Boolean))
+    if (idSet.size === 0) return { recovered: 0, missing: 0 }
+
+    let recovered = 0
+    const characters = get().characters.map(c => {
+      if (!idSet.has(c.id)) return c
+      recovered++
+      let next = normalizeGameEntity({
+        ...c,
+        ...buildRecoverPatch(c),
+        updatedAt: new Date().toISOString(),
+      })
+      const { patch: caps } = enforceProgressionCaps(next)
+      if (caps) next = { ...next, ...caps }
+      return next
+    })
+
+    persist(characters)
+    set({ characters, lastOverloadEvents: [] })
+    return { recovered, missing: idSet.size - recovered }
   },
 
   addXp(characterId, amount) {

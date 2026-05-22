@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import {
-  UsersRound, Pencil, Trash2, Star, UserPlus, X, Sparkles, Swords, RotateCcw, Plus,
+  UsersRound, Pencil, Trash2, Star, UserPlus, X, Sparkles, RotateCcw, Plus,
 } from 'lucide-react'
 import { SESSION_ULTRA_XP_TIERS } from '../constants/progression'
 import { EntityThumb } from '../components/ui/EntityThumb'
@@ -17,7 +17,7 @@ import { ATTRIBUTES } from '../constants/attributes'
 import { getPhysicalStateOption, getMentalStateOption } from '../constants/states'
 import { formatOverloadDisplay } from '../constants/ecoOverload'
 import { filterByActiveCampaign } from '../utils/campaignScope'
-import { useCombatStore } from '../store/useCombatStore'
+import { useSaveStore } from '../store/useSaveStore'
 
 function GroupForm({ initial, onSave, onCancel }) {
   const [form, setForm] = useState(initial || { name: '', description: '' })
@@ -124,9 +124,9 @@ function MemberRow({ character, selected, onManage, onRemove }) {
 
 export function ManageGroups() {
   const { activeCampaignId } = useCampaignStore()
-  const { combatGroupId, setCombatGroup } = useCombatStore()
   const { groups, addGroup, updateGroup, deleteGroup, addMember, removeMember } = useGroupStore()
   const { characters, addXpToMany, recoverGroupMembers } = useCharacterStore()
+  const showToast = useSaveStore(s => s.showToast)
   const selectCharacter = useCharacterPanelStore(s => s.selectCharacter)
 
   const [groupModal, setGroupModal] = useState(null)
@@ -263,25 +263,22 @@ export function ManageGroups() {
           </button>
           <button
             type="button"
-            className="btn-secondary"
-            onClick={() => setCombatGroup(combatGroupId === activeGroup.id ? null : activeGroup.id)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              fontSize: '0.7rem',
-              borderColor: combatGroupId === activeGroup.id ? 'rgba(220,38,38,0.45)' : undefined,
-              color: combatGroupId === activeGroup.id ? '#dc2626' : undefined,
-            }}
-          >
-            <Swords size={12} />
-            {combatGroupId === activeGroup.id ? 'Grupo no combate' : 'Usar no combate'}
-          </button>
-          <button
-            type="button"
             className="btn-ghost"
             disabled={members.length === 0}
-            onClick={() => recoverGroupMembers(activeGroup.memberIds)}
+            onClick={() => {
+              const ids = members.map(m => m.id)
+              const { recovered, missing } = recoverGroupMembers(ids)
+              if (recovered > 0) {
+                showToast(
+                  `Descanso aplicado a ${recovered} personagem${recovered > 1 ? 's' : ''} — marcas e sobrecarga zeradas.`,
+                  'success',
+                )
+              } else if (missing > 0) {
+                showToast('Alguns membros do grupo não foram encontrados na campanha.', 'error')
+              } else {
+                showToast('Adicione membros ao grupo para descansar.', 'info')
+              }
+            }}
             title="Zera sobrecarga Eco, limpa marcas e volta estados ao estável"
             style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}
           >
@@ -428,9 +425,12 @@ export function ManageGroups() {
         <GroupForm initial={groupModal?.group} onSave={handleSaveGroup} onCancel={() => setGroupModal(null)} />
       </Modal>
 
-      <Modal open={addMemberOpen} onClose={() => setAddMemberOpen(false)} title="Adicionar membro" maxWidth="400px">
+      <Modal open={addMemberOpen} onClose={() => setAddMemberOpen(false)} title="Adicionar ao grupo" maxWidth="400px">
+        <p style={{ fontSize: '0.75rem', color: '#555', margin: '0 0 0.75rem', lineHeight: 1.5 }}>
+          Personagens em espera (criados e ainda não designados para o grupo).
+        </p>
         {availableToAdd.length === 0 ? (
-          <p style={{ fontSize: '0.8rem', color: '#666' }}>Nenhum personagem disponível para adicionar.</p>
+          <p style={{ fontSize: '0.8rem', color: '#666' }}>Nenhum personagem em espera nesta campanha.</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', maxHeight: '320px', overflowY: 'auto' }}>
             {availableToAdd.map(c => (

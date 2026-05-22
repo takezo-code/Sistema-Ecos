@@ -116,7 +116,7 @@ export function ManageScene() {
   )
 
   const campaignEnemies = useMemo(
-    () => filterByActiveCampaign(npcs, activeCampaignId).filter(n => n.podeCombater),
+    () => filterByActiveCampaign(npcs, activeCampaignId).filter(n => n.papelCombate !== 'boss'),
     [npcs, activeCampaignId]
   )
 
@@ -270,8 +270,12 @@ export function ManageScene() {
               type="button"
               className="btn-ghost"
               onClick={() => {
-                recoverGroupMembers(activeGroup.memberIds)
-                setSceneNotice('Grupo descansou — sobrecarga e marcas zeradas.')
+                const { recovered } = recoverGroupMembers(activeGroup.memberIds)
+                setSceneNotice(
+                  recovered > 0
+                    ? `Grupo descansou — ${recovered} personagem${recovered > 1 ? 's' : ''} recuperado${recovered > 1 ? 's' : ''}.`
+                    : 'Nenhum membro recuperado.',
+                )
               }}
               disabled={activeGroup.memberIds.length === 0}
               style={{ fontSize: '0.6rem', padding: '3px 8px', display: 'flex', alignItems: 'center', gap: '4px' }}

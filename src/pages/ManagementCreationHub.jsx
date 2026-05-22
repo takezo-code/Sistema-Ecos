@@ -20,7 +20,7 @@ const CREATION_TYPES = [
   {
     id: 'npcs',
     label: 'NPC',
-    description: 'Figura da narrativa — aliado, informante ou personagem de cena, sem ficha de combate.',
+    description: 'Figura da narrativa — aliado, informante ou inimigo de cena. Pode entrar em combate.',
     icon: Skull,
     color: '#06b6d4',
     border: 'rgba(6,182,212,0.2)',

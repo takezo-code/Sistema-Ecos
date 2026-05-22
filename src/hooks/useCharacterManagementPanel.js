@@ -53,7 +53,6 @@ export function useCharacterManagementPanel(characterId, { adminMode = false } =
     return {
       showProgression: true,
       adminMode,
-      levelUps: lastLevelUps,
       onUpdate: data => updateCharacter(id, data),
       onAddXp: amount => addXp(id, amount),
       onChangeAttribute: (key, val, opts) => {
@@ -80,7 +79,6 @@ export function useCharacterManagementPanel(characterId, { adminMode = false } =
   }, [
     characterId,
     adminMode,
-    lastLevelUps,
     lastMasterError,
     lastOverloadEvents,
     updateCharacter,

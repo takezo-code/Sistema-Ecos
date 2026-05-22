@@ -1,5 +1,6 @@
 /**
- * Pool de descoberta aleatória (personagens).
- * Preencha conforme o catálogo de personagem ou skills dedicadas ao sorteio.
+ * Pool de descoberta aleatória (personagens) — espelha o catálogo builtin.
  */
-export const SKILL_POOL = []
+import { ECO_SKILLS_CATALOG } from './ecoSkillsCatalog'
+
+export const SKILL_POOL = ECO_SKILLS_CATALOG

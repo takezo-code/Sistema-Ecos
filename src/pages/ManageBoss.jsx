@@ -161,7 +161,7 @@ export function ManageBoss({ embedded = false }) {
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [search, setSearch] = useState('')
 
-  let filtered = filterByActiveCampaign(npcs, activeCampaignId).filter(n => n.podeCombater)
+  let filtered = filterByActiveCampaign(npcs, activeCampaignId).filter(n => n.papelCombate === 'boss')
   if (search) filtered = filtered.filter(n => n.name.toLowerCase().includes(search.toLowerCase()))
 
   const current = managing ? npcs.find(n => n.id === managing.id) : null
@@ -231,7 +231,6 @@ export function ManageBoss({ embedded = false }) {
               entity={current}
               showProgression
               adminMode
-              levelUps={lastLevelUps}
               onUpdate={data => updateNPC(current.id, data)}
               onAddXp={amount => addXp(current.id, amount)}
               onChangeAttribute={(key, val, opts) => {

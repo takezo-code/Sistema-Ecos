@@ -36,7 +36,9 @@ export const BOSS_DEFAULTS = {
 const EMPTY_FORM = {
   name: '',
   image: '',
-  description: '',
+  appearance: '',
+  personality: '',
+  history: '',
   motivation: '',
   secret: '',
   organization: '',
@@ -48,8 +50,8 @@ const EMPTY_FORM = {
   ecoPoints: 0,
   socialAttributes: defaultSocialAttributes(),
   unspentSocialPoints: STARTING_SOCIAL_POINTS,
-  podeCombater: false,
-  papelCombate: 'nenhum',
+  podeCombater: true,
+  papelCombate: 'capanga',
   resistenciaFisica: 0,
   resistenciaMental: 0,
   marcasMaximas: 0,
@@ -64,8 +66,9 @@ const PAPEL_OPTIONS = [
 ]
 
 export function buildNpcPayloadForSave(data, isNewEntity) {
+  const { description: _legacy, ...npcData } = data
   let payload = {
-    ...data,
+    ...npcData,
     ...(isNewEntity ? { level: 1, xp: 0, ecoPoints: 0, skills: [] } : {}),
     ...finalizeCreationAttributes(data, { isNew: isNewEntity && (data.unspentAttributePoints ?? 0) > 0 }),
   }
@@ -85,6 +88,30 @@ export function buildNpcPayloadForSave(data, isNewEntity) {
   return draft
 }
 
+/** Preenche campos narrativos; NPCs antigos com só `description` migram para História. */
+function resolveNpcNarrativeFields(initial) {
+  const legacy =
+    initial?.description?.trim() &&
+    !initial?.appearance?.trim() &&
+    !initial?.personality?.trim() &&
+    !initial?.history?.trim()
+  return {
+    appearance: initial?.appearance ?? '',
+    personality: initial?.personality ?? '',
+    history: initial?.history ?? (legacy ? initial.description : ''),
+    motivation: initial?.motivation ?? '',
+    secret: initial?.secret ?? '',
+  }
+}
+
+const narrativeSectionLabel = {
+  fontSize: '0.65rem',
+  color: '#444',
+  fontFamily: 'monospace',
+  letterSpacing: '0.1em',
+  marginBottom: '0.25rem',
+}
+
 export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, variant = 'npc' }) {
   const isBoss = variant === 'boss'
   const isNew = !initial?.id
@@ -92,6 +119,7 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
     ...EMPTY_FORM,
     ...(isBoss && isNew ? BOSS_DEFAULTS : {}),
     ...(initial || {}),
+    ...resolveNpcNarrativeFields(initial),
     campaignId,
     attributes: { ...defaultAttributes(), ...(initial?.attributes || {}) },
     unspentAttributePoints: initial?.unspentAttributePoints ?? (isNew ? STARTING_ATTRIBUTE_POINTS : 0),
@@ -100,8 +128,8 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
     ecoPoints: initial?.ecoPoints ?? 0,
     socialAttributes: { ...defaultSocialAttributes(), ...(initial?.socialAttributes || {}) },
     unspentSocialPoints: initial?.unspentSocialPoints ?? (isNew ? STARTING_SOCIAL_POINTS : 0),
-    podeCombater: initial?.podeCombater ?? false,
-    papelCombate: initial?.papelCombate ?? 'nenhum',
+    podeCombater: isBoss ? (initial?.podeCombater ?? true) : true,
+    papelCombate: isBoss ? (initial?.papelCombate ?? 'boss') : (initial?.papelCombate === 'boss' ? 'capanga' : (initial?.papelCombate ?? 'capanga')),
     resistenciaFisica: initial?.resistenciaFisica ?? 0,
     resistenciaMental: initial?.resistenciaMental ?? 0,
     marcasMaximas: initial?.marcasMaximas ?? 0,
@@ -157,16 +185,54 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
 
       <ImageUpload value={form.image} onChange={v => set('image', v)} label="Foto do NPC" />
 
-      <Field label="Descrição">
-        <Textarea value={form.description} onChange={e => set('description', e.target.value)} placeholder="Aparência, personalidade, história..." rows={3} />
-      </Field>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-        <Field label="Motivação">
-          <Textarea value={form.motivation} onChange={e => set('motivation', e.target.value)} placeholder="O que move este NPC..." rows={2} />
-        </Field>
-        <Field label="Segredo">
-          <Textarea value={form.secret} onChange={e => set('secret', e.target.value)} placeholder="O que ele esconde..." rows={2} />
-        </Field>
+      <div>
+        <div style={narrativeSectionLabel}>PERFIL NARRATIVO</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <Field label="Aparência">
+              <Textarea
+                value={form.appearance}
+                onChange={e => set('appearance', e.target.value)}
+                placeholder="Físico, vestimenta, marcas, aura..."
+                rows={2}
+              />
+            </Field>
+            <Field label="Personalidade">
+              <Textarea
+                value={form.personality}
+                onChange={e => set('personality', e.target.value)}
+                placeholder="Temperamento, maneirismos, tom de voz..."
+                rows={2}
+              />
+            </Field>
+          </div>
+          <Field label="História">
+            <Textarea
+              value={form.history}
+              onChange={e => set('history', e.target.value)}
+              placeholder="Passado, origem, eventos relevantes..."
+              rows={3}
+            />
+          </Field>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <Field label="Motivações">
+              <Textarea
+                value={form.motivation}
+                onChange={e => set('motivation', e.target.value)}
+                placeholder="Objetivos, medos, o que o move..."
+                rows={2}
+              />
+            </Field>
+            <Field label="Segredos">
+              <Textarea
+                value={form.secret}
+                onChange={e => set('secret', e.target.value)}
+                placeholder="O que ele esconde do grupo..."
+                rows={2}
+              />
+            </Field>
+          </div>
+        </div>
       </div>
 
       <label style={{
@@ -204,35 +270,6 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
         showRuptureHint={form.hasEcoPowers}
       />
 
-      {/* ── Combate (opcional em NPC narrativo; sempre em Boss) ── */}
-      {!isBoss && (
-        <>
-          <hr className="divide-line" />
-          <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-            COMBATE (OPCIONAL)
-          </div>
-          <p style={{ fontSize: '0.7rem', color: '#555', marginBottom: '0.5rem', lineHeight: 1.5 }}>
-            Para inimigos de combate (Boss, elite), use Gerenciamento → Criação → Boss.
-          </p>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#888', cursor: 'pointer', padding: '0.25rem 0' }}>
-            <input
-              type="checkbox"
-              checked={!!form.podeCombater}
-              onChange={e => {
-                const checked = e.target.checked
-                setForm(p => ({
-                  ...p,
-                  podeCombater: checked,
-                  papelCombate: checked ? (p.papelCombate === 'nenhum' ? 'capanga' : p.papelCombate) : 'nenhum',
-                }))
-              }}
-              style={{ accentColor: '#dc2626' }}
-            />
-            Este NPC pode entrar em combate como inimigo
-          </label>
-        </>
-      )}
-
       {isBoss && (
         <>
           <hr className="divide-line" />
@@ -242,7 +279,7 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
         </>
       )}
 
-      {(isBoss || form.podeCombater) && (
+      {isBoss && (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <Field label="Papel no Combate">
@@ -307,8 +344,25 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
   )
 }
 
+function NarrativeDetailBlock({ label, text, color = '#444', borderColor }) {
+  if (!text?.trim()) return null
+  return (
+    <div style={{
+      background: '#0d0d0d',
+      border: `1px solid ${borderColor || '#1a1a1a'}`,
+      borderRadius: '3px',
+      padding: '0.75rem',
+    }}>
+      <div style={{ fontSize: '0.6rem', color, fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '4px' }}>{label}</div>
+      <p style={{ fontSize: '0.775rem', color: '#666', lineHeight: 1.6, margin: 0 }}>{text}</p>
+    </div>
+  )
+}
+
 function NPCDetailModal({ npc, onClose, onEdit }) {
   if (!npc) return null
+  const narrative = resolveNpcNarrativeFields(npc)
+  const hasNarrative = Object.values(narrative).some(v => v?.trim())
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
@@ -326,26 +380,19 @@ function NPCDetailModal({ npc, onClose, onEdit }) {
           {npc.organization && <div style={{ fontSize: '0.75rem', color: '#555' }}>{npc.organization}</div>}
         </div>
       </div>
-      {npc.description && (
-        <div>
-          <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '4px' }}>DESCRIÇÃO</div>
-          <p style={{ fontSize: '0.8rem', color: '#888', lineHeight: 1.7 }}>{npc.description}</p>
+      {hasNarrative && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+            <NarrativeDetailBlock label="APARÊNCIA" text={narrative.appearance} color="#a78bfa" />
+            <NarrativeDetailBlock label="PERSONALIDADE" text={narrative.personality} color="#eab308" />
+          </div>
+          <NarrativeDetailBlock label="HISTÓRIA" text={narrative.history} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+            <NarrativeDetailBlock label="MOTIVAÇÕES" text={narrative.motivation} color="#06b6d4" borderColor="rgba(6,182,212,0.15)" />
+            <NarrativeDetailBlock label="SEGREDOS" text={narrative.secret} color="#dc2626" borderColor="rgba(220,38,38,0.15)" />
+          </div>
         </div>
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-        {npc.motivation && (
-          <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '3px', padding: '0.75rem' }}>
-            <div style={{ fontSize: '0.6rem', color: '#06b6d4', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '4px' }}>MOTIVAÇÃO</div>
-            <p style={{ fontSize: '0.775rem', color: '#666', lineHeight: 1.6 }}>{npc.motivation}</p>
-          </div>
-        )}
-        {npc.secret && (
-          <div style={{ background: '#0d0d0d', border: '1px solid rgba(220,38,38,0.15)', borderRadius: '3px', padding: '0.75rem' }}>
-            <div style={{ fontSize: '0.6rem', color: '#dc2626', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '4px' }}>SEGREDO</div>
-            <p style={{ fontSize: '0.775rem', color: '#666', lineHeight: 1.6 }}>{npc.secret}</p>
-          </div>
-        )}
-      </div>
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         <button className="btn-ghost" onClick={onClose}>Fechar</button>
         <button className="btn-secondary" onClick={onEdit}>
@@ -414,10 +461,10 @@ function NPCCard({ npc, onEdit, onDelete, onView }) {
             {npc.organization}
           </div>
         )}
-        {npc.motivation && (
+        {(npc.personality || npc.appearance || npc.motivation) && (
           <div style={{ fontSize: '0.7rem', color: '#333', marginTop: '4px', lineHeight: 1.5,
             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-            {npc.motivation}
+            {npc.personality || npc.appearance || npc.motivation}
           </div>
         )}
       </div>
@@ -446,10 +493,21 @@ export function NPCs({
 
   let filtered = filterByActiveCampaign(npcs, activeCampaignId).filter(isNarrativeNpc)
   if (filterStatus !== 'todos') filtered = filtered.filter(n => n.status === filterStatus)
-  if (search) filtered = filtered.filter(n =>
-    n.name.toLowerCase().includes(search.toLowerCase()) ||
-    (n.organization || '').toLowerCase().includes(search.toLowerCase())
-  )
+  if (search) {
+    const q = search.toLowerCase()
+    filtered = filtered.filter(n => {
+      const narrative = resolveNpcNarrativeFields(n)
+      return (
+        n.name.toLowerCase().includes(q) ||
+        (n.organization || '').toLowerCase().includes(q) ||
+        narrative.appearance.toLowerCase().includes(q) ||
+        narrative.personality.toLowerCase().includes(q) ||
+        narrative.history.toLowerCase().includes(q) ||
+        narrative.motivation.toLowerCase().includes(q) ||
+        narrative.secret.toLowerCase().includes(q)
+      )
+    })
+  }
 
   const openCreate = () => { setEditing(null); setModalOpen(true) }
   const openEdit = (n) => { setEditing(n); setModalOpen(true); setViewing(null) }
@@ -467,10 +525,15 @@ export function NPCs({
 
   const handleSave = (data) => {
     const isNew = !editing
+    const payload = {
+      ...data,
+      podeCombater: true,
+      papelCombate: data.papelCombate === 'boss' ? 'capanga' : (data.papelCombate || 'capanga'),
+    }
     if (editing) {
-      updateNPC(editing.id, buildNpcPayloadForSave(data, false))
+      updateNPC(editing.id, buildNpcPayloadForSave(payload, false))
     } else {
-      addNPC(withActiveCampaign(buildNpcPayloadForSave(data, true), activeCampaignId))
+      addNPC(withActiveCampaign(buildNpcPayloadForSave(payload, true), activeCampaignId))
     }
     closeModal()
     if (autoOpenCreate && isNew) onCreateFlowSuccess?.()

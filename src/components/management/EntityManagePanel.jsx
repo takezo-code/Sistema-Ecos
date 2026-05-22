@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Pencil, Sparkles } from 'lucide-react'
+import { Pencil, Sparkles, BookOpen } from 'lucide-react'
+import { NarrativeProfileModal } from './NarrativeProfileModal'
 import { EntityThumb } from '../ui/EntityThumb'
 import { Modal } from '../ui/Modal'
 import { AttributeGrid } from './AttributeGrid'
@@ -34,10 +35,10 @@ export function EntityManagePanel({
   masterError,
   showProgression = true,
   adminMode = false,
-  levelUps = [],
 }) {
-  const [localLevelUps, setLocalLevelUps] = useState(levelUps)
   const [skillsOpen, setSkillsOpen] = useState(false)
+  const [narrativeOpen, setNarrativeOpen] = useState(false)
+  const showNarrative = !isNpcEntity(entity)
   const isCreation = isInCreationPhase(entity)
   const hasEco = entityHasEcoPowers(entity)
 
@@ -47,10 +48,7 @@ export function EntityManagePanel({
   const mentalOpt = getMentalStateOption(mentalState)
 
   const handleAddXp = (amount) => {
-    if (onAddXp) {
-      const result = onAddXp(amount)
-      if (result?.levelUps) setLocalLevelUps(result.levelUps)
-    }
+    onAddXp?.(amount)
   }
 
   return (
@@ -66,7 +64,18 @@ export function EntityManagePanel({
             <span style={{ color: mentalOpt.color }}> · {mentalOpt.label.toUpperCase()}</span>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {showNarrative && (
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setNarrativeOpen(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}
+            >
+              <BookOpen size={12} style={{ color: '#06b6d4' }} />
+              Perfil narrativo
+            </button>
+          )}
           {hasEco && (
             <button
               type="button"
@@ -101,7 +110,6 @@ export function EntityManagePanel({
           <ProgressionSection
             entity={entity}
             onAddXp={handleAddXp}
-            levelUps={localLevelUps.length ? localLevelUps : levelUps}
             adminMode={adminMode}
             onMasterProgression={onMasterProgression}
             onSyncProgression={onSyncProgression}
@@ -123,6 +131,14 @@ export function EntityManagePanel({
         onSpendPending={adminMode ? undefined : onSpendPendingAttribute}
         onSpendPendingSocial={adminMode ? undefined : onSpendPendingSocialAttribute}
       />
+
+      {showNarrative && (
+        <NarrativeProfileModal
+          open={narrativeOpen}
+          onClose={() => setNarrativeOpen(false)}
+          entity={entity}
+        />
+      )}
 
       <Modal open={hasEco && skillsOpen} onClose={() => setSkillsOpen(false)} title={`Skills — ${entity.name}`} maxWidth="720px">
         <EntitySkillsPanel

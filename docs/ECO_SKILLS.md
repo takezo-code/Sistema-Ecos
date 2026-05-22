@@ -8,7 +8,7 @@
 
 ## Catálogo
 
-20 habilidades em `src/data/ecoSkillsCatalog.js` — tom humano alterado, sem magia exagerada.
+135 habilidades builtin em `src/data/characterSkillsCatalog.js` (15 por categoria) — tom humano alterado, sem magia exagerada.
 
 ## Cooldown e turnos
 

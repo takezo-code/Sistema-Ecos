@@ -1,8 +1,11 @@
 /**
  * Catálogo de habilidades de personagem (Eco).
- * Preencha pela aba Skills → Personagem.
+ * Builtin: ~15 por categoria em characterSkillsCatalog.js
+ * Custom: aba Skills → Personagem (localStorage)
  */
-export const ECO_SKILLS_CATALOG = []
+import { CHARACTER_SKILLS_CATALOG } from './characterSkillsCatalog'
+
+export const ECO_SKILLS_CATALOG = CHARACTER_SKILLS_CATALOG
 
 export function getCatalogSkillIds() {
   return ECO_SKILLS_CATALOG.map(s => s.templateId)

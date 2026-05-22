@@ -199,7 +199,7 @@ export function ManageNPCs({ embedded = false }) {
           <EmptyState
             icon={Skull}
             title="Nenhum NPC para gerenciar"
-            description="Crie NPCs narrativos em Gerenciamento → Criação → NPC. Inimigos de combate ficam em Boss."
+            description="Crie NPCs em Gerenciamento → Criação → NPC. Bosses ficam em Criação → Boss."
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '720px' }}>
@@ -226,7 +226,6 @@ export function ManageNPCs({ embedded = false }) {
             entity={current}
             showProgression
             adminMode
-            levelUps={lastLevelUps}
             onUpdate={data => updateNPC(current.id, data)}
             onAddXp={amount => addXp(current.id, amount)}
             onChangeAttribute={(key, val, opts) => {
