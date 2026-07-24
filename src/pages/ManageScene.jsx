@@ -21,7 +21,8 @@ const SCENE_ACCENT = '#d97706'
 
 function RollResultBanner({ result, onDismiss }) {
   if (!result) return null
-  const outcome = getRollOutcome(result.dice, result.bonus)
+  const sides = result.sides || 20
+  const outcome = getRollOutcome(result.dice, result.bonus, sides)
 
   return (
     <div style={{
@@ -38,7 +39,7 @@ function RollResultBanner({ result, onDismiss }) {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '1rem', fontWeight: 900, color: outcome.color }}>{result.total}</span>
           <span style={{ fontSize: '0.65rem', color: '#aaa', fontFamily: 'monospace' }}>
-            d20({result.dice}) + {result.bonus}
+            d{sides}({result.dice}) + {result.bonus}
           </span>
           <span style={{ fontSize: '0.75rem', fontWeight: 700, color: outcome.color }}>{outcome.label}</span>
           {result.characterName && (
@@ -139,11 +140,12 @@ export function ManageScene() {
     setSkillDetailRef({ characterId: character.id, skillId: runtime.instance.id })
   }, [])
 
-  const handleRollAttribute = useCallback((character, _attrKey, attrLabel, eff) => {
-    const dice = Math.floor(Math.random() * 20) + 1
+  const handleRollAttribute = useCallback((character, _attrKey, attrLabel, eff, sides = 20) => {
+    const dice = Math.floor(Math.random() * sides) + 1
     const total = dice + eff
     setRollResult({
       dice,
+      sides,
       bonus: eff,
       total,
       characterName: character.name,
@@ -161,10 +163,10 @@ export function ManageScene() {
     }
   }, [addXp])
 
-  const handleEnemyRollAttribute = useCallback((enemy, _attrKey, attrLabel, eff) => {
-    const dice = Math.floor(Math.random() * 20) + 1
+  const handleEnemyRollAttribute = useCallback((enemy, _attrKey, attrLabel, eff, sides = 20) => {
+    const dice = Math.floor(Math.random() * sides) + 1
     const total = dice + eff
-    setRollResult({ dice, bonus: eff, total, characterName: enemy.name, attrLabel })
+    setRollResult({ dice, sides, bonus: eff, total, characterName: enemy.name, attrLabel })
   }, [])
 
   const handleActivateSkill = useCallback((characterId, skillId) => {

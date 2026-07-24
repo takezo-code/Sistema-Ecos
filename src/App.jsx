@@ -6,11 +6,11 @@ import { WelcomeScreen } from './pages/WelcomeScreen'
 import { Dashboard } from './pages/Dashboard'
 import { Campanha } from './pages/Campanha'
 import { Management } from './pages/Management'
+import { MANAGEMENT_VIEWS, skillAudienceToManagementView } from './constants/managementViews'
 import { EmJogo } from './pages/EmJogo'
 import { Dice } from './pages/Dice'
 import { Trash } from './pages/Trash'
-import { Equipment } from './pages/Equipment'
-import { Skills } from './pages/Skills'
+import { Creation } from './pages/Creation'
 import { isAppBootstrapped, persistUiState, autoSave } from './services/saveService'
 import { storage, KEYS } from './services/storage'
 
@@ -19,8 +19,7 @@ const PAGES = {
   campanha: Campanha,
   management: Management,
   emjogo: EmJogo,
-  equipamentos: Equipment,
-  skills: Skills,
+  creation: Creation,
   dice: Dice,
   trash: Trash,
 }
@@ -29,32 +28,66 @@ function loadUiState() {
   return storage.get(KEYS.uiState) || {}
 }
 
+function migrateUiState(savedUi) {
+  let page = savedUi.activePage || 'dashboard'
+  let managementView = savedUi.managementView || MANAGEMENT_VIEWS.CHARACTERS
+  let campanhaView = savedUi.campanhaView || 'historia'
+  let emjogoView = savedUi.emjogoView || 'ficha'
+
+  if (page === 'character') page = 'emjogo'
+  if (emjogoView === 'skills') emjogoView = 'ficha'
+
+  if (page === 'campaigns') {
+    page = 'campanha'
+    campanhaView = 'historia'
+  } else if (page === 'sessions') {
+    page = 'campanha'
+    campanhaView = 'sessoes'
+  }
+
+  // Abas antigas Equipamentos / Skills → Gerenciamento (ou Criação)
+  if (page === 'equipamentos') {
+    if (savedUi.equipamentosView === 'creation') {
+      page = 'creation'
+      managementView = MANAGEMENT_VIEWS.ARMAS
+    } else {
+      page = 'management'
+      managementView = savedUi.equipamentosView === 'armadura'
+        ? MANAGEMENT_VIEWS.ARMADURA
+        : MANAGEMENT_VIEWS.ARMAS
+    }
+  } else if (page === 'skills') {
+    if (savedUi.skillsView === 'creation') {
+      page = 'creation'
+      managementView = MANAGEMENT_VIEWS.SKILLS_CHARACTER
+    } else {
+      page = 'management'
+      managementView = skillAudienceToManagementView(savedUi.skillsView)
+    }
+  }
+
+  if (managementView === 'creation') {
+    page = 'creation'
+    managementView = MANAGEMENT_VIEWS.CHARACTERS
+  }
+
+  // Audiences antigas gravadas como managementView
+  if (managementView === 'character') managementView = MANAGEMENT_VIEWS.SKILLS_CHARACTER
+  if (managementView === 'npc') managementView = MANAGEMENT_VIEWS.SKILLS_NPC
+
+  return { page, managementView, campanhaView, emjogoView }
+}
+
 export default function App() {
   const [inApp, setInApp] = useState(() => isAppBootstrapped())
   const savedUi = loadUiState()
-  const legacyPage = savedUi.activePage
-  let migratedPage = legacyPage || 'dashboard'
-  let migratedCampanhaView = savedUi.campanhaView || 'historia'
-  if (legacyPage === 'character') migratedPage = 'emjogo'
-  else if (savedUi.emjogoView === 'skills') migratedPage = 'emjogo'
-  else if (legacyPage === 'campaigns') {
-    migratedPage = 'campanha'
-    migratedCampanhaView = 'historia'
-  } else if (legacyPage === 'sessions') {
-    migratedPage = 'campanha'
-    migratedCampanhaView = 'sessoes'
-  }
-  const [activePage, setActivePage] = useState(migratedPage)
-  const [managementView, setManagementView] = useState(savedUi.managementView || 'characters')
-  const [managementCreationType, setManagementCreationType] = useState(null)
-  const [equipamentosView, setEquipamentosView] = useState(savedUi.equipamentosView || 'armas')
-  const [equipamentosCreationType, setEquipamentosCreationType] = useState(null)
-  const [skillsView, setSkillsView] = useState(savedUi.skillsView || 'character')
-  const [skillsCreationType, setSkillsCreationType] = useState(null)
-  const [emjogoView, setEmjogoView] = useState(
-    savedUi.emjogoView === 'skills' ? 'ficha' : (savedUi.emjogoView || 'ficha')
-  )
-  const [campanhaView, setCampanhaView] = useState(migratedCampanhaView)
+  const migrated = migrateUiState(savedUi)
+
+  const [activePage, setActivePage] = useState(migrated.page)
+  const [managementView, setManagementView] = useState(migrated.managementView)
+  const [creationType, setCreationType] = useState(null)
+  const [emjogoView, setEmjogoView] = useState(migrated.emjogoView)
+  const [campanhaView, setCampanhaView] = useState(migrated.campanhaView)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(savedUi.sidebarCollapsed ?? false)
 
   useEffect(() => {
@@ -62,43 +95,42 @@ export default function App() {
     persistUiState({
       activePage,
       managementView,
-      equipamentosView,
-      skillsView,
       emjogoView,
       campanhaView,
       sidebarCollapsed,
     })
-  }, [inApp, activePage, managementView, equipamentosView, skillsView, emjogoView, campanhaView, sidebarCollapsed])
+  }, [inApp, activePage, managementView, emjogoView, campanhaView, sidebarCollapsed])
 
   useEffect(() => {
     if (inApp) autoSave()
   }, [inApp])
 
-  const handleNavigate = (page, subView, creationType) => {
+  const handleNavigate = (page, subView, type) => {
+    // Compat: links antigos Gerenciamento/Equipamentos/Skills → Criação
+    if (subView === 'creation') {
+      setActivePage('creation')
+      if (type) setCreationType(type)
+      return
+    }
+
+    // Compat: páginas Equipamentos / Skills removidas da sidebar
+    if (page === 'equipamentos') {
+      setActivePage('management')
+      setManagementView(subView === 'armadura' ? MANAGEMENT_VIEWS.ARMADURA : MANAGEMENT_VIEWS.ARMAS)
+      return
+    }
+    if (page === 'skills') {
+      setActivePage('management')
+      setManagementView(skillAudienceToManagementView(subView))
+      return
+    }
+
     setActivePage(page)
+    if (page === 'creation' && type) {
+      setCreationType(type)
+    }
     if (page === 'management' && subView) {
-      setManagementView(subView)
-      if (subView === 'creation' && creationType) {
-        setManagementCreationType(creationType)
-      } else if (subView !== 'creation') {
-        setManagementCreationType(null)
-      }
-    }
-    if (page === 'equipamentos' && subView) {
-      setEquipamentosView(subView)
-      if (subView === 'creation' && creationType) {
-        setEquipamentosCreationType(creationType)
-      } else if (subView !== 'creation') {
-        setEquipamentosCreationType(null)
-      }
-    }
-    if (page === 'skills' && subView) {
-      setSkillsView(subView)
-      if (subView === 'creation' && creationType) {
-        setSkillsCreationType(creationType)
-      } else if (subView !== 'creation') {
-        setSkillsCreationType(null)
-      }
+      setManagementView(subView === 'creation' ? MANAGEMENT_VIEWS.CHARACTERS : subView)
     }
     if (page === 'emjogo' && subView) setEmjogoView(subView)
     if (page === 'campanha' && subView) setCampanhaView(subView)
@@ -117,27 +149,15 @@ export default function App() {
   const pageProps = activePage === 'management'
     ? {
         initialView: managementView,
-        initialCreationType: managementCreationType,
-        onCreationTypeConsumed: () => setManagementCreationType(null),
         onViewChange: setManagementView,
         onNavigate: handleNavigate,
       }
-    : activePage === 'equipamentos'
+    : activePage === 'creation'
       ? {
-          initialView: equipamentosView,
-          initialCreationType: equipamentosCreationType,
-          onCreationTypeConsumed: () => setEquipamentosCreationType(null),
-          onViewChange: setEquipamentosView,
           onNavigate: handleNavigate,
+          initialCreationType: creationType,
+          onCreationTypeConsumed: () => setCreationType(null),
         }
-      : activePage === 'skills'
-        ? {
-            initialView: skillsView,
-            initialCreationType: skillsCreationType,
-            onCreationTypeConsumed: () => setSkillsCreationType(null),
-            onViewChange: setSkillsView,
-            onNavigate: handleNavigate,
-          }
       : activePage === 'emjogo'
         ? { initialView: emjogoView, onViewChange: setEmjogoView, onNavigate: handleNavigate }
         : activePage === 'campanha'
@@ -157,8 +177,6 @@ export default function App() {
         onToggle={() => setSidebarCollapsed(c => !c)}
         activePage={activePage}
         managementView={managementView}
-        equipamentosView={equipamentosView}
-        skillsView={skillsView}
         emjogoView={emjogoView}
         campanhaView={campanhaView}
         onNavigate={handleNavigate}

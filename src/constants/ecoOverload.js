@@ -25,7 +25,8 @@ export function getStableEcoPenaltyPercent(overload) {
 
 /**
  * Atributos mentais afetados pela Sobrecarga de Eco (6/5+).
- * Força, Destreza e Vitalidade são afetados apenas pelo estado físico/marcas.
+ * Força, Destreza e Vitalidade são afetados apenas pelo estado físico/marcas
+ * (−1 / −2 / −3 flat conforme Ferido / Grave / Incapacitado).
  */
 export const MENTAL_ATTR_KEYS = Object.freeze(['inteligencia', 'ruptura'])
 

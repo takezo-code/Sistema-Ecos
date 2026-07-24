@@ -12,9 +12,10 @@ import { ATTRIBUTES } from '../constants/attributes'
 import { filterByActiveCampaign } from '../utils/campaignScope'
 import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
 import { useTrashStore } from '../store/useTrashStore'
+import { getEntityEffectiveAttributes } from '../services/stateModifiers'
 
 function CharacterManageCard({ character, onManage, onDelete }) {
-  const attrs = character.attributes || {}
+  const { effective: attrs, base } = getEntityEffectiveAttributes(character)
   return (
     <div
       style={{
@@ -50,12 +51,19 @@ function CharacterManageCard({ character, onManage, onDelete }) {
               NVL {character.level || 1} · {character.ecoPoints ?? 0} Ecos
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.25rem' }}>
-              {ATTRIBUTES.map(attr => (
-                <div key={attr.key} style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: attrs[attr.key] > 0 ? attr.color : '#333' }}>{attrs[attr.key] || 0}</div>
-                  <div style={{ fontSize: '0.5rem', color: '#333', fontFamily: 'monospace' }}>{attr.label.slice(0, 3).toUpperCase()}</div>
-                </div>
-              ))}
+              {ATTRIBUTES.map(attr => {
+                const eff = attrs[attr.key] || 0
+                const raw = base?.[attr.key] || 0
+                const reduced = eff < raw
+                return (
+                  <div key={attr.key} style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: eff > 0 ? (reduced ? '#ea580c' : attr.color) : '#333' }}>
+                      {eff}
+                    </div>
+                    <div style={{ fontSize: '0.5rem', color: '#333', fontFamily: 'monospace' }}>{attr.label.slice(0, 3).toUpperCase()}</div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </button>
@@ -135,7 +143,7 @@ export function ManageCharacters({ embedded = false }) {
           <EmptyState
             icon={Sword}
             title="Nenhum personagem para gerenciar"
-            description="Crie personagens em Gerenciamento → Criação para gerenciar status, nível e mochila aqui."
+            description="Crie personagens em Criação na sidebar para gerenciar status, nível e mochila aqui."
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '720px' }}>

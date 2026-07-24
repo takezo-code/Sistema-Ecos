@@ -2,13 +2,13 @@
  * Engine de Marcas de Dano — sistema sem HP tradicional.
  *
  * Marcas acumulam e determinam o estado físico do personagem.
- * Estado físico penaliza Força, Destreza e Vitalidade percentualmente.
+ * A cada 3 marcas avança um estado (−1 FOR · DES · VIT por estado).
  *
  * Thresholds:
- *   0–2  → Estável   (sem penalidade)
- *   3–5  → Ferido    (−5%)
- *   6–8  → Grave     (−10%)
- *   9+   → Incapacitado (−20%)
+ *   0–2  → Estável       (−0)
+ *   3–5  → Ferido        (−1 FOR/DES/VIT)
+ *   6–8  → Grave         (−2 FOR/DES/VIT)
+ *   9+   → Incapacitado  (−3 FOR/DES/VIT)
  */
 
 // ──────────────────────────────────────────────
@@ -36,10 +36,10 @@ export const DAMAGE_MARK_META = Object.freeze({
 // Tabela de progressão de estados
 // ──────────────────────────────────────────────
 export const MARK_STATE_THRESHOLDS = [
-  { min: 0, max: 2,        state: 'bem',          label: 'Estável',      color: '#16a34a' },
-  { min: 3, max: 5,        state: 'ferido',        label: 'Ferido',       color: '#eab308' },
-  { min: 6, max: 8,        state: 'grave',         label: 'Grave',        color: '#ea580c' },
-  { min: 9, max: Infinity, state: 'incapacitado',  label: 'Incapacitado', color: '#991b1b' },
+  { min: 0, max: 2,        state: 'bem',          label: 'Estável',      color: '#16a34a', attrPenalty: 0 },
+  { min: 3, max: 5,        state: 'ferido',        label: 'Ferido −1',    color: '#eab308', attrPenalty: 1 },
+  { min: 6, max: 8,        state: 'grave',         label: 'Grave −2',     color: '#ea580c', attrPenalty: 2 },
+  { min: 9, max: Infinity, state: 'incapacitado',  label: 'Incap. −3',    color: '#991b1b', attrPenalty: 3 },
 ]
 
 /**
@@ -208,9 +208,9 @@ export function healDamageMarks(entity, amount) {
 // Narrativa
 // ──────────────────────────────────────────────
 const STATE_TRANSITION_NARRATIVE = {
-  'bem→ferido': 'O personagem começa a sentir o peso dos ferimentos.',
-  'ferido→grave': 'Os ferimentos se aprofundam. Cada movimento custa mais.',
-  'grave→incapacitado': 'O corpo cede. Continuar está além dos limites físicos.',
+  'bem→ferido': 'O personagem começa a sentir o peso dos ferimentos (−1 FOR · DES · VIT).',
+  'ferido→grave': 'Os ferimentos se aprofundam (−2 FOR · DES · VIT).',
+  'grave→incapacitado': 'O corpo cede (−3 FOR · DES · VIT). Continuar está além dos limites físicos.',
 }
 
 const MARK_NARRATIVE = {

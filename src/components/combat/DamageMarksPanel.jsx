@@ -109,6 +109,12 @@ export function DamageMarksPanel({
         </span>
       </div>
 
+      {(stateOpt.attrPenalty ?? 0) > 0 && (
+        <div style={{ fontSize: '0.5rem', color: stateOpt.color, fontFamily: 'monospace', textAlign: 'center' }}>
+          {stateOpt.note || `−${stateOpt.attrPenalty} FOR · DES · VIT`}
+        </div>
+      )}
+
       {/* Barra de progresso */}
       <MarksProgressBar marks={marks} />
 

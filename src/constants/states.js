@@ -2,9 +2,12 @@
 export const PHYSICAL_AFFECTED_KEYS = ['forca', 'destreza', 'vitalidade']
 
 /**
- * Estados físicos do personagem.
- * Penalidades aplicadas sobre Força, Destreza e Vitalidade.
- * Estável: 0% | Ferido: −5% | Grave: −10% | Incapacitado: −20%
+ * Estados físicos do personagem (derivados das marcas de dano).
+ * A cada 3 marcas avança um estado e aplica −1 FOR · DES · VIT (acumulativo).
+ *   0–2  Estável       → −0
+ *   3–5  Ferido        → −1
+ *   6–8  Grave         → −2
+ *   9+   Incapacitado  → −3
  */
 export const PHYSICAL_STATES = [
   {
@@ -12,36 +15,40 @@ export const PHYSICAL_STATES = [
     label: 'Estável',
     multiplier: 1.0,
     penaltyPercent: 0,
+    attrPenalty: 0,
     color: '#16a34a',
     glow: 'rgba(22,163,74,0.2)',
     note: null,
   },
   {
     value: 'ferido',
-    label: 'Ferido',
-    multiplier: 0.95,
-    penaltyPercent: 5,
+    label: 'Ferido (−1)',
+    multiplier: 1.0,
+    penaltyPercent: 0,
+    attrPenalty: 1,
     color: '#eab308',
     glow: 'rgba(234,179,8,0.15)',
-    note: '−5% Força · Destreza · Vitalidade',
+    note: '−1 Força · Destreza · Vitalidade',
   },
   {
     value: 'grave',
-    label: 'Grave',
-    multiplier: 0.90,
-    penaltyPercent: 10,
+    label: 'Grave (−2)',
+    multiplier: 1.0,
+    penaltyPercent: 0,
+    attrPenalty: 2,
     color: '#ea580c',
     glow: 'rgba(234,88,12,0.18)',
-    note: '−10% Força · Destreza · Vitalidade',
+    note: '−2 Força · Destreza · Vitalidade',
   },
   {
     value: 'incapacitado',
-    label: 'Incapacitado',
-    multiplier: 0.80,
-    penaltyPercent: 20,
+    label: 'Incapacitado (−3)',
+    multiplier: 1.0,
+    penaltyPercent: 0,
+    attrPenalty: 3,
     color: '#991b1b',
     glow: 'rgba(153,27,27,0.25)',
-    note: '−20% Força · Destreza · Vitalidade · combate limitado',
+    note: '−3 Força · Destreza · Vitalidade · combate limitado',
   },
 ]
 

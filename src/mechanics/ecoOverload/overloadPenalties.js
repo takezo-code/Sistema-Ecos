@@ -7,10 +7,6 @@ import {
 import { ATTRIBUTES } from '../../constants/attributes'
 import { PHYSICAL_AFFECTED_KEYS, getMentalStateOption, getPhysicalStateOption } from '../../constants/states'
 
-function getPhysicalMultiplier(physicalState) {
-  return getPhysicalStateOption(physicalState).multiplier
-}
-
 /**
  * Penalidade percentual no poder de Eco (0–100).
  * 1–5: −1% por nível | 6+: tabela de ruptura
@@ -84,7 +80,7 @@ export function applySkillPowerPenalty(basePower, ecoPowerPercent) {
 
 /**
  * Atributos efetivos com separação clara:
- *  - Físicos (Força/Destreza/Vitalidade) → penalizados pelo estado físico/marcas
+ *  - Físicos (Força/Destreza/Vitalidade) → −N flat pelo estado físico (marcas)
  *  - Mentais (Inteligência/Ruptura)       → penalizados pela sobrecarga de Eco (6/5+)
  */
 export function calculateEffectiveAttributes(attributes = {}, {
@@ -92,7 +88,8 @@ export function calculateEffectiveAttributes(attributes = {}, {
   ecoOverload = 0,
   mentalState = 'estavel',
 } = {}) {
-  const physicalMult = getPhysicalMultiplier(physicalState)
+  const physicalOpt = getPhysicalStateOption(physicalState)
+  const physicalFlat = Math.max(0, Number(physicalOpt.attrPenalty) || 0)
   const penalties    = resolveMentalPenalties(ecoOverload, mentalState)
   const mentalMult   = penalties.mentalAttrMultiplier
   const effective    = {}
@@ -103,7 +100,7 @@ export function calculateEffectiveAttributes(attributes = {}, {
     let value  = base
 
     if (PHYSICAL_AFFECTED_KEYS.includes(key)) {
-      value = Math.round(value * physicalMult)
+      value = base - physicalFlat
     } else if (MENTAL_ATTR_KEYS.includes(key)) {
       value = Math.round(value * mentalMult)
     }
@@ -114,7 +111,8 @@ export function calculateEffectiveAttributes(attributes = {}, {
   return {
     base: attributes,
     effective,
-    physicalMultiplier: physicalMult,
+    physicalMultiplier: physicalOpt.multiplier ?? 1,
+    physicalAttrPenalty: physicalFlat,
     mentalAttributeMultiplier: mentalMult,
     globalAttributeMultiplier: mentalMult,
     ecoPowerMultiplier: penalties.ecoPowerMultiplier,

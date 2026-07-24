@@ -1,41 +1,30 @@
 import React, { useEffect, useState } from 'react'
-import { Sparkles, Sword, Skull, ShieldAlert } from 'lucide-react'
+import { Sword, Skull, ShieldAlert } from 'lucide-react'
 import { PageHeader } from '../components/ui/PageHeader'
 import { SkillsCatalogView } from './SkillsCatalogView'
-import { SkillsCreationHub } from './SkillsCreationHub'
 import { SKILL_AUDIENCE } from '../constants/skillAudience'
 
 const VIEW_META = {
   [SKILL_AUDIENCE.CHARACTER]: { title: 'Skills Personagem', icon: Sword },
   [SKILL_AUDIENCE.NPC]: { title: 'Skills NPC', icon: Skull },
   [SKILL_AUDIENCE.BOSS]: { title: 'Skills Boss', icon: ShieldAlert },
-  creation: { title: 'Criação', icon: Sparkles },
 }
 
 const SUBTITLES = {
   [SKILL_AUDIENCE.CHARACTER]: 'CATÁLOGO · PERSONAGENS JOGÁVEIS',
   [SKILL_AUDIENCE.NPC]: 'CATÁLOGO · NPCs',
   [SKILL_AUDIENCE.BOSS]: 'CATÁLOGO · BOSSES E INIMIGOS',
-  creation: 'SKILL DE PERSONAGEM · NPC · BOSS',
 }
 
 export function Skills({
   initialView = SKILL_AUDIENCE.CHARACTER,
-  initialCreationType,
-  onCreationTypeConsumed,
   onViewChange,
 }) {
-  const [activeView, setActiveView] = useState(initialView)
+  const [activeView, setActiveView] = useState(initialView === 'creation' ? SKILL_AUDIENCE.CHARACTER : initialView)
 
   useEffect(() => {
-    if (initialView) setActiveView(initialView)
+    if (initialView && initialView !== 'creation') setActiveView(initialView)
   }, [initialView])
-
-  const handleViewChange = (view) => {
-    setActiveView(view)
-    onViewChange?.(view)
-    if (view !== 'creation') onCreationTypeConsumed?.()
-  }
 
   const meta = VIEW_META[activeView] || VIEW_META[SKILL_AUDIENCE.CHARACTER]
   const HeaderIcon = meta.icon
@@ -57,13 +46,6 @@ export function Skills({
         )}
         {activeView === SKILL_AUDIENCE.BOSS && (
           <SkillsCatalogView audience={SKILL_AUDIENCE.BOSS} />
-        )}
-        {activeView === 'creation' && (
-          <SkillsCreationHub
-            onViewChange={handleViewChange}
-            initialCreationType={initialCreationType}
-            onCreationTypeConsumed={onCreationTypeConsumed}
-          />
         )}
       </div>
     </div>

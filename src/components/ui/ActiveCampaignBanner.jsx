@@ -3,7 +3,9 @@ import { BookOpen } from 'lucide-react'
 import { useCampaignStore } from '../../store/useCampaignStore'
 
 export function ActiveCampaignBanner({ onNavigate }) {
-  const { activeCampaign } = useCampaignStore()
+  const activeCampaign = useCampaignStore(s =>
+    s.campaigns.find(c => c.id === s.activeCampaignId) || null
+  )
 
   if (activeCampaign) {
     return (

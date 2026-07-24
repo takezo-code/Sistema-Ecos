@@ -36,20 +36,8 @@ export function SkillListRow({ skill, onClick }) {
       }}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '4px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#e5e5e5' }}>{skill.name}</span>
-          {!skill.isBuiltin && (
-            <span style={{
-              fontSize: '0.5rem',
-              color: '#a855f7',
-              fontFamily: 'monospace',
-              border: '1px solid rgba(168,85,247,0.3)',
-              padding: '1px 5px',
-              borderRadius: '2px',
-            }}>
-              CUSTOM
-            </span>
-          )}
+        <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#e5e5e5', marginBottom: '4px' }}>
+          {skill.name}
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', fontSize: '0.6rem', fontFamily: 'monospace' }}>
           <span style={{ color: audienceMeta.color }}>{audienceMeta.shortLabel}</span>

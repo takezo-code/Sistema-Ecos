@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import { Input } from '../ui/Field'
-import { MAX_LEVEL, COMBAT_HIGHLIGHT_XP } from '../../constants/progression'
+import { MAX_LEVEL } from '../../constants/progression'
 import { getXpProgress } from '../../services/progressionService'
 import { getProgressionSnapshot, validateProgression } from '../../services/progressionBudget'
 import { entityHasEcoPowers, isNpcEntity } from '../../constants/entityProgression'
-import { isInCreationPhase, STARTING_ATTRIBUTE_POINTS } from '../../constants/attributes'
+import { isInCreationPhase, STARTING_ATTRIBUTE_POINTS, STARTING_SOCIAL_POINTS } from '../../constants/attributes'
+
+function clampLevel(value) {
+  return Math.min(MAX_LEVEL, Math.max(1, value))
+}
 
 function AdminStepper({ label, value, min, max, onChange, color = '#e5e5e5' }) {
   const atMin = value <= min
@@ -31,47 +35,64 @@ function AdminStepper({ label, value, min, max, onChange, color = '#e5e5e5' }) {
 export function ProgressionSection({
   entity,
   adminMode = false,
-  onAddXp,
   onMasterProgression,
   onSyncProgression,
   onClampAuxiliary,
   onScaleAttributes,
   masterError,
 }) {
-  const [xpDirect, setXpDirect] = useState(String(entity.xp ?? 0))
-  const [levelDirect, setLevelDirect] = useState(String(entity.level ?? 1))
+  const [levelDraft, setLevelDraft] = useState(String(entity.level ?? 1))
+  const [ecoDraft, setEcoDraft] = useState(entity.ecoPoints ?? 0)
+  const [poolDraft, setPoolDraft] = useState(entity.unspentAttributePoints ?? 0)
+
   useEffect(() => {
-    setXpDirect(String(entity.xp ?? 0))
-  }, [entity.id, entity.xp])
-  useEffect(() => {
-    setLevelDirect(String(entity.level ?? 1))
-  }, [entity.id, entity.level])
+    setLevelDraft(String(entity.level ?? 1))
+    setEcoDraft(entity.ecoPoints ?? 0)
+    setPoolDraft(entity.unspentAttributePoints ?? 0)
+  }, [entity.id, entity.level, entity.ecoPoints, entity.unspentAttributePoints])
+
   const level = entity.level ?? 1
   const progress = getXpProgress(entity)
   const atMax = level >= MAX_LEVEL
   const snapshot = getProgressionSnapshot(entity)
   const validation = adminMode ? validateProgression(entity) : null
   const pending = entity.pendingAttributePoints ?? 0
+  const pendingSocial = entity.pendingSocialPoints ?? 0
   const pool = entity.unspentAttributePoints ?? 0
   const hasEco = entityHasEcoPowers(entity)
   const inCreation = isInCreationPhase(entity)
-  const showCreationPool = inCreation && pool > 0
+  const showCreationPool = inCreation && (pool > 0 || poolDraft > 0)
   const isNpc = isNpcEntity(entity)
 
-  const applyLevelAndSync = (nextLevel) => {
-    const next = Math.min(MAX_LEVEL, Math.max(1, nextLevel))
-    setLevelDirect(String(next))
-    onMasterProgression?.({ level: next })
-    queueMicrotask(() => onSyncProgression?.())
+  const parsedLevelDraft = clampLevel(parseInt(levelDraft, 10) || 1)
+
+  const isDirty = useMemo(() => {
+    if (parsedLevelDraft !== level) return true
+    if (hasEco && ecoDraft !== (entity.ecoPoints ?? 0)) return true
+    if (showCreationPool && poolDraft !== (entity.unspentAttributePoints ?? 0)) return true
+    return false
+  }, [parsedLevelDraft, level, hasEco, ecoDraft, entity.ecoPoints, showCreationPool, poolDraft, entity.unspentAttributePoints])
+
+  const resetDrafts = () => {
+    setLevelDraft(String(entity.level ?? 1))
+    setEcoDraft(entity.ecoPoints ?? 0)
+    setPoolDraft(entity.unspentAttributePoints ?? 0)
   }
 
-  const applyXpDirect = () => {
-    const xp = Math.max(0, parseInt(xpDirect, 10) || 0)
-    onMasterProgression?.({ xp })
+  const confirmChanges = () => {
+    if (!isDirty) return
+    const nextLevel = parsedLevelDraft
+    const patch = { level: nextLevel }
+    if (hasEco) patch.ecoPoints = ecoDraft
+    if (showCreationPool) patch.unspentAttributePoints = poolDraft
+    onMasterProgression?.(patch)
+    if (nextLevel !== level) {
+      queueMicrotask(() => onSyncProgression?.())
+    }
   }
 
-  const applyLevelDirect = () => {
-    applyLevelAndSync(parseInt(levelDirect, 10) || 1)
+  const nudgeLevel = (delta) => {
+    setLevelDraft(String(clampLevel(parsedLevelDraft + delta)))
   }
 
   return (
@@ -166,101 +187,89 @@ export function ProgressionSection({
           border: '1px solid rgba(217,119,6,0.15)',
           borderRadius: '4px',
         }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'flex-end' }}>
-            <div style={{ flex: '1 1 140px', minWidth: '140px' }}>
-              <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', marginBottom: '4px' }}>ALTERAR NÍVEL</div>
-              <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
-                <button
-                  type="button"
-                  disabled={level <= 1}
-                  onClick={() => applyLevelAndSync(level - 1)}
-                  style={{ background: '#1a1a1a', border: 'none', color: level <= 1 ? '#222' : '#666', cursor: level <= 1 ? 'not-allowed' : 'pointer', padding: '6px 8px', borderRadius: '2px', display: 'flex' }}
-                >
-                  <ChevronDown size={14} />
-                </button>
-                <Input
-                  type="number"
-                  min="1"
-                  max={MAX_LEVEL}
-                  value={levelDirect}
-                  onChange={e => setLevelDirect(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), applyLevelDirect())}
-                  style={{ width: '56px', textAlign: 'center' }}
-                />
-                <button
-                  type="button"
-                  disabled={level >= MAX_LEVEL}
-                  onClick={() => applyLevelAndSync(level + 1)}
-                  style={{ background: '#1a1a1a', border: 'none', color: level >= MAX_LEVEL ? '#222' : '#666', cursor: level >= MAX_LEVEL ? 'not-allowed' : 'pointer', padding: '6px 8px', borderRadius: '2px', display: 'flex' }}
-                >
-                  <ChevronUp size={14} />
-                </button>
-                <button type="button" className="btn-secondary" onClick={applyLevelDirect} style={{ fontSize: '0.7rem' }}>
-                  Aplicar
-                </button>
-              </div>
-            </div>
-            <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
-              <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', marginBottom: '4px' }}>XP ATUAL</div>
-              <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-                <Input
-                  type="number"
-                  min="0"
-                  value={xpDirect}
-                  onChange={e => setXpDirect(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), applyXpDirect())}
-                  style={{ flex: 1, minWidth: '72px' }}
-                />
-                <button type="button" className="btn-ghost" onClick={applyXpDirect} style={{ fontSize: '0.7rem' }}>
-                  Aplicar
-                </button>
-                {onAddXp && (
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    onClick={() => onAddXp(COMBAT_HIGHLIGHT_XP)}
-                    disabled={atMax}
-                    style={{ fontSize: '0.7rem', opacity: atMax ? 0.5 : 1 }}
-                  >
-                    +{COMBAT_HIGHLIGHT_XP} XP
-                  </button>
-                )}
-              </div>
+          <div>
+            <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', marginBottom: '4px' }}>ALTERAR NÍVEL</div>
+            <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+              <button
+                type="button"
+                disabled={parsedLevelDraft <= 1}
+                onClick={() => nudgeLevel(-1)}
+                style={{ background: '#1a1a1a', border: 'none', color: parsedLevelDraft <= 1 ? '#222' : '#666', cursor: parsedLevelDraft <= 1 ? 'not-allowed' : 'pointer', padding: '6px 8px', borderRadius: '2px', display: 'flex' }}
+              >
+                <ChevronDown size={14} />
+              </button>
+              <Input
+                type="number"
+                min="1"
+                max={MAX_LEVEL}
+                value={levelDraft}
+                onChange={e => setLevelDraft(e.target.value)}
+                style={{ width: '64px', textAlign: 'center' }}
+              />
+              <button
+                type="button"
+                disabled={parsedLevelDraft >= MAX_LEVEL}
+                onClick={() => nudgeLevel(1)}
+                style={{ background: '#1a1a1a', border: 'none', color: parsedLevelDraft >= MAX_LEVEL ? '#222' : '#666', cursor: parsedLevelDraft >= MAX_LEVEL ? 'not-allowed' : 'pointer', padding: '6px 8px', borderRadius: '2px', display: 'flex' }}
+              >
+                <ChevronUp size={14} />
+              </button>
             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.5rem' }}>
-            <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '4px', padding: '0.625rem 0.75rem' }}>
-              <div style={{ fontSize: '0.55rem', color: '#444', fontFamily: 'monospace' }}>ATRIBUTOS (NÍVEL)</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: snapshot.spent > snapshot.budget ? '#dc2626' : '#e5e5e5' }}>
-                {snapshot.spent}<span style={{ fontSize: '0.7rem', color: '#555' }}> / {snapshot.budget}</span>
-              </div>
-              <div style={{ fontSize: '0.55rem', color: '#333', marginTop: '2px' }}>
-                {STARTING_ATTRIBUTE_POINTS} criação + {Math.max(0, snapshot.budget - STARTING_ATTRIBUTE_POINTS)} nível
-              </div>
-            </div>
             <div style={{
               background: pending > 0 ? 'rgba(217,119,6,0.08)' : '#0d0d0d',
               border: `1px solid ${pending > 0 ? 'rgba(217,119,6,0.25)' : '#1a1a1a'}`,
               borderRadius: '4px',
               padding: '0.625rem 0.75rem',
             }}>
-              <div style={{ fontSize: '0.55rem', color: '#d97706', fontFamily: 'monospace' }}>PARA DISTRIBUIR</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: pending > 0 ? '#d97706' : '#555' }}>{pending}</div>
-              <div style={{ fontSize: '0.55rem', color: '#333', marginTop: '2px' }}>máx. {snapshot.maxPending} pelo nv.{level}</div>
+              <div style={{ fontSize: '0.55rem', color: '#d97706', fontFamily: 'monospace' }}>PTS ATRIBUTOS</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: snapshot.spent > snapshot.budget ? '#dc2626' : '#e5e5e5' }}>
+                {snapshot.spent}<span style={{ fontSize: '0.7rem', color: '#555' }}> / {snapshot.budget}</span>
+              </div>
+              <div style={{ fontSize: '0.55rem', color: pending > 0 ? '#d97706' : '#333', marginTop: '2px' }}>
+                {pending > 0 ? `${pending} para distribuir` : `${STARTING_ATTRIBUTE_POINTS} criação + ${Math.max(0, snapshot.budget - STARTING_ATTRIBUTE_POINTS)} nível`}
+              </div>
+            </div>
+            <div style={{
+              background: pendingSocial > 0 ? 'rgba(232,121,249,0.08)' : '#0d0d0d',
+              border: `1px solid ${pendingSocial > 0 ? 'rgba(232,121,249,0.25)' : '#1a1a1a'}`,
+              borderRadius: '4px',
+              padding: '0.625rem 0.75rem',
+            }}>
+              <div style={{ fontSize: '0.55rem', color: '#e879f9', fontFamily: 'monospace' }}>PTS CENA</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: snapshot.socialSpent > snapshot.socialBudget ? '#dc2626' : '#e5e5e5' }}>
+                {snapshot.socialSpent}<span style={{ fontSize: '0.7rem', color: '#555' }}> / {snapshot.socialBudget}</span>
+              </div>
+              <div style={{ fontSize: '0.55rem', color: pendingSocial > 0 ? '#e879f9' : '#333', marginTop: '2px' }}>
+                {pendingSocial > 0
+                  ? `${pendingSocial} para distribuir`
+                  : `${STARTING_SOCIAL_POINTS} criação + ${snapshot.socialFromLevel} nível`}
+              </div>
             </div>
             {hasEco && (
               <div style={{ background: '#0d0d0d', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '4px', padding: '0.625rem 0.75rem' }}>
-                <div style={{ fontSize: '0.55rem', color: '#a855f7', fontFamily: 'monospace' }}>ECOS LIVRES</div>
+                <div style={{ fontSize: '0.55rem', color: '#a855f7', fontFamily: 'monospace' }}>PTS ECO</div>
                 <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e5e5e5' }}>{snapshot.ecoFree}</div>
-                <div style={{ fontSize: '0.55rem', color: '#333', marginTop: '2px' }}>máx. {snapshot.maxEcoFree} · {snapshot.ecoSpent} em skills</div>
+                <div style={{ fontSize: '0.55rem', color: '#333', marginTop: '2px' }}>
+                  livres · máx. {snapshot.maxEcoFree} · {snapshot.ecoSpent} em skills
+                </div>
               </div>
             )}
           </div>
 
-          {pending > 0 && !showCreationPool && (
+          {(pending > 0 || pendingSocial > 0) && !showCreationPool && (
             <p style={{ fontSize: '0.75rem', color: '#888', margin: 0, lineHeight: 1.5 }}>
-              Use as setas na <strong style={{ color: '#d97706' }}>grade de atributos abaixo</strong> para gastar os {pending} ponto(s) pendentes.
+              Use as setas na grade abaixo para gastar
+              {pending > 0 && (
+                <> <strong style={{ color: '#d97706' }}>{pending} de atributo</strong></>
+              )}
+              {pending > 0 && pendingSocial > 0 && ' e'}
+              {pendingSocial > 0 && (
+                <> <strong style={{ color: '#e879f9' }}>{pendingSocial} de cena</strong></>
+              )}
+              .
               {isNpc && ' Os pontos de criação já foram definidos ao criar o NPC.'}
             </p>
           )}
@@ -268,24 +277,46 @@ export function ProgressionSection({
           {showCreationPool && (
             <AdminStepper
               label="PTS DE CRIAÇÃO (ficha nova)"
-              value={pool}
+              value={poolDraft}
               min={0}
-              max={Math.max(0, STARTING_ATTRIBUTE_POINTS - snapshot.spent + pool)}
+              max={Math.max(0, STARTING_ATTRIBUTE_POINTS - snapshot.spent + (entity.unspentAttributePoints ?? 0))}
               color="#16a34a"
-              onChange={v => onMasterProgression?.({ unspentAttributePoints: v })}
+              onChange={setPoolDraft}
             />
           )}
 
           {hasEco && snapshot.maxEcoFree > 0 && (
             <AdminStepper
               label={`AJUSTAR ECOS (máx ${snapshot.maxEcoFree})`}
-              value={entity.ecoPoints ?? 0}
+              value={ecoDraft}
               min={0}
               max={snapshot.maxEcoFree}
               color="#a855f7"
-              onChange={v => onMasterProgression?.({ ecoPoints: v })}
+              onChange={setEcoDraft}
             />
           )}
+
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={confirmChanges}
+              disabled={!isDirty}
+              style={{ fontSize: '0.75rem', opacity: isDirty ? 1 : 0.45, cursor: isDirty ? 'pointer' : 'not-allowed' }}
+            >
+              Confirmar alterações
+            </button>
+            {isDirty && (
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={resetDrafts}
+                style={{ fontSize: '0.7rem' }}
+              >
+                Descartar
+              </button>
+            )}
+          </div>
 
           {validation && !validation.valid && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
@@ -293,7 +324,7 @@ export function ProgressionSection({
                 Corrigir XP / Ecos
               </button>
               {snapshot.spent > snapshot.budget && (
-                <button type="button" className="btn-primary" onClick={onScaleAttributes} style={{ fontSize: '0.7rem' }}>
+                <button type="button" className="btn-secondary" onClick={onScaleAttributes} style={{ fontSize: '0.7rem' }}>
                   Ajustar atributos ({snapshot.budget} pts)
                 </button>
               )}
@@ -318,8 +349,8 @@ export function ProgressionSection({
 
       {adminMode && snapshot && (
         <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', marginBottom: '0.75rem' }}>
-          Nv.{level}: até {snapshot.budget} pts em atributos
-          {hasEco ? ` · ${snapshot.ecoBudget} Ecos no nível` : ' · sem Ecos (só atributos)'}
+          Nv.{level}: {snapshot.budget} pts atributos · {snapshot.socialBudget} pts cena
+          {hasEco ? ` · ${snapshot.ecoBudget} Ecos` : ' · sem Ecos'}
           {snapshot.ecoSpent > 0 && ` · ${snapshot.ecoSpent} Eco(s) em skills`}
         </div>
       )}

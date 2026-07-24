@@ -157,7 +157,11 @@ export function Dice() {
     const attrVal = char
       ? isSocial
         ? (char.socialAttributes?.[contextAttr] ?? 0)
-        : getEffectiveAttributeValue(char.attributes, contextAttr, char.physicalState ?? char.condition ?? 'bem', char.ecoOverload ?? 0)
+        : getEffectiveAttributeValue(char.attributes, contextAttr, {
+            physicalState: char.physicalState ?? char.condition ?? 'bem',
+            ecoOverload: char.ecoOverload ?? 0,
+            mentalState: char.mentalState ?? 'estavel',
+          })
       : 0
     const charName = char ? char.name : ''
     const label = charName
@@ -253,7 +257,11 @@ export function Dice() {
                     const isSoc = SOCIAL_ATTR_KEYS.has(contextAttr)
                     const eff = isSoc
                       ? (c.socialAttributes?.[contextAttr] ?? 0)
-                      : getEffectiveAttributeValue(c.attributes, contextAttr, c.physicalState ?? c.condition ?? 'bem', c.ecoOverload ?? 0)
+                      : getEffectiveAttributeValue(c.attributes, contextAttr, {
+                          physicalState: c.physicalState ?? c.condition ?? 'bem',
+                          ecoOverload: c.ecoOverload ?? 0,
+                          mentalState: c.mentalState ?? 'estavel',
+                        })
                     const base = isSoc ? (c.socialAttributes?.[contextAttr] || 0) : (c.attributes?.[contextAttr] || 0)
                     return eff !== base
                       ? `${c.name} · ${ATTRIBUTE_LABELS[contextAttr]}: ${eff} (${base})`

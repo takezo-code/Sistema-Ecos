@@ -14,8 +14,14 @@ import {
   formatMentalAttrPenalty,
 } from '../mechanics/ecoOverload/overloadPenalties'
 
+/** Penalidade flat em FOR/DES/VIT pelo estado físico (0–3). */
+export function getPhysicalAttrPenalty(physicalState) {
+  return Math.max(0, Number(getPhysicalStateOption(physicalState).attrPenalty) || 0)
+}
+
+/** @deprecated multiplicador físico não é mais usado — penalidade é flat (attrPenalty). */
 export function getPhysicalMultiplier(physicalState) {
-  return getPhysicalStateOption(physicalState).multiplier
+  return getPhysicalStateOption(physicalState).multiplier ?? 1
 }
 
 export function getMentalMultiplier(mentalState) {
@@ -30,14 +36,24 @@ export function hasTemporalInstability(mentalState) {
   return normalizeMentalState(mentalState) === 'perdido_no_tempo'
 }
 
-/** @deprecated use calculateEffectiveAttributes — mantido por compatibilidade */
+/** Atributos efetivos de qualquer entidade (personagem, NPC, boss). */
+export function getEntityEffectiveAttributes(entity = {}) {
+  return calculateEffectiveAttributes(entity.attributes || {}, {
+    physicalState: entity.physicalState ?? entity.condition ?? 'bem',
+    ecoOverload: entity.ecoOverload ?? 0,
+    mentalState: entity.mentalState ?? 'estavel',
+  })
+}
+
+/** @deprecated use getEntityEffectiveAttributes / calculateEffectiveAttributes */
 export function calculatePhysicalAttributes(attributes = {}, physicalState = 'bem', ecoOverload = 0, mentalState = 'estavel') {
   const result = calculateEffectiveAttributes(attributes, { physicalState, ecoOverload, mentalState })
   return {
     base: result.base,
     effective: result.effective,
     multiplier: result.physicalMultiplier,
-    penaltyPercent: getPhysicalStateOption(physicalState).penaltyPercent,
+    attrPenalty: result.physicalAttrPenalty ?? getPhysicalAttrPenalty(physicalState),
+    penaltyPercent: 0,
     globalAttributeMultiplier: result.globalAttributeMultiplier,
     ecoPowerMultiplier: result.ecoPowerMultiplier,
   }
@@ -74,17 +90,29 @@ export function rollEcoSkillFailure(mentalState) {
   return { failed: roll < chance, chance, roll }
 }
 
+/**
+ * Valor efetivo de um atributo.
+ * Aceita opts `{ physicalState, ecoOverload, mentalState }` ou args posicionais legados.
+ */
 export function getEffectiveAttributeValue(attributes, attrKey, physicalState, ecoOverload = 0) {
   const opts = typeof physicalState === 'object' && physicalState !== null
-    ? physicalState
-    : { physicalState, ecoOverload: arguments[3] ?? 0 }
+    ? {
+        physicalState: physicalState.physicalState ?? 'bem',
+        ecoOverload: physicalState.ecoOverload ?? 0,
+        mentalState: physicalState.mentalState ?? 'estavel',
+      }
+    : {
+        physicalState,
+        ecoOverload: arguments[3] ?? 0,
+        mentalState: arguments[4] ?? 'estavel',
+      }
   const { effective } = calculateEffectiveAttributes(attributes, opts)
   return effective[attrKey] ?? 0
 }
 
 export function formatPhysicalPenalty(physicalState) {
-  const pct = getPhysicalStateOption(physicalState).penaltyPercent
-  return pct > 0 ? `−${pct}% físico` : null
+  const n = getPhysicalAttrPenalty(physicalState)
+  return n > 0 ? `−${n} FOR · DES · VIT` : null
 }
 
 /** @deprecated use formatMentalPenaltiesSummary */
@@ -94,6 +122,7 @@ export function formatMentalPenalty(mentalState, ecoOverload = 0) {
 }
 
 export {
+  PHYSICAL_AFFECTED_KEYS,
   formatEcoOverloadPenalty,
   calculateEffectiveAttributes,
   formatMentalPenaltiesSummary,

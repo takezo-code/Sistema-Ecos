@@ -27,8 +27,9 @@ import { isNarrativeNpc } from '../utils/npcScope'
 export const BOSS_DEFAULTS = {
   podeCombater: true,
   papelCombate: 'boss',
-  resistenciaFisica: 6,
-  resistenciaMental: 4,
+  hasEcoPowers: true,
+  resistenciaFisica: 0,
+  resistenciaMental: 0,
   marcasMaximas: 15,
   xpRecompensa: 500,
 }
@@ -123,17 +124,17 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
     campaignId,
     attributes: { ...defaultAttributes(), ...(initial?.attributes || {}) },
     unspentAttributePoints: initial?.unspentAttributePoints ?? (isNew ? STARTING_ATTRIBUTE_POINTS : 0),
-    hasEcoPowers: initial?.hasEcoPowers ?? false,
+    hasEcoPowers: isBoss ? true : (initial?.hasEcoPowers ?? false),
     level: initial?.level ?? 1,
     ecoPoints: initial?.ecoPoints ?? 0,
     socialAttributes: { ...defaultSocialAttributes(), ...(initial?.socialAttributes || {}) },
     unspentSocialPoints: initial?.unspentSocialPoints ?? (isNew ? STARTING_SOCIAL_POINTS : 0),
     podeCombater: isBoss ? (initial?.podeCombater ?? true) : true,
     papelCombate: isBoss ? (initial?.papelCombate ?? 'boss') : (initial?.papelCombate === 'boss' ? 'capanga' : (initial?.papelCombate ?? 'capanga')),
-    resistenciaFisica: initial?.resistenciaFisica ?? 0,
-    resistenciaMental: initial?.resistenciaMental ?? 0,
-    marcasMaximas: initial?.marcasMaximas ?? 0,
-    xpRecompensa: initial?.xpRecompensa ?? 0,
+    resistenciaFisica: isBoss ? 0 : (initial?.resistenciaFisica ?? 0),
+    resistenciaMental: isBoss ? 0 : (initial?.resistenciaMental ?? 0),
+    marcasMaximas: initial?.marcasMaximas ?? (isBoss && isNew ? BOSS_DEFAULTS.marcasMaximas : 0),
+    xpRecompensa: initial?.xpRecompensa ?? (isBoss && isNew ? BOSS_DEFAULTS.xpRecompensa : 0),
   }))
   const set = (f, v) => setForm(p => ({ ...p, [f]: v }))
 
@@ -142,7 +143,17 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
       onSubmit={e => {
         e.preventDefault()
         if (!form.name.trim()) return
-        onSave(form)
+        if (isBoss && !(form.marcasMaximas > 0)) return
+        onSave(isBoss
+          ? {
+              ...form,
+              hasEcoPowers: true,
+              papelCombate: form.papelCombate || 'boss',
+              resistenciaFisica: 0,
+              resistenciaMental: 0,
+              marcasMaximas: Math.max(1, form.marcasMaximas || 1),
+            }
+          : form)
       }}
       style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
     >
@@ -188,24 +199,6 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
       <div>
         <div style={narrativeSectionLabel}>PERFIL NARRATIVO</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <Field label="Aparência">
-              <Textarea
-                value={form.appearance}
-                onChange={e => set('appearance', e.target.value)}
-                placeholder="Físico, vestimenta, marcas, aura..."
-                rows={2}
-              />
-            </Field>
-            <Field label="Personalidade">
-              <Textarea
-                value={form.personality}
-                onChange={e => set('personality', e.target.value)}
-                placeholder="Temperamento, maneirismos, tom de voz..."
-                rows={2}
-              />
-            </Field>
-          </div>
           <Field label="História">
             <Textarea
               value={form.history}
@@ -235,6 +228,7 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
         </div>
       </div>
 
+      {!isBoss && (
       <label style={{
         display: 'flex',
         alignItems: 'center',
@@ -263,11 +257,18 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
         />
         Este NPC possui poderes de Eco / Ruptura
       </label>
+      )}
+
+      {isBoss && (
+        <p style={{ fontSize: '0.75rem', color: '#888', margin: 0, lineHeight: 1.45 }}>
+          Bosses usam o catálogo <strong style={{ color: '#a855f7' }}>Skills Boss</strong> — você escolhe as habilidades manualmente no Gerenciamento.
+        </p>
+      )}
 
       <AttributePointsEditor
         form={form}
         onFormChange={setForm}
-        showRuptureHint={form.hasEcoPowers}
+        showRuptureHint={isBoss || form.hasEcoPowers}
       />
 
       {isBoss && (
@@ -281,7 +282,7 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
 
       {isBoss && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
             <Field label="Papel no Combate">
               <Select value={form.papelCombate} onChange={e => set('papelCombate', e.target.value)}>
                 {PAPEL_OPTIONS.filter(o => o.value !== 'nenhum').map(o => (
@@ -296,42 +297,19 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
                 onChange={e => set('xpRecompensa', Math.max(0, parseInt(e.target.value, 10) || 0))}
               />
             </Field>
-          </div>
-
-          <p style={{ fontSize: '0.6rem', color: '#555', fontFamily: 'monospace', margin: '0 0 0.5rem', lineHeight: 1.5 }}>
-            RESISTÊNCIAS — reduzem o dano antes de virar marcas (dano − resistência = dano efetivo)
-          </p>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-            gap: '0.75rem',
-            alignItems: 'start',
-          }}>
-            <Field label="Resist. Física">
+            <Field label="Vida" required>
               <Input
-                type="number" min={0} max={20}
-                value={form.resistenciaFisica}
-                onChange={e => set('resistenciaFisica', Math.max(0, Math.min(20, parseInt(e.target.value, 10) || 0)))}
-              />
-            </Field>
-            <Field label="Resist. Mental">
-              <Input
-                type="number" min={0} max={20}
-                value={form.resistenciaMental}
-                onChange={e => set('resistenciaMental', Math.max(0, Math.min(20, parseInt(e.target.value, 10) || 0)))}
-              />
-            </Field>
-            <Field label="Marcas máx.">
-              <Input
-                type="number" min={0}
-                value={form.marcasMaximas}
-                onChange={e => set('marcasMaximas', Math.max(0, parseInt(e.target.value, 10) || 0))}
-                title="0 = sem limite"
+                type="number"
+                min={1}
+                value={form.marcasMaximas || ''}
+                onChange={e => set('marcasMaximas', Math.max(1, parseInt(e.target.value, 10) || 1))}
+                placeholder="Ex: 15"
+                title="Pontos de vida do boss (marcas até derrotar)"
               />
             </Field>
           </div>
-          <p style={{ fontSize: '0.55rem', color: '#444', marginTop: '0.25rem' }}>
-            Marcas máx.: 0 = sem limite
+          <p style={{ fontSize: '0.6rem', color: '#555', fontFamily: 'monospace', margin: 0, lineHeight: 1.5 }}>
+            VIDA — cada ponto de dano aplica uma marca. Ao atingir o total, o boss é derrotado.
           </p>
         </>
       )}
@@ -382,10 +360,6 @@ function NPCDetailModal({ npc, onClose, onEdit }) {
       </div>
       {hasNarrative && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-            <NarrativeDetailBlock label="APARÊNCIA" text={narrative.appearance} color="#a78bfa" />
-            <NarrativeDetailBlock label="PERSONALIDADE" text={narrative.personality} color="#eab308" />
-          </div>
           <NarrativeDetailBlock label="HISTÓRIA" text={narrative.history} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
             <NarrativeDetailBlock label="MOTIVAÇÕES" text={narrative.motivation} color="#06b6d4" borderColor="rgba(6,182,212,0.15)" />

@@ -169,7 +169,7 @@ export function ManageOrganizations() {
           <EmptyState
             icon={Building2}
             title="Nenhuma organização para gerenciar"
-            description="Crie organizações em Gerenciamento → Criação para gerenciá-las aqui."
+            description="Crie organizações em Criação na sidebar para gerenciá-las aqui."
           />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.75rem' }}>

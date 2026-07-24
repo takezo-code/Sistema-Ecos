@@ -62,13 +62,13 @@ export function SkillDetailPanel({ skill, onBack, onEdit, onDelete }) {
           <ArrowLeft size={14} /> Voltar
         </button>
         <div style={{ flex: 1, minWidth: 0 }} />
-        {!skill.isBuiltin && onEdit && (
+        {onEdit && (
           <button type="button" className="btn-secondary" onClick={() => onEdit(skill)}
             style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}>
             <Pencil size={12} /> Editar
           </button>
         )}
-        {!skill.isBuiltin && onDelete && (
+        {onDelete && (
           <button type="button" className="btn-ghost" onClick={() => onDelete(skill)}
             style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem', color: '#dc2626' }}>
             <Trash2 size={12} /> Excluir
@@ -148,18 +148,6 @@ export function SkillDetailPanel({ skill, onBack, onEdit, onDelete }) {
               }}>
                 SOBRECARGA +{isPassiva ? (skill.passiveOverloadRisk ? ' risco passivo' : '0') : (skill.overloadCost ?? 1)}
               </span>
-              {skill.isBuiltin && (
-                <span style={{
-                  fontSize: '0.65rem',
-                  fontFamily: 'monospace',
-                  color: '#555',
-                  border: '1px solid #2a2a2a',
-                  padding: '4px 10px',
-                  borderRadius: '3px',
-                }}>
-                  SISTEMA
-                </span>
-              )}
             </div>
           </div>
 

@@ -1,7 +1,6 @@
 /**
  * Catálogo de habilidades de personagem (Eco).
- * Builtin: ~15 por categoria em characterSkillsCatalog.js
- * Custom: aba Skills → Personagem (localStorage)
+ * Builtin vazio — skills via Gerenciamento → Skills → Personagem.
  */
 import { CHARACTER_SKILLS_CATALOG } from './characterSkillsCatalog'
 

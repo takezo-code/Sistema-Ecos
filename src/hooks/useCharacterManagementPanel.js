@@ -18,7 +18,6 @@ export function useCharacterManagementPanel(characterId, { adminMode = false } =
   const entity = useCharacterEntity(characterId)
 
   const updateCharacter = useCharacterStore(s => s.updateCharacter)
-  const addXp = useCharacterStore(s => s.addXp)
   const changeAttribute = useCharacterStore(s => s.changeAttribute)
   const setMasterAttribute = useCharacterStore(s => s.setMasterAttribute)
   const changeSocialAttribute = useCharacterStore(s => s.changeSocialAttribute)
@@ -54,7 +53,6 @@ export function useCharacterManagementPanel(characterId, { adminMode = false } =
       showProgression: true,
       adminMode,
       onUpdate: data => updateCharacter(id, data),
-      onAddXp: amount => addXp(id, amount),
       onChangeAttribute: (key, val, opts) => {
         if (opts?.admin) return setMasterAttribute(id, key, val)
         return changeAttribute(id, key, val, opts)
@@ -82,7 +80,6 @@ export function useCharacterManagementPanel(characterId, { adminMode = false } =
     lastMasterError,
     lastOverloadEvents,
     updateCharacter,
-    addXp,
     changeAttribute,
     setMasterAttribute,
     changeSocialAttribute,

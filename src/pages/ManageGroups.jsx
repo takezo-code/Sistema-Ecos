@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import {
-  UsersRound, Pencil, Trash2, Star, UserPlus, X, Sparkles, RotateCcw, Plus,
+  UsersRound, Pencil, Trash2, UserPlus, X, Sparkles, RotateCcw, Plus,
 } from 'lucide-react'
 import { SESSION_ULTRA_XP_TIERS } from '../constants/progression'
 import { EntityThumb } from '../components/ui/EntityThumb'
@@ -18,6 +18,7 @@ import { getPhysicalStateOption, getMentalStateOption } from '../constants/state
 import { formatOverloadDisplay } from '../constants/ecoOverload'
 import { filterByActiveCampaign } from '../utils/campaignScope'
 import { useSaveStore } from '../store/useSaveStore'
+import { getEntityEffectiveAttributes } from '../services/stateModifiers'
 
 function GroupForm({ initial, onSave, onCancel }) {
   const [form, setForm] = useState(initial || { name: '', description: '' })
@@ -43,7 +44,7 @@ function GroupForm({ initial, onSave, onCancel }) {
 }
 
 function MemberRow({ character, selected, onManage, onRemove }) {
-  const attrs = character.attributes || {}
+  const { effective: attrs } = getEntityEffectiveAttributes(character)
   const physical = getPhysicalStateOption(character.physicalState ?? character.condition)
   const mental = getMentalStateOption(character.mentalState)
   const marks = character.damageMarks ?? 0
@@ -103,11 +104,16 @@ function MemberRow({ character, selected, onManage, onRemove }) {
             <span style={{ fontSize: '0.6rem', color: '#a855f7', fontFamily: 'monospace' }}>NVL {character.level || 1}</span>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {ATTRIBUTES.map(attr => (
-              <span key={attr.key} style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: attrs[attr.key] > 0 ? attr.color : '#333' }}>
-                {attr.label.slice(0, 3).toUpperCase()} {attrs[attr.key] || 0}
-              </span>
-            ))}
+            {ATTRIBUTES.map(attr => {
+              const eff = attrs[attr.key] || 0
+              const raw = character.attributes?.[attr.key] || 0
+              const reduced = eff < raw
+              return (
+                <span key={attr.key} style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: eff > 0 ? (reduced ? '#ea580c' : attr.color) : '#333' }}>
+                  {attr.label.slice(0, 3).toUpperCase()} {eff}
+                </span>
+              )
+            })}
           </div>
         </div>
       </button>
@@ -132,7 +138,6 @@ export function ManageGroups() {
   const [groupModal, setGroupModal] = useState(null)
   const [addMemberOpen, setAddMemberOpen] = useState(false)
   const [selectedMemberId, setSelectedMemberId] = useState(null)
-  const [groupXp, setGroupXp] = useState('')
   const [ultraXpOpen, setUltraXpOpen] = useState(false)
   const [lastUltraXp, setLastUltraXp] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
@@ -163,13 +168,6 @@ export function ManageGroups() {
       clearPanelSession()
     }
   }, [members, selectedMemberId, clearPanelSession])
-
-  const handleGroupXp = () => {
-    const amount = parseInt(groupXp, 10)
-    if (!amount || !activeGroup) return
-    addXpToMany(activeGroup.memberIds, amount)
-    setGroupXp('')
-  }
 
   const handleUltraXp = (tier) => {
     if (!activeGroup || members.length === 0) return
@@ -255,13 +253,6 @@ export function ManageGroups() {
             <Trash2 size={12} />
           </button>
           <button
-            className="btn-secondary"
-            onClick={() => setAddMemberOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}
-          >
-            <UserPlus size={12} /> Membro
-          </button>
-          <button
             type="button"
             className="btn-ghost"
             disabled={members.length === 0}
@@ -287,21 +278,17 @@ export function ManageGroups() {
         </div>
       </div>
 
-      {/* XP em grupo */}
+      {/* Ações do grupo */}
       <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid #1a1a1a', flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <Star size={13} style={{ color: '#d97706', flexShrink: 0 }} />
-          <Input
-            type="number"
-            min="1"
-            value={groupXp}
-            onChange={e => setGroupXp(e.target.value)}
-            placeholder="XP para todo o grupo..."
-            onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleGroupXp())}
-            style={{ flex: 1, maxWidth: '200px' }}
-          />
-          <button className="btn-primary" onClick={handleGroupXp} disabled={members.length === 0} style={{ fontSize: '0.75rem' }}>
-            Dar XP ao grupo
+          <button
+            className="btn-primary"
+            onClick={() => setAddMemberOpen(true)}
+            disabled={availableToAdd.length === 0}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}
+            title={availableToAdd.length === 0 ? 'Nenhum personagem em espera nesta campanha' : 'Adicionar personagem ao grupo'}
+          >
+            <UserPlus size={13} /> Adicionar membro
           </button>
           <div style={{ position: 'relative' }}>
             <button
@@ -319,7 +306,7 @@ export function ManageGroups() {
             </button>
             {ultraXpOpen && (
               <div style={{
-                position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 20,
+                position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 20,
                 minWidth: '260px', background: '#111', border: '1px solid #2a2a2a',
                 borderRadius: '4px', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', overflow: 'hidden',
               }}>

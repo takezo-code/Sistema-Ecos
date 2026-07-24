@@ -6,9 +6,9 @@ import { useCampaignStore } from '../store/useCampaignStore'
 import { useCombatStore } from '../store/useCombatStore'
 import { useGroupStore } from '../store/useGroupStore'
 import { filterByActiveCampaign } from '../utils/campaignScope'
+import { canEnterCombat } from '../utils/npcScope'
 import { resolveCombatRoster } from '../utils/combatRoster'
 import { listCharacterSkillsRuntime } from '../services/ecoSkillRuntimeService'
-import { COMBAT_HIGHLIGHT_XP } from '../constants/progression'
 import { CombatCharacterColumn } from '../components/combat/CombatCharacterColumn'
 import { CombatEnemyCard } from '../components/combat/CombatEnemyCard'
 import { CombatSkillDetailModal } from '../components/combat/CombatSkillDetailModal'
@@ -18,7 +18,8 @@ import { getRollOutcome } from '../mechanics/combat/rollOutcome'
 
 function RollResultBanner({ result, onDismiss }) {
   if (!result) return null
-  const outcome = getRollOutcome(result.dice, result.bonus)
+  const sides = result.sides || 20
+  const outcome = getRollOutcome(result.dice, result.bonus, sides)
 
   return (
     <div style={{
@@ -36,7 +37,7 @@ function RollResultBanner({ result, onDismiss }) {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '1rem', fontWeight: 900, color: outcome.color }}>{result.total}</span>
           <span style={{ fontSize: '0.65rem', color: '#aaa', fontFamily: 'monospace' }}>
-            d20({result.dice}) + {result.bonus}
+            d{sides}({result.dice}) + {result.bonus}
           </span>
           <span style={{ fontSize: '0.75rem', fontWeight: 700, color: outcome.color }}>{outcome.label}</span>
           {result.characterName && (
@@ -73,7 +74,7 @@ function RollResultBanner({ result, onDismiss }) {
 // ──────────────────────────────────────────────
 export function ManageCombat() {
   const {
-    characters, updateCharacter, activateSkill, advanceTurn, addXp,
+    characters, updateCharacter, activateSkill, advanceTurn,
     applyDamageMarks, healDamageMarks, clearDamageMarks, recoverGroupMembers,
   } = useCharacterStore()
   const {
@@ -119,9 +120,15 @@ export function ManageCombat() {
     [roster]
   )
 
-  // Inimigos da campanha que podem combater
+  // Inimigos da campanha (capangas, elites e bosses)
   const campaignEnemies = useMemo(
-    () => filterByActiveCampaign(npcs, activeCampaignId).filter(n => n.papelCombate !== 'boss'),
+    () => filterByActiveCampaign(npcs, activeCampaignId)
+      .filter(canEnterCombat)
+      .sort((a, b) => {
+        const rank = { boss: 0, elite: 1, capanga: 2 }
+        return (rank[a.papelCombate] ?? 3) - (rank[b.papelCombate] ?? 3)
+          || (a.name || '').localeCompare(b.name || '', 'pt')
+      }),
     [npcs, activeCampaignId]
   )
 
@@ -144,11 +151,12 @@ export function ManageCombat() {
     setSkillDetailRef({ characterId: character.id, skillId: runtime.instance.id })
   }, [])
 
-  const handleRollAttribute = useCallback((character, _attrKey, attrLabel, eff) => {
-    const dice = Math.floor(Math.random() * 20) + 1
+  const handleRollAttribute = useCallback((character, _attrKey, attrLabel, eff, sides = 20) => {
+    const dice = Math.floor(Math.random() * sides) + 1
     const total = dice + eff
     setRollResult({
       dice,
+      sides,
       bonus: eff,
       total,
       characterName: character.name,
@@ -173,21 +181,45 @@ export function ManageCombat() {
     setCombatNotice(`${character.name} se recuperou — marcas de dano limpas.`)
   }, [clearDamageMarks])
 
-  const handleGrantHighlightXp = useCallback((character) => {
-    const { levelUps } = addXp(character.id, COMBAT_HIGHLIGHT_XP) || {}
-    if (levelUps?.length) {
-      const lv = levelUps[levelUps.length - 1]
-      setCombatNotice(`${character.name} subiu para o nível ${lv.level}! (+${COMBAT_HIGHLIGHT_XP} XP)`)
-    } else {
-      setCombatNotice(`+${COMBAT_HIGHLIGHT_XP} XP para ${character.name} — bom desempenho na cena`)
-    }
-  }, [addXp])
-
-  const handleEnemyRollAttribute = useCallback((enemy, _attrKey, attrLabel, eff) => {
-    const dice = Math.floor(Math.random() * 20) + 1
+  const handleEnemyRollAttribute = useCallback((enemy, _attrKey, attrLabel, eff, sides = 20) => {
+    const dice = Math.floor(Math.random() * sides) + 1
     const total = dice + eff
-    setRollResult({ dice, bonus: eff, total, characterName: enemy.name, attrLabel })
+    setRollResult({ dice, sides, bonus: eff, total, characterName: enemy.name, attrLabel })
   }, [])
+
+  const handleBossAttackRoll = useCallback((result) => {
+    setRollResult({
+      dice: result.dice,
+      sides: result.sides,
+      bonus: result.bonus,
+      total: result.total,
+      characterName: result.characterName,
+      attrLabel: result.attrLabel,
+    })
+    if (result.hit && result.damage) {
+      setCombatNotice(
+        `${result.characterName} → ${result.targetName}: ${result.outcome.label} · ${result.damage.label} (+${result.damage.value})`
+      )
+    } else if (result.bossExpose) {
+      setCombatNotice(`${result.characterName} falhou criticamente e se expôs! (+1 marca no boss)`)
+    } else {
+      setCombatNotice(`${result.characterName} errou o ataque contra ${result.targetName}.`)
+    }
+  }, [])
+
+  const handleApplyMarksToTarget = useCallback((targetId, markType) => {
+    const target = combatCharacters.find(c => c.id === targetId)
+    if (!target) return
+    const result = applyDamageMarks(targetId, markType)
+    if (result?.stateChanged) {
+      setCombatNotice(`${target.name}: ${result.narratives?.join(' · ') || 'Estado alterado.'}`)
+    }
+  }, [combatCharacters, applyDamageMarks])
+
+  const handleBossExpose = useCallback((markType = 'leve') => {
+    if (!activeEnemyId) return
+    applyNPCDamageMarks(activeEnemyId, markType)
+  }, [activeEnemyId, applyNPCDamageMarks])
 
   const handleEnemyApplyMarks = useCallback((markType) => {
     if (!activeEnemyId) return
@@ -277,7 +309,8 @@ export function ManageCombat() {
               <option value="">Sem inimigo</option>
               {campaignEnemies.map(n => (
                 <option key={n.id} value={n.id}>
-                  {n.papelCombate === 'boss' ? '★ ' : ''}{n.name}
+                  {n.papelCombate === 'boss' ? '★ BOSS · ' : n.papelCombate === 'elite' ? 'Elite · ' : ''}
+                  {n.name}
                 </option>
               ))}
             </select>
@@ -371,7 +404,6 @@ export function ManageCombat() {
                 onUpdate={data => updateCharacter(c.id, data)}
                 onRollAttribute={handleRollAttribute}
                 onActivateSkill={handleActivateSkill}
-                onGrantHighlightXp={handleGrantHighlightXp}
                 onSelectSkill={handleSelectSkill}
                 onApplyMarks={(markType) => handleApplyMarks(c, markType)}
                 onHealMarks={(amount) => handleHealMarks(c, amount)}
@@ -411,12 +443,16 @@ export function ManageCombat() {
                 </div>
                 <CombatEnemyCard
                   enemy={activeEnemy}
+                  targets={combatCharacters}
                   onUpdate={data => updateNPC(activeEnemy.id, data)}
                   onApplyMarks={handleEnemyApplyMarks}
                   onHealMarks={(amount) => healNPCMarks(activeEnemy.id, amount)}
                   onClearMarks={() => { clearNPCMarks(activeEnemy.id); setCombatNotice(`${activeEnemy.name}: marcas limpas.`) }}
                   onNotice={msg => setCombatNotice(msg)}
                   onRollAttribute={handleEnemyRollAttribute}
+                  onBossAttackRoll={handleBossAttackRoll}
+                  onApplyMarksToTarget={handleApplyMarksToTarget}
+                  onBossExpose={handleBossExpose}
                 />
               </div>
             </div>

@@ -124,7 +124,7 @@ export function Bosses({
           <EmptyState
             icon={ShieldAlert}
             title="Nenhum boss encontrado"
-            description="Crie inimigos de combate em Gerenciamento → Criação → Boss."
+            description="Crie inimigos de combate em Criação → Boss."
             action={<button className="btn-primary" onClick={openCreate}>Criar Boss</button>}
           />
         ) : (

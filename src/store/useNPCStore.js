@@ -291,7 +291,7 @@ export const useNPCStore = create((set, get) => ({
       return { ok: false, message: 'Habilidade não existe no grimório.' }
     }
     if (!catalogSkillAllowedForEntity(templateId, n)) {
-      return { ok: false, message: 'Esta habilidade é exclusiva de personagens.' }
+      return { ok: false, message: 'Esta habilidade não pertence ao catálogo deste inimigo.' }
     }
     if ((n.skills || []).some(s => s.templateId === templateId)) {
       return { ok: false, message: 'NPC já possui esta habilidade.' }

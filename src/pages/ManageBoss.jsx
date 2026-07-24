@@ -10,8 +10,9 @@ import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
 import { EntityManagePanel } from '../components/management/EntityManagePanel'
 import { CombatStatsSection } from '../components/management/CombatStatsSection'
 import { StatusTag } from '../components/ui/StatusTag'
-import { getAttributesForEntity, entityHasEcoPowers } from '../constants/entityProgression'
+import { getAttributesForEntity } from '../constants/entityProgression'
 import { useTrashStore } from '../store/useTrashStore'
+import { getEntityEffectiveAttributes } from '../services/stateModifiers'
 
 const PAPEL_META = {
   capanga: { label: 'Capanga', color: '#6b7280' },
@@ -20,7 +21,7 @@ const PAPEL_META = {
 }
 
 function BossManageCard({ npc, onManage, onDelete }) {
-  const attrs = npc.attributes || {}
+  const { effective: attrs, base } = getEntityEffectiveAttributes(npc)
   const papel = PAPEL_META[npc.papelCombate] ?? PAPEL_META.capanga
   const marks = npc.damageMarks ?? 0
   const maxMarks = npc.marcasMaximas ?? 0
@@ -73,13 +74,7 @@ function BossManageCard({ npc, onManage, onDelete }) {
 
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '6px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: '#dc2626', background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '3px', padding: '2px 6px' }}>
-                RES.FÍS {npc.resistenciaFisica ?? 0}
-              </span>
-              <span style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: '#06b6d4', background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.2)', borderRadius: '3px', padding: '2px 6px' }}>
-                RES.MEN {npc.resistenciaMental ?? 0}
-              </span>
-              <span style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: '#d97706', background: 'rgba(217,119,6,0.06)', border: '1px solid rgba(217,119,6,0.2)', borderRadius: '3px', padding: '2px 6px' }}>
-                MARCAS {marks}{maxMarks > 0 ? `/${maxMarks}` : ''}
+                VIDA {Math.max(0, maxMarks - marks)}{maxMarks > 0 ? `/${maxMarks}` : ''}
               </span>
             </div>
 
@@ -88,12 +83,17 @@ function BossManageCard({ npc, onManage, onDelete }) {
               gridTemplateColumns: `repeat(${getAttributesForEntity(npc).length}, 1fr)`,
               gap: '0.25rem',
             }}>
-              {getAttributesForEntity(npc).map(attr => (
-                <div key={attr.key} style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: attrs[attr.key] > 0 ? attr.color : '#333' }}>{attrs[attr.key] || 0}</div>
-                  <div style={{ fontSize: '0.5rem', color: '#333', fontFamily: 'monospace' }}>{attr.label.slice(0, 3).toUpperCase()}</div>
-                </div>
-              ))}
+              {getAttributesForEntity(npc).map(attr => {
+                const eff = attrs[attr.key] || 0
+                const raw = base?.[attr.key] || 0
+                const reduced = eff < raw
+                return (
+                  <div key={attr.key} style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: eff > 0 ? (reduced ? '#ea580c' : attr.color) : '#333' }}>{eff}</div>
+                    <div style={{ fontSize: '0.5rem', color: '#333', fontFamily: 'monospace' }}>{attr.label.slice(0, 3).toUpperCase()}</div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </button>
@@ -130,7 +130,6 @@ export function ManageBoss({ embedded = false }) {
     npcs,
     updateNPC,
     deleteNPC,
-    addXp,
     changeAttribute,
     setMasterAttribute,
     setMasterProgression,
@@ -165,7 +164,6 @@ export function ManageBoss({ embedded = false }) {
   if (search) filtered = filtered.filter(n => n.name.toLowerCase().includes(search.toLowerCase()))
 
   const current = managing ? npcs.find(n => n.id === managing.id) : null
-  const showEcoProgression = current ? entityHasEcoPowers(current) : false
 
   const handleOpenManage = (npc) => {
     setManaging(npc)
@@ -203,7 +201,7 @@ export function ManageBoss({ embedded = false }) {
           <EmptyState
             icon={ShieldAlert}
             title="Nenhum inimigo de combate"
-            description="Crie um Boss em Gerenciamento → Criação, ou marque um NPC como combatente na ficha de criação/edição."
+            description="Crie um Boss em Criação na sidebar, ou edite um existente aqui."
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '720px' }}>
@@ -232,7 +230,6 @@ export function ManageBoss({ embedded = false }) {
               showProgression
               adminMode
               onUpdate={data => updateNPC(current.id, data)}
-              onAddXp={amount => addXp(current.id, amount)}
               onChangeAttribute={(key, val, opts) => {
                 if (opts?.admin) return setMasterAttribute(current.id, key, val)
                 return changeAttribute(current.id, key, val, opts)
@@ -245,10 +242,10 @@ export function ManageBoss({ embedded = false }) {
               onScaleAttributes={() => scaleMasterAttributesToBudget(current.id)}
               masterError={lastMasterError}
               onSpendPendingAttribute={key => spendPendingAttribute(current.id, key)}
-              onLearnCatalogSkill={showEcoProgression ? templateId => learnCatalogSkill(current.id, templateId, { free: true }) : undefined}
-              onRemoveSkill={showEcoProgression ? skillId => removeSkill(current.id, skillId) : undefined}
-              onRestOverload={showEcoProgression ? () => restEcoOverload(current.id) : undefined}
-              onSetOverload={showEcoProgression ? level => setEcoOverloadLevel(current.id, level) : undefined}
+              onLearnCatalogSkill={templateId => learnCatalogSkill(current.id, templateId, { free: true })}
+              onRemoveSkill={skillId => removeSkill(current.id, skillId)}
+              onRestOverload={() => restEcoOverload(current.id)}
+              onSetOverload={level => setEcoOverloadLevel(current.id, level)}
               lastOverloadEvents={lastOverloadEvents}
               onClearOverloadEvents={clearOverloadEvents}
               onAddItem={item => addInventoryItem(current.id, item)}

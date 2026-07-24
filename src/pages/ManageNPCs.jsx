@@ -13,9 +13,10 @@ import { StatusTag } from '../components/ui/StatusTag'
 import { getAttributesForEntity, entityHasEcoPowers } from '../constants/entityProgression'
 import { applyInitialAttributeChange, applyAttributePointSpend } from '../services/progressionService'
 import { useTrashStore } from '../store/useTrashStore'
+import { getEntityEffectiveAttributes } from '../services/stateModifiers'
 
 function NPCManageCard({ npc, onManage, onDelete }) {
-  const attrs = npc.attributes || {}
+  const { effective: attrs, base } = getEntityEffectiveAttributes(npc)
   return (
     <div
       style={{
@@ -64,12 +65,17 @@ function NPCManageCard({ npc, onManage, onDelete }) {
               gridTemplateColumns: `repeat(${getAttributesForEntity(npc).length}, 1fr)`,
               gap: '0.25rem',
             }}>
-              {getAttributesForEntity(npc).map(attr => (
-                <div key={attr.key} style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: attrs[attr.key] > 0 ? attr.color : '#333' }}>{attrs[attr.key] || 0}</div>
-                  <div style={{ fontSize: '0.5rem', color: '#333', fontFamily: 'monospace' }}>{attr.label.slice(0, 3).toUpperCase()}</div>
-                </div>
-              ))}
+              {getAttributesForEntity(npc).map(attr => {
+                const eff = attrs[attr.key] || 0
+                const raw = base?.[attr.key] || 0
+                const reduced = eff < raw
+                return (
+                  <div key={attr.key} style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: eff > 0 ? (reduced ? '#ea580c' : attr.color) : '#333' }}>{eff}</div>
+                    <div style={{ fontSize: '0.5rem', color: '#333', fontFamily: 'monospace' }}>{attr.label.slice(0, 3).toUpperCase()}</div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </button>
@@ -127,7 +133,6 @@ export function ManageNPCs({ embedded = false }) {
     npcs,
     updateNPC,
     deleteNPC,
-    addXp,
     changeAttribute,
     setMasterAttribute,
     setMasterProgression,
@@ -199,7 +204,7 @@ export function ManageNPCs({ embedded = false }) {
           <EmptyState
             icon={Skull}
             title="Nenhum NPC para gerenciar"
-            description="Crie NPCs em Gerenciamento → Criação → NPC. Bosses ficam em Criação → Boss."
+            description="Crie NPCs em Criação → NPC. Bosses ficam em Criação → Boss."
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '720px' }}>
@@ -227,7 +232,6 @@ export function ManageNPCs({ embedded = false }) {
             showProgression
             adminMode
             onUpdate={data => updateNPC(current.id, data)}
-            onAddXp={amount => addXp(current.id, amount)}
             onChangeAttribute={(key, val, opts) => {
               if (opts?.admin) return setMasterAttribute(current.id, key, val)
               return changeAttribute(current.id, key, val, opts)

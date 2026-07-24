@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { DamageMarksPanel } from './DamageMarksPanel'
+import { BossTargetPanel } from './BossTargetPanel'
 import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
 import { PHYSICAL_STATES, MENTAL_STATES, getPhysicalStateOption, getMentalStateOption } from '../../constants/states'
 import { EntityThumb } from '../ui/EntityThumb'
@@ -38,15 +39,46 @@ function ResistancePill({ label, value, color }) {
   )
 }
 
-function SocialAttributesGrid({ enemy, onRollAttribute }) {
+function DiceSideToggle({ diceSides, setDiceSides }) {
+  return (
+    <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }} role="group" aria-label="Tipo de dado">
+      {[6, 20].map(sides => {
+        const active = diceSides === sides
+        return (
+          <button
+            key={sides}
+            type="button"
+            onClick={() => setDiceSides(sides)}
+            title={`Usar d${sides} nas rolagens`}
+            style={{
+              padding: '1px 5px',
+              fontSize: '0.5rem',
+              fontFamily: 'monospace',
+              fontWeight: 700,
+              borderRadius: '3px',
+              cursor: 'pointer',
+              border: `1px solid ${active ? (sides === 6 ? '#06b6d4' : '#e5e5e5') : '#2a2a2a'}`,
+              background: active ? (sides === 6 ? 'rgba(6,182,212,0.15)' : 'rgba(229,229,229,0.1)') : 'transparent',
+              color: active ? (sides === 6 ? '#06b6d4' : '#e5e5e5') : '#444',
+            }}
+          >
+            d{sides}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function SocialAttributesGrid({ enemy, onRollAttribute, diceSides }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.25rem' }}>
       {SOCIAL_ATTRIBUTES.map(attr => {
         const val = enemy.socialAttributes?.[attr.key] ?? 0
         return (
           <button key={attr.key} type="button"
-            onClick={() => onRollAttribute?.(enemy, attr.key, attr.label, val)}
-            title={`Rolar d20 + ${attr.label} (${val})`}
+            onClick={() => onRollAttribute?.(enemy, attr.key, attr.label, val, diceSides)}
+            title={`Rolar d${diceSides} + ${attr.label} (${val})`}
             style={{
               background: '#111', border: '1px solid #1e1e1e', borderRadius: '4px',
               padding: '0.35rem 0.25rem', cursor: 'pointer', textAlign: 'center',
@@ -72,9 +104,14 @@ export function CombatEnemyCard({
   onClearMarks,
   onNotice,
   onRollAttribute,
+  targets = [],
+  onBossAttackRoll,
+  onApplyMarksToTarget,
+  onBossExpose,
   variant = 'combat',
 }) {
   const isScene = variant === 'scene'
+  const [diceSides, setDiceSides] = useState(20)
   const marks = enemy.damageMarks ?? 0
   const maxMarks = enemy.marcasMaximas ?? 0
   const physical = enemy.physicalState ?? 'bem'
@@ -145,15 +182,31 @@ export function CombatEnemyCard({
 
         {!isScene && (
           <div style={{ display: 'flex', gap: '0.3rem' }}>
-            <ResistancePill label="RESIST.FÍS" value={enemy.resistenciaFisica ?? 0} color="#dc2626" />
-            <ResistancePill label="RESIST.MEN" value={enemy.resistenciaMental ?? 0} color="#06b6d4" />
-            {maxMarks > 0 && <ResistancePill label="MARCAS MÁX" value={maxMarks} color="#d97706" />}
+            {maxMarks > 0 && (
+              <ResistancePill
+                label="VIDA"
+                value={Math.max(0, maxMarks - marks)}
+                color="#dc2626"
+              />
+            )}
+            {maxMarks > 0 && (
+              <ResistancePill label="MÁX" value={maxMarks} color="#d97706" />
+            )}
           </div>
         )}
       </header>
 
       {!isScene && (
-        <section style={{ padding: '0.5rem 0.625rem', borderBottom: '1px solid #1a1a1a' }}>
+        <section style={{ padding: '0.5rem 0.625rem', borderBottom: '1px solid #1a1a1a', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <BossTargetPanel
+            enemy={enemy}
+            targets={targets}
+            diceSides={diceSides}
+            onDiceSidesChange={setDiceSides}
+            onRollResult={onBossAttackRoll}
+            onApplyMarksToTarget={onApplyMarksToTarget}
+            onBossExpose={onBossExpose}
+          />
           <DamageMarksPanel
             character={enemy}
             maxMarks={maxMarks}
@@ -163,7 +216,7 @@ export function CombatEnemyCard({
             onNotice={onNotice}
           />
           {isDefeated && (
-            <div style={{ fontSize: '0.6rem', color: '#dc2626', fontFamily: 'monospace', textAlign: 'center', marginTop: '0.35rem', fontWeight: 700 }}>
+            <div style={{ fontSize: '0.6rem', color: '#dc2626', fontFamily: 'monospace', textAlign: 'center', fontWeight: 700 }}>
               ✕ DERROTADO
             </div>
           )}
@@ -171,12 +224,15 @@ export function CombatEnemyCard({
       )}
 
       <section style={{ padding: '0.5rem 0.625rem' }}>
-        <div style={{ fontSize: '0.45rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.375rem' }}>
-          {isScene ? 'ATRIBUTOS SOCIAIS · CLIQUE PARA ROLAR' : 'ATRIBUTOS · CLIQUE PARA ROLAR'}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.35rem', marginBottom: '0.375rem' }}>
+          <div style={{ fontSize: '0.45rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+            {isScene ? 'ATRIBUTOS SOCIAIS' : 'ATRIBUTOS'}
+          </div>
+          <DiceSideToggle diceSides={diceSides} setDiceSides={setDiceSides} />
         </div>
 
         {isScene ? (
-          <SocialAttributesGrid enemy={enemy} onRollAttribute={onRollAttribute} />
+          <SocialAttributesGrid enemy={enemy} onRollAttribute={onRollAttribute} diceSides={diceSides} />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.25rem' }}>
             {ATTRIBUTES.map(attr => {
@@ -189,8 +245,8 @@ export function CombatEnemyCard({
               const short = attr.key === 'inteligencia' ? 'INT' : attr.key === 'vitalidade' ? 'VIT' : attr.key === 'ruptura' ? 'RUP' : attr.label.slice(0, 3).toUpperCase()
               return (
                 <button key={attr.key} type="button"
-                  onClick={() => onRollAttribute?.(enemy, attr.key, attr.label, eff)}
-                  title={`Rolar d20 + ${attr.label} (${eff})`}
+                  onClick={() => onRollAttribute?.(enemy, attr.key, attr.label, eff, diceSides)}
+                  title={`Rolar d${diceSides} + ${attr.label} (${eff})`}
                   style={{
                     background: '#111', border: '1px solid #1e1e1e', borderRadius: '4px',
                     padding: '0.35rem 0.25rem', cursor: 'pointer', textAlign: 'center',

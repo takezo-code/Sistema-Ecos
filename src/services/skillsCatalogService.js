@@ -12,7 +12,6 @@ import {
 import { isNpcEntity } from '../constants/entityProgression'
 import { storage, KEYS } from './storage'
 import { genId } from '../utils/id'
-import { archiveEntity, TRASH_TYPES } from './trashService'
 
 const CHARACTER_BUILTIN = ECO_SKILLS_CATALOG.map(s => ({
   ...s,
@@ -138,8 +137,13 @@ export function updateCustomSkill(templateId, draft) {
 export function deleteCustomSkill(templateId) {
   const builtin = BUILTIN.some(s => s.templateId === templateId)
   if (builtin) return { ok: false, message: 'Habilidades do sistema não podem ser excluídas.' }
-  const skill = loadCustomSkills().find(s => s.templateId === templateId)
+  const custom = loadCustomSkills()
+  const skill = custom.find(s => s.templateId === templateId)
   if (!skill) return { ok: false, message: 'Skill não encontrada.' }
-  archiveEntity(TRASH_TYPES.skill, skill)
+  saveCustomSkills(custom.filter(s => s.templateId !== templateId))
+  // Lazy import evita ciclo trashService ↔ skillsCatalogService no boot
+  import('./trashService').then(({ archiveEntity, TRASH_TYPES }) => {
+    archiveEntity(TRASH_TYPES.skill, skill)
+  }).catch(err => console.error('[deleteCustomSkill]', err))
   return { ok: true }
 }

@@ -10,10 +10,6 @@ export const useCampaignStore = create((set, get) => ({
   campaigns: load(),
   activeCampaignId: loadActive(),
 
-  get activeCampaign() {
-    return get().campaigns.find(c => c.id === get().activeCampaignId) || null
-  },
-
   addCampaign(data) {
     const campaign = {
       id: genId(),

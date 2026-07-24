@@ -160,12 +160,12 @@ const CATALOG_META = {
   arma: {
     label: 'Arma',
     description: 'Catálogo de armas da campanha — cada item pode conceder skills ao ser equipado.',
-    emptyHint: 'Nenhuma arma encontrada. Crie em Equipamentos → Criação.',
+    emptyHint: 'Nenhuma arma encontrada. Crie em Criação → Arma.',
   },
   armadura: {
     label: 'Armadura',
     description: 'Catálogo de armaduras — leve, média ou pesada, com resistência e penalidades.',
-    emptyHint: 'Nenhuma armadura encontrada. Crie em Equipamentos → Criação.',
+    emptyHint: 'Nenhuma armadura encontrada. Crie em Criação → Armadura.',
   },
 }
 

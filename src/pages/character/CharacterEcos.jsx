@@ -22,7 +22,7 @@ export function CharacterEcos({
         onClearEvents={onClearOverloadEvents}
       />
       <hr className="divide-line" style={{ margin: '1.5rem 0' }} />
-      <ProgressionSection entity={character} onAddXp={() => {}} adminMode={false} />
+      <ProgressionSection entity={character} adminMode={false} />
       <p style={{ fontSize: '0.7rem', color: '#444', marginTop: '0.75rem' }}>
         Para conceder XP e Ecos, use Gerenciamento em modo mestre.
       </p>

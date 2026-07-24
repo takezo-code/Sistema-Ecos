@@ -29,6 +29,7 @@ import {
 } from '../services/progressionService'
 import { getTotalAttributePoints, getTotalSocialPoints } from '../constants/attributes'
 import { resolveCharacterNarrative } from '../utils/entityNarrative'
+import { getEntityEffectiveAttributes } from '../services/stateModifiers'
 
 const EMPTY_FORM = {
   name: '',
@@ -176,24 +177,6 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
         <div>
           <div style={narrativeSectionLabel}>PERFIL NARRATIVO</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-              <Field label="Aparência">
-                <Textarea
-                  value={form.appearance}
-                  onChange={e => set('appearance', e.target.value)}
-                  placeholder="Físico, vestimenta, marcas, aura..."
-                  rows={2}
-                />
-              </Field>
-              <Field label="Personalidade">
-                <Textarea
-                  value={form.personality}
-                  onChange={e => set('personality', e.target.value)}
-                  placeholder="Temperamento, maneirismos, tom de voz..."
-                  rows={2}
-                />
-              </Field>
-            </div>
             <Field label="História">
               <Textarea
                 value={form.history}
@@ -369,7 +352,7 @@ function InventoryPanel({ character, onAddItem, onRemoveItem, onClose }) {
 }
 
 function CharCard({ character, onEdit, onDelete, onInventory }) {
-  const attrs = character.attributes || {}
+  const { effective: attrs, base } = getEntityEffectiveAttributes(character)
 
   return (
     <div
@@ -426,16 +409,21 @@ function CharCard({ character, onEdit, onDelete, onInventory }) {
 
       {/* Attributes bar */}
       <div style={{ padding: '0 1.25rem 0.875rem', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.35rem' }}>
-        {ATTRIBUTES.map(attr => (
-          <div key={attr.key} style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: attrs[attr.key] > 0 ? attr.color : '#222', lineHeight: 1 }}>
-              {attrs[attr.key] || 0}
+        {ATTRIBUTES.map(attr => {
+          const eff = attrs[attr.key] || 0
+          const raw = base?.[attr.key] || 0
+          const reduced = eff < raw
+          return (
+            <div key={attr.key} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: eff > 0 ? (reduced ? '#ea580c' : attr.color) : '#222', lineHeight: 1 }}>
+                {eff}
+              </div>
+              <div style={{ fontSize: '0.5rem', color: '#333', fontFamily: 'monospace', marginTop: '2px' }}>
+                {attr.label.slice(0, 3).toUpperCase()}
+              </div>
             </div>
-            <div style={{ fontSize: '0.55rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.05em', marginTop: '2px' }}>
-              {attr.label.slice(0, 3).toUpperCase()}
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {character.inventory.length > 0 && (

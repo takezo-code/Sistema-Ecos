@@ -4,7 +4,6 @@ import {
   BookOpen,
   Users,
   ScrollText,
-  Dices,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -19,29 +18,37 @@ import {
   Shield,
   UsersRound,
   Clapperboard,
-  Package,
 } from 'lucide-react'
-import { SKILL_AUDIENCE } from '../constants/skillAudience'
+import { MANAGEMENT_VIEWS } from '../constants/managementViews'
 
-const MANAGEMENT_CHILDREN = [
-  { id: 'characters', label: 'Personagens', icon: Sword },
-  { id: 'npcs', label: 'NPCs', icon: Skull },
-  { id: 'boss', label: 'Boss', icon: ShieldAlert },
-  { id: 'organizations', label: 'Organizações', icon: Building2 },
-  { id: 'creation', label: 'Criação', icon: Sparkles },
-]
-
-const EQUIPMENT_CHILDREN = [
-  { id: 'armas',    label: 'Armas',    icon: Sword    },
-  { id: 'armadura', label: 'Armadura', icon: Shield   },
-  { id: 'creation', label: 'Criação',  icon: Sparkles },
-]
-
-const SKILLS_CHILDREN = [
-  { id: SKILL_AUDIENCE.CHARACTER, label: 'Skills Personagem', icon: Sword },
-  { id: SKILL_AUDIENCE.NPC,       label: 'Skills NPC',        icon: Skull },
-  { id: SKILL_AUDIENCE.BOSS,      label: 'Skills Boss',       icon: ShieldAlert },
-  { id: 'creation',               label: 'Criação',           icon: Sparkles },
+const MANAGEMENT_SECTIONS = [
+  {
+    id: 'entities',
+    label: 'Entidades',
+    items: [
+      { id: MANAGEMENT_VIEWS.CHARACTERS, label: 'Personagens', icon: Sword },
+      { id: MANAGEMENT_VIEWS.NPCS, label: 'NPCs', icon: Skull },
+      { id: MANAGEMENT_VIEWS.BOSS, label: 'Boss', icon: ShieldAlert },
+      { id: MANAGEMENT_VIEWS.ORGANIZATIONS, label: 'Organizações', icon: Building2 },
+    ],
+  },
+  {
+    id: 'equipment',
+    label: 'Equipamentos',
+    items: [
+      { id: MANAGEMENT_VIEWS.ARMAS, label: 'Armas', icon: Sword },
+      { id: MANAGEMENT_VIEWS.ARMADURA, label: 'Armadura', icon: Shield },
+    ],
+  },
+  {
+    id: 'skills',
+    label: 'Skills',
+    items: [
+      { id: MANAGEMENT_VIEWS.SKILLS_CHARACTER, label: 'Personagem', icon: Sword },
+      { id: MANAGEMENT_VIEWS.SKILLS_NPC, label: 'NPC', icon: Skull },
+      { id: MANAGEMENT_VIEWS.SKILLS_BOSS, label: 'Boss', icon: ShieldAlert },
+    ],
+  },
 ]
 
 const EMJOGO_CHILDREN = [
@@ -68,22 +75,8 @@ const NAV_ITEMS = [
     id: 'management',
     label: 'Gerenciamento',
     icon: Users,
-    children: MANAGEMENT_CHILDREN,
-    defaultSubView: 'characters',
-  },
-  {
-    id: 'equipamentos',
-    label: 'Equipamentos',
-    icon: Package,
-    children: EQUIPMENT_CHILDREN,
-    defaultSubView: 'armas',
-  },
-  {
-    id: 'skills',
-    label: 'Skills',
-    icon: Sparkles,
-    children: SKILLS_CHILDREN,
-    defaultSubView: SKILL_AUDIENCE.CHARACTER,
+    sections: MANAGEMENT_SECTIONS,
+    defaultSubView: MANAGEMENT_VIEWS.CHARACTERS,
   },
   {
     id: 'emjogo',
@@ -92,7 +85,7 @@ const NAV_ITEMS = [
     children: EMJOGO_CHILDREN,
     defaultSubView: 'ficha',
   },
-  { id: 'dice', label: 'Dados', icon: Dices },
+  { id: 'creation', label: 'Criação', icon: Sparkles },
   { id: 'trash', label: 'Lixeira', icon: Trash2 },
 ]
 
@@ -143,6 +136,31 @@ function NavItemButton({ item, isActive, collapsed, onClick, indent = 0 }) {
       {!collapsed && <span>{item.label}</span>}
     </button>
   )
+}
+
+function NavSectionLabel({ label }) {
+  return (
+    <div
+      style={{
+        padding: '0.55rem 1rem 0.2rem 1.85rem',
+        fontSize: '0.58rem',
+        color: '#3a3a3a',
+        fontFamily: 'monospace',
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        userSelect: 'none',
+      }}
+    >
+      {label}
+    </div>
+  )
+}
+
+function getGroupItems(group) {
+  if (group.sections) {
+    return group.sections.flatMap(section => section.items)
+  }
+  return group.children || []
 }
 
 function NavGroup({
@@ -199,7 +217,22 @@ function NavGroup({
           : <ChevronDown size={13} style={{ color: '#444', flexShrink: 0 }} />
         }
       </button>
-      {expanded && group.children.map(child => (
+      {expanded && group.sections && group.sections.map((section, sectionIndex) => (
+        <div key={section.id} style={{ marginTop: sectionIndex > 0 ? '0.25rem' : 0 }}>
+          <NavSectionLabel label={section.label} />
+          {section.items.map(child => (
+            <NavItemButton
+              key={child.id}
+              item={child}
+              isActive={isGroupActive && activeSubView === child.id}
+              collapsed={false}
+              indent={1}
+              onClick={() => onNavigate(pageId, child.id)}
+            />
+          ))}
+        </div>
+      ))}
+      {expanded && !group.sections && getGroupItems(group).map(child => (
         <NavItemButton
           key={child.id}
           item={child}
@@ -217,52 +250,40 @@ export function Sidebar({
   collapsed,
   onToggle,
   activePage,
-  managementView = 'characters',
-  equipamentosView = 'armas',
-  skillsView = SKILL_AUDIENCE.CHARACTER,
+  managementView = MANAGEMENT_VIEWS.CHARACTERS,
   emjogoView = 'ficha',
   campanhaView = 'historia',
   onNavigate,
   footer,
 }) {
   const [managementExpanded, setManagementExpanded] = useState(activePage === 'management')
-  const [equipamentosExpanded, setEquipamentosExpanded] = useState(activePage === 'equipamentos')
-  const [skillsExpanded, setSkillsExpanded] = useState(activePage === 'skills')
   const [emjogoExpanded, setEmjogoExpanded] = useState(activePage === 'emjogo')
   const [campanhaExpanded, setCampanhaExpanded] = useState(activePage === 'campanha')
 
   useEffect(() => {
-    if (activePage === 'management')   setManagementExpanded(true)
-    if (activePage === 'equipamentos') setEquipamentosExpanded(true)
-    if (activePage === 'skills')       setSkillsExpanded(true)
-    if (activePage === 'emjogo')       setEmjogoExpanded(true)
-    if (activePage === 'campanha')     setCampanhaExpanded(true)
+    if (activePage === 'management') setManagementExpanded(true)
+    if (activePage === 'emjogo') setEmjogoExpanded(true)
+    if (activePage === 'campanha') setCampanhaExpanded(true)
   }, [activePage])
 
   const getSubView = (pageId) => {
-    if (pageId === 'management')   return managementView
-    if (pageId === 'equipamentos') return equipamentosView
-    if (pageId === 'skills')       return skillsView
-    if (pageId === 'emjogo')       return emjogoView
-    if (pageId === 'campanha')     return campanhaView
+    if (pageId === 'management') return managementView
+    if (pageId === 'emjogo') return emjogoView
+    if (pageId === 'campanha') return campanhaView
     return null
   }
 
   const getExpanded = (pageId) => {
-    if (pageId === 'management')   return managementExpanded
-    if (pageId === 'equipamentos') return equipamentosExpanded
-    if (pageId === 'skills')       return skillsExpanded
-    if (pageId === 'emjogo')       return emjogoExpanded
-    if (pageId === 'campanha')     return campanhaExpanded
+    if (pageId === 'management') return managementExpanded
+    if (pageId === 'emjogo') return emjogoExpanded
+    if (pageId === 'campanha') return campanhaExpanded
     return false
   }
 
   const setExpanded = (pageId, value) => {
-    if (pageId === 'management')   setManagementExpanded(value)
-    if (pageId === 'equipamentos') setEquipamentosExpanded(value)
-    if (pageId === 'skills')       setSkillsExpanded(value)
-    if (pageId === 'emjogo')       setEmjogoExpanded(value)
-    if (pageId === 'campanha')     setCampanhaExpanded(value)
+    if (pageId === 'management') setManagementExpanded(value)
+    if (pageId === 'emjogo') setEmjogoExpanded(value)
+    if (pageId === 'campanha') setCampanhaExpanded(value)
   }
 
   const toggleExpanded = (pageId, item) => {
@@ -335,7 +356,7 @@ export function Sidebar({
 
       <nav style={{ flex: 1, padding: '0.5rem 0', overflowY: 'auto', overflowX: 'hidden' }}>
         {NAV_ITEMS.map(item => {
-          if (item.children) {
+          if (item.children || item.sections) {
             const pageId = item.id
             return (
               <NavGroup

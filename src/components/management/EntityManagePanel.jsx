@@ -14,7 +14,6 @@ import { getPhysicalStateOption, getMentalStateOption } from '../../constants/st
 export function EntityManagePanel({
   entity,
   onUpdate,
-  onAddXp,
   onChangeAttribute,
   onChangeSocialAttribute,
   onSpendPendingAttribute,
@@ -46,10 +45,6 @@ export function EntityManagePanel({
   const mentalState = entity.mentalState ?? 'estavel'
   const physicalOpt = getPhysicalStateOption(physicalState)
   const mentalOpt = getMentalStateOption(mentalState)
-
-  const handleAddXp = (amount) => {
-    onAddXp?.(amount)
-  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -109,7 +104,6 @@ export function EntityManagePanel({
           <hr className="divide-line" />
           <ProgressionSection
             entity={entity}
-            onAddXp={handleAddXp}
             adminMode={adminMode}
             onMasterProgression={onMasterProgression}
             onSyncProgression={onSyncProgression}
@@ -146,7 +140,7 @@ export function EntityManagePanel({
           adminMode={adminMode}
           manualSkillPick={isNpcEntity(entity)}
           onUnlockSkill={isNpcEntity(entity) ? undefined : onUnlockSkill}
-          onLearnCatalogSkill={onLearnCatalogSkill}
+          onLearnCatalogSkill={isNpcEntity(entity) ? onLearnCatalogSkill : undefined}
           onRemoveSkill={onRemoveSkill}
           onRestOverload={onRestOverload}
           onSetOverload={onSetOverload}

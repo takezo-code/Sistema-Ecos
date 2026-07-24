@@ -1,7 +1,7 @@
 import React from 'react'
 import {
   LayoutDashboard, BookOpen, Skull, GitBranch,
-  ScrollText, Plus, ArrowRight, Activity, Sword, Building2, Dices, Users, Save, UserCircle,
+  ScrollText, Plus, ArrowRight, Activity, Sword, Building2, Users, Save, UserCircle,
 } from 'lucide-react'
 import { manualSave } from '../services/saveService'
 import { useCampaignStore } from '../store/useCampaignStore'
@@ -64,13 +64,15 @@ function QuickCard({ icon: Icon, label, color, onClick }) {
 }
 
 export function Dashboard({ onNavigate }) {
-  const { campaigns, activeCampaignId, activeCampaign } = useCampaignStore()
+  const campaigns = useCampaignStore(s => s.campaigns)
+  const activeCampaignId = useCampaignStore(s => s.activeCampaignId)
+  const active = useCampaignStore(s =>
+    s.campaigns.find(c => c.id === s.activeCampaignId) || null
+  )
   const { npcs } = useNPCStore()
   const { sessions } = useSessionStore()
   const { events } = useNarrativeStore()
   const { characters } = useCharacterStore()
-
-  const active = activeCampaign
   const campaignNpcs = active ? npcs.filter(n => n.campaignId === activeCampaignId) : npcs
   const campaignSessions = active
     ? sessions.filter(s => s.campaignId === activeCampaignId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -284,13 +286,12 @@ export function Dashboard({ onNavigate }) {
             ATALHOS RÁPIDOS
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.5rem' }}>
-            <QuickCard icon={UserCircle} label="Skills" color="#a855f7" onClick={() => onNavigate('skills')} />
+            <QuickCard icon={UserCircle} label="Skills" color="#a855f7" onClick={() => onNavigate('management', 'skills-character')} />
             <QuickCard icon={BookOpen} label="Nova Campanha" color="#dc2626" onClick={() => onNavigate('campanha', 'historia')} />
-            <QuickCard icon={Skull} label="Novo NPC" color="#06b6d4" onClick={() => onNavigate('management', 'creation', 'npcs')} />
-            <QuickCard icon={Sword} label="Novo Personagem" color="#9ca3af" onClick={() => onNavigate('management', 'creation', 'characters')} />
-            <QuickCard icon={Building2} label="Nova Organização" color="#d97706" onClick={() => onNavigate('management', 'creation', 'organizations')} />
+            <QuickCard icon={Skull} label="Novo NPC" color="#06b6d4" onClick={() => onNavigate('creation', null, 'npcs')} />
+            <QuickCard icon={Sword} label="Novo Personagem" color="#9ca3af" onClick={() => onNavigate('creation', null, 'characters')} />
+            <QuickCard icon={Building2} label="Nova Organização" color="#d97706" onClick={() => onNavigate('creation', null, 'organizations')} />
             <QuickCard icon={ScrollText} label="Nova Sessão" color="#16a34a" onClick={() => onNavigate('campanha', 'sessoes')} />
-            <QuickCard icon={Dices} label="Rolar Dados" color="#a855f7" onClick={() => onNavigate('dice')} />
             <QuickCard icon={Users} label="Gerenciar" color="#e5e5e5" onClick={() => onNavigate('management')} />
           </div>
         </div>

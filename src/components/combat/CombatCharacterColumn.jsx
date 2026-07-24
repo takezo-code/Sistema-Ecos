@@ -35,6 +35,7 @@ export function CombatCharacterColumn({
   const isScene = variant === 'scene'
   const [skillsOpen, setSkillsOpen] = useState(false)
   const [xpFlash, setXpFlash] = useState(false)
+  const [diceSides, setDiceSides] = useState(20)
 
   const physical = character.physicalState ?? 'bem'
   const mental = character.mentalState ?? 'estavel'
@@ -203,8 +204,36 @@ export function CombatCharacterColumn({
       )}
 
       <section style={{ padding: '0.5rem 0.625rem', borderBottom: '1px solid #1a1a1a' }}>
-        <div style={{ fontSize: '0.45rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.375rem' }}>
-          {isScene ? 'ATRIBUTOS SOCIAIS · CLIQUE PARA ROLAR' : 'ATRIBUTOS · CLIQUE PARA ROLAR'}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.35rem', marginBottom: '0.375rem' }}>
+          <div style={{ fontSize: '0.45rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+            {isScene ? 'ATRIBUTOS SOCIAIS' : 'ATRIBUTOS'}
+          </div>
+          <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }} role="group" aria-label="Tipo de dado">
+            {[6, 20].map(sides => {
+              const active = diceSides === sides
+              return (
+                <button
+                  key={sides}
+                  type="button"
+                  onClick={() => setDiceSides(sides)}
+                  title={`Usar d${sides} nas rolagens`}
+                  style={{
+                    padding: '1px 5px',
+                    fontSize: '0.5rem',
+                    fontFamily: 'monospace',
+                    fontWeight: 700,
+                    borderRadius: '3px',
+                    cursor: 'pointer',
+                    border: `1px solid ${active ? (sides === 6 ? '#06b6d4' : '#e5e5e5') : '#2a2a2a'}`,
+                    background: active ? (sides === 6 ? 'rgba(6,182,212,0.15)' : 'rgba(229,229,229,0.1)') : 'transparent',
+                    color: active ? (sides === 6 ? '#06b6d4' : '#e5e5e5') : '#444',
+                  }}
+                >
+                  d{sides}
+                </button>
+              )
+            })}
+          </div>
         </div>
         {(() => {
           const list = isScene ? SOCIAL_ATTRIBUTES : (attributeList ?? ATTRIBUTES)
@@ -232,8 +261,8 @@ export function CombatCharacterColumn({
                   <button
                     key={attr.key}
                     type="button"
-                    onClick={() => onRollAttribute?.(character, attr.key, attr.label, eff)}
-                    title={`Rolar d20 + ${attr.label} (${eff})`}
+                    onClick={() => onRollAttribute?.(character, attr.key, attr.label, eff, diceSides)}
+                    title={`Rolar d${diceSides} + ${attr.label} (${eff})`}
                     style={{
                       background: '#111',
                       border: `1px solid #1e1e1e`,

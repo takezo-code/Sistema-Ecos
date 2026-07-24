@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
-import { Sword, Shield, Sparkles } from 'lucide-react'
+import { Sword, Shield } from 'lucide-react'
 import { PageHeader } from '../components/ui/PageHeader'
 import { EquipmentCatalogView } from './EquipmentCatalogView'
-import { EquipmentCreationHub } from './EquipmentCreationHub'
 import { useEquipmentStore } from '../store/useEquipmentStore'
 import { useCampaignStore } from '../store/useCampaignStore'
 import { WEAPON_TYPES, ARMOR_TYPES } from '../constants/equipmentTypes'
@@ -13,34 +12,24 @@ const ARMOR_TYPE_MAP_BY_ID = Object.fromEntries(ARMOR_TYPES.map(t => [t.id, t]))
 const VIEW_META = {
   armas: { title: 'Armas', icon: Sword },
   armadura: { title: 'Armadura', icon: Shield },
-  creation: { title: 'Criação', icon: Sparkles },
 }
 
 const SUBTITLES = {
   armas: 'CATÁLOGO · ARMAS DE FOGO · CORPO A CORPO · ECO',
   armadura: 'CATÁLOGO · LEVE · MÉDIA · PESADA',
-  creation: 'ARMA · ARMADURA',
 }
 
 export function Equipment({
   initialView = 'armas',
-  initialCreationType,
-  onCreationTypeConsumed,
   onViewChange,
 }) {
-  const [activeView, setActiveView] = useState(initialView)
+  const [activeView, setActiveView] = useState(initialView === 'creation' ? 'armas' : initialView)
   const { items } = useEquipmentStore()
   const activeCampaignId = useCampaignStore(s => s.activeCampaignId)
 
   useEffect(() => {
-    if (initialView) setActiveView(initialView)
+    if (initialView && initialView !== 'creation') setActiveView(initialView)
   }, [initialView])
-
-  const handleViewChange = (view) => {
-    setActiveView(view)
-    onViewChange?.(view)
-    if (view !== 'creation') onCreationTypeConsumed?.()
-  }
 
   const campaignItems = useMemo(
     () => items.filter(i => !i.campaignId || i.campaignId === activeCampaignId),
@@ -74,13 +63,6 @@ export function Equipment({
             category="armadura"
             items={armorItems}
             typesMeta={ARMOR_TYPE_MAP_BY_ID}
-          />
-        )}
-        {activeView === 'creation' && (
-          <EquipmentCreationHub
-            onViewChange={handleViewChange}
-            initialCreationType={initialCreationType}
-            onCreationTypeConsumed={onCreationTypeConsumed}
           />
         )}
       </div>

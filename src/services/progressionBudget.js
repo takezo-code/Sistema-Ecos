@@ -59,6 +59,14 @@ export function getProgressionSnapshot(entity) {
   const spentFromLevel = Math.max(0, spent - STARTING_ATTRIBUTE_POINTS)
   const maxPending = Math.max(0, fromLevel - spentFromLevel)
 
+  const socialSpent = getTotalSocialPoints(entity.socialAttributes)
+  const socialBudget = getSocialBudget(level)
+  const socialFromLevel = getSocialPointsFromLevel(level)
+  const socialUnspent = entity.unspentSocialPoints ?? 0
+  const pendingSocial = entity.pendingSocialPoints ?? 0
+  const socialSpentFromLevel = Math.max(0, socialSpent - STARTING_SOCIAL_POINTS)
+  const maxPendingSocial = Math.max(0, socialFromLevel - socialSpentFromLevel)
+
   return {
     level,
     spent,
@@ -74,6 +82,12 @@ export function getProgressionSnapshot(entity) {
     ecoFree,
     ecoTotal,
     maxEcoFree: Math.max(0, ecoBudget - ecoSpent),
+    socialSpent,
+    socialBudget,
+    socialUnspent,
+    pendingSocial,
+    maxPendingSocial,
+    socialFromLevel,
   }
 }
 
