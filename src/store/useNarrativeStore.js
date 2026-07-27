@@ -8,6 +8,13 @@ const normalizeEvent = (e) => ({
   type: e.type || 'historia',
   choices: Array.isArray(e.choices) ? e.choices : [],
   selectedChoiceId: e.selectedChoiceId ?? null,
+  images: Array.isArray(e.images)
+    ? e.images.filter(img => img?.src).map(img => ({
+        id: img.id || genId(),
+        src: img.src,
+        caption: img.caption || '',
+      }))
+    : [],
 })
 
 const load = () => (storage.get(KEYS.narrative) || []).map(normalizeEvent)
@@ -41,6 +48,7 @@ export const useNarrativeStore = create((set, get) => ({
         : [],
       selectedChoiceId: null,
       status: data.status || 'não iniciado',
+      images: Array.isArray(data.images) ? data.images : [],
       order: existing.length,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

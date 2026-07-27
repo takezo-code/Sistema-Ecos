@@ -21,6 +21,13 @@ export const useCampaignStore = create((set, get) => ({
         future: data.timeline?.future || '',
       },
       status: data.status || 'ativa',
+      images: Array.isArray(data.images)
+        ? data.images.filter(img => img?.src).map(img => ({
+            id: img.id || genId(),
+            src: img.src,
+            caption: img.caption || '',
+          }))
+        : [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }

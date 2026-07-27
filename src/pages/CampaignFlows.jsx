@@ -9,6 +9,7 @@ import { Modal } from '../components/ui/Modal'
 import { Field, Input, Textarea, Select } from '../components/ui/Field'
 import { StatusTag } from '../components/ui/StatusTag'
 import { EmptyState } from '../components/ui/EmptyState'
+import { SceneImageGalleryEditor, SceneImageGalleryView, normalizeSceneImages } from '../components/ui/SceneImageGallery'
 import { genId } from '../utils/id'
 
 const STATUS_ICONS = {
@@ -31,6 +32,7 @@ const EMPTY_HISTORIA = {
   description: '',
   objective: '',
   status: 'não iniciado',
+  images: [],
 }
 
 const EMPTY_ESCOLHA = {
@@ -49,12 +51,19 @@ function HistoriaForm({ initial, onSave, onCancel }) {
     ...EMPTY_HISTORIA,
     ...(initial || {}),
     type: 'historia',
+    images: normalizeSceneImages(initial?.images),
   }))
   const set = (f, v) => setForm(p => ({ ...p, [f]: v }))
 
   return (
-    <form onSubmit={e => { e.preventDefault(); if (!form.title.trim()) return; onSave(form) }}
-      style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <form
+      onSubmit={e => {
+        e.preventDefault()
+        if (!form.title.trim()) return
+        onSave({ ...form, images: normalizeSceneImages(form.images) })
+      }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+    >
       <Field label="Título da cena" required>
         <Input value={form.title} onChange={e => set('title', e.target.value)} placeholder="Ex: Chegada ao vilarejo" autoFocus />
       </Field>
@@ -69,6 +78,11 @@ function HistoriaForm({ initial, onSave, onCancel }) {
       <Field label="Objetivo (opcional)">
         <Textarea value={form.objective} onChange={e => set('objective', e.target.value)} placeholder="O que os jogadores devem perceber ou alcançar..." rows={2} />
       </Field>
+      <SceneImageGalleryEditor
+        images={form.images}
+        onChange={imgs => set('images', imgs)}
+        label="Imagens de ambiente"
+      />
       <Field label="Status">
         <Select value={form.status} onChange={e => set('status', e.target.value)}>
           <option value="não iniciado">Não Iniciado</option>
@@ -233,6 +247,7 @@ function HistoriaFlowCard({ event, index, total, onEdit, onDelete, onMoveUp, onM
             <div style={{ fontSize: '0.7rem', color: '#555', lineHeight: 1.5 }}>{event.objective}</div>
           </div>
         )}
+        <SceneImageGalleryView images={event.images} title="Ambiente" />
         <StatusButtons status={event.status} onStatusChange={onStatusChange} />
       </div>
     </div>

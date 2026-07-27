@@ -7,16 +7,23 @@ import { Modal } from '../components/ui/Modal'
 import { Field, Input, Textarea, Select } from '../components/ui/Field'
 import { StatusTag } from '../components/ui/StatusTag'
 import { EmptyState } from '../components/ui/EmptyState'
+import { SceneImageGalleryEditor, SceneImageGalleryView, normalizeSceneImages } from '../components/ui/SceneImageGallery'
 import { formatDate } from '../utils/id'
 
 const EMPTY_FORM = {
   name: '', description: '',
   timeline: { past: '', present: '', future: '' },
   status: 'ativa',
+  images: [],
 }
 
 function CampaignForm({ initial, onSave, onCancel }) {
-  const [form, setForm] = useState(initial || EMPTY_FORM)
+  const [form, setForm] = useState(() => ({
+    ...EMPTY_FORM,
+    ...(initial || {}),
+    timeline: { ...EMPTY_FORM.timeline, ...(initial?.timeline || {}) },
+    images: normalizeSceneImages(initial?.images),
+  }))
 
   const set = (field, val) => setForm(f => ({ ...f, [field]: val }))
   const setTimeline = (field, val) => setForm(f => ({ ...f, timeline: { ...f.timeline, [field]: val } }))
@@ -24,7 +31,7 @@ function CampaignForm({ initial, onSave, onCancel }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!form.name.trim()) return
-    onSave(form)
+    onSave({ ...form, images: normalizeSceneImages(form.images) })
   }
 
   return (
@@ -42,6 +49,12 @@ function CampaignForm({ initial, onSave, onCancel }) {
           <option value="concluída">Concluída</option>
         </Select>
       </Field>
+      <hr className="divide-line" />
+      <SceneImageGalleryEditor
+        images={form.images}
+        onChange={imgs => set('images', imgs)}
+        label="Referências do mundo"
+      />
       <hr className="divide-line" />
       <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>TIMELINE NARRATIVA</div>
       <Field label="Passado">
@@ -91,6 +104,9 @@ function CampaignCard({ campaign, isActive, onOpen, onEdit, onDelete, onActivate
               {campaign.description}
             </p>
           )}
+          <div onClick={e => e.stopPropagation()}>
+            <SceneImageGalleryView images={campaign.images} title="Mundo" />
+          </div>
           {(campaign.timeline?.past || campaign.timeline?.present || campaign.timeline?.future) && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
               {['past', 'present', 'future'].map((key, i) => (
