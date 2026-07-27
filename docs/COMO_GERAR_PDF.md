@@ -8,7 +8,7 @@ O manual completo está em **`SISTEMA_RPG.md`**.
 2. Pressione **Ctrl+P**.
 3. Destino: **Salvar como PDF**.
 4. Margens: padrão ou “Mínimas”.
-5. Salvar.
+5. Salvar.//
 
 Para atualizar o HTML após editar o Markdown:
 
