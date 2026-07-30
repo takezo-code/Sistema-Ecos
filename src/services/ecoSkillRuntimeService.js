@@ -1,7 +1,8 @@
 import { getCatalogSkill } from './skillsCatalogService'
 import { ECO_SKILL_TYPES } from '../constants/skillTypes'
 import { SKILL_VISUAL_STATE_META } from '../constants/skillVisualStates'
-import { SKILL_CATEGORY_META } from '../constants/skillCategories'
+import { getCharacterClass } from '../constants/classes'
+import { getEcoSafeLimitFromEntity } from '../constants/ecoOverload'
 import { getCooldownRemaining } from '../mechanics/skills/cooldownEngine'
 import { resolveSkillVisualState, canActivateActiveSkill } from '../mechanics/skills/skillVisualState'
 import { activateActiveSkill, advanceTurnForEntity } from '../mechanics/skills/skillActivationEngine'
@@ -34,6 +35,7 @@ export function resolveSkillRuntime(entity, skillInstance) {
     }
   }
 
+  const safeLimit = getEcoSafeLimitFromEntity(entity)
   const cooldownRemaining = catalog.skillType === ECO_SKILL_TYPES.ATIVA
     ? getCooldownRemaining(entity.skillCooldowns, catalog.templateId)
     : 0
@@ -43,6 +45,7 @@ export function resolveSkillRuntime(entity, skillInstance) {
     cooldownRemaining,
     ecoOverload: entity.ecoOverload ?? 0,
     mentalState: entity.mentalState ?? 'estavel',
+    safeLimit,
   })
 
   const activation = catalog.skillType === ECO_SKILL_TYPES.ATIVA
@@ -51,13 +54,15 @@ export function resolveSkillRuntime(entity, skillInstance) {
       cooldowns: entity.skillCooldowns,
       templateId: catalog.templateId,
       ecoOverload: entity.ecoOverload ?? 0,
+      safeLimit,
     })
     : { allowed: false, reason: 'Passiva — efeito constante.' }
 
   return {
     instance: skillInstance,
     catalog,
-    categoryMeta: SKILL_CATEGORY_META[catalog.category],
+    classMeta: getCharacterClass(catalog.classId),
+    categoryMeta: null,
     cooldownRemaining,
     cooldownTotal: catalog.cooldownTurns ?? 0,
     visualState,
@@ -91,6 +96,7 @@ export function activateCharacterSkill(entity, skillId) {
     cooldowns: entity.skillCooldowns,
     templateId: catalog.templateId,
     ecoOverload: entity.ecoOverload ?? 0,
+    safeLimit: getEcoSafeLimitFromEntity(entity),
   })
   if (!check.allowed) {
     return { ok: false, error: { message: check.reason } }

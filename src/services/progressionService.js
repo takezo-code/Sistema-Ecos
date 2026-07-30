@@ -21,6 +21,7 @@ import {
   isInCreationPhase,
 } from '../constants/attributes'
 import { entityHasEcoPowers } from '../constants/entityProgression'
+import { normalizeClassId } from '../constants/classes'
 import {
   getAttributeBudget,
   getSocialBudget,
@@ -81,15 +82,17 @@ export function applyXpGain(character, amount) {
     xp -= needed
     level += 1
 
-    const rewardType = getLevelRewardType(level, { hasEcoPowers: entityHasEcoPowers(character) })
+    const hasEco = entityHasEcoPowers(character)
+
+    if (hasEco) {
+      ecoPoints += 1
+      levelUps.push({ level, type: 'eco', message: `Nível ${level}: +1 Eco` })
+    }
+
+    const rewardType = getLevelRewardType(level, { hasEcoPowers: hasEco })
     if (rewardType === 'attribute') {
       pendingAttributePoints += 1
       levelUps.push({ level, type: 'attribute', message: `Nível ${level}: +1 ponto de atributo` })
-    } else if (rewardType === 'eco') {
-      ecoPoints += 1
-      levelUps.push({ level, type: 'eco', message: `Nível ${level}: +1 Eco` })
-    } else {
-      levelUps.push({ level, type: 'none', message: `Nível ${level}` })
     }
 
     if (level <= MAX_SOCIAL_LEVEL) {
@@ -162,6 +165,33 @@ export function validateStartingAttributesDistributed(entity) {
       message: `Distribua exatamente ${STARTING_ATTRIBUTE_POINTS} pontos iniciais (você colocou ${spent}).`,
     }
   }
+  return { ok: true }
+}
+
+/**
+ * Criação de personagem: exige classe + gastar o Eco inicial em pelo menos 1 skill.
+ */
+export function validateStartingEcoSkillSelected(entity) {
+  const classId = normalizeClassId(entity?.classId)
+  if (!classId) {
+    return { ok: false, message: 'Escolha uma classe antes de criar o personagem.' }
+  }
+
+  const unlocked = (entity.skills || []).filter(s => (Number(s.tier) || 0) > 0)
+  if (unlocked.length < 1) {
+    return {
+      ok: false,
+      message: 'Gaste o Eco inicial e desbloqueie uma skill da classe para liberar a criação.',
+    }
+  }
+
+  if ((entity.ecoPoints ?? 0) > 0) {
+    return {
+      ok: false,
+      message: 'Gaste o ponto de Eco inicial em uma skill para liberar a criação.',
+    }
+  }
+
   return { ok: true }
 }
 

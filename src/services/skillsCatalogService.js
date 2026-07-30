@@ -1,11 +1,11 @@
 import { ECO_SKILLS_CATALOG } from '../data/ecoSkillsCatalog'
 import { NPC_SKILLS_CATALOG } from '../data/npcSkillsCatalog'
 import { ECO_SKILL_TYPES } from '../constants/skillTypes'
-import { SKILL_CATEGORIES } from '../constants/skillCategories'
-import { normalizeSkillType } from '../constants/skillTypes'
 import {
   SKILL_AUDIENCE,
   normalizeSkillAudience,
+  normalizeCreatableAudience,
+  isCreatableSkillAudience,
   getSkillAudience,
   skillMatchesAudience,
 } from '../constants/skillAudience'
@@ -75,15 +75,14 @@ export function getCatalogSkill(templateId) {
   return getMergedCatalog().find(s => s.templateId === templateId) || null
 }
 
-export function createEmptySkillDraft(audience = SKILL_AUDIENCE.CHARACTER) {
+export function createEmptySkillDraft(audience = SKILL_AUDIENCE.NPC) {
   return {
     name: '',
-    audience: normalizeSkillAudience(audience),
+    audience: normalizeCreatableAudience(audience),
+    classId: null,
     skillType: ECO_SKILL_TYPES.ATIVA,
-    category: SKILL_CATEGORIES.PERCEPCAO,
     cooldownTurns: 3,
     overloadCost: 1,
-    passiveOverloadRisk: false,
     description: '',
     narrativeConsequence: '',
     mechanicalEffect: '',
@@ -91,22 +90,21 @@ export function createEmptySkillDraft(audience = SKILL_AUDIENCE.CHARACTER) {
 }
 
 export function buildSkillFromDraft(draft, existingId = null) {
-  const skillType = normalizeSkillType(draft.skillType)
-  const isPassiva = skillType === ECO_SKILL_TYPES.PASSIVA
+  // Skills de personagem são pré-definidas por classe — custom só NPC/Boss
+  const audience = isCreatableSkillAudience(draft.audience)
+    ? normalizeCreatableAudience(draft.audience)
+    : SKILL_AUDIENCE.NPC
   return {
     templateId: existingId || `custom_${genId()}`,
     name: String(draft.name || '').trim() || 'Sem nome',
-    skillType,
-    category: Object.values(SKILL_CATEGORIES).includes(draft.category)
-      ? draft.category
-      : SKILL_CATEGORIES.PERCEPCAO,
-    cooldownTurns: isPassiva ? 0 : Math.max(0, Number(draft.cooldownTurns) || 0),
-    overloadCost: isPassiva ? 0 : Math.max(0, Number(draft.overloadCost) ?? 1),
-    passiveOverloadRisk: Boolean(draft.passiveOverloadRisk),
+    skillType: ECO_SKILL_TYPES.ATIVA,
+    classId: null,
+    cooldownTurns: Math.max(0, Number(draft.cooldownTurns) || 0),
+    overloadCost: Math.max(0, Number(draft.overloadCost) ?? 1),
     description: String(draft.description || '').trim(),
     narrativeConsequence: String(draft.narrativeConsequence || '').trim(),
     mechanicalEffect: String(draft.mechanicalEffect || '').trim(),
-    audience: normalizeSkillAudience(draft.audience),
+    audience,
     isBuiltin: false,
     createdAt: draft.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),

@@ -1,4 +1,4 @@
-import { MAX_LEVEL, getXpRequiredForLevel, getSocialPointsFromLevel } from '../constants/progression'
+import { MAX_LEVEL, getXpRequiredForLevel, getSocialPointsFromLevel, ECO_SKILL_MAX_LEVEL } from '../constants/progression'
 import {
   ATTRIBUTES,
   STARTING_ATTRIBUTE_POINTS,
@@ -9,13 +9,11 @@ import {
 } from '../constants/attributes'
 import { entityHasEcoPowers } from '../constants/entityProgression'
 
-/** Pontos de atributo de nível: pares + (sem Eco) também os slots que seriam Eco */
+/** Pontos de atributo de nível: pares; sem Eco, todos os níveis 2+. */
 export function getAttributePointsFromLevel(level, entity = null) {
   const l = Math.max(1, level)
-  const fromEven = Math.floor(l / 2)
-  if (!entity || entityHasEcoPowers(entity)) return fromEven
-  const ecoSlots = l < 3 ? 0 : Math.floor((l - 1) / 2)
-  return fromEven + ecoSlots
+  if (!entity || entityHasEcoPowers(entity)) return Math.floor(l / 2)
+  return Math.max(0, l - 1)
 }
 
 /** Total de pontos de status permitidos (criação + nível) */
@@ -28,17 +26,19 @@ export function getSocialBudget(level) {
   return STARTING_SOCIAL_POINTS + getSocialPointsFromLevel(level)
 }
 
-/** Ecos ganhos em níveis ímpares a partir do 3 — zero se entidade sem poderes de Eco */
+/** Ecos totais: 1 por nível (nv.1 = 1 … nv.20 = 20). */
 export function getEcoPointsFromLevel(level, entity = null) {
   if (entity && !entityHasEcoPowers(entity)) return 0
-  const l = Math.max(1, level)
-  if (l < 3) return 0
-  return Math.floor((l - 1) / 2)
+  const l = Math.max(1, Math.min(MAX_LEVEL, Number(level) || 1))
+  return l
 }
 
-/** Ecos já gastos em habilidades (1 por desbloqueio + 1 por tier acima de 1) */
+/** Ecos gastos em skills: só níveis 1–3. Graus 4–5 usam item do mercador. */
 export function getEcoSpentOnSkills(skills = []) {
-  return (skills || []).reduce((sum, s) => sum + Math.max(1, Number(s.tier) || 1), 0)
+  return (skills || []).reduce((sum, s) => {
+    const tier = Math.max(0, Number(s.tier) || 0)
+    return sum + Math.min(tier, ECO_SKILL_MAX_LEVEL)
+  }, 0)
 }
 
 export function getProgressionSnapshot(entity) {

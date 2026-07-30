@@ -1,6 +1,6 @@
 /**
  * Catálogo de habilidades de personagem (Eco).
- * Builtin vazio — skills via Gerenciamento → Skills → Personagem.
+ * Builtin — skills pré-definidas por classe; jogadores só liberam (sem criação manual).
  */
 import { CHARACTER_SKILLS_CATALOG } from './characterSkillsCatalog'
 

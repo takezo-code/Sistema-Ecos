@@ -10,7 +10,8 @@ import { getCatalogAudienceForEntity } from '../../services/skillsCatalogService
 /** Conteúdo de habilidades + sobrecarga de Eco (uso de skills) */
 export function EntitySkillsPanel({
   entity,
-  onUnlockSkill,
+  onInvestSkillPoint,
+  onUpgradeSkillGrade,
   onLearnCatalogSkill,
   onRemoveSkill,
   onRestOverload,
@@ -63,8 +64,8 @@ export function EntitySkillsPanel({
           textAlign: 'right',
         }}>
           {manualSkillPick
-            ? (hasEcoToSpend ? 'Eco disponível' : 'Ganhe Eco em níveis ímpares')
-            : (hasEcoToSpend ? 'Pode descobrir skill' : 'Ganhe em níveis ímpares')}
+            ? (hasEcoToSpend ? 'Eco disponível' : 'Ganhe +1 Eco por nível')
+            : (hasEcoToSpend ? 'Pode investir até nv.4' : 'Ganhe +1 Eco por nível')}
         </span>
       </div>
 
@@ -104,7 +105,8 @@ export function EntitySkillsPanel({
 
       <EcoSkillsSection
         entity={entity}
-        onUnlockSkill={manualSkillPick ? undefined : onUnlockSkill}
+        onInvestSkillPoint={manualSkillPick ? undefined : onInvestSkillPoint}
+        onUpgradeSkillGrade={manualSkillPick ? undefined : onUpgradeSkillGrade}
         manualSkillPick={manualSkillPick}
       />
     </div>

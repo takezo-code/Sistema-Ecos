@@ -28,7 +28,6 @@ const VIEW_META = {
   [MANAGEMENT_VIEWS.ORGANIZATIONS]: { title: 'Organizações', icon: Building2 },
   [MANAGEMENT_VIEWS.ARMAS]: { title: 'Armas', icon: Sword },
   [MANAGEMENT_VIEWS.ARMADURA]: { title: 'Armadura', icon: Shield },
-  [MANAGEMENT_VIEWS.SKILLS_CHARACTER]: { title: 'Skills Personagem', icon: Sword },
   [MANAGEMENT_VIEWS.SKILLS_NPC]: { title: 'Skills NPC', icon: Skull },
   [MANAGEMENT_VIEWS.SKILLS_BOSS]: { title: 'Skills Boss', icon: ShieldAlert },
 }
@@ -40,7 +39,6 @@ const SUBTITLES = {
   [MANAGEMENT_VIEWS.ORGANIZATIONS]: 'FAÇÕES · ALIADOS · INIMIGOS',
   [MANAGEMENT_VIEWS.ARMAS]: 'CATÁLOGO · ARMAS DE FOGO · CORPO A CORPO · ECO',
   [MANAGEMENT_VIEWS.ARMADURA]: 'CATÁLOGO · LEVE · MÉDIA · PESADA',
-  [MANAGEMENT_VIEWS.SKILLS_CHARACTER]: 'CATÁLOGO · PERSONAGENS JOGÁVEIS',
   [MANAGEMENT_VIEWS.SKILLS_NPC]: 'CATÁLOGO · NPCs',
   [MANAGEMENT_VIEWS.SKILLS_BOSS]: 'CATÁLOGO · BOSSES E INIMIGOS',
 }
@@ -95,9 +93,6 @@ export function Management({
             items={armorItems}
             typesMeta={ARMOR_TYPE_MAP_BY_ID}
           />
-        )}
-        {activeView === MANAGEMENT_VIEWS.SKILLS_CHARACTER && (
-          <SkillsCatalogView audience={SKILL_AUDIENCE.CHARACTER} />
         )}
         {activeView === MANAGEMENT_VIEWS.SKILLS_NPC && (
           <SkillsCatalogView audience={SKILL_AUDIENCE.NPC} />

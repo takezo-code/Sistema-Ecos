@@ -1,158 +1,43 @@
-import React, { useState } from 'react'
-import { Sparkles, Zap, Search, ArrowLeft } from 'lucide-react'
-import { ECO_UNLOCK_SKILL_COST, MAX_SKILL_TIER } from '../../constants/progression'
-import { canUnlockRandomSkill, getSkillDisplay } from '../../services/skillService'
-import { formatRuptureBonus } from '../../services/ruptureBonus'
+import React from 'react'
+import { ClassSkillBook } from '../skills/ClassSkillBook'
+import { getSkillDisplay } from '../../services/skillService'
+import { MAX_CLASS_SKILL_LEVEL } from '../../constants/progression'
+import { getCharacterClass } from '../../constants/classes'
 
-const CHOICE = Object.freeze({
-  NONE: null,
-  UNLOCK: 'unlock',
-})
-
-function EcoPointsBar({ eco, hasEcoToSpend }) {
-  return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: '0.75rem',
-      padding: '0.625rem 0.75rem',
-      marginBottom: '0.75rem',
-      background: hasEcoToSpend ? 'rgba(168,85,247,0.1)' : '#0d0d0d',
-      border: `1px solid ${hasEcoToSpend ? 'rgba(168,85,247,0.35)' : '#1a1a1a'}`,
-      borderRadius: '4px',
-      boxShadow: hasEcoToSpend ? '0 0 16px rgba(168,85,247,0.15)' : 'none',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <Zap size={16} style={{ color: hasEcoToSpend ? '#a855f7' : '#444' }} />
-        <div>
-          <div style={{ fontSize: '0.55rem', color: '#666', fontFamily: 'monospace', letterSpacing: '0.08em' }}>
-            PONTOS DE ECO
-          </div>
-          <div style={{
-            fontSize: '1.5rem',
-            fontWeight: 800,
-            color: hasEcoToSpend ? '#a855f7' : '#555',
-            lineHeight: 1,
-            fontFamily: 'monospace',
-          }}>
-            {eco}
-          </div>
-        </div>
-      </div>
-      {hasEcoToSpend ? (
-        <span style={{
-          fontSize: '0.65rem',
-          color: '#a855f7',
-          fontFamily: 'monospace',
-          fontWeight: 600,
-          textAlign: 'right',
-        }}>
-          Pronto para descobrir
-        </span>
-      ) : (
-        <span style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', textAlign: 'right', maxWidth: '140px', lineHeight: 1.4 }}>
-          Sem Ecos · ganhe em níveis ímpares
-        </span>
-      )}
-    </div>
-  )
-}
-
-export function EcoSkillsSection({ entity, onUnlockSkill, manualSkillPick = false }) {
-  const eco = entity.ecoPoints ?? 0
+/**
+ * Skills de Eco do personagem — livro de classe (investir Eco) ou lista legada/NPC.
+ */
+export function EcoSkillsSection({
+  entity,
+  onInvestSkillPoint,
+  onUpgradeSkillGrade,
+  onActivateSkill,
+  manualSkillPick = false,
+}) {
+  const classMeta = getCharacterClass(entity)
   const skills = entity.skills || []
   const rupture = entity.attributes?.ruptura ?? 0
   const mentalState = entity.mentalState ?? 'estavel'
   const ecoOverload = entity.ecoOverload ?? 0
-  const canUnlock = !manualSkillPick && canUnlockRandomSkill(entity)
-  const hasEcoToSpend = eco >= ECO_UNLOCK_SKILL_COST
 
-  const [choiceMode, setChoiceMode] = useState(CHOICE.NONE)
-
-  const handleUnlock = () => {
-    onUnlockSkill?.()
-    setChoiceMode(CHOICE.NONE)
+  // Personagem com classe → livro Metin
+  if (!manualSkillPick && classMeta) {
+    return (
+      <ClassSkillBook
+        entity={entity}
+        onInvestPoint={onInvestSkillPoint}
+        onUpgradeGrade={onUpgradeSkillGrade}
+        onActivate={onActivateSkill}
+      />
+    )
   }
 
+  // NPC / sem classe / grimório manual: lista simples
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Sparkles size={14} style={{ color: '#a855f7' }} />
-          <span style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-            HABILIDADES DE RUPTURA
-          </span>
-        </div>
-        <span style={{ fontSize: '0.65rem', color: '#d97706', fontFamily: 'monospace' }}>
-          Bônus Ruptura: {formatRuptureBonus(rupture)}
-        </span>
+      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>
+        HABILIDADES · {skills.length} DESBLOQUEADA(S)
       </div>
-
-      <EcoPointsBar eco={eco} hasEcoToSpend={hasEcoToSpend} />
-
-      <p style={{ fontSize: '0.75rem', color: '#555', lineHeight: 1.6, marginBottom: '0.75rem' }}>
-        {manualSkillPick
-          ? 'Adicione habilidades pelo grimório do mestre.'
-          : 'Gaste um Eco para descobrir uma habilidade nova que você ainda não possui.'}
-      </p>
-
-      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', marginBottom: '0.5rem' }}>
-        {skills.length} HABILIDADE(S) DESBLOQUEADA(S)
-      </div>
-
-      {choiceMode === CHOICE.NONE && !manualSkillPick && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '1rem' }}>
-          <button
-            type="button"
-            className="btn-primary"
-            disabled={!canUnlock || !onUnlockSkill}
-            onClick={() => setChoiceMode(CHOICE.UNLOCK)}
-            title={canUnlock ? `Gasta ${ECO_UNLOCK_SKILL_COST} Eco` : 'Precisa de pelo menos 1 Eco'}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              width: '100%',
-              fontSize: '0.8rem',
-              opacity: canUnlock ? 1 : 0.5,
-            }}
-          >
-            <Search size={14} />
-            Descobrir habilidade ({ECO_UNLOCK_SKILL_COST} Eco)
-          </button>
-        </div>
-      )}
-
-      {!manualSkillPick && choiceMode === CHOICE.UNLOCK && (
-        <div style={{
-          marginBottom: '1rem',
-          padding: '0.75rem',
-          background: '#0d0d0d',
-          border: '1px solid rgba(168,85,247,0.25)',
-          borderRadius: '4px',
-        }}>
-          <button type="button" className="btn-ghost" onClick={() => setChoiceMode(CHOICE.NONE)}
-            style={{ fontSize: '0.65rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <ArrowLeft size={11} /> Voltar
-          </button>
-          <p style={{ fontSize: '0.75rem', color: '#888', marginBottom: '0.75rem', lineHeight: 1.5 }}>
-            Revela uma habilidade de Eco que você ainda não possui. O sorteio evita duplicar o que já tem.
-          </p>
-          <button
-            type="button"
-            className="btn-primary"
-            disabled={!canUnlock}
-            onClick={handleUnlock}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', fontSize: '0.75rem' }}
-          >
-            <Zap size={13} />
-            Confirmar descoberta ({ECO_UNLOCK_SKILL_COST} Eco)
-          </button>
-        </div>
-      )}
-
       {skills.length === 0 ? (
         <div style={{
           textAlign: 'center',
@@ -163,17 +48,18 @@ export function EcoSkillsSection({ entity, onUnlockSkill, manualSkillPick = fals
           fontSize: '0.775rem',
         }}>
           Nenhuma habilidade desbloqueada.
-          {manualSkillPick ? (
+          {manualSkillPick && (
             <div style={{ marginTop: '0.5rem', color: '#555' }}>Use &quot;Adicionar skill&quot; no grimório acima.</div>
-          ) : canUnlock && choiceMode === CHOICE.NONE && (
-            <div style={{ marginTop: '0.5rem', color: '#555' }}>Use o botão &quot;Descobrir habilidade&quot; acima.</div>
+          )}
+          {!manualSkillPick && !classMeta && (
+            <div style={{ marginTop: '0.5rem', color: '#555' }}>Defina a classe para abrir o livro de skills.</div>
           )}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {skills.map(skill => {
             const display = getSkillDisplay(skill, rupture, mentalState, ecoOverload)
-            const atMaxTier = skill.tier >= MAX_SKILL_TIER
+            const atMaxTier = skill.tier >= MAX_CLASS_SKILL_LEVEL
             return (
               <div
                 key={skill.id}
@@ -188,21 +74,23 @@ export function EcoSkillsSection({ entity, onUnlockSkill, manualSkillPick = fals
                   <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#e5e5e5' }}>{skill.name}</div>
                   <div style={{ fontSize: '0.6rem', color: '#a855f7', fontFamily: 'monospace', marginTop: '2px' }}>
                     <span style={{ color: display.typeMeta?.color }}>{display.typeMeta?.label?.toUpperCase()} · </span>
-                    TIER {skill.tier}{atMaxTier ? ' (máx)' : ''} · PODER {display.effectivePower}
-                    {display.overloadPenaltyPercent > 0 && (
-                      <span style={{ color: '#dc2626' }}> (−{display.overloadPenaltyPercent}%)</span>
+                    NÍVEL {skill.tier}{atMaxTier ? ' (máx)' : ''} · PODER {display.effectivePower}
+                    {display.overloadAttrPenalty > 0 && (
+                      <span style={{ color: '#dc2626' }}> (−{display.overloadAttrPenalty} INT/PER/SAB/CAR)</span>
                     )}
                   </div>
                 </div>
                 <p style={{ fontSize: '0.75rem', color: '#666', lineHeight: 1.6, marginBottom: '0.5rem' }}>{skill.description}</p>
-                <div style={{ background: '#111', border: '1px solid #1a1a1a', borderRadius: '3px', padding: '0.5rem 0.625rem', marginBottom: '0.35rem' }}>
-                  <div style={{ fontSize: '0.55rem', color: '#06b6d4', fontFamily: 'monospace', marginBottom: '2px' }}>EFEITO</div>
-                  <div style={{ fontSize: '0.7rem', color: '#888', lineHeight: 1.5 }}>{skill.effect}</div>
-                </div>
-                {skill.sideEffect && (
+                {(skill.effect || skill.mechanicalEffect) && (
+                  <div style={{ background: '#111', border: '1px solid #1a1a1a', borderRadius: '3px', padding: '0.5rem 0.625rem', marginBottom: '0.35rem' }}>
+                    <div style={{ fontSize: '0.55rem', color: '#06b6d4', fontFamily: 'monospace', marginBottom: '2px' }}>EFEITO</div>
+                    <div style={{ fontSize: '0.7rem', color: '#888', lineHeight: 1.5 }}>{skill.effect || skill.mechanicalEffect}</div>
+                  </div>
+                )}
+                {(skill.sideEffect || skill.narrativeConsequence) && (
                   <div style={{ background: 'rgba(220,38,38,0.04)', border: '1px solid rgba(220,38,38,0.12)', borderRadius: '3px', padding: '0.5rem 0.625rem' }}>
                     <div style={{ fontSize: '0.55rem', color: '#dc2626', fontFamily: 'monospace', marginBottom: '2px' }}>EFEITO COLATERAL</div>
-                    <div style={{ fontSize: '0.7rem', color: '#666', lineHeight: 1.5 }}>{skill.sideEffect}</div>
+                    <div style={{ fontSize: '0.7rem', color: '#666', lineHeight: 1.5 }}>{skill.sideEffect || skill.narrativeConsequence}</div>
                   </div>
                 )}
               </div>

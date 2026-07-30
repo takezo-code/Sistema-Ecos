@@ -21,16 +21,20 @@ export const useDiceStore = create((set, get) => ({
     return result
   },
 
-  rollWithAttribute(sides, attributeValue, label) {
+  rollWithAttribute(sides, attributeValue, label, classBonus = 0) {
     const diceResult = Math.floor(Math.random() * sides) + 1
-    const total = diceResult + (attributeValue || 0)
+    const attrBonus = attributeValue || 0
+    const clsBonus = classBonus || 0
+    const total = diceResult + attrBonus + clsBonus
     const entry = {
       id: Date.now(),
       sides,
       result: diceResult,
-      bonus: attributeValue || 0,
+      bonus: attrBonus + clsBonus,
+      attrBonus,
+      classBonus: clsBonus,
       total,
-      label: label || `d${sides} + ${attributeValue}`,
+      label: label || `d${sides} + ${attrBonus}`,
       timestamp: new Date().toISOString(),
     }
     const history = [entry, ...get().history].slice(0, 50)

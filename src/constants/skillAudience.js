@@ -4,12 +4,18 @@ export const SKILL_AUDIENCE = Object.freeze({
   BOSS: 'boss',
 })
 
+/** Audiences que o mestre pode criar/editar no app. Skills de personagem vêm pré-definidas por classe. */
+export const CREATABLE_SKILL_AUDIENCES = Object.freeze([
+  SKILL_AUDIENCE.NPC,
+  SKILL_AUDIENCE.BOSS,
+])
+
 export const SKILL_AUDIENCE_META = {
   [SKILL_AUDIENCE.CHARACTER]: {
     label: 'Personagem',
     shortLabel: 'PC',
     color: '#9ca3af',
-    description: 'Habilidades para personagens jogadores — descoberta aleatória e aprendizado usam só este catálogo.',
+    description: 'Skills pré-definidas por classe — jogadores só liberam; criação manual desativada.',
   },
   [SKILL_AUDIENCE.NPC]: {
     label: 'NPC',
@@ -29,6 +35,16 @@ export function normalizeSkillAudience(audience) {
   if (audience === SKILL_AUDIENCE.NPC) return SKILL_AUDIENCE.NPC
   if (audience === SKILL_AUDIENCE.BOSS) return SKILL_AUDIENCE.BOSS
   return SKILL_AUDIENCE.CHARACTER
+}
+
+export function isCreatableSkillAudience(audience) {
+  return CREATABLE_SKILL_AUDIENCES.includes(normalizeSkillAudience(audience))
+}
+
+/** Normaliza audience para criação: só NPC ou Boss (default NPC). */
+export function normalizeCreatableAudience(audience) {
+  if (audience === SKILL_AUDIENCE.BOSS) return SKILL_AUDIENCE.BOSS
+  return SKILL_AUDIENCE.NPC
 }
 
 export function getSkillAudience(skill) {

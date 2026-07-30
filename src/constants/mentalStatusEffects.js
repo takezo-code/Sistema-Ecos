@@ -23,7 +23,7 @@ export const MENTAL_STATUS_EFFECTS = Object.freeze({
       'Impulsividade',
       'Exaustão psicológica',
     ],
-    modifiers: { ecoPowerPenalty: 5 },
+    modifiers: { attrFlat: 1 },
   },
 
   ruptura_fragmentada: {
@@ -38,7 +38,7 @@ export const MENTAL_STATUS_EFFECTS = Object.freeze({
       'Memória de curto prazo instável',
       'Agressividade involuntária',
     ],
-    modifiers: { ecoPowerPenalty: 10, intPenalty: 5, rupturePenalty: 5 },
+    modifiers: { attrFlat: 2 },
   },
 
   dissociacao_mental: {
@@ -53,7 +53,7 @@ export const MENTAL_STATUS_EFFECTS = Object.freeze({
       'Fala incoerente sob pressão',
       'Ações automáticas e involuntárias',
     ],
-    modifiers: { ecoPowerPenalty: 20, intPenalty: 10, rupturePenalty: 10 },
+    modifiers: { attrFlat: 3 },
   },
 
   colapso_iminente: {
@@ -68,7 +68,7 @@ export const MENTAL_STATUS_EFFECTS = Object.freeze({
       'Eco escapa sem intenção — risco a aliados',
       'Um passo antes da Ruptura Total',
     ],
-    modifiers: { ecoPowerPenalty: 80, intPenalty: 40, rupturePenalty: 40 },
+    modifiers: { attrFlat: 4 },
   },
 })
 

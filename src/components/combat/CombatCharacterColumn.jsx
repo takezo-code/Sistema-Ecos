@@ -1,13 +1,17 @@
 import React, { useState } from 'react'
 import { Zap, Play, ChevronDown, ChevronUp, Star } from 'lucide-react'
 import { COMBAT_HIGHLIGHT_XP } from '../../constants/progression'
-import { DamageMarksPanel } from './DamageMarksPanel'
+import { DamageMarksPanel, PLAYER_MARK_TYPES } from './DamageMarksPanel'
 import { EntityThumb } from '../ui/EntityThumb'
 import { PHYSICAL_STATES, MENTAL_STATES } from '../../constants/states'
 import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
-import { formatOverloadDisplay, ECO_OVERLOAD_DISPLAY_CAP } from '../../constants/ecoOverload'
-import { getEffectiveAttributeValue } from '../../services/stateModifiers'
+import { formatOverloadDisplay, getEcoSafeLimitFromEntity } from '../../constants/ecoOverload'
+import { getEffectiveAttributeValue, getEffectiveSocialAttributeValue } from '../../services/stateModifiers'
 import { listActiveMentalStatusDetails } from '../../services/mentalStatusService'
+import { getCharacterClass } from '../../constants/classes'
+import { getClassAttributeBonus } from '../../mechanics/classes/classBonusEngine'
+import { getWeaponProficiencyPenalty } from '../../mechanics/equipment/weaponProficiencyEngine'
+import { getArmorDestrezaPenalty } from '../../mechanics/equipment/armorEffectsEngine'
 
 function socialAttrShort(attr) {
   if (attr.key === 'carisma') return 'CAR'
@@ -34,6 +38,7 @@ export function CombatCharacterColumn({
 }) {
   const isScene = variant === 'scene'
   const [skillsOpen, setSkillsOpen] = useState(false)
+  const [notesOpen, setNotesOpen] = useState(false)
   const [xpFlash, setXpFlash] = useState(false)
   const [diceSides, setDiceSides] = useState(20)
 
@@ -43,12 +48,16 @@ export function CombatCharacterColumn({
   const mentalOpt = MENTAL_STATES.find(s => s.value === mental) || MENTAL_STATES[0]
   const mentalStatuses = listActiveMentalStatusDetails(character.activeMentalStatuses)
   const skills = character._skillRuntimes || []
+  const characterClass = getCharacterClass(character)
+  const armorDexPenalty = getArmorDestrezaPenalty(character)
   const overload = character.ecoOverload ?? 0
-  const overloadPct = Math.min(overload / ECO_OVERLOAD_DISPLAY_CAP, 1)
+  const safeLimit = getEcoSafeLimitFromEntity(character)
+  const overloadPct = Math.min(overload / Math.max(safeLimit, 1), 1)
+  const hasNotes = Boolean((character.combatNotes || '').trim())
 
   return (
     <article style={{
-      width: '230px',
+      width: '220px',
       flexShrink: 0,
       display: 'flex',
       flexDirection: 'column',
@@ -56,17 +65,16 @@ export function CombatCharacterColumn({
       border: `1px solid ${(isScene ? mentalOpt : physicalOpt).color}44`,
       borderRadius: '8px',
       overflow: 'hidden',
-      boxShadow: !isScene && physicalOpt.glow ? `0 0 20px ${physicalOpt.glow}` : 'none',
+      boxShadow: !isScene && physicalOpt.glow ? `0 0 16px ${physicalOpt.glow}` : 'none',
     }}>
 
-      {/* Header compacto */}
-      <header style={{ padding: '0.625rem 0.75rem', background: '#111', borderBottom: '1px solid #1a1a1a' }}>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
-          <EntityThumb src={character.image} alt={character.name} size={36} borderRadius="4px" />
+      <header style={{ padding: '0.5rem 0.625rem', background: '#111', borderBottom: '1px solid #1a1a1a' }}>
+        <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
+          <EntityThumb src={character.image} alt={character.name} size={32} borderRadius="4px" />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', minWidth: 0 }}>
               <span style={{
-                fontSize: '0.9rem',
+                fontSize: '0.85rem',
                 fontWeight: 800,
                 color: '#f5f5f5',
                 whiteSpace: 'nowrap',
@@ -85,60 +93,55 @@ export function CombatCharacterColumn({
                     setXpFlash(true)
                     setTimeout(() => setXpFlash(false), 700)
                   }}
-                  title={`Bom desempenho — +${COMBAT_HIGHLIGHT_XP} XP`}
+                  title={`+${COMBAT_HIGHLIGHT_XP} XP`}
                   style={{
                     flexShrink: 0,
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: '2px',
-                    padding: '2px 5px',
-                    background: xpFlash ? 'rgba(217,119,6,0.25)' : 'rgba(217,119,6,0.08)',
-                    border: `1px solid ${xpFlash ? 'rgba(217,119,6,0.6)' : 'rgba(217,119,6,0.25)'}`,
+                    padding: '2px 4px',
+                    background: xpFlash ? 'rgba(217,119,6,0.25)' : 'transparent',
+                    border: `1px solid ${xpFlash ? 'rgba(217,119,6,0.5)' : '#2a2a2a'}`,
                     borderRadius: '3px',
                     color: '#d97706',
                     cursor: 'pointer',
-                    fontSize: '0.5rem',
-                    fontFamily: 'monospace',
-                    fontWeight: 700,
-                    transition: 'background 0.2s, border-color 0.2s',
                   }}
                 >
                   <Star size={9} fill={xpFlash ? '#d97706' : 'none'} />
-                  XP
+                </button>
+              )}
+              {onAdvanceTurn && (
+                <button
+                  type="button"
+                  onClick={onAdvanceTurn}
+                  title="Avançar turno"
+                  style={{
+                    flexShrink: 0,
+                    background: 'transparent',
+                    border: '1px solid #2a2a2a',
+                    borderRadius: '3px',
+                    color: '#555',
+                    cursor: 'pointer',
+                    padding: '1px 5px',
+                    fontSize: '0.5rem',
+                    fontFamily: 'monospace',
+                  }}
+                >
+                  +T
                 </button>
               )}
             </div>
-            <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#444', marginTop: '1px' }}>
-              NVL {character.level ?? 1} · T{character.currentTurn ?? 0}
-              <span style={{ color: '#333' }}> · {character.xp ?? 0} XP</span>
+            <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#555', marginTop: '1px' }}>
+              Nv.{character.level ?? 1}
+              {characterClass && (
+                <span style={{ color: characterClass.color }}> · {characterClass.label}</span>
+              )}
             </div>
           </div>
-          {onAdvanceTurn && (
-            <button
-              type="button"
-              onClick={onAdvanceTurn}
-              title="Avançar turno deste personagem"
-              style={{
-                background: 'transparent',
-                border: '1px solid #2a2a2a',
-                borderRadius: '4px',
-                color: '#555',
-                cursor: 'pointer',
-                padding: '2px 6px',
-                fontSize: '0.55rem',
-                fontFamily: 'monospace',
-                flexShrink: 0,
-              }}
-            >
-              +T
-            </button>
-          )}
         </div>
 
         {!isScene && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <Zap size={10} style={{ color: '#a855f7', flexShrink: 0 }} />
-            <div style={{ flex: 1, height: '4px', background: '#1a1a1a', borderRadius: '2px', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.45rem' }}>
+            <Zap size={9} style={{ color: '#a855f7', flexShrink: 0 }} />
+            <div style={{ flex: 1, height: '3px', background: '#1a1a1a', borderRadius: '2px', overflow: 'hidden' }}>
               <div style={{
                 height: '100%',
                 width: `${overloadPct * 100}%`,
@@ -147,54 +150,40 @@ export function CombatCharacterColumn({
                 transition: 'width 0.3s',
               }} />
             </div>
-            <span style={{ fontSize: '0.55rem', color: '#a855f7', fontFamily: 'monospace', flexShrink: 0 }}>
-              {formatOverloadDisplay(overload)}
+            <span style={{ fontSize: '0.5rem', color: '#777', fontFamily: 'monospace', flexShrink: 0 }}>
+              {formatOverloadDisplay(overload, { safeLimit })}
             </span>
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: isScene ? '1fr' : '1fr 1fr', gap: '0.35rem' }}>
-          {!isScene && (
-            <div>
-              <div style={{ fontSize: '0.45rem', color: physicalOpt.color, fontFamily: 'monospace', marginBottom: '2px' }}>FÍSICO</div>
-              <select
-                className="input-base"
-                value={physical}
-                onChange={e => onUpdate?.({ physicalState: e.target.value })}
-                style={{ fontSize: '0.7rem', padding: '3px 4px', borderColor: `${physicalOpt.color}55`, width: '100%' }}
-              >
-                {PHYSICAL_STATES.map(s => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
-                ))}
-              </select>
-            </div>
-          )}
-          <div>
-            <div style={{ fontSize: '0.45rem', color: mentalOpt.color, fontFamily: 'monospace', marginBottom: '2px' }}>MENTAL</div>
+        {isScene && (
+          <div style={{ marginTop: '0.45rem' }}>
             <select
               className="input-base"
               value={mental}
               onChange={e => onUpdate?.({ mentalState: e.target.value })}
-              style={{ fontSize: '0.7rem', padding: '3px 4px', borderColor: `${mentalOpt.color}55`, width: '100%' }}
+              style={{ fontSize: '0.65rem', padding: '3px 4px', borderColor: `${mentalOpt.color}55`, width: '100%' }}
             >
               {MENTAL_STATES.map(s => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </select>
           </div>
-        </div>
+        )}
 
         {mentalStatuses.length > 0 && (
-          <div style={{ marginTop: '0.35rem', fontSize: '0.55rem', color: '#eab308', fontFamily: 'monospace' }}>
+          <div style={{ marginTop: '0.3rem', fontSize: '0.5rem', color: '#eab308', fontFamily: 'monospace' }}>
             {mentalStatuses.map(s => s.definition?.label).join(' · ')}
           </div>
         )}
       </header>
 
       {!isScene && (
-        <section style={{ padding: '0.5rem 0.625rem', borderBottom: '1px solid #1a1a1a' }}>
+        <section style={{ padding: '0.45rem 0.625rem', borderBottom: '1px solid #1a1a1a' }}>
           <DamageMarksPanel
             character={character}
+            markTypes={PLAYER_MARK_TYPES}
+            compact
             onApplyMarks={onApplyMarks}
             onHealMarks={onHealMarks}
             onClearMarks={onClearMarks}
@@ -203,53 +192,57 @@ export function CombatCharacterColumn({
         </section>
       )}
 
-      <section style={{ padding: '0.5rem 0.625rem', borderBottom: '1px solid #1a1a1a' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.35rem', marginBottom: '0.375rem' }}>
-          <div style={{ fontSize: '0.45rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-            {isScene ? 'ATRIBUTOS SOCIAIS' : 'ATRIBUTOS'}
-          </div>
-          <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }} role="group" aria-label="Tipo de dado">
-            {[6, 20].map(sides => {
-              const active = diceSides === sides
-              return (
-                <button
-                  key={sides}
-                  type="button"
-                  onClick={() => setDiceSides(sides)}
-                  title={`Usar d${sides} nas rolagens`}
-                  style={{
-                    padding: '1px 5px',
-                    fontSize: '0.5rem',
-                    fontFamily: 'monospace',
-                    fontWeight: 700,
-                    borderRadius: '3px',
-                    cursor: 'pointer',
-                    border: `1px solid ${active ? (sides === 6 ? '#06b6d4' : '#e5e5e5') : '#2a2a2a'}`,
-                    background: active ? (sides === 6 ? 'rgba(6,182,212,0.15)' : 'rgba(229,229,229,0.1)') : 'transparent',
-                    color: active ? (sides === 6 ? '#06b6d4' : '#e5e5e5') : '#444',
-                  }}
-                >
-                  d{sides}
-                </button>
-              )
-            })}
-          </div>
+      <section style={{ padding: '0.45rem 0.625rem', borderBottom: '1px solid #1a1a1a' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '2px', marginBottom: '0.35rem' }}>
+          {[6, 20].map(sides => {
+            const active = diceSides === sides
+            return (
+              <button
+                key={sides}
+                type="button"
+                onClick={() => setDiceSides(sides)}
+                title={`d${sides}`}
+                style={{
+                  padding: '1px 5px',
+                  fontSize: '0.5rem',
+                  fontFamily: 'monospace',
+                  fontWeight: 700,
+                  borderRadius: '3px',
+                  cursor: 'pointer',
+                  border: `1px solid ${active ? (sides === 6 ? '#06b6d4' : '#888') : '#222'}`,
+                  background: active ? (sides === 6 ? 'rgba(6,182,212,0.12)' : 'rgba(255,255,255,0.06)') : 'transparent',
+                  color: active ? (sides === 6 ? '#06b6d4' : '#ccc') : '#444',
+                }}
+              >
+                d{sides}
+              </button>
+            )
+          })}
         </div>
         {(() => {
           const list = isScene ? SOCIAL_ATTRIBUTES : (attributeList ?? ATTRIBUTES)
           const isSocial = isScene || (attributeList?.[0] && SOCIAL_ATTRIBUTES.some(a => a.key === attributeList[0].key))
           const attrs = isSocial ? (character.socialAttributes || {}) : (character.attributes || {})
           return (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.2rem' }}>
               {list.map(attr => {
                 const base = attrs[attr.key] ?? 0
                 const eff = isSocial
-                  ? base
+                  ? getEffectiveSocialAttributeValue(character.socialAttributes || {}, attr.key, {
+                    ecoOverload: overload,
+                    mentalState: mental,
+                    safeLimit,
+                  })
                   : getEffectiveAttributeValue(character.attributes, attr.key, {
                     physicalState: physical,
                     ecoOverload: overload,
                     mentalState: mental,
+                    destrezaPenalty: armorDexPenalty,
+                    safeLimit,
                   })
+                const classBonus = getClassAttributeBonus(character, attr.key)
+                const weaponPenalty = isScene ? 0 : getWeaponProficiencyPenalty(character)
+                const rollBonus = eff + classBonus + weaponPenalty
                 const reduced = eff < base
                 const shortKey = isSocial
                   ? socialAttrShort(attr)
@@ -261,35 +254,31 @@ export function CombatCharacterColumn({
                   <button
                     key={attr.key}
                     type="button"
-                    onClick={() => onRollAttribute?.(character, attr.key, attr.label, eff, diceSides)}
-                    title={`Rolar d${diceSides} + ${attr.label} (${eff})`}
+                    onClick={() => onRollAttribute?.(
+                      character, attr.key, attr.label, rollBonus, diceSides,
+                      { attrBonus: eff, classBonus, weaponPenalty },
+                    )}
+                    title={`d${diceSides} + ${attr.label}`}
                     style={{
                       background: '#111',
-                      border: `1px solid #1e1e1e`,
+                      border: `1px solid ${weaponPenalty
+                        ? 'rgba(220,38,38,0.35)'
+                        : classBonus > 0 ? 'rgba(217,119,6,0.3)' : '#1e1e1e'}`,
                       borderRadius: '4px',
-                      padding: '0.35rem 0.25rem',
+                      padding: '0.3rem 0.2rem',
                       cursor: 'pointer',
                       textAlign: 'center',
-                      transition: 'border-color 0.12s, background 0.12s',
-                    }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.borderColor = attr.color
-                      e.currentTarget.style.background = `${attr.color}11`
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.borderColor = '#1e1e1e'
-                      e.currentTarget.style.background = '#111'
                     }}
                   >
-                    <div style={{ fontSize: '0.45rem', color: attr.color, fontFamily: 'monospace', marginBottom: '1px' }}>
+                    <div style={{ fontSize: '0.4rem', color: attr.color, fontFamily: 'monospace' }}>
                       {shortKey}
                     </div>
-                    <div style={{ fontSize: '1rem', fontWeight: 800, color: reduced ? '#ea580c' : '#e5e5e5', lineHeight: 1 }}>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 800, color: reduced ? '#ea580c' : '#e5e5e5', lineHeight: 1.1 }}>
                       {eff}
+                      {classBonus > 0 && (
+                        <span style={{ fontSize: '0.5rem', color: '#d97706', marginLeft: '1px' }}>+{classBonus}</span>
+                      )}
                     </div>
-                    {reduced && (
-                      <div style={{ fontSize: '0.4rem', color: '#444', fontFamily: 'monospace' }}>{base}</div>
-                    )}
                   </button>
                 )
               })}
@@ -298,7 +287,6 @@ export function CombatCharacterColumn({
         })()}
       </section>
 
-      {/* Skills colapsável */}
       <section style={{ borderBottom: '1px solid #1a1a1a' }}>
         <button
           type="button"
@@ -308,23 +296,23 @@ export function CombatCharacterColumn({
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '0.4rem 0.625rem',
+            padding: '0.35rem 0.625rem',
             background: 'transparent',
             border: 'none',
             cursor: 'pointer',
-            color: '#444',
+            color: '#555',
           }}
         >
-          <span style={{ fontSize: '0.5rem', fontFamily: 'monospace', letterSpacing: '0.08em' }}>
-            SKILLS ({skills.length})
+          <span style={{ fontSize: '0.5rem', fontFamily: 'monospace', letterSpacing: '0.06em' }}>
+            SKILLS · {skills.length}
           </span>
-          {skillsOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          {skillsOpen ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
         </button>
 
         {skillsOpen && (
-          <div style={{ maxHeight: '180px', overflowY: 'auto', padding: '0 0.5rem 0.5rem' }}>
+          <div style={{ maxHeight: '160px', overflowY: 'auto', padding: '0 0.5rem 0.45rem' }}>
             {skills.length === 0 ? (
-              <p style={{ fontSize: '0.7rem', color: '#333', textAlign: 'center', padding: '0.5rem' }}>Sem skills</p>
+              <p style={{ fontSize: '0.65rem', color: '#333', textAlign: 'center', margin: 0 }}>Sem skills</p>
             ) : (
               skills.map(rt => (
                 <div
@@ -340,23 +328,21 @@ export function CombatCharacterColumn({
                     background: '#111',
                     border: `1px solid ${rt.visualMeta?.border || '#1a1a1a'}`,
                     borderRadius: '4px',
-                    padding: '0.35rem 0.5rem',
-                    marginBottom: '0.25rem',
-                    gap: '0.5rem',
+                    padding: '0.3rem 0.45rem',
+                    marginBottom: '0.2rem',
+                    gap: '0.35rem',
                     cursor: onSelectSkill ? 'pointer' : 'default',
-                    transition: 'background 0.12s',
                   }}
-                  onMouseEnter={e => { if (onSelectSkill) e.currentTarget.style.background = '#161616' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '#111' }}
                 >
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#e5e5e5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#e5e5e5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {rt.catalog.name}
                     </div>
-                    <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: rt.visualMeta?.color || '#555' }}>
-                      {rt.catalog.skillType?.toUpperCase()}
-                      {!rt.isPassive && rt.cooldownTotal > 0 && ` · CD${rt.cooldownRemaining}/${rt.cooldownTotal}`}
-                    </div>
+                    {!rt.isPassive && rt.cooldownTotal > 0 && (
+                      <div style={{ fontSize: '0.45rem', fontFamily: 'monospace', color: '#555' }}>
+                        CD {rt.cooldownRemaining}/{rt.cooldownTotal}
+                      </div>
+                    )}
                   </div>
                   {!rt.isPassive && onActivateSkill && (
                     <button
@@ -368,9 +354,9 @@ export function CombatCharacterColumn({
                         onActivateSkill(character.id, rt.instance.id)
                       }}
                       title={rt.blockReason || 'Ativar'}
-                      style={{ padding: '2px 6px', fontSize: '0.55rem', opacity: rt.canActivate ? 1 : 0.35, flexShrink: 0 }}
+                      style={{ padding: '2px 5px', fontSize: '0.5rem', opacity: rt.canActivate ? 1 : 0.35, flexShrink: 0 }}
                     >
-                      <Play size={9} />
+                      <Play size={8} />
                     </button>
                   )}
                 </div>
@@ -380,20 +366,40 @@ export function CombatCharacterColumn({
         )}
       </section>
 
-      {/* Anotações do personagem */}
-      <div style={{ padding: '0.5rem 0.625rem' }}>
-        <div style={{ fontSize: '0.45rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.08em', marginBottom: '0.3rem' }}>
-          ANOTAÇÕES
-        </div>
-        <textarea
-          className="input-base"
-          rows={2}
-          value={character.combatNotes ?? ''}
-          onChange={e => onUpdate?.({ combatNotes: e.target.value })}
-          placeholder="mão ferida, envenenado…"
-          style={{ fontSize: '0.75rem', lineHeight: 1.4, resize: 'none', width: '100%', padding: '4px 6px' }}
-        />
-      </div>
+      <section>
+        <button
+          type="button"
+          onClick={() => setNotesOpen(v => !v)}
+          style={{
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '0.35rem 0.625rem',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            color: hasNotes ? '#777' : '#444',
+          }}
+        >
+          <span style={{ fontSize: '0.5rem', fontFamily: 'monospace', letterSpacing: '0.06em' }}>
+            NOTAS{hasNotes ? ' · ···' : ''}
+          </span>
+          {notesOpen ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+        </button>
+        {notesOpen && (
+          <div style={{ padding: '0 0.625rem 0.5rem' }}>
+            <textarea
+              className="input-base"
+              rows={2}
+              value={character.combatNotes ?? ''}
+              onChange={e => onUpdate?.({ combatNotes: e.target.value })}
+              placeholder="Anotações…"
+              style={{ fontSize: '0.7rem', lineHeight: 1.35, resize: 'none', width: '100%', padding: '4px 6px' }}
+            />
+          </div>
+        )}
+      </section>
     </article>
   )
 }

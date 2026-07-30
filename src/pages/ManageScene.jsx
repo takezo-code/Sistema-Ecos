@@ -39,7 +39,10 @@ function RollResultBanner({ result, onDismiss }) {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '1rem', fontWeight: 900, color: outcome.color }}>{result.total}</span>
           <span style={{ fontSize: '0.65rem', color: '#aaa', fontFamily: 'monospace' }}>
-            d{sides}({result.dice}) + {result.bonus}
+            d{sides}({result.dice}) + {result.attrBonus ?? result.bonus}
+            {result.classBonus > 0 && (
+              <span style={{ color: '#d97706' }}> + {result.classBonus} classe</span>
+            )}
           </span>
           <span style={{ fontSize: '0.75rem', fontWeight: 700, color: outcome.color }}>{outcome.label}</span>
           {result.characterName && (
@@ -140,13 +143,15 @@ export function ManageScene() {
     setSkillDetailRef({ characterId: character.id, skillId: runtime.instance.id })
   }, [])
 
-  const handleRollAttribute = useCallback((character, _attrKey, attrLabel, eff, sides = 20) => {
+  const handleRollAttribute = useCallback((character, _attrKey, attrLabel, eff, sides = 20, breakdown = null) => {
     const dice = Math.floor(Math.random() * sides) + 1
     const total = dice + eff
     setRollResult({
       dice,
       sides,
       bonus: eff,
+      attrBonus: breakdown?.attrBonus ?? eff,
+      classBonus: breakdown?.classBonus ?? 0,
       total,
       characterName: character.name,
       attrLabel,

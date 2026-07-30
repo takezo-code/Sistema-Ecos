@@ -18,9 +18,11 @@ import {
 import { getAttributesForEntity } from '../../constants/entityProgression'
 import {
   calculateEffectiveAttributes,
+  calculateEffectiveSocialAttributes,
   formatPhysicalPenalty,
   formatMentalPenaltiesSummary,
 } from '../../services/stateModifiers'
+import { getArmorDestrezaPenalty } from '../../mechanics/equipment/armorEffectsEngine'
 import { getProgressionSnapshot, validateProgression, getSocialBudget } from '../../services/progressionBudget'
 import { getSocialPointsFromLevel } from '../../constants/progression'
 
@@ -110,9 +112,20 @@ export function AttributeGrid({
     physicalState,
     ecoOverload,
     mentalState,
+    destrezaPenalty: getArmorDestrezaPenalty(entity),
+    ruptura: entity.attributes?.ruptura,
+  })
+  const { effective: effectiveSocial } = calculateEffectiveSocialAttributes(entity.socialAttributes || {}, {
+    ecoOverload,
+    mentalState,
+    ruptura: entity.attributes?.ruptura,
   })
   const physicalPenalty = formatPhysicalPenalty(physicalState)
-  const mentalPenalties = formatMentalPenaltiesSummary({ ecoOverload, mentalState })
+  const mentalPenalties = formatMentalPenaltiesSummary({
+    ecoOverload,
+    mentalState,
+    ruptura: entity.attributes?.ruptura,
+  })
 
   const handleChange = (key, newVal) => {
     if (adminMode) {
@@ -206,14 +219,9 @@ export function AttributeGrid({
           ) : (
             <>
               {physicalPenalty && <span style={{ color: '#ea580c' }}>{physicalPenalty}</span>}
-              {mentalPenalties.skillPowerLine && (
-                <span style={{ color: '#06b6d4' }}>
-                  {physicalPenalty ? ' · ' : ''}{mentalPenalties.skillPowerLine}
-                </span>
-              )}
               {mentalPenalties.mentalAttrLine && (
                 <span style={{ color: '#06b6d4' }}>
-                  {(physicalPenalty || mentalPenalties.skillPowerLine) ? ' · ' : ''}{mentalPenalties.mentalAttrLine}
+                  {physicalPenalty ? ' · ' : ''}{mentalPenalties.mentalAttrLine}
                 </span>
               )}
             </>
@@ -287,12 +295,14 @@ export function AttributeGrid({
         {SOCIAL_ATTRIBUTES.map(attr => {
           const value = entity.socialAttributes?.[attr.key] || 0
           const max = isCreation ? getInitialSocialMax() : getSocialAttributeMax(attr.key)
+          const eff = effectiveSocial[attr.key]
+          const effectiveValue = eff !== value ? eff : null
           return (
             <AttributeInput
               key={attr.key}
               attr={attr}
               value={value}
-              effectiveValue={null}
+              effectiveValue={effectiveValue}
               max={max}
               showMax={!isCreation}
               canIncrease={canIncreaseSocialAttr(attr.key, value)}

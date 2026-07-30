@@ -1,5 +1,5 @@
 /**
- * Catálogo embutido de habilidades de personagem.
- * Vazio de propósito — skills passam a ser criadas pelo CRUD em Gerenciamento → Skills.
+ * Catálogo embutido de habilidades de personagem (Eco).
+ * Skills pré-definidas por classe — jogadores investem Eco para desbloquear/evoluir.
  */
-export const CHARACTER_SKILLS_CATALOG = []
+export { CHARACTER_SKILLS_CATALOG, getClassSkills, getClassSkillDef } from './classSkillsCatalog'

@@ -3,10 +3,9 @@ import { Sidebar } from './components/Sidebar'
 import { SaveToolbar } from './components/SaveToolbar'
 import { SaveToast } from './components/ui/SaveToast'
 import { WelcomeScreen } from './pages/WelcomeScreen'
-import { Dashboard } from './pages/Dashboard'
 import { Campanha } from './pages/Campanha'
 import { Management } from './pages/Management'
-import { MANAGEMENT_VIEWS, skillAudienceToManagementView } from './constants/managementViews'
+import { MANAGEMENT_VIEWS, skillAudienceToManagementView, normalizeManagementView } from './constants/managementViews'
 import { EmJogo } from './pages/EmJogo'
 import { Dice } from './pages/Dice'
 import { Trash } from './pages/Trash'
@@ -15,7 +14,6 @@ import { isAppBootstrapped, persistUiState, autoSave } from './services/saveServ
 import { storage, KEYS } from './services/storage'
 
 const PAGES = {
-  dashboard: Dashboard,
   campanha: Campanha,
   management: Management,
   emjogo: EmJogo,
@@ -29,11 +27,12 @@ function loadUiState() {
 }
 
 function migrateUiState(savedUi) {
-  let page = savedUi.activePage || 'dashboard'
+  let page = savedUi.activePage || 'campanha'
   let managementView = savedUi.managementView || MANAGEMENT_VIEWS.CHARACTERS
   let campanhaView = savedUi.campanhaView || 'historia'
   let emjogoView = savedUi.emjogoView || 'ficha'
 
+  if (page === 'dashboard') page = 'campanha'
   if (page === 'character') page = 'emjogo'
   if (emjogoView === 'skills') emjogoView = 'ficha'
 
@@ -59,7 +58,7 @@ function migrateUiState(savedUi) {
   } else if (page === 'skills') {
     if (savedUi.skillsView === 'creation') {
       page = 'creation'
-      managementView = MANAGEMENT_VIEWS.SKILLS_CHARACTER
+      managementView = MANAGEMENT_VIEWS.SKILLS_NPC
     } else {
       page = 'management'
       managementView = skillAudienceToManagementView(savedUi.skillsView)
@@ -72,7 +71,9 @@ function migrateUiState(savedUi) {
   }
 
   // Audiences antigas gravadas como managementView
-  if (managementView === 'character') managementView = MANAGEMENT_VIEWS.SKILLS_CHARACTER
+  if (managementView === 'character' || managementView === MANAGEMENT_VIEWS.SKILLS_CHARACTER) {
+    managementView = MANAGEMENT_VIEWS.SKILLS_NPC
+  }
   if (managementView === 'npc') managementView = MANAGEMENT_VIEWS.SKILLS_NPC
 
   return { page, managementView, campanhaView, emjogoView }
@@ -125,12 +126,16 @@ export default function App() {
       return
     }
 
-    setActivePage(page)
+    setActivePage(page === 'dashboard' ? 'campanha' : page)
     if (page === 'creation' && type) {
       setCreationType(type)
     }
     if (page === 'management' && subView) {
-      setManagementView(subView === 'creation' ? MANAGEMENT_VIEWS.CHARACTERS : subView)
+      setManagementView(
+        subView === 'creation'
+          ? MANAGEMENT_VIEWS.CHARACTERS
+          : normalizeManagementView(subView),
+      )
     }
     if (page === 'emjogo' && subView) setEmjogoView(subView)
     if (page === 'campanha' && subView) setCampanhaView(subView)
@@ -145,7 +150,7 @@ export default function App() {
     )
   }
 
-  const PageComponent = PAGES[activePage] || Dashboard
+  const PageComponent = PAGES[activePage] || Campanha
   const pageProps = activePage === 'management'
     ? {
         initialView: managementView,

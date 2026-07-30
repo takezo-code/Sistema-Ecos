@@ -26,10 +26,16 @@ import {
   finalizeCreationAttributes,
   validateStartingAttributesDistributed,
   validateStartingSocialDistributed,
+  validateStartingEcoSkillSelected,
 } from '../services/progressionService'
 import { getTotalAttributePoints, getTotalSocialPoints } from '../constants/attributes'
 import { resolveCharacterNarrative } from '../utils/entityNarrative'
 import { getEntityEffectiveAttributes } from '../services/stateModifiers'
+import { ClassPicker } from '../components/creation/ClassPicker'
+import { ClassSkillBook } from '../components/skills/ClassSkillBook'
+import { getCharacterClass, normalizeClassId } from '../constants/classes'
+import { getClassAttributeBonus } from '../mechanics/classes/classBonusEngine'
+import { investSkillPoint } from '../mechanics/skills/classSkillProgressionEngine'
 
 const EMPTY_FORM = {
   name: '',
@@ -38,10 +44,13 @@ const EMPTY_FORM = {
   personality: '',
   history: '',
   motivation: '',
+  classId: null,
   attributes: defaultAttributes(),
   unspentAttributePoints: STARTING_ATTRIBUTE_POINTS,
   socialAttributes: defaultSocialAttributes(),
   unspentSocialPoints: STARTING_SOCIAL_POINTS,
+  ecoPoints: 1,
+  skills: [],
 }
 
 const narrativeSectionLabel = {
@@ -52,11 +61,11 @@ const narrativeSectionLabel = {
   marginBottom: '0.25rem',
 }
 
-function AttributeInput({ attr, value, onChange, canIncrease }) {
+function AttributeInput({ attr, value, onChange, canIncrease, classBonus = 0, isClassAttr = false }) {
   return (
     <div style={{
       background: '#0d0d0d',
-      border: '1px solid #1a1a1a',
+      border: `1px solid ${isClassAttr ? 'rgba(217,119,6,0.35)' : '#1a1a1a'}`,
       borderRadius: '3px',
       padding: '0.625rem 0.75rem',
       display: 'flex',
@@ -67,7 +76,14 @@ function AttributeInput({ attr, value, onChange, canIncrease }) {
         <div style={{ fontSize: '0.6rem', color: attr.color, fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '2px' }}>
           {attr.label.toUpperCase()}
         </div>
-        <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#e5e5e5', lineHeight: 1 }}>{value}</div>
+        <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#e5e5e5', lineHeight: 1 }}>
+          {value}
+          {classBonus > 0 && (
+            <span style={{ fontSize: '0.6rem', color: '#d97706', fontWeight: 700, marginLeft: '4px' }}>
+              +{classBonus}
+            </span>
+          )}
+        </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
         <button type="button"
@@ -95,14 +111,17 @@ function AttributeInput({ attr, value, onChange, canIncrease }) {
 export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }) {
   const isNew = !initial?.id
   const [form, setForm] = useState(() => {
-    if (!initial) return EMPTY_FORM
+    if (!initial) return { ...EMPTY_FORM }
     return {
       ...initial,
       ...resolveCharacterNarrative(initial),
+      classId: normalizeClassId(initial.classId),
       attributes: { ...defaultAttributes(), ...(initial.attributes || {}) },
       unspentAttributePoints: initial.unspentAttributePoints ?? STARTING_ATTRIBUTE_POINTS,
       socialAttributes: { ...defaultSocialAttributes(), ...(initial.socialAttributes || {}) },
       unspentSocialPoints: initial.unspentSocialPoints ?? STARTING_SOCIAL_POINTS,
+      ecoPoints: initial.ecoPoints ?? 0,
+      skills: initial.skills ?? [],
     }
   })
   const [attrError, setAttrError] = useState(null)
@@ -123,12 +142,43 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
     }
   }
 
+  const setClassId = (classId) => {
+    setForm(p => ({
+      ...p,
+      classId,
+      ...(isNew ? { skills: [], ecoPoints: 1 } : {}),
+    }))
+    setAttrError(null)
+  }
+
+  const handleInvestStarterSkill = (templateId) => {
+    const result = investSkillPoint(form, templateId)
+    if (result.error) {
+      setAttrError(result.error.message)
+      return
+    }
+    setForm(p => ({ ...p, ...result.patch }))
+    setAttrError(null)
+  }
+
+  const resetStarterSkill = () => {
+    setForm(p => ({ ...p, skills: [], ecoPoints: 1 }))
+    setAttrError(null)
+  }
+
+  const classAttrKeys = getCharacterClass(form.classId)?.attributes ?? []
   const pool = form.unspentAttributePoints ?? 0
   const spent = getTotalAttributePoints(form.attributes)
   const socialPool = form.unspentSocialPoints ?? 0
   const socialSpent = getTotalSocialPoints(form.socialAttributes)
+  const ecoCheck = validateStartingEcoSkillSelected(form)
   const creationReady = !isNew || profileOnly
-    || (validateStartingAttributesDistributed(form).ok && validateStartingSocialDistributed(form).ok)
+    || (
+      validateStartingAttributesDistributed(form).ok
+      && validateStartingSocialDistributed(form).ok
+      && ecoCheck.ok
+    )
+  const starterSkillPicked = (form.skills || []).some(s => (Number(s.tier) || 0) > 0)
 
   const handleSubmit = e => {
     e.preventDefault()
@@ -154,6 +204,11 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
       const checkSocial = validateStartingSocialDistributed(form)
       if (!checkSocial.ok) {
         setAttrError(checkSocial.message)
+        return
+      }
+      const checkEco = validateStartingEcoSkillSelected(form)
+      if (!checkEco.ok) {
+        setAttrError(checkEco.message)
         return
       }
     }
@@ -200,6 +255,9 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
       {!profileOnly && (
         <>
           <hr className="divide-line" />
+          <ClassPicker value={form.classId ?? null} onChange={setClassId} />
+
+          <hr className="divide-line" />
           <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
             PONTOS DE STATUS · <span style={{ color: pool > 0 ? '#eab308' : '#16a34a' }}>{pool}</span> disponíveis
             · <span style={{ color: '#666' }}>{spent}/{STARTING_ATTRIBUTE_POINTS} usados</span>
@@ -210,19 +268,6 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
               Distribua todos os {STARTING_ATTRIBUTE_POINTS} pontos iniciais para criar o personagem.
             </p>
           )}
-          {attrError && (
-            <p style={{
-              fontSize: '0.72rem',
-              color: '#f87171',
-              margin: '0 0 0.5rem',
-              padding: '0.5rem 0.65rem',
-              background: 'rgba(220,38,38,0.08)',
-              border: '1px solid rgba(220,38,38,0.2)',
-              borderRadius: '3px',
-            }}>
-              {attrError}
-            </p>
-          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem' }}>
             {ATTRIBUTES.map(attr => {
               const v = form.attributes[attr.key] || 0
@@ -231,6 +276,8 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
                   key={attr.key}
                   attr={attr}
                   value={v}
+                  isClassAttr={classAttrKeys.includes(attr.key)}
+                  classBonus={getClassAttributeBonus(form, attr.key)}
                   canIncrease={pool > 0 && v < INITIAL_ATTRIBUTE_MAX}
                   onChange={val => setAttr(attr.key, val)}
                 />
@@ -257,13 +304,82 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
                   key={attr.key}
                   attr={attr}
                   value={v}
+                  isClassAttr={classAttrKeys.includes(attr.key)}
+                  classBonus={getClassAttributeBonus(form, attr.key)}
                   canIncrease={socialPool > 0 && v < INITIAL_SOCIAL_MAX}
                   onChange={val => setSocialAttr(attr.key, val)}
                 />
               )
             })}
           </div>
+
+          {isNew && (
+            <>
+              <hr className="divide-line" />
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '0.75rem',
+                marginBottom: '0.65rem',
+                flexWrap: 'wrap',
+              }}>
+                <div>
+                  <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+                    SKILL INICIAL · ECO
+                  </div>
+                  <p style={{ fontSize: '0.72rem', color: starterSkillPicked ? '#16a34a' : '#a855f7', margin: '0.35rem 0 0', lineHeight: 1.45 }}>
+                    {starterSkillPicked
+                      ? 'Skill inicial escolhida. Agora você pode criar o personagem.'
+                      : 'Gaste o 1 Eco inicial desbloqueando uma skill da classe para liberar a criação.'}
+                  </p>
+                </div>
+                {starterSkillPicked && (
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={resetStarterSkill}
+                    style={{ fontSize: '0.65rem' }}
+                  >
+                    Trocar skill
+                  </button>
+                )}
+              </div>
+              {form.classId ? (
+                <ClassSkillBook
+                  entity={form}
+                  onInvestPoint={handleInvestStarterSkill}
+                  compact
+                />
+              ) : (
+                <div style={{
+                  padding: '1rem',
+                  border: '1px dashed #1a1a1a',
+                  borderRadius: '4px',
+                  color: '#555',
+                  fontSize: '0.75rem',
+                  textAlign: 'center',
+                }}>
+                  Escolha a classe acima para ver o livro de skills.
+                </div>
+              )}
+            </>
+          )}
         </>
+      )}
+
+      {attrError && (
+        <p style={{
+          fontSize: '0.72rem',
+          color: '#f87171',
+          margin: 0,
+          padding: '0.5rem 0.65rem',
+          background: 'rgba(220,38,38,0.08)',
+          border: '1px solid rgba(220,38,38,0.2)',
+          borderRadius: '3px',
+        }}>
+          {attrError}
+        </p>
       )}
 
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -273,7 +389,9 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
           className="btn-primary"
           disabled={!profileOnly && isNew && !creationReady}
           title={!profileOnly && isNew && !creationReady
-            ? `Distribua todos os pontos iniciais (${STARTING_ATTRIBUTE_POINTS} físicos e ${STARTING_SOCIAL_POINTS} de cena)`
+            ? (!ecoCheck.ok
+              ? ecoCheck.message
+              : `Distribua todos os pontos iniciais (${STARTING_ATTRIBUTE_POINTS} físicos e ${STARTING_SOCIAL_POINTS} de cena)`)
             : undefined}
         >
           Salvar
@@ -353,6 +471,7 @@ function InventoryPanel({ character, onAddItem, onRemoveItem, onClose }) {
 
 function CharCard({ character, onEdit, onDelete, onInventory }) {
   const { effective: attrs, base } = getEntityEffectiveAttributes(character)
+  const charClass = getCharacterClass(character)
 
   return (
     <div
@@ -373,6 +492,9 @@ function CharCard({ character, onEdit, onDelete, onInventory }) {
             <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#e5e5e5', marginBottom: '2px' }}>{character.name}</div>
             <div style={{ fontSize: '0.65rem', color: '#a855f7', fontFamily: 'monospace', marginBottom: '4px' }}>
               NVL {character.level || 1} · {character.ecoPoints ?? 0} Ecos
+              {charClass && (
+                <span style={{ color: charClass.color }}> · {charClass.label.toUpperCase()}</span>
+              )}
             </div>
             {(character.personality || character.motivation || character.history) && (
               <div style={{ fontSize: '0.7rem', color: '#444', lineHeight: 1.5,
@@ -473,6 +595,10 @@ export function Characters({
     if (isNew) {
       const check = validateStartingAttributesDistributed(data)
       if (!check.ok) return
+      const social = validateStartingSocialDistributed(data)
+      if (!social.ok) return
+      const eco = validateStartingEcoSkillSelected(data)
+      if (!eco.ok) return
     }
     const payload = {
       ...data,
@@ -493,7 +619,7 @@ export function Characters({
 
   if (creationFlowOnly) {
     return (
-      <Modal open={modalOpen} onClose={handleModalClose} title="Novo Personagem" maxWidth="640px">
+      <Modal open={modalOpen} onClose={handleModalClose} title="Novo Personagem" maxWidth="720px">
         <CharacterForm initial={null} onSave={handleSave} onCancel={handleModalClose} />
       </Modal>
     )
@@ -546,7 +672,7 @@ export function Characters({
         )}
       </div>
 
-      <Modal open={modalOpen} onClose={handleModalClose} title={editing ? 'Editar Personagem' : 'Novo Personagem'} maxWidth="640px">
+      <Modal open={modalOpen} onClose={handleModalClose} title={editing ? 'Editar Personagem' : 'Novo Personagem'} maxWidth="720px">
         <CharacterForm initial={editing} onSave={handleSave} onCancel={handleModalClose} />
       </Modal>
 

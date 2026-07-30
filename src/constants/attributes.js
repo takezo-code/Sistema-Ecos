@@ -1,13 +1,14 @@
 import { getXpRequiredForLevel } from './progression'
 import { migrateGameEntityExtras } from '../models/gameEntity'
 import { entityHasEcoPowers, isNpcEntity, sanitizeEntityForEcoFlag } from './entityProgression'
+import { normalizeClassId } from './classes'
 
 export const ATTRIBUTES = [
   { key: 'forca', label: 'Força', color: '#dc2626', max: 10 },
   { key: 'destreza', label: 'Destreza', color: '#06b6d4', max: 10 },
   { key: 'inteligencia', label: 'Inteligência', color: '#a855f7', max: 10 },
   { key: 'vitalidade', label: 'Vitalidade', color: '#16a34a', max: 10 },
-  { key: 'ruptura', label: 'Ruptura', color: '#d97706', max: 5 },
+  { key: 'ruptura', label: 'Ruptura', color: '#d97706', max: 10 },
 ]
 
 export const SOCIAL_ATTRIBUTES = [
@@ -209,6 +210,7 @@ export function normalizeGameEntity(entity) {
   const hasEco = entityHasEcoPowers(entity)
   const base = {
     ...entity,
+    classId: normalizeClassId(entity.classId),
     level,
     xp: entity.xp ?? 0,
     xpToNextLevel: getXpRequiredForLevel(level),

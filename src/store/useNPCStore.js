@@ -386,12 +386,21 @@ export const useNPCStore = create((set, get) => ({
   },
 
   addEquippedItem(npcId, item) {
-    const name = typeof item === 'string' ? item : item.name
+    const payload = typeof item === 'string'
+      ? { name: item }
+      : item
     const npcs = get().npcs.map(n => {
       if (n.id !== npcId) return n
       return normalizeGameEntity({
         ...n,
-        equipped: [...n.equipped, { id: genId(), name, slot: item.slot || '' }],
+        equipped: [...n.equipped, {
+          id: genId(),
+          name: payload.name || 'Item',
+          slot: payload.slot || '',
+          category: payload.category || 'arma',
+          type: payload.type || null,
+          equipmentId: payload.equipmentId || null,
+        }],
         updatedAt: new Date().toISOString(),
       })
     })

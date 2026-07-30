@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Activity, RotateCcw, AlertTriangle } from 'lucide-react'
 import { getEcoOverloadSnapshot, RUPTURE_TOTAL_OUTCOMES } from '../../services/ecoOverloadService'
-import { ECO_OVERLOAD_DISPLAY_CAP, ECO_OVERLOAD_PHASES } from '../../constants/ecoOverload'
+import { ECO_OVERLOAD_PHASES, ECO_OVERLOAD_OVERAGE_TO_TOTAL } from '../../constants/ecoOverload'
 
 const PHASE_LABELS = {
   [ECO_OVERLOAD_PHASES.STABLE]: { label: 'Estável', color: '#16a34a' },
@@ -20,8 +20,10 @@ export function EcoOverloadSection({
   const snapshot = getEcoOverloadSnapshot(entity)
   const phaseMeta = PHASE_LABELS[snapshot.phase] || PHASE_LABELS[ECO_OVERLOAD_PHASES.STABLE]
   const [masterLevel, setMasterLevel] = useState(String(snapshot.overload))
+  const lim = snapshot.safeLimit
+  const ruptura = entity?.attributes?.ruptura ?? 0
 
-  const barPercent = Math.min(100, (snapshot.overload / ECO_OVERLOAD_DISPLAY_CAP) * 100)
+  const barPercent = Math.min(100, (snapshot.overload / Math.max(lim, 1)) * 100)
   const barColor = snapshot.inRupturePhase ? '#dc2626' : snapshot.atCap ? '#eab308' : '#a855f7'
 
   return (
@@ -48,14 +50,12 @@ export function EcoOverloadSection({
         }} />
       </div>
 
-      <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', color: '#555', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-        {snapshot.ecoPenaltyPercent > 0 && (
-          <span style={{ color: '#a855f7' }}>−{snapshot.ecoPenaltyPercent}% habilidades Eco</span>
-        )}
+        <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', color: '#555', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <span style={{ color: '#666' }}>Limite 5+RUP ({ruptura}) = {lim}</span>
         {snapshot.mentalAttrPenaltyPercent > 0 && (
-          <span style={{ color: '#dc2626' }}>−{snapshot.mentalAttrPenaltyPercent}% INT · Ruptura</span>
+          <span style={{ color: '#dc2626' }}>−{snapshot.mentalAttrPenaltyPercent} INT · PER · SAB · CAR</span>
         )}
-        {snapshot.ecoPenaltyPercent === 0 && !snapshot.mentalAttrPenaltyPercent && (
+        {!snapshot.mentalAttrPenaltyPercent && (
           <span style={{ color: '#333' }}>Sem penalidade mecânica</span>
         )}
       </div>
@@ -87,7 +87,7 @@ export function EcoOverloadSection({
         {onRestOverload && (
           <button type="button" className="btn-secondary" onClick={onRestOverload}
             style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}>
-            <RotateCcw size={12} /> Descansar Eco (0/5)
+            <RotateCcw size={12} /> Descansar Eco (0/{lim})
           </button>
         )}
         {onSetOverload && (
@@ -95,7 +95,7 @@ export function EcoOverloadSection({
             <input
               type="number"
               min={0}
-              max={15}
+              max={lim + ECO_OVERLOAD_OVERAGE_TO_TOTAL + 5}
               value={masterLevel}
               onChange={e => setMasterLevel(e.target.value)}
               style={{
@@ -143,31 +143,30 @@ export function EcoOverloadSection({
 
       <details style={{ fontSize: '0.65rem', color: '#444' }}>
         <summary style={{ cursor: 'pointer', fontFamily: 'monospace' }}>TABELA DE SOBRECARGA</summary>
-        <table style={{ marginTop: '0.4rem', borderCollapse: 'collapse', width: '100%', fontSize: '0.6rem', lineHeight: 1.7 }}>
+        <p style={{ margin: '0.4rem 0', color: '#555', lineHeight: 1.5 }}>
+          Limite seguro = 5 + Ruptura (seu limite atual: {lim}). Dentro do limite: sem −atributos.
+          No limite e acima: −flat em INT · PER · SAB · CAR conforme o estado.
+        </p>
+        <table style={{ marginTop: '0.2rem', borderCollapse: 'collapse', width: '100%', fontSize: '0.6rem', lineHeight: 1.7 }}>
           <thead>
             <tr style={{ color: '#555', fontFamily: 'monospace' }}>
-              <th style={{ textAlign: 'left', paddingRight: '0.75rem' }}>Nível</th>
-              <th style={{ textAlign: 'left', paddingRight: '0.75rem' }}>Habilidades Eco</th>
-              <th style={{ textAlign: 'left', paddingRight: '0.75rem' }}>INT · Ruptura</th>
-              <th style={{ textAlign: 'left' }}>Estado</th>
+              <th style={{ textAlign: 'left', paddingRight: '0.75rem' }}>Situação</th>
+              <th style={{ textAlign: 'left', paddingRight: '0.75rem' }}>Estado</th>
+              <th style={{ textAlign: 'left' }}>INT·PER·SAB·CAR</th>
             </tr>
           </thead>
           <tbody style={{ color: '#666' }}>
             {[
-              { l: '0/5',  eco: '—',    attr: '—',   estado: 'Estável' },
-              { l: '1–4/5',eco: '−1–4%',attr: '—',   estado: 'Estável' },
-              { l: '5/5',  eco: '−5%',  attr: '—',   estado: 'Abalado' },
-              { l: '6/5',  eco: '−10%', attr: '−5%', estado: 'Fragmentado', danger: true },
-              { l: '7/5',  eco: '−20%', attr: '−10%',estado: 'Dissociado',  danger: true },
-              { l: '8/5',  eco: '−40%', attr: '−20%',estado: 'Dissociado',  danger: true },
-              { l: '9/5',  eco: '−80%', attr: '−40%',estado: 'Colapso',     danger: true },
-              { l: '10/5', eco: '−100%',attr: '−100%',estado: `Ruptura Total (${RUPTURE_TOTAL_OUTCOMES.length} desfechos)`, danger: true },
+              { l: `abaixo de ${lim}`, estado: 'Estável', attr: '—' },
+              { l: `${lim}/${lim}`, estado: 'Abalado', attr: '−1', danger: true },
+              { l: `${lim + 1}/${lim}`, estado: 'Fragmentado', attr: '−2', danger: true },
+              { l: `${lim + 2}–${lim + 3}/${lim}`, estado: 'Dissociado', attr: '−3', danger: true },
+              { l: `${lim + 4}+/${lim}`, estado: 'Perdido no Tempo', attr: '−4', danger: true },
             ].map(row => (
               <tr key={row.l} style={{ color: row.danger ? '#dc2626' : '#666' }}>
                 <td style={{ paddingRight: '0.75rem', fontFamily: 'monospace' }}>{row.l}</td>
-                <td style={{ paddingRight: '0.75rem' }}>{row.eco}</td>
-                <td style={{ paddingRight: '0.75rem' }}>{row.attr}</td>
-                <td>{row.estado}</td>
+                <td style={{ paddingRight: '0.75rem' }}>{row.estado}</td>
+                <td>{row.attr}</td>
               </tr>
             ))}
           </tbody>

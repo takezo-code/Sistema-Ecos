@@ -1,6 +1,6 @@
 import { genId } from '../utils/id'
 import { MENTAL_STATUS_EFFECTS, MENTAL_STATUS_SOURCES } from '../constants/mentalStatusEffects'
-import { ECO_OVERLOAD_SHAKEN_THRESHOLD } from '../constants/ecoOverload'
+import { ECO_OVERLOAD_BASE_LIMIT, asSafeLimit } from '../constants/ecoOverload'
 
 export function normalizeActiveMentalStatuses(list) {
   if (!Array.isArray(list)) return []
@@ -44,15 +44,16 @@ export function removeMentalStatusById(activeStatuses, statusId) {
   return normalizeActiveMentalStatuses(activeStatuses).filter(s => s.id !== statusId)
 }
 
-/** Sincroniza Mentalmente Abalado com nível de sobrecarga */
-export function syncOverloadMentalStatus(activeStatuses, ecoOverload) {
+/** Sincroniza Mentalmente Abalado ao atingir o limite seguro (5 + Ruptura). */
+export function syncOverloadMentalStatus(activeStatuses, ecoOverload, safeLimit = ECO_OVERLOAD_BASE_LIMIT) {
   let list = normalizeActiveMentalStatuses(activeStatuses)
-  const shouldHave = (Number(ecoOverload) || 0) >= ECO_OVERLOAD_SHAKEN_THRESHOLD
+  const lim = asSafeLimit(safeLimit)
+  const shouldHave = (Number(ecoOverload) || 0) >= lim
 
   if (shouldHave) {
     list = applyMentalStatus(list, 'mentalmente_abalado', {
       source: MENTAL_STATUS_SOURCES.ECO_OVERLOAD,
-      meta: { overload: ecoOverload },
+      meta: { overload: ecoOverload, safeLimit: lim },
     })
   } else {
     list = removeMentalStatusByEffect(list, 'mentalmente_abalado')

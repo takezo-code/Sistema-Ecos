@@ -23,7 +23,8 @@ export function CharacterHub() {
   const activateSkill = useCharacterStore(s => s.activateSkill)
   const advanceTurn = useCharacterStore(s => s.advanceTurn)
   const restEcoOverload = useCharacterStore(s => s.restEcoOverload)
-  const learnCatalogSkill = useCharacterStore(s => s.learnCatalogSkill)
+  const investSkillPoint = useCharacterStore(s => s.investSkillPoint)
+  const upgradeSkillGrade = useCharacterStore(s => s.upgradeSkillGrade)
   const removeSkill = useCharacterStore(s => s.removeSkill)
   const lastSkillError = useCharacterStore(s => s.lastSkillError)
   const clearSkillError = useCharacterStore(s => s.clearSkillError)
@@ -89,7 +90,8 @@ export function CharacterHub() {
             onActivate={skillId => activateSkill(id, skillId)}
             onAdvanceTurn={() => advanceTurn(id)}
             onRestEco={() => restEcoOverload(id)}
-            onLearnSkill={templateId => learnCatalogSkill(id, templateId)}
+            onInvestSkillPoint={templateId => investSkillPoint(id, templateId)}
+            onUpgradeSkillGrade={templateId => upgradeSkillGrade(id, templateId)}
             lastSkillError={lastSkillError}
             onClearSkillError={clearSkillError}
             lastOverloadEvents={lastOverloadEvents}

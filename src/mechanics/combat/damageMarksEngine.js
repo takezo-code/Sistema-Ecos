@@ -1,15 +1,20 @@
 /**
  * Engine de Marcas de Dano — sistema sem HP tradicional.
  *
- * Marcas acumulam e determinam o estado físico do personagem.
- * A cada 3 marcas avança um estado (−1 FOR · DES · VIT por estado).
+ * Marcas acumulam e determinam o estado físico.
+ * Thresholds **base** (a cada 4 marcas troca de estado):
+ *   0–4  → Saudável / Estável  (−0)
+ *   5–9  → Ferido              (−1 FOR/DES/VIT)
+ *   10–14 → Grave              (−2 FOR/DES/VIT)
+ *   15+  → Incapacitado        (−3 FOR/DES/VIT)
  *
- * Thresholds:
- *   0–2  → Estável       (−0)
- *   3–5  → Ferido        (−1 FOR/DES/VIT)
- *   6–8  → Grave         (−2 FOR/DES/VIT)
- *   9+   → Incapacitado  (−3 FOR/DES/VIT)
+ * Vitalidade: a cada 2 pts de VIT **base** → +1 limiar (marca a mais
+ * que você aguenta antes de sair de Saudável → Ferido, e nos demais degraus).
+ * Armadura: +1/+2/+3 limiar (leve/média/pesada).
+ * A penalidade de ferimento (−VIT efetiva) NÃO reduz esse buffer.
  */
+
+import { getArmorMarkBonus } from '../equipment/armorEffectsEngine'
 
 // ──────────────────────────────────────────────
 // Tipos de marca e seus valores
@@ -33,25 +38,81 @@ export const DAMAGE_MARK_META = Object.freeze({
 })
 
 // ──────────────────────────────────────────────
-// Tabela de progressão de estados
+// Tabela de progressão de estados (base, sem VIT)
 // ──────────────────────────────────────────────
 export const MARK_STATE_THRESHOLDS = [
-  { min: 0, max: 2,        state: 'bem',          label: 'Estável',      color: '#16a34a', attrPenalty: 0 },
-  { min: 3, max: 5,        state: 'ferido',        label: 'Ferido −1',    color: '#eab308', attrPenalty: 1 },
-  { min: 6, max: 8,        state: 'grave',         label: 'Grave −2',     color: '#ea580c', attrPenalty: 2 },
-  { min: 9, max: Infinity, state: 'incapacitado',  label: 'Incap. −3',    color: '#991b1b', attrPenalty: 3 },
+  { min: 0,  max: 4,        state: 'bem',          label: 'Saudável',     color: '#16a34a', attrPenalty: 0 },
+  { min: 5,  max: 9,        state: 'ferido',        label: 'Ferido −1',    color: '#eab308', attrPenalty: 1 },
+  { min: 10, max: 14,       state: 'grave',         label: 'Grave −2',     color: '#ea580c', attrPenalty: 2 },
+  { min: 15, max: Infinity, state: 'incapacitado',  label: 'Incap. −3',    color: '#991b1b', attrPenalty: 3 },
 ]
 
 /**
+ * Buffer de marcas a partir da VIT **base** da ficha (2 VIT → +1 limiar)
+ * + bônus de armadura equipada (+1/+2/+3).
+ *
+ * Assim o personagem pode tomar mais marcas antes de piorar de estado.
+ * Nunca use VIT efetiva (após −1/−2/−3 de Ferido/Incapacitado):
+ * ferimento reduz VIT nas rolagens, mas não remove o colchão de marcas.
+ *
+ * @param {object} entityOrAttributes - entidade com `.attributes` (e `.equipped`) ou o mapa de atributos
+ */
+export function getVitalityMarkBuffer(entityOrAttributes = {}) {
+  const isEntity = entityOrAttributes?.attributes != null
+  const attrs = isEntity ? entityOrAttributes.attributes : entityOrAttributes
+  const baseVit = Math.max(0, Number(attrs?.vitalidade) || 0)
+  const vitBuffer = Math.floor(baseVit / 2)
+  const armorBonus = isEntity ? getArmorMarkBonus(entityOrAttributes) : 0
+  return vitBuffer + armorBonus
+}
+
+/**
+ * Pool padrão de vida = limiar de Incapacitado (15) + buffer de VIT/armadura.
+ * Ex.: VIT 6 → +3 → vida máxima 18. Começa cheio e reduz ao tomar dano.
+ */
+export function getDefaultMarkPoolMax(entityOrAttributes = {}) {
+  const buffer = getVitalityMarkBuffer(entityOrAttributes)
+  const incapTier = MARK_STATE_THRESHOLDS.find(t => t.state === 'incapacitado')
+  return (incapTier?.min ?? 15) + buffer
+}
+
+/**
+ * Vida máxima: `marcasMaximas` do inimigo/boss, ou pool derivado da VIT para jogadores.
+ */
+export function getMarkPoolMax(entity = {}) {
+  const explicit = Math.max(0, Number(entity.marcasMaximas) || 0)
+  if (explicit > 0) return explicit
+  return getDefaultMarkPoolMax(entity)
+}
+
+/** Vida atual = máximo − marcas acumuladas. */
+export function getRemainingLife(entity = {}) {
+  const max = getMarkPoolMax(entity)
+  const marks = Math.max(0, Number(entity.damageMarks) || 0)
+  return {
+    current: Math.max(0, max - marks),
+    max,
+    marks,
+  }
+}
+
+/** Limiares de um tier com o buffer de VIT aplicado. */
+export function getBufferedTierRange(tier, vitalityBuffer = 0) {
+  const buffer = Math.max(0, Math.floor(Number(vitalityBuffer) || 0))
+  return {
+    min: tier.min === 0 ? 0 : tier.min + buffer,
+    max: tier.max === Infinity ? Infinity : tier.max + buffer,
+  }
+}
+
+/**
  * Retorna o estado físico determinado pelo total de marcas.
- * @param vitalityBuffer - atraso de estado por Vitalidade (marcas extras suportadas)
+ * @param vitalityBuffer - atraso de estado por Vitalidade **base** (marcas extras suportadas)
  */
 export function getPhysicalStateFromMarks(marks, vitalityBuffer = 0) {
   const n = Math.max(0, Number(marks) || 0)
-  const buffer = Math.max(0, Math.floor(Number(vitalityBuffer) || 0))
   for (const tier of MARK_STATE_THRESHOLDS) {
-    const min = tier.min === 0 ? 0 : tier.min + buffer
-    const max = tier.max === Infinity ? Infinity : tier.max + buffer
+    const { min, max } = getBufferedTierRange(tier, vitalityBuffer)
     if (n >= min && n <= max) return tier.state
   }
   return 'incapacitado'
@@ -59,29 +120,33 @@ export function getPhysicalStateFromMarks(marks, vitalityBuffer = 0) {
 
 /**
  * Informação de progresso dentro do tier atual (para barra de UI).
+ * `vitalityBuffer` deve vir de getVitalityMarkBuffer (VIT base).
  */
 export function getMarkProgress(marks, vitalityBuffer = 0) {
   const n = Math.max(0, Number(marks) || 0)
   const buffer = Math.max(0, Math.floor(Number(vitalityBuffer) || 0))
   const tier = MARK_STATE_THRESHOLDS.find(t => {
-    const min = t.min === 0 ? 0 : t.min + buffer
-    const max = t.max === Infinity ? Infinity : t.max + buffer
+    const { min, max } = getBufferedTierRange(t, buffer)
     return n >= min && n <= max
   }) ?? MARK_STATE_THRESHOLDS[MARK_STATE_THRESHOLDS.length - 1]
 
+  const { min: tierMin, max: tierMax } = getBufferedTierRange(tier, buffer)
   const isLast = tier.max === Infinity
-  const posInTier  = n - tier.min
-  const tierSize   = isLast ? null : (tier.max - tier.min + 1)
+  const posInTier = n - tierMin
+  const tierSize = isLast ? null : (tierMax - tierMin + 1)
 
   return {
     total: n,
     state: tier.state,
     stateLabel: tier.label,
     stateColor: tier.color,
+    buffer,
+    tierMin,
+    tierMax: isLast ? null : tierMax,
     posInTier,
     tierSize,
     isMaxTier: isLast,
-    marksToNextTier: isLast ? null : (tier.max - n + 1),
+    marksToNextTier: isLast ? null : (tierMax - n + 1),
     nextState: isLast ? null : (MARK_STATE_THRESHOLDS[MARK_STATE_THRESHOLDS.indexOf(tier) + 1]?.state ?? null),
   }
 }
@@ -102,7 +167,7 @@ export function applyDamageMarks(entity, markType, { forceState = null, extraMar
   const markValue = meta.value + (Number(extraMarks) || 0)
   const currentMarks = Math.max(0, Number(entity.damageMarks) || 0)
   const newMarks = currentMarks + markValue
-  const vitBuffer = Math.floor((Number(entity?.attributes?.vitalidade) || 0) / 2)
+  const vitBuffer = getVitalityMarkBuffer(entity)
   const derivedState = getPhysicalStateFromMarks(newMarks, vitBuffer)
   const newState = forceState ?? derivedState
   const prevState = entity.physicalState ?? 'bem'
@@ -142,7 +207,7 @@ export function applyMarksAmount(entity, amount) {
     }
   }
   const newMarks = currentMarks + markValue
-  const vitBuffer = Math.floor((Number(entity?.attributes?.vitalidade) || 0) / 2)
+  const vitBuffer = getVitalityMarkBuffer(entity)
   const derivedState = getPhysicalStateFromMarks(newMarks, vitBuffer)
   const prevState = entity.physicalState ?? 'bem'
   const newState = derivedState
@@ -190,7 +255,7 @@ export function clearDamageMarks(entity) {
 export function healDamageMarks(entity, amount) {
   const current = Math.max(0, Number(entity.damageMarks) || 0)
   const newMarks = Math.max(0, current - Math.max(1, Number(amount) || 1))
-  const vitBuffer = Math.floor((Number(entity?.attributes?.vitalidade) || 0) / 2)
+  const vitBuffer = getVitalityMarkBuffer(entity)
   const newState = getPhysicalStateFromMarks(newMarks, vitBuffer)
   return {
     patch: {

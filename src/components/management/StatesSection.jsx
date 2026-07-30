@@ -9,7 +9,11 @@ export function StatesSection({ entity, physicalState, mentalState, onPhysicalCh
   const ecoOverload = entity?.ecoOverload ?? 0
 
   const physicalPenalty = formatPhysicalPenalty(physicalState)
-  const mentalSummary = formatMentalPenaltiesSummary({ ecoOverload, mentalState })
+  const mentalSummary = formatMentalPenaltiesSummary({
+    ecoOverload,
+    mentalState,
+    ruptura: entity?.attributes?.ruptura,
+  })
   const activeStatuses = listActiveMentalStatusDetails(entity?.activeMentalStatuses)
 
   return (

@@ -3,12 +3,15 @@ import { Search, Trash2, ChevronLeft, Edit2 } from 'lucide-react'
 import { Modal } from '../components/ui/Modal'
 import { EquipmentForm } from '../components/equipment/EquipmentForm'
 import { useEquipmentStore } from '../store/useEquipmentStore'
-import { useSkillsCatalogStore } from '../store/useSkillsCatalogStore'
-import { RARITY_META } from '../constants/equipmentTypes'
+import { getPassiveSlotsForRarity, getRarityMeta } from '../constants/equipmentTypes'
 
 function ItemCard({ item, typesMeta, onClick }) {
   const typeMeta = typesMeta[item.type]
-  const rarity = RARITY_META[item.rarity] ?? RARITY_META.comum
+  const rarity = getRarityMeta(item.rarity)
+  const slots = item.category === 'arma'
+    ? (item.passiveSlots ?? getPassiveSlotsForRarity(item.rarity))
+    : 0
+  const passivesCount = item.passives?.length ?? 0
 
   return (
     <button
@@ -31,13 +34,25 @@ function ItemCard({ item, typesMeta, onClick }) {
       onMouseLeave={e => { e.currentTarget.style.borderColor = typeMeta?.color ? `${typeMeta.color}33` : '#1a1a1a'; e.currentTarget.style.background = '#0d0d0d' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{typeMeta?.icon ?? '?'}</span>
+        {item.image ? (
+          <img
+            src={item.image}
+            alt=""
+            style={{
+              width: '36px', height: '36px', borderRadius: '4px', objectFit: 'cover',
+              border: '1px solid #1a1a1a', flexShrink: 0,
+            }}
+          />
+        ) : (
+          <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{typeMeta?.icon ?? '?'}</span>
+        )}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#e5e5e5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {item.name}
           </div>
           <div style={{ fontSize: '0.55rem', color: typeMeta?.color ?? '#555', fontFamily: 'monospace' }}>
             {typeMeta?.label ?? item.type}
+            {typeMeta?.handsLabel ? ` · ${typeMeta.handsLabel}` : ''}
           </div>
         </div>
         <span style={{ fontSize: '0.5rem', color: rarity.color, fontFamily: 'monospace', flexShrink: 0, border: `1px solid ${rarity.color}44`, borderRadius: '2px', padding: '1px 4px' }}>
@@ -46,14 +61,9 @@ function ItemCard({ item, typesMeta, onClick }) {
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        {item.bonusAtaque > 0 && (
-          <span style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#dc2626', background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '2px', padding: '1px 5px' }}>
-            ATK +{item.bonusAtaque}
-          </span>
-        )}
-        {item.bonusResistencia > 0 && (
-          <span style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#06b6d4', background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)', borderRadius: '2px', padding: '1px 5px' }}>
-            RESIST +{item.bonusResistencia}
+        {item.category === 'arma' && (
+          <span style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#a855f7', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '2px', padding: '1px 5px' }}>
+            PASSIVAS {passivesCount}/{slots}
           </span>
         )}
         {item.penaltyDestreza > 0 && (
@@ -61,9 +71,9 @@ function ItemCard({ item, typesMeta, onClick }) {
             DES −{item.penaltyDestreza}
           </span>
         )}
-        {item.skillsGranted?.length > 0 && (
-          <span style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#a855f7', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '2px', padding: '1px 5px' }}>
-            {item.skillsGranted.length} skill{item.skillsGranted.length > 1 ? 's' : ''}
+        {item.markBonus > 0 && (
+          <span style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#16a34a', background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: '2px', padding: '1px 5px' }}>
+            MARCAS +{item.markBonus}
           </span>
         )}
       </div>
@@ -71,9 +81,12 @@ function ItemCard({ item, typesMeta, onClick }) {
   )
 }
 
-function ItemDetail({ item, typeMeta, skillsCatalog, onEdit, onDelete, onBack }) {
-  const rarity = RARITY_META[item.rarity] ?? RARITY_META.comum
-  const grantedSkills = (item.skillsGranted || []).map(id => skillsCatalog.find(s => s.templateId === id)).filter(Boolean)
+function ItemDetail({ item, typeMeta, onEdit, onDelete, onBack }) {
+  const rarity = getRarityMeta(item.rarity)
+  const slots = item.category === 'arma'
+    ? (item.passiveSlots ?? getPassiveSlotsForRarity(item.rarity))
+    : 0
+  const passives = item.passives || []
 
   return (
     <div style={{ flex: 1, padding: '1.25rem', overflowY: 'auto' }}>
@@ -83,11 +96,25 @@ function ItemDetail({ item, typeMeta, skillsCatalog, onEdit, onDelete, onBack })
       </button>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
-        <span style={{ fontSize: '2.5rem', lineHeight: 1 }}>{typeMeta?.icon ?? '?'}</span>
+        {item.image ? (
+          <img
+            src={item.image}
+            alt={item.name}
+            style={{
+              width: '72px', height: '72px', borderRadius: '6px', objectFit: 'cover',
+              border: '1px solid #1a1a1a', flexShrink: 0,
+            }}
+          />
+        ) : (
+          <span style={{ fontSize: '2.5rem', lineHeight: 1 }}>{typeMeta?.icon ?? '?'}</span>
+        )}
         <div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#f5f5f5', margin: 0 }}>{item.name}</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.6rem', color: typeMeta?.color ?? '#555', fontFamily: 'monospace' }}>{typeMeta?.label ?? item.type}</span>
+            {typeMeta?.handsLabel && (
+              <span style={{ fontSize: '0.55rem', color: '#555', fontFamily: 'monospace' }}>{typeMeta.handsLabel}</span>
+            )}
             <span style={{ fontSize: '0.6rem', color: rarity.color, fontFamily: 'monospace', border: `1px solid ${rarity.color}44`, borderRadius: '2px', padding: '1px 5px' }}>{rarity.label}</span>
           </div>
         </div>
@@ -100,45 +127,46 @@ function ItemDetail({ item, typeMeta, skillsCatalog, onEdit, onDelete, onBack })
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-        {item.bonusAtaque > 0 && (
-          <div style={{ padding: '0.5rem 0.75rem', background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '4px' }}>
-            <div style={{ fontSize: '0.4rem', color: '#dc2626', fontFamily: 'monospace', marginBottom: '2px' }}>BÔNUS ATK</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#dc2626' }}>+{item.bonusAtaque}</div>
+      {item.category === 'arma' && (
+        <div style={{ marginBottom: '1rem', padding: '0.625rem 0.75rem', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '4px' }}>
+          <div style={{ fontSize: '0.5rem', color: '#a855f7', fontFamily: 'monospace', marginBottom: '0.35rem' }}>
+            PASSIVAS · {passives.length}/{slots}
           </div>
-        )}
-        {item.bonusResistencia > 0 && (
-          <div style={{ padding: '0.5rem 0.75rem', background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)', borderRadius: '4px' }}>
-            <div style={{ fontSize: '0.4rem', color: '#06b6d4', fontFamily: 'monospace', marginBottom: '2px' }}>RESIST. FÍS</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#06b6d4' }}>+{item.bonusResistencia}</div>
-          </div>
-        )}
-        {item.penaltyDestreza > 0 && (
-          <div style={{ padding: '0.5rem 0.75rem', background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)', borderRadius: '4px' }}>
-            <div style={{ fontSize: '0.4rem', color: '#f97316', fontFamily: 'monospace', marginBottom: '2px' }}>PENALIDADE DES</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#f97316' }}>−{item.penaltyDestreza}</div>
-          </div>
-        )}
-      </div>
+          {passives.length === 0 ? (
+            <div style={{ fontSize: '0.7rem', color: '#555' }}>
+              Slots reservados pela raridade. Passivas serão geradas depois.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              {passives.map((p, i) => (
+                <div key={p.id || i} style={{ fontSize: '0.75rem', color: '#ccc' }}>{p.name || p.id || `Passiva ${i + 1}`}</div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {item.category === 'armadura' && (
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+          {item.penaltyDestreza > 0 && (
+            <div style={{ padding: '0.5rem 0.75rem', background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)', borderRadius: '4px' }}>
+              <div style={{ fontSize: '0.4rem', color: '#f97316', fontFamily: 'monospace', marginBottom: '2px' }}>PENALIDADE DES</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#f97316' }}>−{item.penaltyDestreza}</div>
+            </div>
+          )}
+          {item.markBonus > 0 && (
+            <div style={{ padding: '0.5rem 0.75rem', background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: '4px' }}>
+              <div style={{ fontSize: '0.4rem', color: '#16a34a', fontFamily: 'monospace', marginBottom: '2px' }}>LIMIAR MARCAS</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#16a34a' }}>+{item.markBonus}</div>
+            </div>
+          )}
+        </div>
+      )}
 
       {item.description && (
         <div style={{ marginBottom: '1rem' }}>
           <div style={{ fontSize: '0.5rem', color: '#333', fontFamily: 'monospace', marginBottom: '0.35rem' }}>DESCRIÇÃO</div>
           <p style={{ fontSize: '0.8rem', color: '#888', lineHeight: 1.7, margin: 0 }}>{item.description}</p>
-        </div>
-      )}
-
-      {grantedSkills.length > 0 && (
-        <div style={{ marginBottom: '1rem' }}>
-          <div style={{ fontSize: '0.5rem', color: '#a855f7', fontFamily: 'monospace', marginBottom: '0.5rem' }}>SKILLS CONCEDIDAS</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-            {grantedSkills.map(skill => (
-              <div key={skill.templateId} style={{ padding: '0.5rem 0.75rem', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '4px' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#e5e5e5' }}>{skill.name}</div>
-                {skill.description && <div style={{ fontSize: '0.65rem', color: '#666', marginTop: '2px' }}>{skill.description}</div>}
-              </div>
-            ))}
-          </div>
         </div>
       )}
 
@@ -159,19 +187,18 @@ function ItemDetail({ item, typeMeta, skillsCatalog, onEdit, onDelete, onBack })
 const CATALOG_META = {
   arma: {
     label: 'Arma',
-    description: 'Catálogo de armas da campanha — cada item pode conceder skills ao ser equipado.',
+    description: 'Catálogo de armas — perícia por classe, passivas pela raridade (sem skills nem bônus de ataque).',
     emptyHint: 'Nenhuma arma encontrada. Crie em Criação → Arma.',
   },
   armadura: {
     label: 'Armadura',
-    description: 'Catálogo de armaduras — leve, média ou pesada, com resistência e penalidades.',
+    description: 'Catálogo de armaduras — leve, média ou pesada (−DES / +limiar de marcas).',
     emptyHint: 'Nenhuma armadura encontrada. Crie em Criação → Armadura.',
   },
 }
 
 export function EquipmentCatalogView({ category, items, typesMeta }) {
   const { updateItem, removeItem } = useEquipmentStore()
-  const skillsCatalog = useSkillsCatalogStore(s => s.skills)
   const [selected, setSelected] = useState(null)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
@@ -216,7 +243,6 @@ export function EquipmentCatalogView({ category, items, typesMeta }) {
         <ItemDetail
           item={selected}
           typeMeta={typeMeta}
-          skillsCatalog={skillsCatalog}
           onEdit={setEditing}
           onDelete={handleDelete}
           onBack={() => setSelected(null)}

@@ -6,9 +6,29 @@ import { useCampaignStore } from '../store/useCampaignStore'
 import { PageHeader } from '../components/ui/PageHeader'
 import { formatDateTime } from '../utils/id'
 import { getAllAttributeLabels, SOCIAL_ATTRIBUTES } from '../constants/attributes'
-import { getEffectiveAttributeValue } from '../services/stateModifiers'
+import { getEffectiveAttributeValue, getEffectiveSocialAttributeValue } from '../services/stateModifiers'
+import { getCharacterClass } from '../constants/classes'
+import { getClassAttributeBonus } from '../mechanics/classes/classBonusEngine'
+import { getArmorDestrezaPenalty } from '../mechanics/equipment/armorEffectsEngine'
 
 const SOCIAL_ATTR_KEYS = new Set(SOCIAL_ATTRIBUTES.map(a => a.key))
+
+function resolveAttrValue(char, attrKey) {
+  if (SOCIAL_ATTR_KEYS.has(attrKey)) {
+    return getEffectiveSocialAttributeValue(char.socialAttributes || {}, attrKey, {
+      ecoOverload: char.ecoOverload ?? 0,
+      mentalState: char.mentalState ?? 'estavel',
+      ruptura: char.attributes?.ruptura,
+    })
+  }
+  return getEffectiveAttributeValue(char.attributes, attrKey, {
+    physicalState: char.physicalState ?? char.condition ?? 'bem',
+    ecoOverload: char.ecoOverload ?? 0,
+    mentalState: char.mentalState ?? 'estavel',
+    destrezaPenalty: getArmorDestrezaPenalty(char),
+    ruptura: char.attributes?.ruptura,
+  })
+}
 
 const DICE_TYPES = [
   { sides: 4, label: 'd4', color: '#a855f7' },
@@ -102,7 +122,10 @@ function ResultDisplay({ result, rolling }) {
           </div>
           {result.total !== undefined && (
             <div style={{ fontSize: '0.75rem', color: '#444', fontFamily: 'monospace' }}>
-              {result.result} + {result.bonus} (bônus)
+              {result.result} + {result.attrBonus ?? result.bonus} (atributo)
+              {result.classBonus > 0 && (
+                <span style={{ color: '#d97706' }}> + {result.classBonus} (classe)</span>
+              )}
             </div>
           )}
           {result.result === result.sides && result.total === undefined && (
@@ -153,16 +176,8 @@ export function Dice() {
   const handleContextRoll = () => {
     const sides = parseInt(contextDice) || 20
     const char = campChars.find(c => c.id === contextChar)
-    const isSocial = SOCIAL_ATTR_KEYS.has(contextAttr)
-    const attrVal = char
-      ? isSocial
-        ? (char.socialAttributes?.[contextAttr] ?? 0)
-        : getEffectiveAttributeValue(char.attributes, contextAttr, {
-            physicalState: char.physicalState ?? char.condition ?? 'bem',
-            ecoOverload: char.ecoOverload ?? 0,
-            mentalState: char.mentalState ?? 'estavel',
-          })
-      : 0
+    const attrVal = char ? resolveAttrValue(char, contextAttr) : 0
+    const classBonus = char ? getClassAttributeBonus(char, contextAttr) : 0
     const charName = char ? char.name : ''
     const label = charName
       ? `d${sides} + ${ATTRIBUTE_LABELS[contextAttr]} (${charName})`
@@ -170,8 +185,16 @@ export function Dice() {
     if (rolling) return
     setRolling(true)
     setTimeout(() => {
-      const { diceResult, total } = rollWithAttribute(sides, attrVal, label)
-      setLastResult({ result: diceResult, sides, bonus: attrVal, total, label })
+      const { diceResult, total } = rollWithAttribute(sides, attrVal, label, classBonus)
+      setLastResult({
+        result: diceResult,
+        sides,
+        bonus: attrVal + classBonus,
+        attrBonus: attrVal,
+        classBonus,
+        total,
+        label,
+      })
       setRolling(false)
     }, 200)
   }
@@ -255,17 +278,21 @@ export function Dice() {
                     const c = campChars.find(ch => ch.id === contextChar)
                     if (!c) return ''
                     const isSoc = SOCIAL_ATTR_KEYS.has(contextAttr)
-                    const eff = isSoc
-                      ? (c.socialAttributes?.[contextAttr] ?? 0)
-                      : getEffectiveAttributeValue(c.attributes, contextAttr, {
-                          physicalState: c.physicalState ?? c.condition ?? 'bem',
-                          ecoOverload: c.ecoOverload ?? 0,
-                          mentalState: c.mentalState ?? 'estavel',
-                        })
+                    const eff = resolveAttrValue(c, contextAttr)
                     const base = isSoc ? (c.socialAttributes?.[contextAttr] || 0) : (c.attributes?.[contextAttr] || 0)
-                    return eff !== base
+                    const clsBonus = getClassAttributeBonus(c, contextAttr)
+                    const cls = getCharacterClass(c)
+                    const attrText = eff !== base
                       ? `${c.name} · ${ATTRIBUTE_LABELS[contextAttr]}: ${eff} (${base})`
                       : `${c.name} · ${ATTRIBUTE_LABELS[contextAttr]}: ${eff}`
+                    return (
+                      <>
+                        {attrText}
+                        {clsBonus > 0 && (
+                          <span style={{ color: '#d97706' }}> · +{clsBonus} {cls?.label}</span>
+                        )}
+                      </>
+                    )
                   })()}
                 </div>
               )}
@@ -338,7 +365,10 @@ export function Dice() {
                           </div>
                           {entry.total !== undefined && (
                             <div style={{ fontSize: '0.6rem', color: '#333', fontFamily: 'monospace' }}>
-                              {entry.result} + {entry.bonus}
+                              {entry.result} + {entry.attrBonus ?? entry.bonus}
+                              {entry.classBonus > 0 && (
+                                <span style={{ color: '#8a5a10' }}> + {entry.classBonus}</span>
+                              )}
                             </div>
                           )}
                         </div>

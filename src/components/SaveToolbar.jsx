@@ -1,6 +1,6 @@
 import React, { useRef } from 'react'
-import { Save, Upload, HardDrive } from 'lucide-react'
-import { exportCampaign, importCampaign } from '../services/saveService'
+import { Save, Upload, HardDrive, RotateCcw } from 'lucide-react'
+import { exportCampaign, importCampaign, resetAllTestData } from '../services/saveService'
 import { useSaveStore } from '../store/useSaveStore'
 import { useSettingsStore } from '../store/useSettingsStore'
 
@@ -31,6 +31,23 @@ export function SaveToolbar({ collapsed = false }) {
     setSaving(false)
   }
 
+  const handleReset = () => {
+    const ok = window.confirm(
+      'Apagar TODOS os dados de teste?\n\n'
+      + 'Remove personagens, NPCs, bosses, organizações, grupos, sessões, lixeira e equipamentos.\n'
+      + 'Cria uma campanha vazia nova.\n\n'
+      + 'Isso não tem volta (salve antes se precisar).',
+    )
+    if (!ok) return
+    const ok2 = window.confirm('Confirma mesmo? Tudo será zerado.')
+    if (!ok2) return
+    try {
+      resetAllTestData('Nova Campanha')
+    } catch (e) {
+      showToast(e.message || 'Erro ao resetar.', 'error')
+    }
+  }
+
   const lastSave = settings?.lastManualSaveAt || settings?.lastAutoSaveAt
   const lastLabel = lastSave
     ? new Date(lastSave).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -38,7 +55,7 @@ export function SaveToolbar({ collapsed = false }) {
 
   if (collapsed) {
     return (
-      <>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0' }}>
         <button
           type="button"
           title="Salvar campanha"
@@ -47,8 +64,16 @@ export function SaveToolbar({ collapsed = false }) {
         >
           <Save size={14} />
         </button>
+        <button
+          type="button"
+          title="Resetar tudo (teste)"
+          onClick={handleReset}
+          style={{ ...btnIconStyle, color: '#7f1d1d' }}
+        >
+          <RotateCcw size={14} />
+        </button>
         <input ref={fileRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={handleFile} />
-      </>
+      </div>
     )
   }
 
@@ -67,6 +92,15 @@ export function SaveToolbar({ collapsed = false }) {
       <button type="button" onClick={handleImport} style={btnGhostStyle}>
         <Upload size={13} />
         Importar
+      </button>
+      <button
+        type="button"
+        onClick={handleReset}
+        title="Apaga personagens, NPCs, bosses, orgs e demais dados de teste"
+        style={btnResetStyle}
+      >
+        <RotateCcw size={13} />
+        Resetar tudo
       </button>
       {lastLabel && (
         <div style={{
@@ -110,6 +144,15 @@ const btnGhostStyle = {
   background: 'transparent',
   border: '1px solid #1a1a1a',
   color: '#666',
+}
+
+const btnResetStyle = {
+  ...btnFullStyle,
+  background: 'transparent',
+  border: '1px solid rgba(127,29,29,0.45)',
+  color: '#7f1d1d',
+  fontWeight: 500,
+  letterSpacing: '0.04em',
 }
 
 const btnIconStyle = {

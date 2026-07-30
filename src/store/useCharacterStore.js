@@ -15,13 +15,16 @@ import {
   applyInitialAttributeChange,
   applyAttributePointSpend,
   validateStartingAttributesDistributed,
+  validateStartingSocialDistributed,
+  validateStartingEcoSkillSelected,
   applyMasterAttributeChange,
   buildMasterProgressionPatch,
   syncProgressionToLevel,
   clampMasterAuxiliary as buildClampMasterAuxiliaryPatch,
   scaleAttributesToBudget,
 } from '../services/progressionService'
-import { unlockRandomSkill } from '../services/skillService'
+import { investSkillPoint as investSkillPointEngine, upgradeSkillGrade as upgradeSkillGradeEngine } from '../mechanics/skills/classSkillProgressionEngine'
+
 import { useEcoSkill, restEcoOverload, masterSetEcoOverload } from '../services/ecoOverloadService'
 import {
   activateCharacterSkill,
@@ -83,6 +86,10 @@ export const useCharacterStore = create((set, get) => ({
   addCharacter(data) {
     const preCheck = validateStartingAttributesDistributed(data)
     if (!preCheck.ok) return null
+    const socialCheck = validateStartingSocialDistributed(data)
+    if (!socialCheck.ok) return null
+    const ecoCheck = validateStartingEcoSkillSelected(data)
+    if (!ecoCheck.ok) return null
     const character = normalizeGameEntity({
       ...data,
       id: genId(),
@@ -313,13 +320,30 @@ export const useCharacterStore = create((set, get) => ({
     return { ok: true }
   },
 
-  unlockSkill(characterId) {
+  investSkillPoint(characterId, templateId) {
     const c = get().characters.find(ch => ch.id === characterId)
-    if (!c) return null
-    const patch = unlockRandomSkill(c)
-    if (!patch) return null
-    patchCharacter(get, set, characterId, ch => ({ ...ch, ...patch }))
-    return patch.skills[patch.skills.length - 1]
+    if (!c) return { ok: false, message: 'Personagem não encontrado' }
+    const result = investSkillPointEngine(c, templateId)
+    if (result.error) {
+      set({ lastSkillError: result.error })
+      return { ok: false, message: result.error.message }
+    }
+    patchCharacter(get, set, characterId, ch => ({ ...ch, ...result.patch }))
+    set({ lastSkillError: null })
+    return { ok: true, level: result.level, unlocked: result.unlocked }
+  },
+
+  upgradeSkillGrade(characterId, templateId) {
+    const c = get().characters.find(ch => ch.id === characterId)
+    if (!c) return { ok: false, message: 'Personagem não encontrado' }
+    const result = upgradeSkillGradeEngine(c, templateId)
+    if (result.error) {
+      set({ lastSkillError: result.error })
+      return { ok: false, message: result.error.message }
+    }
+    patchCharacter(get, set, characterId, ch => ({ ...ch, ...result.patch }))
+    set({ lastSkillError: null })
+    return { ok: true, level: result.level, enteredGrade: result.enteredGrade }
   },
 
   useEcoSkill(characterId, skillId, options = {}) {
@@ -411,12 +435,28 @@ export const useCharacterStore = create((set, get) => ({
   },
 
   addInventoryItem(characterId, item) {
-    const name = typeof item === 'string' ? item : item.name
-    const qty = typeof item === 'string' ? 1 : (item.qty || 1)
+    const payload = typeof item === 'string'
+      ? { name: item, qty: 1 }
+      : { ...item, name: item.name, qty: item.qty || 1 }
     patchCharacter(get, set, characterId, c => {
       const cap = c.backpackCapacity
       if (cap != null && c.inventory.length >= cap) return c
-      return { ...c, inventory: [...c.inventory, { id: genId(), name, qty }] }
+
+      // Empilha catalisador / mesmo itemId
+      if (payload.itemId) {
+        const idx = (c.inventory || []).findIndex(i => i.itemId === payload.itemId)
+        if (idx >= 0) {
+          const inventory = [...c.inventory]
+          const cur = inventory[idx]
+          inventory[idx] = { ...cur, qty: (Number(cur.qty) || 1) + (Number(payload.qty) || 1) }
+          return { ...c, inventory }
+        }
+      }
+
+      return {
+        ...c,
+        inventory: [...(c.inventory || []), { id: genId(), ...payload }],
+      }
     })
   },
 
@@ -435,10 +475,19 @@ export const useCharacterStore = create((set, get) => ({
   },
 
   addEquippedItem(characterId, item) {
-    const name = typeof item === 'string' ? item : item.name
+    const payload = typeof item === 'string'
+      ? { name: item }
+      : item
     patchCharacter(get, set, characterId, c => ({
       ...c,
-      equipped: [...c.equipped, { id: genId(), name, slot: item.slot || '' }],
+      equipped: [...c.equipped, {
+        id: genId(),
+        name: payload.name || 'Item',
+        slot: payload.slot || '',
+        category: payload.category || 'arma',
+        type: payload.type || null,
+        equipmentId: payload.equipmentId || null,
+      }],
     }))
   },
 

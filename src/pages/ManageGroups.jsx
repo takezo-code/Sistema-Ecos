@@ -99,7 +99,7 @@ function MemberRow({ character, selected, onManage, onRemove }) {
               <span style={{ fontSize: '0.55rem', color: physical.color, fontFamily: 'monospace' }}>{marks}M</span>
             )}
             {overload > 0 && (
-              <span style={{ fontSize: '0.55rem', color: '#a855f7', fontFamily: 'monospace' }}>{formatOverloadDisplay(overload)}</span>
+              <span style={{ fontSize: '0.55rem', color: '#a855f7', fontFamily: 'monospace' }}>{formatOverloadDisplay(overload, character)}</span>
             )}
             <span style={{ fontSize: '0.6rem', color: '#a855f7', fontFamily: 'monospace' }}>NVL {character.level || 1}</span>
           </div>

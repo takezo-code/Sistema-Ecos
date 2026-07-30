@@ -10,6 +10,12 @@ import { useNarrativeStore } from '../store/useNarrativeStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { useSettingsStore } from '../store/useSettingsStore'
 import { useSaveStore } from '../store/useSaveStore'
+import { useEquipmentStore } from '../store/useEquipmentStore'
+import { useTrashStore } from '../store/useTrashStore'
+import { useSkillsCatalogStore } from '../store/useSkillsCatalogStore'
+import { useCombatStore } from '../store/useCombatStore'
+import { useSceneStore } from '../store/useSceneStore'
+import { useCharacterPanelStore } from '../store/useCharacterPanelStore'
 import { genId } from '../utils/id'
 import { normalizeGameEntity } from '../constants/attributes'
 import { filterByActiveCampaign } from '../utils/campaignScope'
@@ -368,6 +374,37 @@ export function initializeNewCampaign(campaignName = 'Nova Campanha') {
   const empty = createEmptySave(campaignName)
   restoreSaveData(empty, { silent: true })
   autoSave()
+  return empty
+}
+
+/**
+ * Apaga personagens, NPCs, bosses, orgs, grupos, sessões, lixeira, equipamentos, etc.
+ * Mantém uma campanha vazia pronta para testes.
+ */
+export function resetAllTestData(campaignName = 'Nova Campanha') {
+  const empty = initializeNewCampaign(campaignName)
+
+  useEquipmentStore.setState({ items: [] })
+  useTrashStore.setState({ items: [] })
+  useSkillsCatalogStore.getState().reload()
+  useCombatStore.setState({
+    globalNotes: '',
+    turn: 0,
+    campaignId: empty.activeCampaignId,
+    combatGroupId: null,
+    activeEnemyId: null,
+    lastRoll: null,
+  })
+  useSceneStore.setState({
+    globalNotes: '',
+    turn: 0,
+    campaignId: empty.activeCampaignId,
+    sceneGroupId: null,
+    activeEnemyId: null,
+  })
+  useCharacterPanelStore.setState({ selectedCharacterId: null })
+
+  useSaveStore.getState().showToast('Dados de teste apagados. Campanha limpa.', 'success')
   return empty
 }
 

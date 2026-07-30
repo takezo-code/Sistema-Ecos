@@ -1,13 +1,11 @@
 import {
-  ECO_OVERLOAD_DISPLAY_CAP,
-  ECO_OVERLOAD_RUPTURE_TOTAL,
+  getEcoSafeLimitFromEntity,
+  getEcoTotalRuptureThreshold,
   formatOverloadDisplay,
   getOverloadPhase,
   isInRupturePhase,
 } from '../constants/ecoOverload'
 import {
-  getEcoPowerPenaltyPercent,
-  getGlobalAttributePenaltyPercent,
   getMentalAttributePenaltyPercent,
 } from '../mechanics/ecoOverload/overloadPenalties'
 import { processEcoSkillUse, resetEcoOverload, setEcoOverloadLevel } from '../mechanics/ecoOverload/overloadEngine'
@@ -20,7 +18,9 @@ export {
   getGlobalAttributePenaltyPercent,
   getMentalAttributePenaltyPercent,
   calculateEffectiveAttributes,
+  calculateEffectiveSocialAttributes,
   getEffectiveAttributeValue,
+  getEffectiveSocialAttributeValue,
   formatEcoOverloadPenalty,
   formatMentalPenaltiesSummary,
   formatSkillPowerPenalty,
@@ -35,21 +35,23 @@ export { buildRuptureTotalEvent, RUPTURE_TOTAL_OUTCOMES } from '../mechanics/eco
 /** Snapshot completo para UI e rolagens */
 export function getEcoOverloadSnapshot(entity) {
   const overload = Math.max(0, Number(entity?.ecoOverload) || 0)
-  const phase = getOverloadPhase(overload)
-  const ecoPenalty      = getEcoPowerPenaltyPercent(overload)
-  const mentalAttrPenalty = getMentalAttributePenaltyPercent(overload)
+  const safeLimit = getEcoSafeLimitFromEntity(entity)
+  const totalAt = getEcoTotalRuptureThreshold(safeLimit)
+  const phase = getOverloadPhase(overload, safeLimit)
+  const mentalAttrFlat = getMentalAttributePenaltyPercent(overload, safeLimit)
 
   return {
     overload,
-    display: formatOverloadDisplay(overload),
+    safeLimit,
+    display: formatOverloadDisplay(overload, { safeLimit }),
     phase,
-    inRupturePhase: isInRupturePhase(overload),
-    atCap: overload >= ECO_OVERLOAD_DISPLAY_CAP,
-    atTotalRupture: overload >= ECO_OVERLOAD_RUPTURE_TOTAL,
-    ecoPenaltyPercent: ecoPenalty,
-    mentalAttrPenaltyPercent: mentalAttrPenalty,
-    // compat alias
-    attributePenaltyPercent: mentalAttrPenalty,
+    inRupturePhase: isInRupturePhase(overload, safeLimit),
+    atCap: overload >= safeLimit,
+    atTotalRupture: overload >= totalAt,
+    ecoPenaltyPercent: 0,
+    mentalAttrFlat,
+    mentalAttrPenaltyPercent: mentalAttrFlat,
+    attributePenaltyPercent: mentalAttrFlat,
     activeMentalStatuses: listActiveMentalStatusDetails(entity?.activeMentalStatuses),
     lastRuptureTotalEvent: entity?.lastRuptureTotalEvent ?? null,
     ruptureTotalCount: entity?.ruptureTotalCount ?? 0,

@@ -5,7 +5,7 @@ import { ECO_UNLOCK_SKILL_COST } from '../constants/progression'
 import { normalizeSkillType, getSkillTypeMeta } from '../constants/skillTypes'
 import { getEffectiveSkillPower } from './ruptureBonus'
 import { getMentalMultiplier, getEcoFailureChance } from './stateModifiers'
-import { getEcoPowerPenaltyPercent } from '../mechanics/ecoOverload/overloadPenalties'
+import { getMentalAttributeFlatPenalty } from '../mechanics/ecoOverload/overloadPenalties'
 
 export function createSkillFromTemplate(template, tier = 1) {
   const skillType = normalizeSkillType(template.skillType)
@@ -66,7 +66,8 @@ export function getSkillDisplay(skill, rupturePoints = 0, mentalState = 'estavel
     ),
     ruptureBonus: rupturePoints,
     mentalMultiplier: mentalMult,
-    overloadPenaltyPercent: getEcoPowerPenaltyPercent(ecoOverload),
+    overloadPenaltyPercent: 0,
+    overloadAttrPenalty: getMentalAttributeFlatPenalty(ecoOverload, { ruptura: rupturePoints }),
     ecoFailureChance: getEcoFailureChance(mentalState),
   }
 }

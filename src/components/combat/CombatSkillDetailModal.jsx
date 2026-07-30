@@ -41,7 +41,7 @@ export function CombatSkillDetailModal({
   const catalog = runtime.catalog
   const typeMeta = getSkillTypeMeta(catalog.skillType)
   const isPassiva = catalog.skillType === ECO_SKILL_TYPES.PASSIVA
-  const catLabel = runtime.categoryMeta?.label
+  const classLabel = runtime.classMeta?.label
 
   return (
     <Modal
@@ -75,16 +75,16 @@ export function CombatSkillDetailModal({
           }}>
             {typeMeta.label.toUpperCase()}
           </span>
-          {catLabel && (
+          {classLabel && (
             <span style={{
               fontSize: '0.6rem',
               fontFamily: 'monospace',
-              color: runtime.categoryMeta?.color || '#666',
-              border: `1px solid ${runtime.categoryMeta?.color || '#333'}44`,
+              color: runtime.classMeta?.color || '#666',
+              border: `1px solid ${runtime.classMeta?.color || '#333'}44`,
               padding: '2px 8px',
               borderRadius: '3px',
             }}>
-              {catLabel.toUpperCase()}
+              {classLabel.toUpperCase()}
             </span>
           )}
           <span style={{
@@ -140,7 +140,10 @@ export function CombatSkillDetailModal({
                   : `+${runtime.overloadCost ?? 1}`}
                 {!isPassiva && character && (
                   <span style={{ fontSize: '0.6rem', color: '#666', fontWeight: 400 }}>
-                    {' '}→ {formatOverloadDisplay((character.ecoOverload ?? 0) + (runtime.overloadCost ?? 1))}
+                    {' '}→ {formatOverloadDisplay(
+                      (character.ecoOverload ?? 0) + (runtime.overloadCost ?? 1),
+                      character,
+                    )}
                   </span>
                 )}
               </div>
@@ -150,7 +153,7 @@ export function CombatSkillDetailModal({
 
         {character && (
           <div style={{ fontSize: '0.65rem', color: '#666', fontFamily: 'monospace' }}>
-            Sobrecarga atual: {formatOverloadDisplay(character.ecoOverload ?? 0)}
+            Sobrecarga atual: {formatOverloadDisplay(character.ecoOverload ?? 0, character)}
           </div>
         )}
 

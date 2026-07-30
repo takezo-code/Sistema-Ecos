@@ -1,14 +1,23 @@
-/** Exibição padrão da barra de sobrecarga (0–5 estável, 6+ ruptura) */
-export const ECO_OVERLOAD_DISPLAY_CAP = 5
+/** Limite base de usos de Eco sem consequência (Ruptura 0). */
+export const ECO_OVERLOAD_BASE_LIMIT = 5
 
-/** Nível em que dispara Ruptura Total */
-export const ECO_OVERLOAD_RUPTURE_TOTAL = 10
+/** Ruptura máxima no atributo → limite seguro sobe até 15. */
+export const ECO_OVERLOAD_MAX_RUPTURA_BONUS = 10
 
-/** Ao atingir este valor, aplica status Mentalmente Abalado */
-export const ECO_OVERLOAD_SHAKEN_THRESHOLD = 5
+/** Quantos usos acima do limite até Ruptura Total. */
+export const ECO_OVERLOAD_OVERAGE_TO_TOTAL = 5
 
-/** A partir deste valor entra em fase de Ruptura de Eco */
-export const ECO_OVERLOAD_RUPTURE_PHASE_START = 6
+/** @deprecated use getEcoSafeLimit(ruptura) — mantido como base */
+export const ECO_OVERLOAD_DISPLAY_CAP = ECO_OVERLOAD_BASE_LIMIT
+
+/** @deprecated use getEcoTotalRuptureThreshold(safeLimit) */
+export const ECO_OVERLOAD_RUPTURE_TOTAL = ECO_OVERLOAD_BASE_LIMIT + ECO_OVERLOAD_OVERAGE_TO_TOTAL
+
+/** @deprecated limiar relativo — use getEcoSafeLimit */
+export const ECO_OVERLOAD_SHAKEN_THRESHOLD = ECO_OVERLOAD_BASE_LIMIT
+
+/** @deprecated use safeLimit + 1 */
+export const ECO_OVERLOAD_RUPTURE_PHASE_START = ECO_OVERLOAD_BASE_LIMIT + 1
 
 export const ECO_OVERLOAD_PHASES = Object.freeze({
   STABLE: 'stable',
@@ -17,54 +26,109 @@ export const ECO_OVERLOAD_PHASES = Object.freeze({
   TOTAL: 'total',
 })
 
-/** Penalidade de poder Eco por nível dentro do limite (1–5): −1% por nível */
-export function getStableEcoPenaltyPercent(overload) {
-  const level = Math.max(0, Math.min(ECO_OVERLOAD_DISPLAY_CAP, Number(overload) || 0))
-  return level
+/**
+ * Limite seguro de sobrecarga = 5 + Ruptura (máx. 15).
+ * Dentro do limite: sem redução de atributos.
+ */
+export function getEcoSafeLimit(ruptura = 0) {
+  const r = Math.max(0, Math.min(ECO_OVERLOAD_MAX_RUPTURA_BONUS, Number(ruptura) || 0))
+  return ECO_OVERLOAD_BASE_LIMIT + r
+}
+
+export function getEcoSafeLimitFromEntity(entity) {
+  return getEcoSafeLimit(entity?.attributes?.ruptura)
+}
+
+export function getEcoTotalRuptureThreshold(safeLimit = ECO_OVERLOAD_BASE_LIMIT) {
+  return Math.max(ECO_OVERLOAD_BASE_LIMIT, Number(safeLimit) || ECO_OVERLOAD_BASE_LIMIT) + ECO_OVERLOAD_OVERAGE_TO_TOTAL
+}
+
+/** Usos acima do limite seguro (0 = ainda seguro). */
+export function getOverloadOverage(overload = 0, safeLimit = ECO_OVERLOAD_BASE_LIMIT) {
+  return Math.max(0, (Number(overload) || 0) - (Number(safeLimit) || ECO_OVERLOAD_BASE_LIMIT))
 }
 
 /**
- * Atributos mentais afetados pela Sobrecarga de Eco (6/5+).
- * Força, Destreza e Vitalidade são afetados apenas pelo estado físico/marcas
- * (−1 / −2 / −3 flat conforme Ferido / Grave / Incapacitado).
+ * Atributos reduzidos ao passar do limite:
+ * INT (físico) · PER · SAB · CAR (cena). Ruptura NÃO é penalizada.
  */
-export const MENTAL_ATTR_KEYS = Object.freeze(['inteligencia', 'ruptura'])
+export const OVERLOAD_ATTR_KEYS = Object.freeze([
+  'inteligencia',
+  'percepcao',
+  'sabedoria',
+  'carisma',
+])
+
+/** Subconjunto no grid físico */
+export const MENTAL_ATTR_KEYS = Object.freeze(['inteligencia'])
+
+/** Subconjunto no grid de cena */
+export const OVERLOAD_SOCIAL_ATTR_KEYS = Object.freeze([
+  'percepcao',
+  'sabedoria',
+  'carisma',
+])
 
 /**
- * Penalidades ao ultrapassar 5/5.
- *
- * ecoPercent      — reduz poder/eficácia das habilidades de Eco
- * mentalAttrPercent — reduz Inteligência e Ruptura diretamente
- *
- * Atributos físicos (Força/Destreza/Vitalidade) NÃO são afetados pela sobrecarga mental.
+ * Penalidades por excesso acima do limite (overage).
+ * mentalAttrFlat — −INT · PER · SAB · CAR
+ * overage 0 no limite → Abalado (−1), tratado em getMentalAttributeFlatPenalty
  */
 export const RUPTURE_BREAK_PENALTIES = Object.freeze({
-  6:  { ecoPercent: 10,  mentalAttrPercent: 5  },
-  7:  { ecoPercent: 20,  mentalAttrPercent: 10 },
-  8:  { ecoPercent: 40,  mentalAttrPercent: 20 },
-  9:  { ecoPercent: 80,  mentalAttrPercent: 40 },
-  10: { ecoPercent: 100, mentalAttrPercent: 100, isTotal: true },
+  1: { mentalAttrFlat: 2 },
+  2: { mentalAttrFlat: 3 },
+  3: { mentalAttrFlat: 3 },
+  4: { mentalAttrFlat: 4 },
+  5: { mentalAttrFlat: 4, isTotal: true },
 })
 
-/** @deprecated use mentalAttrPercent — mantido para compatibilidade legada */
-export function legacyAttributePercent(overload) {
-  const n = Math.max(0, Math.min(10, Number(overload) || 0))
-  return RUPTURE_BREAK_PENALTIES[n]?.mentalAttrPercent ?? 0
+/** Resolve safeLimit a partir de entidade / { safeLimit } / { ruptura } / número (ruptura). */
+export function resolveEcoSafeLimit(rupturaOrOpts) {
+  if (rupturaOrOpts == null) return ECO_OVERLOAD_BASE_LIMIT
+  if (typeof rupturaOrOpts === 'number') {
+    return getEcoSafeLimit(rupturaOrOpts)
+  }
+  if (typeof rupturaOrOpts === 'object') {
+    if (rupturaOrOpts.safeLimit != null) {
+      return Math.max(ECO_OVERLOAD_BASE_LIMIT, Number(rupturaOrOpts.safeLimit) || ECO_OVERLOAD_BASE_LIMIT)
+    }
+    if (rupturaOrOpts.attributes != null) {
+      return getEcoSafeLimit(rupturaOrOpts.attributes.ruptura)
+    }
+    if (rupturaOrOpts.ruptura != null) {
+      return getEcoSafeLimit(rupturaOrOpts.ruptura)
+    }
+  }
+  return ECO_OVERLOAD_BASE_LIMIT
 }
 
-export function getOverloadPhase(overload) {
+/** Segundo argumento numérico = limite seguro já calculado (não ruptura). */
+export function asSafeLimit(limit) {
+  return Math.max(ECO_OVERLOAD_BASE_LIMIT, Number(limit) || ECO_OVERLOAD_BASE_LIMIT)
+}
+
+export function getOverloadPhase(overload, safeLimit = ECO_OVERLOAD_BASE_LIMIT) {
   const n = Math.max(0, Number(overload) || 0)
-  if (n >= ECO_OVERLOAD_RUPTURE_TOTAL) return ECO_OVERLOAD_PHASES.TOTAL
-  if (n >= ECO_OVERLOAD_RUPTURE_PHASE_START) return ECO_OVERLOAD_PHASES.RUPTURE
-  if (n >= ECO_OVERLOAD_SHAKEN_THRESHOLD) return ECO_OVERLOAD_PHASES.SHAKEN
+  const lim = Math.max(ECO_OVERLOAD_BASE_LIMIT, Number(safeLimit) || ECO_OVERLOAD_BASE_LIMIT)
+  const totalAt = getEcoTotalRuptureThreshold(lim)
+  if (n >= totalAt) return ECO_OVERLOAD_PHASES.TOTAL
+  if (n > lim) return ECO_OVERLOAD_PHASES.RUPTURE
+  if (n >= lim) return ECO_OVERLOAD_PHASES.SHAKEN
   return ECO_OVERLOAD_PHASES.STABLE
 }
 
-export function formatOverloadDisplay(overload) {
+export function formatOverloadDisplay(overload, rupturaOrOpts) {
   const n = Math.max(0, Number(overload) || 0)
-  return `${n}/${ECO_OVERLOAD_DISPLAY_CAP}`
+  const lim = resolveEcoSafeLimit(rupturaOrOpts)
+  return `${n}/${lim}`
 }
 
-export function isInRupturePhase(overload) {
-  return (Number(overload) || 0) >= ECO_OVERLOAD_RUPTURE_PHASE_START
+export function isInRupturePhase(overload, safeLimit = ECO_OVERLOAD_BASE_LIMIT) {
+  return getOverloadPhase(overload, safeLimit) === ECO_OVERLOAD_PHASES.RUPTURE
+    || getOverloadPhase(overload, safeLimit) === ECO_OVERLOAD_PHASES.TOTAL
+}
+
+/** @deprecated sem uso no modelo novo (sem −% dentro do limite) */
+export function getStableEcoPenaltyPercent() {
+  return 0
 }

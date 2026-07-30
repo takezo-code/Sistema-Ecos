@@ -7,12 +7,15 @@ import {
 } from '../constants/states'
 import {
   calculateEffectiveAttributes,
+  calculateEffectiveSocialAttributes,
+  getEffectiveSocialAttributeValue,
   resolveMentalPenalties,
   formatEcoOverloadPenalty,
   formatMentalPenaltiesSummary,
   formatSkillPowerPenalty,
   formatMentalAttrPenalty,
 } from '../mechanics/ecoOverload/overloadPenalties'
+import { getArmorDestrezaPenalty } from '../mechanics/equipment/armorEffectsEngine'
 
 /** Penalidade flat em FOR/DES/VIT pelo estado físico (0–3). */
 export function getPhysicalAttrPenalty(physicalState) {
@@ -42,6 +45,16 @@ export function getEntityEffectiveAttributes(entity = {}) {
     physicalState: entity.physicalState ?? entity.condition ?? 'bem',
     ecoOverload: entity.ecoOverload ?? 0,
     mentalState: entity.mentalState ?? 'estavel',
+    destrezaPenalty: getArmorDestrezaPenalty(entity),
+    ruptura: entity.attributes?.ruptura,
+  })
+}
+
+export function getEntityEffectiveSocialAttributes(entity = {}) {
+  return calculateEffectiveSocialAttributes(entity.socialAttributes || {}, {
+    ecoOverload: entity.ecoOverload ?? 0,
+    mentalState: entity.mentalState ?? 'estavel',
+    ruptura: entity.attributes?.ruptura,
   })
 }
 
@@ -67,7 +80,7 @@ export function calculateEcoEfficiency({
   tier = 1,
   ecoOverload = 0,
 } = {}) {
-  const { ecoPowerMultiplier } = resolveMentalPenalties(ecoOverload, mentalState)
+  const { ecoPowerMultiplier } = resolveMentalPenalties(ecoOverload, mentalState, { ruptura: rupturePoints })
   const ruptureMult = 1 + Math.max(0, Number(rupturePoints) || 0) / 100
   const tierMult = 1 + (Math.max(1, tier) - 1) * 0.15
   const combined = ecoPowerMultiplier * ruptureMult * tierMult
@@ -100,11 +113,13 @@ export function getEffectiveAttributeValue(attributes, attrKey, physicalState, e
         physicalState: physicalState.physicalState ?? 'bem',
         ecoOverload: physicalState.ecoOverload ?? 0,
         mentalState: physicalState.mentalState ?? 'estavel',
+        destrezaPenalty: physicalState.destrezaPenalty ?? 0,
       }
     : {
         physicalState,
         ecoOverload: arguments[3] ?? 0,
         mentalState: arguments[4] ?? 'estavel',
+        destrezaPenalty: arguments[5] ?? 0,
       }
   const { effective } = calculateEffectiveAttributes(attributes, opts)
   return effective[attrKey] ?? 0
@@ -115,16 +130,16 @@ export function formatPhysicalPenalty(physicalState) {
   return n > 0 ? `−${n} FOR · DES · VIT` : null
 }
 
-/** @deprecated use formatMentalPenaltiesSummary */
-export function formatMentalPenalty(mentalState, ecoOverload = 0) {
-  const { ecoPowerPercent } = resolveMentalPenalties(ecoOverload, mentalState)
-  return formatSkillPowerPenalty(ecoPowerPercent)
+export function formatMentalPenalty() {
+  return null
 }
 
 export {
   PHYSICAL_AFFECTED_KEYS,
   formatEcoOverloadPenalty,
   calculateEffectiveAttributes,
+  calculateEffectiveSocialAttributes,
+  getEffectiveSocialAttributeValue,
   formatMentalPenaltiesSummary,
   formatSkillPowerPenalty,
   formatMentalAttrPenalty,

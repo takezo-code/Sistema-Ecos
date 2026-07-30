@@ -11,7 +11,7 @@ const CREATION_TYPES = [
   {
     id: EQUIPMENT_CREATION_ARMA,
     label: 'Arma',
-    description: 'Armas de fogo, arco, corpo a corpo, escudo, orbe, livro, cajado — concedem skills ao equipar.',
+    description: 'Armas à distância, magia, escudo, corpo a corpo — passivas pela raridade.',
     icon: Sword,
     color: '#dc2626',
     border: 'rgba(220,38,38,0.2)',
@@ -20,7 +20,7 @@ const CREATION_TYPES = [
   {
     id: EQUIPMENT_CREATION_ARMADURA,
     label: 'Armadura',
-    description: 'Proteção leve, média ou pesada — resistência física e penalidade de Destreza.',
+    description: 'Proteção leve, média ou pesada — −Destreza e +limiar de marcas.',
     icon: Shield,
     color: '#06b6d4',
     border: 'rgba(6,182,212,0.2)',

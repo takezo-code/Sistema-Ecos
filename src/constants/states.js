@@ -1,18 +1,22 @@
+import { asSafeLimit } from './ecoOverload'
+
 /** Atributos afetados por estado físico (Força, Destreza, Vitalidade) */
 export const PHYSICAL_AFFECTED_KEYS = ['forca', 'destreza', 'vitalidade']
 
 /**
  * Estados físicos do personagem (derivados das marcas de dano).
- * A cada 3 marcas avança um estado e aplica −1 FOR · DES · VIT (acumulativo).
- *   0–2  Estável       → −0
- *   3–5  Ferido        → −1
- *   6–8  Grave         → −2
- *   9+   Incapacitado  → −3
+ * Thresholds base — a cada 4 marcas troca de estado (ver damageMarksEngine):
+ *   0–4  Saudável      → −0
+ *   5–9  Ferido        → −1
+ *   10–14 Grave        → −2
+ *   15+  Incapacitado  → −3
+ *
+ * Vitalidade (2 VIT base → +1 limiar) atrasa esses degraus — usa VIT de base.
  */
 export const PHYSICAL_STATES = [
   {
     value: 'bem',
-    label: 'Estável',
+    label: 'Saudável',
     multiplier: 1.0,
     penaltyPercent: 0,
     attrPenalty: 0,
@@ -55,37 +59,37 @@ export const PHYSICAL_STATES = [
 /**
  * Estados mentais.
  * Ativados progressivamente pela Sobrecarga de Eco.
- * As penalidades de INT e Ruptura são calculadas em overloadPenalties.js.
- * O multiplier aqui afeta a eficácia narrativa/mecânica geral das habilidades de Eco.
+ * Penalidade flat em INT · PER · SAB · CAR (não %).
  */
 export const MENTAL_STATES = [
   {
     value: 'estavel',
     label: 'Estável',
     multiplier: 1.0,
-    /** @deprecated use ecoPowerPenaltyPercent */
     penaltyPercent: 0,
     ecoPowerPenaltyPercent: 0,
+    mentalAttrPenalty: 0,
     mentalAttrPenaltyPercent: 0,
     color: '#06b6d4',
     glow: 'rgba(6,182,212,0.15)',
     note: null,
     ecoFailureChance: 0,
-    overloadRange: '0–4/5',
+    overloadRange: 'abaixo do limite',
     narrativeConsequences: [],
   },
   {
     value: 'abalado',
     label: 'Abalado',
-    multiplier: 0.95,
-    penaltyPercent: 5,
-    ecoPowerPenaltyPercent: 5,
+    multiplier: 1.0,
+    penaltyPercent: 0,
+    ecoPowerPenaltyPercent: 0,
+    mentalAttrPenalty: 1,
     mentalAttrPenaltyPercent: 0,
     color: '#eab308',
     glow: 'rgba(234,179,8,0.12)',
-    note: null,
+    note: '−1 INT · PER · SAB · CAR',
     ecoFailureChance: 0,
-    overloadRange: '5/5',
+    overloadRange: 'no limite',
     narrativeConsequences: [
       'Dificuldade de foco',
       'Lapsos mentais leves',
@@ -98,15 +102,16 @@ export const MENTAL_STATES = [
   {
     value: 'fragmentado',
     label: 'Fragmentado',
-    multiplier: 0.90,
-    penaltyPercent: 10,
-    ecoPowerPenaltyPercent: 10,
-    mentalAttrPenaltyPercent: 5,
+    multiplier: 1.0,
+    penaltyPercent: 0,
+    ecoPowerPenaltyPercent: 0,
+    mentalAttrPenalty: 2,
+    mentalAttrPenaltyPercent: 0,
     color: '#f97316',
     glow: 'rgba(249,115,22,0.15)',
-    note: null,
+    note: '−2 INT · PER · SAB · CAR',
     ecoFailureChance: 0.05,
-    overloadRange: '6/5',
+    overloadRange: '1 acima',
     narrativeConsequences: [
       'Pensamentos fragmentados',
       'Dificuldade de raciocínio complexo',
@@ -118,15 +123,16 @@ export const MENTAL_STATES = [
   {
     value: 'dissociado',
     label: 'Dissociado',
-    multiplier: 0.80,
-    penaltyPercent: 20,
-    ecoPowerPenaltyPercent: 20,
-    mentalAttrPenaltyPercent: 10,
+    multiplier: 1.0,
+    penaltyPercent: 0,
+    ecoPowerPenaltyPercent: 0,
+    mentalAttrPenalty: 3,
+    mentalAttrPenaltyPercent: 0,
     color: '#dc2626',
     glow: 'rgba(220,38,38,0.18)',
-    note: null,
+    note: '−3 INT · PER · SAB · CAR',
     ecoFailureChance: 0.15,
-    overloadRange: '7/5',
+    overloadRange: '2–3 acima',
     narrativeConsequences: [
       'Desconexão com a realidade',
       'Incapacidade de distinguir memória e presente',
@@ -138,15 +144,16 @@ export const MENTAL_STATES = [
   {
     value: 'perdido_no_tempo',
     label: 'Perdido no Tempo',
-    multiplier: 0.20,
-    penaltyPercent: 80,
-    ecoPowerPenaltyPercent: 80,
-    mentalAttrPenaltyPercent: 40,
+    multiplier: 1.0,
+    penaltyPercent: 0,
+    ecoPowerPenaltyPercent: 0,
+    mentalAttrPenalty: 4,
+    mentalAttrPenaltyPercent: 0,
     color: '#a855f7',
     glow: 'rgba(168,85,247,0.22)',
-    note: null,
+    note: '−4 INT · PER · SAB · CAR',
     ecoFailureChance: 0.35,
-    overloadRange: '9/5',
+    overloadRange: '4+ acima',
     glitch: true,
     narrativeConsequences: [
       'Consciência fragmentada no tempo',
@@ -195,26 +202,28 @@ export function compareMentalSeverity(a, b) {
   return MENTAL_STATE_ORDER.indexOf(normalizeMentalState(a)) - MENTAL_STATE_ORDER.indexOf(normalizeMentalState(b))
 }
 
-/** Estado mental mínimo exigido pela sobrecarga de Eco (5→abalado, 6→fragmentado, 7→dissociado, 8+→perdido) */
-export function getMentalStateFromEcoOverload(ecoOverload) {
+/** Estado mental mínimo exigido pela sobrecarga (relativo ao limite 5+RUP). */
+export function getMentalStateFromEcoOverload(ecoOverload, safeLimit = 5) {
   const n = Math.max(0, Number(ecoOverload) || 0)
-  if (n >= 9) return 'perdido_no_tempo'
-  if (n >= 7) return 'dissociado'
-  if (n >= 6) return 'fragmentado'
-  if (n >= 5) return 'abalado'
+  const lim = asSafeLimit(safeLimit)
+  const overage = n - lim
+  if (overage >= 4) return 'perdido_no_tempo'
+  if (overage >= 2) return 'dissociado'
+  if (overage >= 1) return 'fragmentado'
+  if (n >= lim) return 'abalado'
   return null
 }
 
 /** Mantém o estado mais grave entre o atual e o exigido pela sobrecarga */
-export function mergeMentalStateWithOverload(currentMentalState, ecoOverload) {
-  const required = getMentalStateFromEcoOverload(ecoOverload)
+export function mergeMentalStateWithOverload(currentMentalState, ecoOverload, safeLimit = 5) {
+  const required = getMentalStateFromEcoOverload(ecoOverload, safeLimit)
   if (!required) return normalizeMentalState(currentMentalState)
   const current = normalizeMentalState(currentMentalState)
   return compareMentalSeverity(current, required) >= 0 ? current : required
 }
 
-export function getMentalStateLabelForOverload(ecoOverload) {
-  const state = getMentalStateFromEcoOverload(ecoOverload)
+export function getMentalStateLabelForOverload(ecoOverload, safeLimit = 5) {
+  const state = getMentalStateFromEcoOverload(ecoOverload, safeLimit)
   if (!state) return null
   return getMentalStateOption(state).label
 }

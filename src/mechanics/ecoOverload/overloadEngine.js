@@ -1,7 +1,8 @@
 import {
-  ECO_OVERLOAD_RUPTURE_TOTAL,
-  ECO_OVERLOAD_SHAKEN_THRESHOLD,
+  getEcoSafeLimitFromEntity,
+  getEcoTotalRuptureThreshold,
   getOverloadPhase,
+  formatOverloadDisplay,
 } from '../../constants/ecoOverload'
 import { skillTypeIncrementsOverload } from '../../constants/skillTypes'
 import { buildRuptureTotalEvent } from './ruptureEvents'
@@ -10,7 +11,7 @@ import { mergeMentalStateWithOverload, getMentalStateLabelForOverload } from '..
 
 /**
  * Incrementa sobrecarga e aplica consequências (status, eventos).
- * @returns {{ patch: object, events: object[], warnings: string[] }}
+ * Limite seguro = 5 + Ruptura. Acima disso: −INT/PER/SAB/CAR progressivo.
  */
 export function processEcoSkillUse(entity, skill, options = {}) {
   const events = []
@@ -26,14 +27,16 @@ export function processEcoSkillUse(entity, skill, options = {}) {
     }
   }
 
+  const safeLimit = getEcoSafeLimitFromEntity(entity)
+  const totalAt = getEcoTotalRuptureThreshold(safeLimit)
   const current = Math.max(0, Number(entity.ecoOverload) || 0)
   const next = current + 1
   let activeMentalStatuses = [...(entity.activeMentalStatuses || [])]
 
-  activeMentalStatuses = syncOverloadMentalStatus(activeMentalStatuses, next)
+  activeMentalStatuses = syncOverloadMentalStatus(activeMentalStatuses, next, safeLimit)
 
-  const mentalState = mergeMentalStateWithOverload(entity.mentalState, next)
-  const mentalLabel = getMentalStateLabelForOverload(next)
+  const mentalState = mergeMentalStateWithOverload(entity.mentalState, next, safeLimit)
+  const mentalLabel = getMentalStateLabelForOverload(next, safeLimit)
 
   const patch = {
     ecoOverload: next,
@@ -43,19 +46,21 @@ export function processEcoSkillUse(entity, skill, options = {}) {
     lastEcoSkillUsedId: skill?.id ?? null,
   }
 
-  if (next >= ECO_OVERLOAD_SHAKEN_THRESHOLD && current < ECO_OVERLOAD_SHAKEN_THRESHOLD) {
-    warnings.push('Limite de sobrecarga atingido (5/5): personagem Mentalmente Abalado.')
+  if (next >= safeLimit && current < safeLimit) {
+    warnings.push(
+      `Limite de Eco atingido (${formatOverloadDisplay(next, { safeLimit })}): Mentalmente Abalado.`,
+    )
   }
 
   if (mentalState !== (entity.mentalState ?? 'estavel') && mentalLabel) {
     warnings.push(`Estado mental degradado para: ${mentalLabel}.`)
   }
 
-  if (next >= 6 && current < 6) {
-    warnings.push('Ruptura de Eco: penalidades dobram progressivamente em poder e atributos.')
+  if (next === safeLimit + 1 && current <= safeLimit) {
+    warnings.push('Passou do limite: −INT · PER · SAB · CAR sobe com o estado (Abalado −1 … Perdido −4).')
   }
 
-  if (next >= ECO_OVERLOAD_RUPTURE_TOTAL) {
+  if (next >= totalAt && current < totalAt) {
     const ruptureEvent = buildRuptureTotalEvent({
       characterId: entity.id,
       characterName: entity.name,
@@ -72,16 +77,18 @@ export function processEcoSkillUse(entity, skill, options = {}) {
     patch,
     events,
     warnings,
-    phase: getOverloadPhase(next),
+    phase: getOverloadPhase(next, safeLimit),
     overloadBefore: current,
     overloadAfter: next,
+    safeLimit,
   }
 }
 
 export function resetEcoOverload(entity, { clearStatuses = true } = {}) {
+  const safeLimit = getEcoSafeLimitFromEntity(entity)
   let activeMentalStatuses = entity.activeMentalStatuses || []
   if (clearStatuses) {
-    activeMentalStatuses = syncOverloadMentalStatus(activeMentalStatuses, 0)
+    activeMentalStatuses = syncOverloadMentalStatus(activeMentalStatuses, 0, safeLimit)
   }
   return {
     ecoOverload: 0,
@@ -91,17 +98,19 @@ export function resetEcoOverload(entity, { clearStatuses = true } = {}) {
 }
 
 export function setEcoOverloadLevel(entity, level) {
+  const safeLimit = getEcoSafeLimitFromEntity(entity)
   const n = Math.max(0, Math.min(99, Number(level) || 0))
-  const activeMentalStatuses = syncOverloadMentalStatus(entity.activeMentalStatuses || [], n)
-  const mentalState = mergeMentalStateWithOverload(entity.mentalState, n)
+  const activeMentalStatuses = syncOverloadMentalStatus(entity.activeMentalStatuses || [], n, safeLimit)
+  const mentalState = mergeMentalStateWithOverload(entity.mentalState, n, safeLimit)
   return { ecoOverload: n, activeMentalStatuses, mentalState }
 }
 
 /** Aplica status de sobrecarga sem usar habilidade (mestre) */
 export function applyOverloadSideEffects(entity, overload) {
+  const safeLimit = getEcoSafeLimitFromEntity(entity)
   const n = Math.max(0, Number(overload) || 0)
   return {
-    activeMentalStatuses: syncOverloadMentalStatus(entity.activeMentalStatuses || [], n),
-    mentalState: mergeMentalStateWithOverload(entity.mentalState, n),
+    activeMentalStatuses: syncOverloadMentalStatus(entity.activeMentalStatuses || [], n, safeLimit),
+    mentalState: mergeMentalStateWithOverload(entity.mentalState, n, safeLimit),
   }
 }

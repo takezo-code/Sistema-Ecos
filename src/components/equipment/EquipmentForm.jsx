@@ -1,25 +1,23 @@
 import React, { useState } from 'react'
-import { useSkillsCatalogStore } from '../../store/useSkillsCatalogStore'
 import {
   WEAPON_TYPES, ARMOR_TYPES, RARITY_OPTIONS,
-  getWeaponType, getArmorType,
+  getWeaponType, getArmorType, getPassiveSlotsForRarity,
 } from '../../constants/equipmentTypes'
+import { ImageUpload } from '../ui/ImageUpload'
 
 export function EquipmentForm({ initial, category, onSave, onCancel, submitLabel = 'Criar equipamento' }) {
-  const skillsCatalog = useSkillsCatalogStore(s => s.skills)
   const types = category === 'arma' ? WEAPON_TYPES : ARMOR_TYPES
 
   const [form, setForm] = useState(() => {
     const def = types[0]
+    const rarity = initial?.rarity ?? 'comum'
     return {
       type: initial?.type ?? def.id,
       name: initial?.name ?? '',
+      image: initial?.image ?? '',
       description: initial?.description ?? '',
-      rarity: initial?.rarity ?? 'comum',
-      bonusAtaque: initial?.bonusAtaque ?? (category === 'arma' ? (def.defaultBonusAtaque ?? 1) : 0),
-      bonusResistencia: initial?.bonusResistencia ?? (category === 'arma' ? (def.defaultBonusResistencia ?? 0) : def.resistenciaFisica ?? 1),
-      penaltyDestreza: initial?.penaltyDestreza ?? (category === 'armadura' ? (def.penaltyDestreza ?? 0) : 0),
-      skillsGranted: initial?.skillsGranted ?? [],
+      rarity,
+      passives: Array.isArray(initial?.passives) ? initial.passives : [],
     }
   })
 
@@ -29,24 +27,28 @@ export function EquipmentForm({ initial, category, onSave, onCancel, submitLabel
     ? getWeaponType(form.type)
     : getArmorType(form.type)
 
+  const passiveSlots = category === 'arma' ? getPassiveSlotsForRarity(form.rarity) : 0
+
   const handleTypeChange = (typeId) => {
-    const t = category === 'arma' ? getWeaponType(typeId) : getArmorType(typeId)
     set('type', typeId)
-    if (t) {
-      if (category === 'arma') {
-        set('bonusAtaque', t.defaultBonusAtaque ?? 1)
-        set('bonusResistencia', t.defaultBonusResistencia ?? 0)
-      } else {
-        set('bonusResistencia', t.resistenciaFisica ?? 1)
-        set('penaltyDestreza', t.penaltyDestreza ?? 0)
-      }
-    }
   }
 
-  const toggleSkill = (templateId) => {
-    set('skillsGranted', form.skillsGranted.includes(templateId)
-      ? form.skillsGranted.filter(id => id !== templateId)
-      : [...form.skillsGranted, templateId])
+  const handleSave = () => {
+    if (!form.name.trim()) return
+    const payload = {
+      type: form.type,
+      name: form.name,
+      image: form.image || '',
+      description: form.description,
+      rarity: form.rarity,
+      passives: form.passives,
+    }
+    if (category === 'armadura') {
+      const t = getArmorType(form.type)
+      payload.penaltyDestreza = t?.penaltyDestreza ?? 0
+      payload.markBonus = t?.markBonus ?? 0
+    }
+    onSave(payload)
   }
 
   const canSave = form.name.trim().length > 0
@@ -90,6 +92,9 @@ export function EquipmentForm({ initial, category, onSave, onCancel, submitLabel
         </div>
         {selectedTypeMeta && (
           <div style={{ marginTop: '0.4rem', fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', padding: '0.35rem 0.5rem', background: '#0d0d0d', borderRadius: '3px' }}>
+            {selectedTypeMeta.handsLabel && (
+              <span style={{ color: '#666' }}>{selectedTypeMeta.handsLabel.toUpperCase()} · </span>
+            )}
             {selectedTypeMeta.mechDesc}
           </div>
         )}
@@ -106,6 +111,12 @@ export function EquipmentForm({ initial, category, onSave, onCancel, submitLabel
         />
       </div>
 
+      <ImageUpload
+        value={form.image}
+        onChange={v => set('image', v)}
+        label="Imagem do item"
+      />
+
       <div>
         <span style={labelStyle}>RARIDADE</span>
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
@@ -120,32 +131,29 @@ export function EquipmentForm({ initial, category, onSave, onCancel, submitLabel
             >{r.label}</button>
           ))}
         </div>
+        {category === 'arma' && (
+          <div style={{ marginTop: '0.4rem', fontSize: '0.6rem', color: '#555', fontFamily: 'monospace' }}>
+            Passivas: {passiveSlots} slot{passiveSlots !== 1 ? 's' : ''} (comum 1 · incomum 2 · raro 3 · lendário 4)
+          </div>
+        )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.75rem' }}>
-        {category === 'arma' && (
-          <div>
-            <label style={labelStyle}>BÔNUS DE ATAQUE</label>
-            <input type="number" className="input-base" min={-5} max={10}
-              value={form.bonusAtaque} onChange={e => set('bonusAtaque', parseInt(e.target.value, 10) || 0)}
-              style={inputStyle} />
+      {category === 'arma' && (
+        <div style={{
+          padding: '0.625rem 0.75rem',
+          background: '#0d0d0d',
+          border: '1px dashed #1a1a1a',
+          borderRadius: '4px',
+          fontSize: '0.7rem',
+          color: '#555',
+          lineHeight: 1.5,
+        }}>
+          <div style={{ fontSize: '0.5rem', color: '#333', fontFamily: 'monospace', marginBottom: '0.25rem' }}>
+            PASSIVAS · {form.passives.length}/{passiveSlots}
           </div>
-        )}
-        <div>
-          <label style={labelStyle}>{category === 'arma' ? 'BÔNUS RESIST.' : 'RESIST. FÍSICA'}</label>
-          <input type="number" className="input-base" min={0} max={10}
-            value={form.bonusResistencia} onChange={e => set('bonusResistencia', parseInt(e.target.value, 10) || 0)}
-            style={inputStyle} />
+          Passivas serão randomizadas em breve. Por enquanto a arma só reserva os slots pela raridade.
         </div>
-        {category === 'armadura' && (
-          <div>
-            <label style={labelStyle}>PENALIDADE DES</label>
-            <input type="number" className="input-base" min={0} max={5}
-              value={form.penaltyDestreza} onChange={e => set('penaltyDestreza', parseInt(e.target.value, 10) || 0)}
-              style={inputStyle} />
-          </div>
-        )}
-      </div>
+      )}
 
       <div>
         <label style={labelStyle}>DESCRIÇÃO / LORE</label>
@@ -159,34 +167,8 @@ export function EquipmentForm({ initial, category, onSave, onCancel, submitLabel
         />
       </div>
 
-      {skillsCatalog.length > 0 && (
-        <div>
-          <span style={labelStyle}>SKILLS CONCEDIDAS AO EQUIPAR</span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxHeight: '160px', overflowY: 'auto' }}>
-            {skillsCatalog.map(skill => {
-              const active = form.skillsGranted.includes(skill.templateId)
-              return (
-                <button key={skill.templateId} type="button" onClick={() => toggleSkill(skill.templateId)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem',
-                    padding: '0.35rem 0.625rem', borderRadius: '3px',
-                    background: active ? 'rgba(168,85,247,0.1)' : '#0d0d0d',
-                    border: `1px solid ${active ? '#a855f7' : '#1a1a1a'}`,
-                    cursor: 'pointer', textAlign: 'left', transition: 'all 0.12s',
-                  }}
-                >
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: active ? '#a855f7' : '#222', flexShrink: 0 }} />
-                  <span style={{ fontSize: '0.7rem', color: active ? '#e5e5e5' : '#555' }}>{skill.name}</span>
-                  <span style={{ fontSize: '0.5rem', color: '#333', fontFamily: 'monospace', marginLeft: 'auto' }}>{skill.skillType}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
       <div style={{ display: 'flex', gap: '0.5rem', paddingTop: '0.5rem' }}>
-        <button type="button" className="btn-primary" onClick={() => canSave && onSave(form)} disabled={!canSave}
+        <button type="button" className="btn-primary" onClick={handleSave} disabled={!canSave}
           style={{ flex: 1 }}>
           {submitLabel}
         </button>

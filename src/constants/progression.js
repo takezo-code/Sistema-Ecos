@@ -8,11 +8,14 @@ export function getXpRequiredForLevel(currentLevel) {
   return currentLevel * XP_PER_LEVEL_MULTIPLIER
 }
 
-/** @param {{ hasEcoPowers?: boolean }} options — false: só pontos de atributo em cada nível */
+/**
+ * Recompensa de atributo ao subir de nível.
+ * Eco é concedido à parte (1 por nível) — ver applyXpGain.
+ */
 export function getLevelRewardType(newLevel, { hasEcoPowers = true } = {}) {
   if (newLevel <= 1) return null
   if (!hasEcoPowers) return 'attribute'
-  return newLevel % 2 === 0 ? 'attribute' : 'eco'
+  return newLevel % 2 === 0 ? 'attribute' : null
 }
 
 /**
@@ -24,15 +27,27 @@ export function getSocialPointsFromLevel(level) {
   return Math.max(0, Math.min(l - 1, MAX_SOCIAL_LEVEL - 1))
 }
 
-export const MAX_SKILL_TIER = 3
+/** Nível máximo absoluto da skill (Eco + graus com item) */
+export const MAX_SKILL_TIER = 5
 
-/** Descobrir habilidade aleatória (1 Eco) */
-export const ECO_UNLOCK_SKILL_COST = 1
+/** Com Eco dá para subir até este nível (1–4). */
+export const ECO_SKILL_MAX_LEVEL = 4
 
-/**
- * Bônus Ultra XP — fim de sessão (grupo inteiro).
- * Valores calibrados para nível×150: recompensa extra sem pular vários níveis de uma vez.
- */
+/** A partir daqui a skill entra em grau — só sobe com item do mercador. */
+export const SKILL_GRADE_START_LEVEL = 5
+
+/** Custo em Eco para +1 nível (só até ECO_SKILL_MAX_LEVEL) */
+export const ECO_SKILL_POINT_COST = 1
+
+/** @deprecated use ECO_SKILL_POINT_COST */
+export const ECO_UNLOCK_SKILL_COST = ECO_SKILL_POINT_COST
+
+export const MAX_CLASS_SKILL_LEVEL = MAX_SKILL_TIER
+
+export function isSkillGradeLevel(level) {
+  return Math.max(0, Number(level) || 0) >= SKILL_GRADE_START_LEVEL
+}
+
 /** Bônus pontual no combate (bom desempenho em ação/ataque) — mestre concede manualmente */
 export const COMBAT_HIGHLIGHT_XP = 50
 

@@ -1,108 +1,138 @@
 import {
-  ECO_OVERLOAD_DISPLAY_CAP,
+  ECO_OVERLOAD_BASE_LIMIT,
   RUPTURE_BREAK_PENALTIES,
   MENTAL_ATTR_KEYS,
-  getStableEcoPenaltyPercent,
+  OVERLOAD_SOCIAL_ATTR_KEYS,
+  getOverloadOverage,
+  resolveEcoSafeLimit,
+  asSafeLimit,
 } from '../../constants/ecoOverload'
-import { ATTRIBUTES } from '../../constants/attributes'
-import { PHYSICAL_AFFECTED_KEYS, getMentalStateOption, getPhysicalStateOption } from '../../constants/states'
+import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
+import {
+  PHYSICAL_AFFECTED_KEYS,
+  getMentalStateOption,
+  getPhysicalStateOption,
+  getMentalStateFromEcoOverload,
+} from '../../constants/states'
 
-/**
- * Penalidade percentual no poder de Eco (0–100).
- * 1–5: −1% por nível | 6+: tabela de ruptura
- */
-export function getEcoPowerPenaltyPercent(ecoOverload = 0) {
-  const n = Math.max(0, Number(ecoOverload) || 0)
+function clampOverageKey(overage) {
+  const n = Math.max(0, Number(overage) || 0)
   if (n <= 0) return 0
-  if (n <= ECO_OVERLOAD_DISPLAY_CAP) return getStableEcoPenaltyPercent(n)
-  const row = RUPTURE_BREAK_PENALTIES[Math.min(n, 10)]
-  return row?.ecoPercent ?? 100
+  return Math.min(5, n)
+}
+
+function resolveLimit(safeLimitOrOpts) {
+  if (typeof safeLimitOrOpts === 'number') return asSafeLimit(safeLimitOrOpts)
+  return resolveEcoSafeLimit(safeLimitOrOpts)
 }
 
 /**
- * Penalidade percentual em Inteligência e Ruptura (só a partir de 6/5).
- * Atributos físicos (Força/Destreza/Vitalidade) NÃO são afetados pela sobrecarga mental.
- *
- * Escala: 6→−5%, 7→−10%, 8→−20%, 9→−40%, 10→−100%
+ * Penalidade de poder Eco — removida (sempre 0).
+ * Mantida só por compatibilidade de imports.
  */
-export function getMentalAttributePenaltyPercent(ecoOverload = 0) {
+export function getEcoPowerPenaltyPercent() {
+  return 0
+}
+
+/**
+ * −flat em INT · PER · SAB · CAR conforme sobrecarga (relativo ao limite).
+ * No limiar: −1 (Abalado). Acima: −2 / −3 / −4.
+ */
+export function getMentalAttributeFlatPenalty(ecoOverload = 0, safeLimitOrOpts = ECO_OVERLOAD_BASE_LIMIT) {
+  const lim = resolveLimit(safeLimitOrOpts)
   const n = Math.max(0, Number(ecoOverload) || 0)
-  if (n < 6) return 0
-  const row = RUPTURE_BREAK_PENALTIES[Math.min(n, 10)]
-  return row?.mentalAttrPercent ?? 100
+  const overage = getOverloadOverage(n, lim)
+
+  if (n < lim) return 0
+  if (overage <= 0) return 1 // no limite = Abalado
+
+  const key = clampOverageKey(overage)
+  return RUPTURE_BREAK_PENALTIES[key]?.mentalAttrFlat ?? 4
 }
 
-/** @deprecated renamed to getMentalAttributePenaltyPercent */
-export const getGlobalAttributePenaltyPercent = getMentalAttributePenaltyPercent
-
-export function getEcoPowerMultiplier(ecoOverload = 0) {
-  const penalty = getEcoPowerPenaltyPercent(ecoOverload)
-  return Math.max(0, 1 - penalty / 100)
+/** @deprecated use getMentalAttributeFlatPenalty — retorna flat, não % */
+export function getMentalAttributePenaltyPercent(ecoOverload = 0, safeLimitOrOpts = ECO_OVERLOAD_BASE_LIMIT) {
+  return getMentalAttributeFlatPenalty(ecoOverload, safeLimitOrOpts)
 }
 
-export function getMentalAttributeMultiplier(ecoOverload = 0) {
-  const penalty = getMentalAttributePenaltyPercent(ecoOverload)
-  return Math.max(0, 1 - penalty / 100)
-}
+/** @deprecated */
+export const getGlobalAttributePenaltyPercent = getMentalAttributeFlatPenalty
 
-/** @deprecated renamed to getMentalAttributeMultiplier */
-export const getGlobalAttributeMultiplier = getMentalAttributeMultiplier
+export function getEcoPowerMultiplier() {
+  return 1
+}
 
 /**
- * Penalidades efetivas: usa o maior valor entre sobrecarga de Eco e estado mental selecionado.
- * Garante que ajuste manual do estado mental ou da sobrecarga reflita nas contas.
+ * Penalidades efetivas: maior entre sobrecarga e estado mental selecionado.
+ * Atributos mentais/sociais usam −flat (não %). Sem −% em poder de skill.
  */
-export function resolveMentalPenalties(ecoOverload = 0, mentalState = 'estavel') {
-  const ecoFromOverload    = getEcoPowerPenaltyPercent(ecoOverload)
-  const mentalFromOverload = getMentalAttributePenaltyPercent(ecoOverload)
-  const stateOpt           = getMentalStateOption(mentalState)
+export function resolveMentalPenalties(ecoOverload = 0, mentalState = 'estavel', safeLimitOrOpts = ECO_OVERLOAD_BASE_LIMIT) {
+  const lim = resolveLimit(safeLimitOrOpts)
+  const flatFromOverload = getMentalAttributeFlatPenalty(ecoOverload, lim)
 
-  const ecoFromState    = stateOpt.ecoPowerPenaltyPercent ?? stateOpt.penaltyPercent ?? 0
-  const mentalFromState = stateOpt.mentalAttrPenaltyPercent ?? 0
+  const stateOpt = getMentalStateOption(mentalState)
+  const requiredState = getMentalStateFromEcoOverload(ecoOverload, lim)
+  const requiredOpt = requiredState ? getMentalStateOption(requiredState) : null
 
-  const ecoPowerPercent      = Math.max(ecoFromOverload, ecoFromState)
-  const mentalAttrPercent    = Math.max(mentalFromOverload, mentalFromState)
+  const flatFromState = Math.max(
+    Number(stateOpt.mentalAttrPenalty) || 0,
+    Number(requiredOpt?.mentalAttrPenalty) || 0,
+  )
+
+  const mentalAttrFlat = Math.max(flatFromOverload, flatFromState)
 
   return {
-    ecoPowerPercent,
-    mentalAttrPercent,
-    ecoPowerMultiplier: Math.max(0, 1 - ecoPowerPercent / 100),
-    mentalAttrMultiplier: Math.max(0, 1 - mentalAttrPercent / 100),
+    ecoPowerPercent: 0,
+    mentalAttrFlat,
+    mentalAttrPercent: mentalAttrFlat,
+    ecoPowerMultiplier: 1,
+    mentalAttrMultiplier: 1,
+    safeLimit: lim,
   }
 }
 
-/** Aplica penalidade de poder de habilidade (ex: 100 com −5% → 95) */
-export function applySkillPowerPenalty(basePower, ecoPowerPercent) {
-  const base = Math.max(0, Number(basePower) || 0)
-  const mult = Math.max(0, 1 - (Number(ecoPowerPercent) || 0) / 100)
-  return Math.max(0, Math.round(base * mult))
+export function applySkillPowerPenalty(basePower) {
+  return Math.max(0, Number(basePower) || 0)
 }
 
 /**
- * Atributos efetivos com separação clara:
- *  - Físicos (Força/Destreza/Vitalidade) → −N flat pelo estado físico (marcas)
- *  - Mentais (Inteligência/Ruptura)       → penalizados pela sobrecarga de Eco (6/5+)
+ * Atributos físicos efetivos:
+ *  - FOR/DES/VIT → −flat estado físico + armadura na DES
+ *  - INT → −flat sobrecarga/estado mental
+ *  - RUP → sem penalidade de sobrecarga
  */
 export function calculateEffectiveAttributes(attributes = {}, {
   physicalState = 'bem',
   ecoOverload = 0,
   mentalState = 'estavel',
+  destrezaPenalty = 0,
+  safeLimit,
+  ruptura,
 } = {}) {
+  const lim = safeLimit != null
+    ? asSafeLimit(safeLimit)
+    : resolveEcoSafeLimit(ruptura != null ? { ruptura } : { ruptura: attributes?.ruptura })
+
   const physicalOpt = getPhysicalStateOption(physicalState)
   const physicalFlat = Math.max(0, Number(physicalOpt.attrPenalty) || 0)
-  const penalties    = resolveMentalPenalties(ecoOverload, mentalState)
-  const mentalMult   = penalties.mentalAttrMultiplier
-  const effective    = {}
-  const keys         = ATTRIBUTES.map(a => a.key)
+  const armorDex = Math.max(0, Number(destrezaPenalty) || 0)
+  const penalties = resolveMentalPenalties(ecoOverload, mentalState, lim)
+  const mentalFlat = penalties.mentalAttrFlat
+  const effective = {}
+  const keys = ATTRIBUTES.map(a => a.key)
 
   keys.forEach(key => {
     const base = Number(attributes[key]) || 0
-    let value  = base
+    let value = base
 
     if (PHYSICAL_AFFECTED_KEYS.includes(key)) {
       value = base - physicalFlat
     } else if (MENTAL_ATTR_KEYS.includes(key)) {
-      value = Math.round(value * mentalMult)
+      value = base - mentalFlat
+    }
+
+    if (key === 'destreza') {
+      value -= armorDex
     }
 
     effective[key] = Math.max(0, value)
@@ -113,12 +143,49 @@ export function calculateEffectiveAttributes(attributes = {}, {
     effective,
     physicalMultiplier: physicalOpt.multiplier ?? 1,
     physicalAttrPenalty: physicalFlat,
-    mentalAttributeMultiplier: mentalMult,
-    globalAttributeMultiplier: mentalMult,
+    destrezaPenalty: armorDex,
+    mentalAttrFlat: mentalFlat,
+    mentalAttributeMultiplier: 1,
+    globalAttributeMultiplier: 1,
     ecoPowerMultiplier: penalties.ecoPowerMultiplier,
     ecoPenaltyPercent: penalties.ecoPowerPercent,
-    mentalAttrPenaltyPercent: penalties.mentalAttrPercent,
-    attributePenaltyPercent: penalties.mentalAttrPercent,
+    mentalAttrPenaltyPercent: mentalFlat,
+    attributePenaltyPercent: mentalFlat,
+    safeLimit: lim,
+  }
+}
+
+/** PER · SAB · CAR efetivos (VON não sofre sobrecarga). */
+export function calculateEffectiveSocialAttributes(socialAttributes = {}, {
+  ecoOverload = 0,
+  mentalState = 'estavel',
+  safeLimit,
+  ruptura,
+} = {}) {
+  const lim = safeLimit != null
+    ? asSafeLimit(safeLimit)
+    : resolveEcoSafeLimit({ ruptura: ruptura ?? 0 })
+
+  const penalties = resolveMentalPenalties(ecoOverload, mentalState, lim)
+  const mentalFlat = penalties.mentalAttrFlat
+  const effective = {}
+
+  SOCIAL_ATTRIBUTES.forEach(({ key }) => {
+    const base = Number(socialAttributes[key]) || 0
+    if (OVERLOAD_SOCIAL_ATTR_KEYS.includes(key)) {
+      effective[key] = Math.max(0, base - mentalFlat)
+    } else {
+      effective[key] = Math.max(0, base)
+    }
+  })
+
+  return {
+    base: socialAttributes,
+    effective,
+    mentalAttrFlat: mentalFlat,
+    mentalAttributeMultiplier: 1,
+    mentalAttrPenaltyPercent: mentalFlat,
+    safeLimit: lim,
   }
 }
 
@@ -126,34 +193,46 @@ export function getEffectiveAttributeValue(attributes, attrKey, {
   physicalState = 'bem',
   ecoOverload = 0,
   mentalState = 'estavel',
+  destrezaPenalty = 0,
+  safeLimit,
+  ruptura,
 } = {}) {
-  const { effective } = calculateEffectiveAttributes(attributes, { physicalState, ecoOverload, mentalState })
+  const { effective } = calculateEffectiveAttributes(attributes, {
+    physicalState, ecoOverload, mentalState, destrezaPenalty, safeLimit, ruptura,
+  })
   return effective[attrKey] ?? 0
 }
 
-export function formatSkillPowerPenalty(ecoPowerPercent) {
-  const pct = Number(ecoPowerPercent) || 0
-  return pct > 0 ? `−${pct}% poder de habilidade` : null
+export function getEffectiveSocialAttributeValue(socialAttributes, attrKey, opts = {}) {
+  const { effective } = calculateEffectiveSocialAttributes(socialAttributes, opts)
+  return effective[attrKey] ?? 0
 }
 
-export function formatMentalAttrPenalty(mentalAttrPercent) {
-  const pct = Number(mentalAttrPercent) || 0
-  return pct > 0 ? `−${pct}% INT · Ruptura` : null
+export function formatSkillPowerPenalty() {
+  return null
+}
+
+export function formatMentalAttrPenalty(mentalAttrFlat) {
+  const n = Math.max(0, Number(mentalAttrFlat) || 0)
+  return n > 0 ? `−${n} INT · PER · SAB · CAR` : null
 }
 
 export function formatMentalPenaltiesSummary({
   ecoOverload = 0,
   mentalState = 'estavel',
+  safeLimit,
+  ruptura,
 } = {}) {
-  const { ecoPowerPercent, mentalAttrPercent } = resolveMentalPenalties(ecoOverload, mentalState)
-  const skillPowerLine = formatSkillPowerPenalty(ecoPowerPercent)
-  const mentalAttrLine = formatMentalAttrPenalty(mentalAttrPercent)
-  const lines = [skillPowerLine, mentalAttrLine].filter(Boolean)
+  const lim = safeLimit != null ? { safeLimit } : { ruptura }
+  const { mentalAttrFlat } = resolveMentalPenalties(ecoOverload, mentalState, lim)
+  const mentalAttrLine = formatMentalAttrPenalty(mentalAttrFlat)
+  const lines = [mentalAttrLine].filter(Boolean)
 
   return {
-    ecoPowerPercent,
-    mentalAttrPercent,
-    skillPowerLine,
+    ecoPowerPercent: 0,
+    mentalAttrFlat,
+    mentalAttrPercent: mentalAttrFlat,
+    skillPowerLine: null,
     mentalAttrLine,
     lines,
     compactLine: lines.join(' · ') || null,
@@ -161,10 +240,7 @@ export function formatMentalPenaltiesSummary({
   }
 }
 
-export function formatEcoOverloadPenalty(ecoOverload, mentalState = 'estavel') {
-  const { ecoPowerPercent, mentalAttrPercent } = resolveMentalPenalties(ecoOverload, mentalState)
-  const parts = []
-  if (ecoPowerPercent > 0) parts.push(`−${ecoPowerPercent}% poder habilidade`)
-  if (mentalAttrPercent > 0) parts.push(`−${mentalAttrPercent}% INT · Ruptura`)
-  return parts.length ? parts.join(' · ') : null
+export function formatEcoOverloadPenalty(ecoOverload, mentalState = 'estavel', safeLimitOrOpts = ECO_OVERLOAD_BASE_LIMIT) {
+  const { mentalAttrFlat } = resolveMentalPenalties(ecoOverload, mentalState, safeLimitOrOpts)
+  return formatMentalAttrPenalty(mentalAttrFlat)
 }

@@ -1,5 +1,3 @@
-import { getEcoPowerMultiplier } from '../mechanics/ecoOverload/overloadPenalties'
-
 /**
  * Cada ponto de Ruptura = +1% na eficiência das habilidades de Eco.
  */
@@ -12,14 +10,12 @@ export function getEffectiveSkillPower(
   rupturePoints = 0,
   tier = 1,
   mentalMultiplier = 1,
-  ecoOverload = 0
 ) {
   const base = Number(basePower) || 0
   const tierMult = 1 + (tier - 1) * 0.15
   const ruptureMult = 1 + getRuptureBonusPercent(rupturePoints) / 100
   const mentalMult = Math.max(0, Number(mentalMultiplier) || 1)
-  const overloadMult = getEcoPowerMultiplier(ecoOverload)
-  return Math.round(base * tierMult * ruptureMult * mentalMult * overloadMult)
+  return Math.round(base * tierMult * ruptureMult * mentalMult)
 }
 
 export function formatRuptureBonus(rupturePoints = 0) {

@@ -28,7 +28,8 @@ export function useCharacterManagementPanel(characterId, { adminMode = false } =
   const clampMasterAuxiliary = useCharacterStore(s => s.clampMasterAuxiliary)
   const scaleMasterAttributesToBudget = useCharacterStore(s => s.scaleMasterAttributesToBudget)
   const lastMasterError = useCharacterStore(s => s.lastMasterError)
-  const unlockSkill = useCharacterStore(s => s.unlockSkill)
+  const investSkillPoint = useCharacterStore(s => s.investSkillPoint)
+  const upgradeSkillGrade = useCharacterStore(s => s.upgradeSkillGrade)
   const useEcoSkill = useCharacterStore(s => s.useEcoSkill)
   const learnCatalogSkill = useCharacterStore(s => s.learnCatalogSkill)
   const removeSkill = useCharacterStore(s => s.removeSkill)
@@ -65,7 +66,8 @@ export function useCharacterManagementPanel(characterId, { adminMode = false } =
       onScaleAttributes: () => scaleMasterAttributesToBudget(id),
       masterError: lastMasterError,
       onSpendPendingAttribute: key => spendPendingAttribute(id, key),
-      onUnlockSkill: () => unlockSkill(id),
+      onInvestSkillPoint: templateId => investSkillPoint(id, templateId),
+      onUpgradeSkillGrade: templateId => upgradeSkillGrade(id, templateId),
       onUseSkill: (skillId, opts) => useEcoSkill(id, skillId, opts),
       onLearnCatalogSkill: templateId => learnCatalogSkill(id, templateId),
       onRemoveSkill: skillId => removeSkill(id, skillId),
@@ -89,7 +91,8 @@ export function useCharacterManagementPanel(characterId, { adminMode = false } =
     clampMasterAuxiliary,
     scaleMasterAttributesToBudget,
     spendPendingAttribute,
-    unlockSkill,
+    investSkillPoint,
+    upgradeSkillGrade,
     useEcoSkill,
     learnCatalogSkill,
     removeSkill,

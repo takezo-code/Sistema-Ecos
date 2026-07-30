@@ -1,10 +1,14 @@
-import { ECO_OVERLOAD_DISPLAY_CAP, ECO_OVERLOAD_RUPTURE_TOTAL } from '../../constants/ecoOverload'
+import {
+  getEcoSafeLimit,
+  getEcoTotalRuptureThreshold,
+} from '../../constants/ecoOverload'
 import { SKILL_VISUAL_STATES } from '../../constants/skillVisualStates'
 import { ECO_SKILL_TYPES } from '../../constants/skillTypes'
 import { isOnCooldown } from './cooldownEngine'
 
 /**
  * Resolve estado visual do card conforme cooldown, sobrecarga e tipo.
+ * safeLimit = 5 + Ruptura (passado pelo runtime ou derivado).
  */
 export function resolveSkillVisualState({
   skillType,
@@ -12,8 +16,13 @@ export function resolveSkillVisualState({
   ecoOverload = 0,
   mentalState = 'estavel',
   explicitlyBlocked = false,
+  safeLimit,
+  ruptura = 0,
 } = {}) {
-  if (explicitlyBlocked || ecoOverload >= ECO_OVERLOAD_RUPTURE_TOTAL) {
+  const lim = safeLimit != null ? safeLimit : getEcoSafeLimit(ruptura)
+  const totalAt = getEcoTotalRuptureThreshold(lim)
+
+  if (explicitlyBlocked || ecoOverload >= totalAt) {
     return SKILL_VISUAL_STATES.BLOQUEADA
   }
 
@@ -21,12 +30,12 @@ export function resolveSkillVisualState({
     return SKILL_VISUAL_STATES.EM_COOLDOWN
   }
 
-  if (ecoOverload >= ECO_OVERLOAD_DISPLAY_CAP) {
+  if (ecoOverload >= lim) {
     return SKILL_VISUAL_STATES.SOBRECARGA_ALTA
   }
 
   const unstableMental = ['fragmentado', 'dissociado', 'perdido_no_tempo'].includes(mentalState)
-  if (unstableMental || ecoOverload >= 4) {
+  if (unstableMental || ecoOverload >= Math.max(0, lim - 1)) {
     return SKILL_VISUAL_STATES.INSTAVEL
   }
 
@@ -38,11 +47,16 @@ export function canActivateActiveSkill({
   cooldowns,
   templateId,
   ecoOverload = 0,
+  safeLimit,
+  ruptura = 0,
 }) {
+  const lim = safeLimit != null ? safeLimit : getEcoSafeLimit(ruptura)
+  const totalAt = getEcoTotalRuptureThreshold(lim)
+
   if (skillType !== ECO_SKILL_TYPES.ATIVA) {
     return { allowed: false, reason: 'Habilidades passivas não são ativadas manualmente.' }
   }
-  if (ecoOverload >= ECO_OVERLOAD_RUPTURE_TOTAL) {
+  if (ecoOverload >= totalAt) {
     return { allowed: false, reason: 'Ruptura total — habilidades bloqueadas.' }
   }
   if (isOnCooldown(cooldowns, templateId)) {

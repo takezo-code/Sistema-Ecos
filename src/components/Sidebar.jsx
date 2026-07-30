@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import {
-  LayoutDashboard,
   BookOpen,
   Users,
   ScrollText,
@@ -18,6 +17,7 @@ import {
   Shield,
   UsersRound,
   Clapperboard,
+  Store,
 } from 'lucide-react'
 import { MANAGEMENT_VIEWS } from '../constants/managementViews'
 
@@ -44,7 +44,6 @@ const MANAGEMENT_SECTIONS = [
     id: 'skills',
     label: 'Skills',
     items: [
-      { id: MANAGEMENT_VIEWS.SKILLS_CHARACTER, label: 'Personagem', icon: Sword },
       { id: MANAGEMENT_VIEWS.SKILLS_NPC, label: 'NPC', icon: Skull },
       { id: MANAGEMENT_VIEWS.SKILLS_BOSS, label: 'Boss', icon: ShieldAlert },
     ],
@@ -55,6 +54,7 @@ const EMJOGO_CHILDREN = [
   { id: 'ficha', label: 'Ficha', icon: UsersRound },
   { id: 'cena', label: 'Cena', icon: Clapperboard },
   { id: 'combat', label: 'Combate', icon: Swords },
+  { id: 'mercador', label: 'Mercador', icon: Store },
 ]
 
 const CAMPANHA_CHILDREN = [
@@ -63,7 +63,6 @@ const CAMPANHA_CHILDREN = [
 ]
 
 const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   {
     id: 'campanha',
     label: 'Campanha',
@@ -313,16 +312,18 @@ export function Sidebar({
     >
       <div
         style={{
-          padding: collapsed ? '1rem 0' : '1rem',
+          padding: collapsed ? '0.75rem 0' : '1rem',
           borderBottom: '1px solid #1a1a1a',
           display: 'flex',
+          flexDirection: collapsed ? 'column' : 'row',
           alignItems: 'center',
           justifyContent: collapsed ? 'center' : 'space-between',
+          gap: collapsed ? '0.5rem' : 0,
           minHeight: '56px',
         }}
       >
         {!collapsed && (
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: '0.7rem', color: '#dc2626', fontFamily: 'monospace', letterSpacing: '0.15em', fontWeight: 700 }}>
               RPG MASTER
             </div>
@@ -331,26 +332,36 @@ export function Sidebar({
             </div>
           </div>
         )}
-        {collapsed && (
-          <div style={{ color: '#dc2626', fontSize: '0.65rem', fontFamily: 'monospace', fontWeight: 700 }}>RM</div>
-        )}
         <button
           type="button"
           onClick={onToggle}
+          title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+          aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
           style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#333',
+            background: collapsed ? 'rgba(255,255,255,0.04)' : 'transparent',
+            border: collapsed ? '1px solid #1a1a1a' : 'none',
+            borderRadius: '4px',
+            color: '#666',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            padding: '2px',
-            transition: 'color 0.15s',
+            justifyContent: 'center',
+            width: collapsed ? '32px' : 'auto',
+            height: collapsed ? '32px' : 'auto',
+            padding: collapsed ? 0 : '4px',
+            flexShrink: 0,
+            transition: 'color 0.15s, background 0.15s, border-color 0.15s',
           }}
-          onMouseEnter={e => { e.currentTarget.style.color = '#666' }}
-          onMouseLeave={e => { e.currentTarget.style.color = '#333' }}
+          onMouseEnter={e => {
+            e.currentTarget.style.color = '#e5e5e5'
+            e.currentTarget.style.borderColor = '#333'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.color = '#666'
+            e.currentTarget.style.borderColor = '#1a1a1a'
+          }}
         >
-          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
       </div>
 
@@ -410,20 +421,29 @@ export function Sidebar({
         })}
       </nav>
 
-      {footer || (
-        <div
-          style={{
-            padding: collapsed ? '0.75rem 0' : '0.75rem 1rem',
-            borderTop: '1px solid #1a1a1a',
-            display: 'flex',
-            justifyContent: collapsed ? 'center' : 'flex-start',
-          }}
-        >
-          <div style={{ fontSize: '0.6rem', color: '#222', fontFamily: 'monospace' }}>
-            {collapsed ? '●' : 'LOCAL MODE ●'}
+      <div
+        style={{
+          borderTop: '1px solid #1a1a1a',
+          padding: collapsed ? '0.5rem 0' : 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: collapsed ? 'center' : 'stretch',
+        }}
+      >
+        {footer || (
+          <div
+            style={{
+              padding: collapsed ? '0.75rem 0' : '0.75rem 1rem',
+              display: 'flex',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+            }}
+          >
+            <div style={{ fontSize: '0.6rem', color: '#222', fontFamily: 'monospace' }}>
+              {collapsed ? '●' : 'LOCAL MODE ●'}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </aside>
   )
 }

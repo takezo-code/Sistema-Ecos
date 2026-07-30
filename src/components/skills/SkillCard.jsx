@@ -34,9 +34,9 @@ export function SkillCard({ runtime, onActivate }) {
             }}>
               {typeMeta.label.toUpperCase()}
             </span>
-            {runtime.categoryMeta && (
-              <span style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: runtime.categoryMeta.color }}>
-                · {runtime.categoryMeta.label.toUpperCase()}
+            {runtime.classMeta && (
+              <span style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: runtime.classMeta.color }}>
+                · {runtime.classMeta.label.toUpperCase()}
               </span>
             )}
             <span style={{

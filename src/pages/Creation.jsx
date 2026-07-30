@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft, Sword, Skull, Building2, ShieldAlert, Shield, Sparkles, Package, Users,
 } from 'lucide-react'
@@ -20,16 +20,52 @@ import {
 } from './EquipmentCreationHub'
 import { MANAGEMENT_VIEWS, skillAudienceToManagementView } from '../constants/managementViews'
 
-const ENTITY_TYPES = [
+// ── Grupos (nível 1) ─────────────────────────────────────────────────
+const GROUPS = {
+  artefato: {
+    id: 'artefato',
+    label: 'Artefato',
+    description: 'Personagem, NPC, boss ou organização da campanha.',
+    icon: Users,
+    color: '#dc2626',
+    border: 'rgba(220,38,38,0.25)',
+    bg: 'rgba(220,38,38,0.04)',
+    needsCampaign: true,
+  },
+  equipamento: {
+    id: 'equipamento',
+    label: 'Equipamento',
+    description: 'Arma ou armadura — catálogo global da mesa.',
+    icon: Package,
+    color: '#06b6d4',
+    border: 'rgba(6,182,212,0.25)',
+    bg: 'rgba(6,182,212,0.04)',
+    needsCampaign: false,
+  },
+  skill: {
+    id: 'skill',
+    label: 'Criar Skill',
+    description: 'Habilidades para NPC ou boss. Skills de personagem são pré-definidas.',
+    icon: Sparkles,
+    color: '#a855f7',
+    border: 'rgba(168,85,247,0.25)',
+    bg: 'rgba(168,85,247,0.04)',
+    needsCampaign: false,
+  },
+}
+
+const GROUP_ORDER = ['artefato', 'equipamento', 'skill']
+
+// ── Opções por grupo (nível 2) ───────────────────────────────────────
+const ARTEFATO_TYPES = [
   {
     id: 'characters',
-    label: 'Personagem',
+    label: 'Player',
     description: 'Personagem jogável com atributos, progressão e habilidades de Eco.',
     icon: Sword,
     color: '#9ca3af',
     border: 'rgba(156,163,175,0.2)',
     bg: 'rgba(156,163,175,0.04)',
-    group: 'entities',
     needsCampaign: true,
   },
   {
@@ -40,7 +76,6 @@ const ENTITY_TYPES = [
     color: '#06b6d4',
     border: 'rgba(6,182,212,0.2)',
     bg: 'rgba(6,182,212,0.04)',
-    group: 'entities',
     needsCampaign: true,
   },
   {
@@ -51,18 +86,16 @@ const ENTITY_TYPES = [
     color: '#dc2626',
     border: 'rgba(220,38,38,0.2)',
     bg: 'rgba(220,38,38,0.04)',
-    group: 'entities',
     needsCampaign: true,
   },
   {
     id: 'organizations',
-    label: 'Organização',
+    label: 'Org',
     description: 'Facção, corporação, culto ou grupo organizado da campanha.',
     icon: Building2,
     color: '#d97706',
     border: 'rgba(217,119,6,0.2)',
     bg: 'rgba(217,119,6,0.04)',
-    group: 'entities',
     needsCampaign: true,
   },
 ]
@@ -71,87 +104,64 @@ const EQUIPMENT_TYPES = [
   {
     id: EQUIPMENT_CREATION_ARMA,
     label: 'Arma',
-    description: 'Armas de fogo, corpo a corpo, escudo, orbe — podem conceder skills.',
+    description: 'Armas à distância, magia, escudo, duas mãos — passivas pela raridade.',
     icon: Sword,
     color: '#dc2626',
     border: 'rgba(220,38,38,0.2)',
     bg: 'rgba(220,38,38,0.04)',
-    group: 'equipment',
-    needsCampaign: false,
   },
   {
     id: EQUIPMENT_CREATION_ARMADURA,
     label: 'Armadura',
-    description: 'Proteção leve, média ou pesada — resistência e penalidade de Destreza.',
+    description: 'Proteção leve, média ou pesada — −Destreza e +limiar de marcas.',
     icon: Shield,
     color: '#06b6d4',
     border: 'rgba(6,182,212,0.2)',
     bg: 'rgba(6,182,212,0.04)',
-    group: 'equipment',
-    needsCampaign: false,
   },
 ]
 
 const SKILL_TYPES = [
   {
-    id: SKILL_AUDIENCE.CHARACTER,
-    label: 'Skill de Personagem',
-    description: 'Poderes que personagens jogadores podem descobrir e aprender.',
-    icon: Sword,
-    color: '#9ca3af',
-    border: 'rgba(156,163,175,0.2)',
-    bg: 'rgba(156,163,175,0.04)',
-    group: 'skills',
-    needsCampaign: false,
-  },
-  {
-    id: SKILL_AUDIENCE.NPC,
-    label: 'Skill de NPC',
-    description: 'Habilidades exclusivas para NPCs — atribuição manual no Gerenciamento.',
+    id: 'skill_npc',
+    label: 'NPC',
+    description: 'Habilidade exclusiva de NPCs — escolha manual no Gerenciamento.',
     icon: Skull,
     color: '#06b6d4',
     border: 'rgba(6,182,212,0.2)',
     bg: 'rgba(6,182,212,0.04)',
-    group: 'skills',
-    needsCampaign: false,
+    audience: SKILL_AUDIENCE.NPC,
   },
   {
-    id: SKILL_AUDIENCE.BOSS,
-    label: 'Skill de Boss',
-    description: 'Poderes de inimigos poderosos — catálogo separado para bosses.',
+    id: 'skill_boss',
+    label: 'Boss',
+    description: 'Habilidade de inimigos poderosos e combatentes de elite.',
     icon: ShieldAlert,
     color: '#dc2626',
     border: 'rgba(220,38,38,0.2)',
     bg: 'rgba(220,38,38,0.04)',
-    group: 'skills',
-    needsCampaign: false,
+    audience: SKILL_AUDIENCE.BOSS,
   },
 ]
 
-const ALL_TYPES = [...ENTITY_TYPES, ...EQUIPMENT_TYPES, ...SKILL_TYPES]
+const GROUP_CHILDREN = {
+  artefato: ARTEFATO_TYPES,
+  equipamento: EQUIPMENT_TYPES,
+  skill: SKILL_TYPES,
+}
 
-const ENTITY_IDS = new Set(ENTITY_TYPES.map(t => t.id))
+const ENTITY_IDS = new Set(ARTEFATO_TYPES.map(t => t.id))
 const EQUIPMENT_IDS = new Set(EQUIPMENT_TYPES.map(t => t.id))
 const SKILL_IDS = new Set(SKILL_TYPES.map(t => t.id))
 
-function SectionTitle({ icon: Icon, label, color }) {
-  return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      marginBottom: '0.75rem',
-      marginTop: '0.25rem',
-    }}>
-      <Icon size={14} style={{ color }} />
-      <span style={{ fontSize: '0.65rem', color: '#555', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-        {label}
-      </span>
-    </div>
-  )
+function resolveGroupForLeaf(typeId) {
+  if (ENTITY_IDS.has(typeId)) return 'artefato'
+  if (EQUIPMENT_IDS.has(typeId)) return 'equipamento'
+  if (SKILL_IDS.has(typeId) || typeId === 'skill') return 'skill'
+  return null
 }
 
-function BackBar({ onBack }) {
+function BackBar({ onBack, label = 'Voltar' }) {
   return (
     <div style={{
       padding: '0.6rem 1.5rem',
@@ -178,8 +188,23 @@ function BackBar({ onBack }) {
         onMouseLeave={e => { e.currentTarget.style.color = '#555' }}
       >
         <ArrowLeft size={13} />
-        Voltar à seleção
+        {label}
       </button>
+    </div>
+  )
+}
+
+function ChoiceGrid({ types, disabled, onClick }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.75rem' }}>
+      {types.map(type => (
+        <CreationChoiceCard
+          key={type.id}
+          type={type}
+          disabled={disabled?.(type) ?? false}
+          onClick={onClick}
+        />
+      ))}
     </div>
   )
 }
@@ -189,34 +214,59 @@ export function Creation({
   initialCreationType,
   onCreationTypeConsumed,
 }) {
-  const [selected, setSelected] = useState(initialCreationType || null)
+  const [group, setGroup] = useState(null)
+  const [selected, setSelected] = useState(null)
   const { activeCampaignId } = useCampaignStore()
   const addItem = useEquipmentStore(s => s.addItem)
   const addSkill = useSkillsCatalogStore(s => s.addSkill)
 
   useEffect(() => {
-    if (initialCreationType) {
-      setSelected(initialCreationType)
-      onCreationTypeConsumed?.()
+    if (!initialCreationType) return
+    const leafGroup = resolveGroupForLeaf(initialCreationType)
+    if (GROUPS[initialCreationType]) {
+      setGroup(initialCreationType)
+      setSelected(null)
+    } else if (leafGroup) {
+      setGroup(leafGroup)
+      setSelected(initialCreationType === 'skill' ? null : initialCreationType)
     }
+    onCreationTypeConsumed?.()
   }, [initialCreationType, onCreationTypeConsumed])
 
-  const handleSelect = (typeId) => {
-    const type = ALL_TYPES.find(t => t.id === typeId)
+  const skillMeta = useMemo(
+    () => SKILL_TYPES.find(t => t.id === selected),
+    [selected],
+  )
+
+  const openGroup = (groupId) => {
+    const g = GROUPS[groupId]
+    if (g?.needsCampaign && !activeCampaignId) return
+    setGroup(groupId)
+    setSelected(null)
+  }
+
+  const openLeaf = (typeId) => {
+    const children = GROUP_CHILDREN[group] || []
+    const type = children.find(t => t.id === typeId)
     if (type?.needsCampaign && !activeCampaignId) return
     setSelected(typeId)
   }
 
-  const clearSelection = () => setSelected(null)
+  const backToGroups = () => {
+    setGroup(null)
+    setSelected(null)
+  }
+
+  const backToGroup = () => setSelected(null)
 
   const handleEntitySuccess = (typeId) => {
-    clearSelection()
+    backToGroups()
     onNavigate?.('management', typeId)
   }
 
   const handleEquipmentCreate = (formData) => {
     addItem({ ...formData, category: selected, campaignId: activeCampaignId })
-    clearSelection()
+    backToGroups()
     onNavigate?.(
       'management',
       selected === EQUIPMENT_CREATION_ARMADURA ? MANAGEMENT_VIEWS.ARMADURA : MANAGEMENT_VIEWS.ARMAS,
@@ -224,24 +274,25 @@ export function Creation({
   }
 
   const handleSkillCreate = (draft) => {
-    addSkill(draft)
-    clearSelection()
-    onNavigate?.('management', skillAudienceToManagementView(draft.audience || selected))
+    const audience = skillMeta?.audience || draft.audience || SKILL_AUDIENCE.NPC
+    addSkill({ ...draft, audience })
+    backToGroups()
+    onNavigate?.('management', skillAudienceToManagementView(audience))
   }
 
-  // ── Fluxo de entidade (personagem / NPC / boss / org) ──────────────
+  // ── Fluxo de entidade ──────────────────────────────────────────────
   if (selected && ENTITY_IDS.has(selected)) {
     const flowProps = {
       embedded: true,
       onNavigate,
       autoOpenCreate: true,
-      onCreateFlowClose: clearSelection,
+      onCreateFlowClose: backToGroup,
       onCreateFlowSuccess: () => handleEntitySuccess(selected),
     }
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-        <PageHeader icon={Sparkles} title="Criação" subtitle="CAMPANHA" />
-        <BackBar onBack={clearSelection} />
+        <PageHeader icon={Sparkles} title="Criação" subtitle="ARTEFATO" />
+        <BackBar onBack={backToGroup} label="Voltar às opções" />
         <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           {selected === 'characters' && <Characters {...flowProps} />}
           {selected === 'npcs' && <NPCs {...flowProps} />}
@@ -258,13 +309,13 @@ export function Creation({
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         <PageHeader icon={Sparkles} title="Criação" subtitle="EQUIPAMENTO" />
-        <BackBar onBack={clearSelection} />
+        <BackBar onBack={backToGroup} label="Voltar às opções" />
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
             <EquipmentForm
               category={categoryLabel}
               onSave={handleEquipmentCreate}
-              onCancel={clearSelection}
+              onCancel={backToGroup}
               submitLabel="Criar equipamento"
             />
           </div>
@@ -274,18 +325,21 @@ export function Creation({
   }
 
   // ── Fluxo de skill ─────────────────────────────────────────────────
-  if (selected && SKILL_IDS.has(selected)) {
+  if (selected && SKILL_IDS.has(selected) && skillMeta) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-        <PageHeader icon={Sparkles} title="Criação" subtitle="SKILL" />
-        <BackBar onBack={clearSelection} />
+        <PageHeader icon={Sparkles} title="Criação" subtitle={`SKILL · ${skillMeta.label.toUpperCase()}`} />
+        <BackBar onBack={backToGroup} label="Voltar às opções" />
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
           <div style={{ maxWidth: '520px', margin: '0 auto' }}>
             <SkillForm
-              defaultAudience={selected}
+              key={skillMeta.id}
+              defaultAudience={skillMeta.audience}
+              initial={{ audience: skillMeta.audience }}
               onSubmit={handleSkillCreate}
-              onCancel={clearSelection}
+              onCancel={backToGroup}
               submitLabel="Criar skill"
+              lockAudience
             />
           </div>
         </div>
@@ -293,13 +347,43 @@ export function Creation({
     )
   }
 
-  // ── Seleção ────────────────────────────────────────────────────────
+  // ── Submenu do grupo ───────────────────────────────────────────────
+  if (group && GROUPS[group]) {
+    const g = GROUPS[group]
+    const children = GROUP_CHILDREN[group]
+    const HeaderIcon = g.icon
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+        <PageHeader icon={HeaderIcon} title="Criação" subtitle={g.label.toUpperCase()} />
+        <BackBar onBack={backToGroups} label="Voltar" />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+          <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: '#e5e5e5', marginBottom: '0.35rem' }}>
+                {g.label}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#444' }}>
+                {g.description}
+              </div>
+            </div>
+            <ChoiceGrid
+              types={children}
+              disabled={(type) => Boolean(type.needsCampaign && !activeCampaignId)}
+              onClick={openLeaf}
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Nível 1: 3 cards ───────────────────────────────────────────────
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <PageHeader
         icon={Sparkles}
         title="Criação"
-        subtitle="PERSONAGEM · NPC · BOSS · EQUIPAMENTO · SKILL"
+        subtitle="ARTEFATO · EQUIPAMENTO · SKILL"
       />
       <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
@@ -309,46 +393,16 @@ export function Creation({
             </div>
             <div style={{ fontSize: '0.75rem', color: '#444' }}>
               {activeCampaignId
-                ? 'Tudo em um só lugar — campanha, equipamentos e skills.'
-                : 'Selecione uma campanha ativa para criar personagens, NPCs, bosses e organizações.'}
+                ? 'Escolha uma categoria e depois o tipo.'
+                : 'Selecione uma campanha ativa para criar artefatos (player, NPC, boss, org).'}
             </div>
           </div>
 
-          <SectionTitle icon={Users} label="CAMPANHA" color="#dc2626" />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.75rem', marginBottom: '1.75rem' }}>
-            {ENTITY_TYPES.map(type => (
-              <CreationChoiceCard
-                key={type.id}
-                type={type}
-                disabled={!activeCampaignId}
-                onClick={handleSelect}
-              />
-            ))}
-          </div>
-
-          <SectionTitle icon={Package} label="EQUIPAMENTOS" color="#06b6d4" />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.75rem', marginBottom: '1.75rem' }}>
-            {EQUIPMENT_TYPES.map(type => (
-              <CreationChoiceCard
-                key={type.id}
-                type={type}
-                disabled={false}
-                onClick={handleSelect}
-              />
-            ))}
-          </div>
-
-          <SectionTitle icon={Sparkles} label="SKILLS" color="#a855f7" />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.75rem' }}>
-            {SKILL_TYPES.map(type => (
-              <CreationChoiceCard
-                key={type.id}
-                type={type}
-                disabled={false}
-                onClick={handleSelect}
-              />
-            ))}
-          </div>
+          <ChoiceGrid
+            types={GROUP_ORDER.map(id => GROUPS[id])}
+            disabled={(type) => Boolean(type.needsCampaign && !activeCampaignId)}
+            onClick={openGroup}
+          />
         </div>
       </div>
     </div>

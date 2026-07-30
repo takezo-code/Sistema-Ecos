@@ -1,43 +1,18 @@
 import React, { useEffect, useState } from 'react'
-import { ArrowLeft, Sword, Skull, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, Sparkles } from 'lucide-react'
 import { SkillForm } from '../components/skills/SkillForm'
 import { useSkillsCatalogStore } from '../store/useSkillsCatalogStore'
-import { SKILL_AUDIENCE } from '../constants/skillAudience'
+import { SKILL_AUDIENCE, normalizeSkillAudience } from '../constants/skillAudience'
+import { CreationChoiceCard } from '../components/creation/CreationChoiceCard'
 
-const CREATION_TYPES = [
-  {
-    id: SKILL_AUDIENCE.CHARACTER,
-    label: 'Skill de Personagem',
-    description: 'Poderes que personagens jogadores podem descobrir e aprender.',
-    icon: Sword,
-    color: '#9ca3af',
-    border: 'rgba(156,163,175,0.2)',
-    bg: 'rgba(156,163,175,0.04)',
-  },
-  {
-    id: SKILL_AUDIENCE.NPC,
-    label: 'Skill de NPC',
-    description: 'Habilidades exclusivas para NPCs — atribuição manual no Gerenciamento.',
-    icon: Skull,
-    color: '#06b6d4',
-    border: 'rgba(6,182,212,0.2)',
-    bg: 'rgba(6,182,212,0.04)',
-  },
-  {
-    id: SKILL_AUDIENCE.BOSS,
-    label: 'Skill de Boss',
-    description: 'Poderes de inimigos poderosos — catálogo separado para bosses.',
-    icon: ShieldAlert,
-    color: '#dc2626',
-    border: 'rgba(220,38,38,0.2)',
-    bg: 'rgba(220,38,38,0.04)',
-  },
-]
-
-function hexToRgb(hex) {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  if (!result) return '255,255,255'
-  return `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}`
+const CREATION_SKILL = {
+  id: 'skill',
+  label: 'Criar Skill',
+  description: 'Habilidades para NPC ou boss. Skills de personagem vêm pré-definidas por classe.',
+  icon: Sparkles,
+  color: '#a855f7',
+  border: 'rgba(168,85,247,0.25)',
+  bg: 'rgba(168,85,247,0.04)',
 }
 
 export function SkillsCreationHub({
@@ -45,31 +20,30 @@ export function SkillsCreationHub({
   initialCreationType,
   onCreationTypeConsumed,
 }) {
-  const [selected, setSelected] = useState(initialCreationType || null)
   const [formOpen, setFormOpen] = useState(false)
+  const [defaultAudience, setDefaultAudience] = useState(SKILL_AUDIENCE.NPC)
   const addSkill = useSkillsCatalogStore(s => s.addSkill)
 
   useEffect(() => {
-    if (initialCreationType) {
-      setSelected(initialCreationType)
-      setFormOpen(true)
-      onCreationTypeConsumed?.()
+    if (!initialCreationType) return
+    if (initialCreationType === 'skill' || initialCreationType === SKILL_AUDIENCE.CHARACTER) {
+      setDefaultAudience(SKILL_AUDIENCE.NPC)
+    } else {
+      setDefaultAudience(normalizeSkillAudience(initialCreationType) === SKILL_AUDIENCE.BOSS
+        ? SKILL_AUDIENCE.BOSS
+        : SKILL_AUDIENCE.NPC)
     }
-  }, [initialCreationType, onCreationTypeConsumed])
-
-  const handleSelect = (audience) => {
-    setSelected(audience)
     setFormOpen(true)
-  }
+    onCreationTypeConsumed?.()
+  }, [initialCreationType, onCreationTypeConsumed])
 
   const handleCreate = draft => {
     addSkill(draft)
     setFormOpen(false)
-    setSelected(null)
-    onViewChange?.(draft.audience || selected)
+    onViewChange?.(draft.audience || defaultAudience)
   }
 
-  if (selected && formOpen) {
+  if (formOpen) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         <div style={{
@@ -80,7 +54,7 @@ export function SkillsCreationHub({
         }}>
           <button
             type="button"
-            onClick={() => { setFormOpen(false); setSelected(null) }}
+            onClick={() => setFormOpen(false)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -96,15 +70,16 @@ export function SkillsCreationHub({
             onMouseLeave={e => { e.currentTarget.style.color = '#555' }}
           >
             <ArrowLeft size={13} />
-            Voltar à seleção
+            Voltar
           </button>
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
           <div style={{ maxWidth: '520px', margin: '0 auto' }}>
             <SkillForm
-              defaultAudience={selected}
+              key={defaultAudience}
+              defaultAudience={defaultAudience}
               onSubmit={handleCreate}
-              onCancel={() => { setFormOpen(false); setSelected(null) }}
+              onCancel={() => setFormOpen(false)}
               submitLabel="Criar skill"
             />
           </div>
@@ -115,70 +90,24 @@ export function SkillsCreationHub({
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '2rem 1.5rem' }}>
-      <div style={{ maxWidth: '640px', margin: '0 auto' }}>
-        <div style={{ marginBottom: '2rem' }}>
+      <div style={{ maxWidth: '420px', margin: '0 auto' }}>
+        <div style={{ marginBottom: '1.5rem' }}>
           <div style={{ fontSize: '1rem', fontWeight: 700, color: '#e5e5e5', marginBottom: '0.35rem' }}>
-            Qual skill você quer criar?
+            Nova skill
           </div>
           <div style={{ fontSize: '0.75rem', color: '#444' }}>
-            Escolha o destino da habilidade no catálogo.
+            Apenas NPC ou boss. Skills de personagem são pré-definidas por classe.
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.75rem' }}>
-          {CREATION_TYPES.map(type => {
-            const Icon = type.icon
-            return (
-              <button
-                key={type.id}
-                type="button"
-                onClick={() => handleSelect(type.id)}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  gap: '0.75rem',
-                  padding: '1.25rem',
-                  background: type.bg,
-                  border: `1px solid ${type.border}`,
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'border-color 0.15s, background 0.15s',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = type.color
-                  e.currentTarget.style.background = `rgba(${hexToRgb(type.color)}, 0.08)`
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = type.border
-                  e.currentTarget.style.background = type.bg
-                }}
-              >
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '6px',
-                  background: `rgba(${hexToRgb(type.color)}, 0.1)`,
-                  border: `1px solid rgba(${hexToRgb(type.color)}, 0.2)`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <Icon size={18} style={{ color: type.color }} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#e5e5e5', marginBottom: '0.3rem' }}>
-                    {type.label}
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: '#555', lineHeight: 1.5 }}>
-                    {type.description}
-                  </div>
-                </div>
-              </button>
-            )
-          })}
-        </div>
+        <CreationChoiceCard
+          type={CREATION_SKILL}
+          disabled={false}
+          onClick={() => {
+            setDefaultAudience(SKILL_AUDIENCE.NPC)
+            setFormOpen(true)
+          }}
+        />
       </div>
     </div>
   )

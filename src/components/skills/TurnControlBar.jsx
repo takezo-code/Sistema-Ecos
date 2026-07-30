@@ -1,8 +1,9 @@
 import React from 'react'
 import { SkipForward, RotateCcw } from 'lucide-react'
-import { formatOverloadDisplay } from '../../constants/ecoOverload'
+import { formatOverloadDisplay, getEcoSafeLimitFromEntity } from '../../constants/ecoOverload'
 
-export function TurnControlBar({ currentTurn, ecoOverload, onAdvanceTurn, onRestEco }) {
+export function TurnControlBar({ currentTurn, ecoOverload, entity, onAdvanceTurn, onRestEco }) {
+  const limOpts = entity || { safeLimit: getEcoSafeLimitFromEntity(entity) }
   return (
     <div style={{
       display: 'flex',
@@ -19,7 +20,7 @@ export function TurnControlBar({ currentTurn, ecoOverload, onAdvanceTurn, onRest
       <div style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: '#666' }}>
         TURNO <span style={{ color: '#e5e5e5', fontWeight: 700 }}>{currentTurn ?? 0}</span>
         <span style={{ color: '#333', margin: '0 0.5rem' }}>·</span>
-        SOBRECARGA <span style={{ color: '#a855f7' }}>{formatOverloadDisplay(ecoOverload ?? 0)}</span>
+        SOBRECARGA <span style={{ color: '#a855f7' }}>{formatOverloadDisplay(ecoOverload ?? 0, limOpts)}</span>
       </div>
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         {onRestEco && (

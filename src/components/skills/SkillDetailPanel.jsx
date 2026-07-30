@@ -1,9 +1,8 @@
 import React from 'react'
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
 import { getSkillTypeMeta } from '../../constants/skillTypes'
-import { SKILL_CATEGORY_META } from '../../constants/skillCategories'
-import { ECO_SKILL_TYPES } from '../../constants/skillTypes'
 import { SKILL_AUDIENCE_META, getSkillAudience } from '../../constants/skillAudience'
+import { getCharacterClass } from '../../constants/classes'
 
 function DetailBlock({ label, color, children }) {
   return (
@@ -33,9 +32,8 @@ export function SkillDetailPanel({ skill, onBack, onEdit, onDelete }) {
   if (!skill) return null
 
   const typeMeta = getSkillTypeMeta(skill.skillType)
-  const catMeta = SKILL_CATEGORY_META[skill.category]
   const audienceMeta = SKILL_AUDIENCE_META[getSkillAudience(skill)]
-  const isPassiva = skill.skillType === ECO_SKILL_TYPES.PASSIVA
+  const skillClass = getCharacterClass(skill.classId)
 
   return (
     <div style={{
@@ -104,6 +102,18 @@ export function SkillDetailPanel({ skill, onBack, onEdit, onDelete }) {
               }}>
                 {audienceMeta.label.toUpperCase()}
               </span>
+              {skillClass && (
+                <span style={{
+                  fontSize: '0.65rem',
+                  fontFamily: 'monospace',
+                  color: skillClass.color,
+                  border: `1px solid ${skillClass.color}44`,
+                  padding: '4px 10px',
+                  borderRadius: '3px',
+                }}>
+                  {skillClass.label.toUpperCase()}
+                </span>
+              )}
               <span style={{
                 fontSize: '0.65rem',
                 fontFamily: 'monospace',
@@ -112,21 +122,9 @@ export function SkillDetailPanel({ skill, onBack, onEdit, onDelete }) {
                 padding: '4px 10px',
                 borderRadius: '3px',
               }}>
-                {typeMeta.label.toUpperCase()}
+                ATIVA
               </span>
-              {catMeta && (
-                <span style={{
-                  fontSize: '0.65rem',
-                  fontFamily: 'monospace',
-                  color: catMeta.color,
-                  border: `1px solid ${catMeta.color}44`,
-                  padding: '4px 10px',
-                  borderRadius: '3px',
-                }}>
-                  {catMeta.label.toUpperCase()}
-                </span>
-              )}
-              {!isPassiva && skill.cooldownTurns > 0 && (
+              {skill.cooldownTurns > 0 && (
                 <span style={{
                   fontSize: '0.65rem',
                   fontFamily: 'monospace',
@@ -146,7 +144,7 @@ export function SkillDetailPanel({ skill, onBack, onEdit, onDelete }) {
                 padding: '4px 10px',
                 borderRadius: '3px',
               }}>
-                SOBRECARGA +{isPassiva ? (skill.passiveOverloadRisk ? ' risco passivo' : '0') : (skill.overloadCost ?? 1)}
+                SOBRECARGA +{skill.overloadCost ?? 1}
               </span>
             </div>
           </div>
