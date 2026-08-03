@@ -41,7 +41,7 @@ export function getOwnedSkillLevel(entity, templateId) {
   return Math.max(0, Number(skill?.tier) || 0)
 }
 
-/** Investir Eco: só até o nível 4. */
+/** Investir Eco: sobe a skill até o nível 3. */
 export function canInvestSkillPoint(entity, templateId) {
   const classId = normalizeClassId(entity?.classId)
   if (!classId) {
@@ -55,15 +55,7 @@ export function canInvestSkillPoint(entity, templateId) {
 
   const level = getOwnedSkillLevel(entity, templateId)
   if (level >= ECO_SKILL_MAX_LEVEL) {
-    if (level >= MAX_CLASS_SKILL_LEVEL) {
-      return { ok: false, reason: 'Skill já está no nível máximo.' }
-    }
-    return {
-      ok: false,
-      reason: `Nível ${SKILL_GRADE_START_LEVEL}+ exige Catalisador de Grau (mercador).`,
-      needsGradeItem: true,
-      nextLevel: level + 1,
-    }
+    return { ok: false, reason: 'Skill já está no nível máximo.' }
   }
 
   const eco = entity.ecoPoints ?? 0
@@ -120,7 +112,7 @@ export function canUpgradeSkillGrade(entity, templateId) {
     return { ok: false, reason: 'Skill já está no nível máximo.' }
   }
   if (!findGradeCatalyst(entity.inventory)) {
-    return { ok: false, reason: 'Sem Catalisador de Grau no inventário. Compre no mercador.' }
+    return { ok: false, reason: 'Sem Catalisador de Grau no inventário.' }
   }
 
   return { ok: true, nextLevel: level + 1 }

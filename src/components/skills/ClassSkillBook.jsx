@@ -170,7 +170,7 @@ export function ClassSkillBook({
           </div>
           {!compact && (
             <div style={{ fontSize: '0.7rem', color: '#555', marginTop: '0.2rem' }}>
-              Eco até nv.{ECO_SKILL_MAX_LEVEL} · Grau {SKILL_GRADE_START_LEVEL}+ com catalisador · RUP {formatRuptureBonus(rupture)}
+              3 de classe · +1 da arma · Eco até nv.{ECO_SKILL_MAX_LEVEL} · RUP {formatRuptureBonus(rupture)}
             </div>
           )}
         </div>
@@ -190,9 +190,9 @@ export function ClassSkillBook({
               [ {eco} ]
             </span>
           </div>
-          {!compact && (
+          {!compact && MAX_CLASS_SKILL_LEVEL > ECO_SKILL_MAX_LEVEL && (
             <div
-              title="Catalisador de Grau — item do mercador para subir a skill ao nível 5"
+              title="Catalisador de Grau — sobe a skill além do Eco"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -215,7 +215,7 @@ export function ClassSkillBook({
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+        gridTemplateColumns: `repeat(${Math.max(book.length, 1)}, minmax(0, 1fr))`,
         gap: '0.4rem',
         marginBottom: '1rem',
         padding: '0.75rem',

@@ -36,8 +36,6 @@ export function CharacterHub() {
   const addInventoryItem = useCharacterStore(s => s.addInventoryItem)
   const updateInventoryItem = useCharacterStore(s => s.updateInventoryItem)
   const removeInventoryItem = useCharacterStore(s => s.removeInventoryItem)
-  const addEquippedItem = useCharacterStore(s => s.addEquippedItem)
-  const removeEquippedItem = useCharacterStore(s => s.removeEquippedItem)
   const { selectedCharacterId, activeTab, selectCharacter, setActiveTab } = useCharacterPanelStore()
 
   const filtered = useMemo(
@@ -71,8 +69,6 @@ export function CharacterHub() {
             onAddItem={item => addInventoryItem(id, item)}
             onUpdateItem={(itemId, data) => updateInventoryItem(id, itemId, data)}
             onRemoveItem={itemId => removeInventoryItem(id, itemId)}
-            onAddEquipped={item => addEquippedItem(id, item)}
-            onRemoveEquipped={itemId => removeEquippedItem(id, itemId)}
           />
         )
       case CHARACTER_PANEL_TABS.STATUS:

@@ -152,8 +152,6 @@ export function ManageBoss({ embedded = false }) {
     addInventoryItem,
     updateInventoryItem,
     removeInventoryItem,
-    addEquippedItem,
-    removeEquippedItem,
   } = useNPCStore()
   const refreshTrash = useTrashStore(s => s.refresh)
   const [managing, setManaging] = useState(null)
@@ -251,8 +249,6 @@ export function ManageBoss({ embedded = false }) {
               onAddItem={item => addInventoryItem(current.id, item)}
               onUpdateItem={(itemId, data) => updateInventoryItem(current.id, itemId, data)}
               onRemoveItem={itemId => removeInventoryItem(current.id, itemId)}
-              onAddEquipped={item => addEquippedItem(current.id, item)}
-              onRemoveEquipped={itemId => removeEquippedItem(current.id, itemId)}
             />
             <hr className="divide-line" style={{ margin: '1.25rem 0' }} />
             <CombatStatsSection

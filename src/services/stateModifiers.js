@@ -16,6 +16,7 @@ import {
   formatMentalAttrPenalty,
 } from '../mechanics/ecoOverload/overloadPenalties'
 import { getArmorDestrezaPenalty } from '../mechanics/equipment/armorEffectsEngine'
+import { sumAttrBonus } from '../mechanics/equipment/gearPassiveEngine'
 
 /** Penalidade flat em FOR/DES/VIT pelo estado físico (0–3). */
 export function getPhysicalAttrPenalty(physicalState) {
@@ -41,21 +42,31 @@ export function hasTemporalInstability(mentalState) {
 
 /** Atributos efetivos de qualquer entidade (personagem, NPC, boss). */
 export function getEntityEffectiveAttributes(entity = {}) {
-  return calculateEffectiveAttributes(entity.attributes || {}, {
+  const result = calculateEffectiveAttributes(entity.attributes || {}, {
     physicalState: entity.physicalState ?? entity.condition ?? 'bem',
     ecoOverload: entity.ecoOverload ?? 0,
     mentalState: entity.mentalState ?? 'estavel',
     destrezaPenalty: getArmorDestrezaPenalty(entity),
     ruptura: entity.attributes?.ruptura,
   })
+  const effective = { ...result.effective }
+  for (const key of Object.keys(effective)) {
+    effective[key] = (Number(effective[key]) || 0) + sumAttrBonus(entity, key)
+  }
+  return { ...result, effective }
 }
 
 export function getEntityEffectiveSocialAttributes(entity = {}) {
-  return calculateEffectiveSocialAttributes(entity.socialAttributes || {}, {
+  const result = calculateEffectiveSocialAttributes(entity.socialAttributes || {}, {
     ecoOverload: entity.ecoOverload ?? 0,
     mentalState: entity.mentalState ?? 'estavel',
     ruptura: entity.attributes?.ruptura,
   })
+  const effective = { ...result.effective }
+  for (const key of Object.keys(effective)) {
+    effective[key] = (Number(effective[key]) || 0) + sumAttrBonus(entity, key)
+  }
+  return { ...result, effective }
 }
 
 /** @deprecated use getEntityEffectiveAttributes / calculateEffectiveAttributes */

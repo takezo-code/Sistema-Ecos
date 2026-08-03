@@ -1,13 +1,17 @@
 /**
  * Efeitos de armadura equipada.
  *
- * Leve  → −1 DES · +1 limiar de marcas
- * Média → −2 DES · +2 limiar de marcas
- * Pesada→ −3 DES · +3 limiar de marcas
+ * Tipo:
+ *   Leve  → −1 DES · +1 limiar de marcas
+ *   Média → −2 DES · +2 limiar de marcas
+ *   Pesada→ −3 DES · +3 limiar de marcas
  *
- * O +marca soma ao buffer de Vitalidade (atraso de Ferido/Grave/etc.).
+ * Raridade (nível do personagem): +0/+1/+2/+3 marcas de vida.
+ * Passiva Metin life_marks: +1–5 marcas de vida.
  */
 import { getArmorType } from '../../constants/equipmentTypes'
+import { getArmorRarityLifeMarks } from './armorProgressionEngine'
+import { sumLifeMarksBonus } from './gearPassiveEngine'
 
 /** Itens equipados reconhecidos como armadura. */
 export function getEquippedArmor(entity = {}) {
@@ -20,12 +24,20 @@ export function getEquippedArmor(entity = {}) {
 
 /**
  * Efeitos da armadura ativa.
- * Se houver várias, usa a de maior proteção (maior markBonus).
+ * Se houver várias, usa a de maior proteção (maior markBonus de tipo).
  */
 export function getArmorEffects(entity = {}) {
   const armors = getEquippedArmor(entity)
   if (armors.length === 0) {
-    return { penaltyDestreza: 0, markBonus: 0, armor: null, typeMeta: null }
+    return {
+      penaltyDestreza: 0,
+      markBonus: 0,
+      typeMarkBonus: 0,
+      rarityMarkBonus: 0,
+      passiveMarkBonus: 0,
+      armor: null,
+      typeMeta: null,
+    }
   }
 
   let best = null
@@ -35,23 +47,38 @@ export function getArmorEffects(entity = {}) {
   for (const item of armors) {
     const meta = getArmorType(item.type)
     if (!meta) continue
-    const markBonus = Math.max(0, Number(item.markBonus ?? meta.markBonus) || 0)
+    const typeMarkBonus = Math.max(0, Number(item.markBonus ?? meta.markBonus) || 0)
     const penaltyDestreza = Math.max(0, Number(item.penaltyDestreza ?? meta.penaltyDestreza) || 0)
-    const score = markBonus * 10 + penaltyDestreza
+    const score = typeMarkBonus * 10 + penaltyDestreza
     if (score > bestScore) {
       bestScore = score
-      best = { ...item, markBonus, penaltyDestreza }
+      best = { ...item, typeMarkBonus, penaltyDestreza }
       bestMeta = meta
     }
   }
 
   if (!best) {
-    return { penaltyDestreza: 0, markBonus: 0, armor: null, typeMeta: null }
+    return {
+      penaltyDestreza: 0,
+      markBonus: 0,
+      typeMarkBonus: 0,
+      rarityMarkBonus: 0,
+      passiveMarkBonus: 0,
+      armor: null,
+      typeMeta: null,
+    }
   }
+
+  const rarityMarkBonus = getArmorRarityLifeMarks(entity)
+  const passiveMarkBonus = sumLifeMarksBonus(entity)
+  const markBonus = best.typeMarkBonus + rarityMarkBonus + passiveMarkBonus
 
   return {
     penaltyDestreza: best.penaltyDestreza,
-    markBonus: best.markBonus,
+    markBonus,
+    typeMarkBonus: best.typeMarkBonus,
+    rarityMarkBonus,
+    passiveMarkBonus,
     armor: best,
     typeMeta: bestMeta,
   }

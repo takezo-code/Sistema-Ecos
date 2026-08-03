@@ -35,6 +35,8 @@ function migrateUiState(savedUi) {
   if (page === 'dashboard') page = 'campanha'
   if (page === 'character') page = 'emjogo'
   if (emjogoView === 'skills') emjogoView = 'ficha'
+  if (emjogoView === 'mercador') emjogoView = 'ficha'
+  if (emjogoView === 'cena') emjogoView = 'combat'
 
   if (page === 'campaigns') {
     page = 'campanha'
@@ -44,17 +46,10 @@ function migrateUiState(savedUi) {
     campanhaView = 'sessoes'
   }
 
-  // Abas antigas Equipamentos / Skills → Gerenciamento (ou Criação)
+  // Aba antiga Equipamentos → catálogo saiu; equipamento agora vive na ficha
   if (page === 'equipamentos') {
-    if (savedUi.equipamentosView === 'creation') {
-      page = 'creation'
-      managementView = MANAGEMENT_VIEWS.ARMAS
-    } else {
-      page = 'management'
-      managementView = savedUi.equipamentosView === 'armadura'
-        ? MANAGEMENT_VIEWS.ARMADURA
-        : MANAGEMENT_VIEWS.ARMAS
-    }
+    page = 'management'
+    managementView = MANAGEMENT_VIEWS.CHARACTERS
   } else if (page === 'skills') {
     if (savedUi.skillsView === 'creation') {
       page = 'creation'
@@ -117,7 +112,7 @@ export default function App() {
     // Compat: páginas Equipamentos / Skills removidas da sidebar
     if (page === 'equipamentos') {
       setActivePage('management')
-      setManagementView(subView === 'armadura' ? MANAGEMENT_VIEWS.ARMADURA : MANAGEMENT_VIEWS.ARMAS)
+      setManagementView(MANAGEMENT_VIEWS.CHARACTERS)
       return
     }
     if (page === 'skills') {

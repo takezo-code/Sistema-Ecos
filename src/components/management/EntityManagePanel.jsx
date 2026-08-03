@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Pencil, Sparkles, BookOpen } from 'lucide-react'
+import { Pencil, Sparkles, BookOpen, Sword } from 'lucide-react'
 import { NarrativeProfileModal } from './NarrativeProfileModal'
 import { EntityThumb } from '../ui/EntityThumb'
 import { Modal } from '../ui/Modal'
@@ -7,6 +7,7 @@ import { AttributeGrid } from './AttributeGrid'
 import { ProgressionSection } from './ProgressionSection'
 import { StatesSection } from './StatesSection'
 import { EntitySkillsPanel } from './EntitySkillsPanel'
+import { CharacterGearPanel } from '../equipment/CharacterGearPanel'
 import { isInCreationPhase } from '../../constants/attributes'
 import { entityHasEcoPowers, isNpcEntity } from '../../constants/entityProgression'
 import { getPhysicalStateOption, getMentalStateOption } from '../../constants/states'
@@ -23,6 +24,9 @@ export function EntityManagePanel({
   onClampAuxiliary,
   onScaleAttributes,
   onEditProfile,
+  onForgeGear,
+  onSetGearPassive,
+  onSetWeaponSkill,
   onInvestSkillPoint,
   onUpgradeSkillGrade,
   onLearnCatalogSkill,
@@ -38,7 +42,9 @@ export function EntityManagePanel({
 }) {
   const [skillsOpen, setSkillsOpen] = useState(false)
   const [narrativeOpen, setNarrativeOpen] = useState(false)
+  const [gearOpen, setGearOpen] = useState(false)
   const showNarrative = !isNpcEntity(entity)
+  const showGear = typeof onForgeGear === 'function' && !isNpcEntity(entity)
   const isCreation = isInCreationPhase(entity)
   const hasEco = entityHasEcoPowers(entity)
 
@@ -81,6 +87,17 @@ export function EntityManagePanel({
             >
               <Sparkles size={12} style={{ color: '#a855f7' }} />
               Skills
+            </button>
+          )}
+          {showGear && (
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setGearOpen(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}
+            >
+              <Sword size={12} style={{ color: '#f97316' }} />
+              Equipamento
             </button>
           )}
           {onEditProfile && (
@@ -148,6 +165,20 @@ export function EntityManagePanel({
           onSetOverload={onSetOverload}
           lastOverloadEvents={lastOverloadEvents}
           onClearOverloadEvents={onClearOverloadEvents}
+        />
+      </Modal>
+
+      <Modal
+        open={showGear && gearOpen}
+        onClose={() => setGearOpen(false)}
+        title={`Equipamento — ${entity.name}`}
+        maxWidth="520px"
+      >
+        <CharacterGearPanel
+          character={entity}
+          onForge={onForgeGear}
+          onSetPassive={onSetGearPassive}
+          onSetWeaponSkill={onSetWeaponSkill}
         />
       </Modal>
     </div>

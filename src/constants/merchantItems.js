@@ -1,29 +1,17 @@
 /**
- * Itens do mercador (consumíveis / especiais).
+ * Itens especiais de inventário (consumíveis de progressão).
+ * O catalisador de grau sobe skills de classe ao nível 5.
  */
-export const MERCHANT_ITEM_IDS = Object.freeze({
+export const SPECIAL_ITEM_IDS = Object.freeze({
   CATALISADOR_GRAU: 'catalisador_grau',
 })
 
-export const MERCHANT_CATALOG = [
-  {
-    id: MERCHANT_ITEM_IDS.CATALISADOR_GRAU,
-    name: 'Catalisador de Grau',
-    description:
-      'Eleva uma skill de classe ao grau máximo (nível 5). Necessário após investir 4 Ecos na skill — não usa Eco.',
-    effect: 'skill_grade_up',
-    color: '#a855f7',
-    priceLabel: 'Narrativo / mesa',
-  },
-]
-
-export function getMerchantItem(itemId) {
-  return MERCHANT_CATALOG.find(i => i.id === itemId) || null
-}
+/** @deprecated use SPECIAL_ITEM_IDS */
+export const MERCHANT_ITEM_IDS = SPECIAL_ITEM_IDS
 
 export function isGradeCatalystItem(item) {
   if (!item) return false
-  if (item.itemId === MERCHANT_ITEM_IDS.CATALISADOR_GRAU) return true
+  if (item.itemId === SPECIAL_ITEM_IDS.CATALISADOR_GRAU) return true
   if (item.effect === 'skill_grade_up') return true
   const name = String(item.name || '').toLowerCase()
   return name.includes('catalisador') && name.includes('grau')
@@ -55,15 +43,4 @@ export function consumeGradeCatalyst(inventory = []) {
     list[idx] = { ...item, qty: qty - 1 }
   }
   return { ok: true, inventory: list }
-}
-
-export function buildMerchantInventoryItem(itemId, qty = 1) {
-  const def = getMerchantItem(itemId)
-  if (!def) return null
-  return {
-    itemId: def.id,
-    name: def.name,
-    effect: def.effect,
-    qty: Math.max(1, Number(qty) || 1),
-  }
 }

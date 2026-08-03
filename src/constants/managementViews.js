@@ -5,13 +5,14 @@ export const MANAGEMENT_VIEWS = {
   NPCS: 'npcs',
   BOSS: 'boss',
   ORGANIZATIONS: 'organizations',
-  ARMAS: 'armas',
-  ARMADURA: 'armadura',
   /** @deprecated skills de personagem saíram do Gerenciamento — redireciona para NPC */
   SKILLS_CHARACTER: 'skills-character',
   SKILLS_NPC: 'skills-npc',
   SKILLS_BOSS: 'skills-boss',
 }
+
+/** Views removidas: o catálogo de equipamento virou equipamento pessoal na ficha. */
+const REMOVED_VIEWS = ['armas', 'armadura']
 
 /** Converte audience de skill / view legada para a subview de Gerenciamento. */
 export function skillAudienceToManagementView(audience) {
@@ -24,6 +25,7 @@ export function skillAudienceToManagementView(audience) {
 
 export function normalizeManagementView(view) {
   if (!view || view === 'creation') return MANAGEMENT_VIEWS.CHARACTERS
+  if (REMOVED_VIEWS.includes(view)) return MANAGEMENT_VIEWS.CHARACTERS
   // Aba removida: Skills Personagem
   if (
     view === MANAGEMENT_VIEWS.SKILLS_CHARACTER

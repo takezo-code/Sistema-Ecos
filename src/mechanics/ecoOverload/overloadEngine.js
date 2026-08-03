@@ -92,6 +92,7 @@ export function resetEcoOverload(entity, { clearStatuses = true } = {}) {
   }
   return {
     ecoOverload: 0,
+    rupturaUsesSpent: 0,
     activeMentalStatuses,
     mentalState: 'estavel',
   }

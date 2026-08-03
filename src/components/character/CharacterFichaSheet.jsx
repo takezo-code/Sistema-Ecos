@@ -12,6 +12,9 @@ import { useCharacterStore } from '../../store/useCharacterStore'
 export function CharacterFichaSheet({ characterId, adminMode = false, onEditProfile }) {
   const { entity, panelProps } = useCharacterManagementPanel(characterId, { adminMode })
   const updateCharacter = useCharacterStore(s => s.updateCharacter)
+  const setGearItem = useCharacterStore(s => s.setGearItem)
+  const setGearPassives = useCharacterStore(s => s.setGearPassives)
+  const setWeaponSkill = useCharacterStore(s => s.setWeaponSkill)
   const [editingProfile, setEditingProfile] = useState(null)
 
   if (!entity || !panelProps) return null
@@ -24,6 +27,9 @@ export function CharacterFichaSheet({ characterId, adminMode = false, onEditProf
         entity={entity}
         {...panelProps}
         onEditProfile={handleEditProfile}
+        onForgeGear={(category, data) => setGearItem(characterId, category, data)}
+        onSetGearPassive={(category, passives) => setGearPassives(characterId, category, passives)}
+        onSetWeaponSkill={data => setWeaponSkill(characterId, data)}
       />
 
       <Modal

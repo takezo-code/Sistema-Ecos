@@ -3,13 +3,21 @@ import { processEcoSkillUse } from '../ecoOverload/overloadEngine'
 import { setCooldown, tickCooldowns } from './cooldownEngine'
 import { ECO_SKILL_TYPES } from '../../constants/skillTypes'
 import { applyOverloadSideEffects } from '../ecoOverload/overloadEngine'
+import {
+  getRupturaUsesRemaining,
+  getRupturaUsesSpent,
+} from '../equipment/gearPassiveEngine'
 
 /**
  * Ativa habilidade ativa: sobrecarga + cooldown + histórico.
+ * Se houver usos de Ruptura restantes (passivas de equipamento),
+ * consome 1 e pula a sobrecarga deste uso.
  */
 export function activateActiveSkill(entity, skillInstance, catalogDef) {
   const templateId = skillInstance.templateId || catalogDef.templateId
   const overloadCost = catalogDef.overloadCost ?? 1
+  const rupturaRemaining = getRupturaUsesRemaining(entity)
+  const useFreeRuptura = rupturaRemaining > 0
 
   const syntheticSkill = {
     id: skillInstance.id,
@@ -22,11 +30,19 @@ export function activateActiveSkill(entity, skillInstance, catalogDef) {
   const events = []
   const warnings = []
 
-  for (let i = 0; i < overloadCost; i++) {
-    const step = processEcoSkillUse({ ...entity, ...patch }, syntheticSkill)
-    patch = { ...patch, ...step.patch }
-    events.push(...step.events)
-    warnings.push(...step.warnings)
+  if (useFreeRuptura) {
+    patch.rupturaUsesSpent = getRupturaUsesSpent(entity) + 1
+    events.push({
+      type: 'ruptura_use',
+      message: `Uso de Ruptura da arma/armadura (${rupturaRemaining - 1} restantes).`,
+    })
+  } else {
+    for (let i = 0; i < overloadCost; i++) {
+      const step = processEcoSkillUse({ ...entity, ...patch }, syntheticSkill)
+      patch = { ...patch, ...step.patch }
+      events.push(...step.events)
+      warnings.push(...step.warnings)
+    }
   }
 
   const skillCooldowns = setCooldown(
@@ -42,6 +58,7 @@ export function activateActiveSkill(entity, skillInstance, catalogDef) {
     type: 'activation',
     turn: entity.currentTurn ?? 0,
     overloadAfter: patch.ecoOverload ?? entity.ecoOverload ?? 0,
+    usedRupturaCharge: useFreeRuptura,
     narrativeConsequence: catalogDef.narrativeConsequence,
     timestamp: new Date().toISOString(),
   }

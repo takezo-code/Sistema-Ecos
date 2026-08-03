@@ -85,8 +85,12 @@ export function applyXpGain(character, amount) {
     const hasEco = entityHasEcoPowers(character)
 
     if (hasEco) {
-      ecoPoints += 1
-      levelUps.push({ level, type: 'eco', message: `Nível ${level}: +1 Eco` })
+      const ecoBudget = getEcoPointsFromLevel(level, character)
+      const ecoSpent = getEcoSpentOnSkills(character.skills)
+      if (ecoPoints + ecoSpent < ecoBudget) {
+        ecoPoints += 1
+        levelUps.push({ level, type: 'eco', message: `Nível ${level}: +1 Eco` })
+      }
     }
 
     const rewardType = getLevelRewardType(level, { hasEcoPowers: hasEco })

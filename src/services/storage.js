@@ -61,7 +61,5 @@ export const KEYS = {
   appBootstrapped: 'app_bootstrapped',
   skillsCatalog: 'skills_catalog_custom',
   combatSession: 'combat_session',
-  sceneSession: 'scene_session',
   trash: 'trash',
-  equipment: 'equipment_catalog',
 }

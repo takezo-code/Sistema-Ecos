@@ -1,10 +1,12 @@
 import { SKILL_AUDIENCE } from '../constants/skillAudience'
 import { ECO_SKILL_TYPES } from '../constants/skillTypes'
-import { CHARACTER_CLASSES } from '../constants/classes'
 
 /**
- * 5 skills ativas pré-definidas por classe.
- * Jogadores investem pontos de Eco para desbloquear (nível 1) e evoluir.
+ * 3 skills ativas pré-definidas por classe.
+ * 1 Eco = +1 nível (máx. nv.3). A 4ª skill vem da arma (custom).
+ *
+ * Não importar CHARACTER_CLASSES no topo: ciclo attributes ↔ classes ↔ equipment
+ * deixa CHARACTER_CLASSES undefined na primeira avaliação.
  */
 
 function skill(classId, slot, partial) {
@@ -30,88 +32,54 @@ function skill(classId, slot, partial) {
 const BY_CLASS = {
   atirador: [
     skill('atirador', 1, {
-      icon: 'MI',
-      name: 'Mira Fria',
-      description: 'Concentra o Eco no olhar — o próximo disparo encontra o ponto fraco.',
-      mechanicalEffect: 'Próximo ataque à distância: +1 eficácia. Acerto: 1 marca Leve extra.',
-      narrativeConsequence: 'Visão estreita por 1 turno — piora testes de percepção periférica.',
+      icon: 'PA',
+      name: 'Precisão Aumentada',
+      description: 'O Eco afia o corpo — a mira fica mais firme.',
+      mechanicalEffect: 'Aumenta Destreza: +1 (nv.1), +2 (nv.2) ou +3 (nv.3) enquanto o efeito durar (até o fim da cena ou conforme o mestre).',
+      narrativeConsequence: 'Músculos travam depois do pico: −1 DES no próximo turno.',
       cooldownTurns: 2,
     }),
     skill('atirador', 2, {
-      icon: 'RA',
-      name: 'Rajada Eco',
-      description: 'Dois disparos ligados pelo mesmo pulso de Eco.',
-      mechanicalEffect: 'Ataque à distância. Sucesso: 1 marca Leve no alvo. Crítico: também marca um alvo adjacente.',
-      narrativeConsequence: 'Ombro lateja; −1 FOR no próximo teste físico.',
-      cooldownTurns: 3,
-    }),
-    skill('atirador', 3, {
-      icon: 'MA',
-      name: 'Marca do Caçador',
-      description: 'Marca o alvo com resíduo de Eco — o grupo sente onde ele está.',
-      mechanicalEffect: 'Escolha 1 alvo em visão: aliados têm vantagem narrativa contra ele até seu próximo turno.',
-      narrativeConsequence: 'Você fica Exposto até o início do próximo turno.',
-      cooldownTurns: 3,
-    }),
-    skill('atirador', 4, {
-      icon: 'RE',
-      name: 'Recuo Controlado',
-      description: 'Dispara e recua no mesmo fôlego.',
-      mechanicalEffect: 'Ataque à distância. Depois, move-se para cobertura curta sem provocação narrativa.',
-      narrativeConsequence: 'Joelho treme: teste DES fácil ou fica Caído.',
+      icon: 'OA',
+      name: 'Olhos de Águia',
+      description: 'Enxerga melhor a longa distância ou percebe algo com mais clareza.',
+      mechanicalEffect: 'Na próxima rolagem de Percepção: +1 (nv.1), +2 (nv.2) ou +3 (nv.3).',
+      narrativeConsequence: 'Olhos ardidos: −1 PER no próximo turno.',
       cooldownTurns: 2,
     }),
-    skill('atirador', 5, {
-      icon: 'TI',
-      name: 'Tiro de Ruptura',
-      description: 'Canaliza Eco demais no projétil — risco e recompensa.',
-      mechanicalEffect: 'Ataque à distância com +2 eficácia. Acerto: 1 marca Média (ou Grave se já Ferido).',
-      narrativeConsequence: '+1 sobrecarga extra neste uso. Zumbido forte até descansar Eco.',
-      cooldownTurns: 4,
-      overloadCost: 2,
+    skill('atirador', 3, {
+      icon: 'SE',
+      name: 'Sniper de Eco',
+      description: 'Cria um sniper de Eco — tiro certeiro, balas em curva, sem interferências.',
+      mechanicalEffect: 'Disparo à distância extremo (inimigos ou alvo longe). Tiro certeiro: ignora coberturas leves e trajetórias tortas; o mestre define alcance e dificuldade.',
+      narrativeConsequence: 'Recuo do Eco no ombro: −1 FOR no próximo turno.',
+      cooldownTurns: 3,
     }),
   ],
   tank: [
     skill('tank', 1, {
-      icon: 'BA',
-      name: 'Barreira Viva',
-      description: 'Endurece o corpo com Eco — amortece o próximo golpe.',
-      mechanicalEffect: 'Até o próximo turno: a próxima marca que receberia cai 1 nível (Grave→Média, etc.).',
-      narrativeConsequence: 'Movimento lento: −1 DES neste turno.',
+      icon: 'PV',
+      name: 'Provocação',
+      description: 'Puxa a atenção — os monstros miram em você em vez dos aliados.',
+      mechanicalEffect: 'Inimigos em alcance curto/médio devem priorizar você nos próximos ataques (enquanto fizer sentido narrativo), até o fim do seu próximo turno ou até você cair.',
+      narrativeConsequence: 'Você se abre demais: −1 DES no próximo turno.',
       cooldownTurns: 2,
     }),
     skill('tank', 2, {
-      icon: 'PR',
-      name: 'Provocar',
-      description: 'Puxa a atenção do inimigo com presença e Eco.',
-      mechanicalEffect: 'Escolha 1 inimigo em alcance curto: ele deve mirar você no próximo ataque (se fizer sentido narrativo).',
-      narrativeConsequence: 'Você fica Exposto até o fim do próximo turno.',
-      cooldownTurns: 2,
-    }),
-    skill('tank', 3, {
-      icon: 'IM',
-      name: 'Impacto de Escudo',
-      description: 'Bate com o escudo carregado de Eco.',
-      mechanicalEffect: 'Ataque corpo a corpo. Sucesso: 1 marca Leve + alvo fica Deslocado neste turno.',
-      narrativeConsequence: 'Braço lateja; −1 FOR no próximo ataque.',
-      cooldownTurns: 2,
-    }),
-    skill('tank', 4, {
-      icon: 'LI',
-      name: 'Linha Inquebrável',
-      description: 'Segura a linha — aliados atrás de você sofrem menos.',
-      mechanicalEffect: 'Até seu próximo turno: 1 aliado adjacente ignora a primeira marca Leve que receberia.',
-      narrativeConsequence: 'Você absorve o estresse: +1 sobrecarga se bloquear algo assim.',
+      icon: 'AD',
+      name: 'Aumento de Defesa',
+      description: 'O Eco endurece o corpo por alguns instantes.',
+      mechanicalEffect: 'Por 3 turnos: +2 limiar de marcas (nv.1), +4 (nv.2) ou +6 (nv.3) só em você.',
+      narrativeConsequence: 'Corpo pesado demais: −1 DES no próximo turno.',
       cooldownTurns: 3,
     }),
-    skill('tank', 5, {
-      icon: 'MU',
-      name: 'Muralha de Eco',
-      description: 'Campo denso que segura a frente por um instante.',
-      mechanicalEffect: 'Você e 1 aliado adjacente: próxima marca Média vira Leve (1× cada).',
-      narrativeConsequence: 'Visão embaca; −1 PER até o fim da cena ou descanso.',
-      cooldownTurns: 4,
-      overloadCost: 2,
+    skill('tank', 3, {
+      icon: 'AR',
+      name: 'Aura de Ruptura',
+      description: 'Uma aura de Eco reforça a defesa de todo o grupo.',
+      mechanicalEffect: 'Por 3 turnos: todo o grupo ganha +1 limiar de marcas (nv.1), +2 (nv.2) ou +3 (nv.3).',
+      narrativeConsequence: 'A aura drena o foco: −1 RUP no próximo turno.',
+      cooldownTurns: 3,
     }),
   ],
   porradeiro: [
@@ -120,7 +88,7 @@ const BY_CLASS = {
       name: 'Golpe Brusco',
       description: 'Força bruta canalizada — sem elegância.',
       mechanicalEffect: 'Ataque corpo a corpo com +1 eficácia. Acerto: 1 marca Leve.',
-      narrativeConsequence: 'Formigamento no braço por 1 turno.',
+      narrativeConsequence: 'Braço lateja: −1 FOR no próximo turno.',
       cooldownTurns: 1,
     }),
     skill('porradeiro', 2, {
@@ -128,7 +96,7 @@ const BY_CLASS = {
       name: 'Arrancada',
       description: 'Investe no alvo com Eco nos músculos.',
       mechanicalEffect: 'Move-se até alcance curto e ataca. Sucesso: 1 marca Leve. Crítico: também Deslocado.',
-      narrativeConsequence: 'Fica Exposto até seu próximo turno.',
+      narrativeConsequence: 'Passos desajeitados depois da investida: −1 DES no próximo turno.',
       cooldownTurns: 2,
     }),
     skill('porradeiro', 3, {
@@ -136,25 +104,8 @@ const BY_CLASS = {
       name: 'Estilhaço Ósseo',
       description: 'O impacto espalha Eco como estilhaços.',
       mechanicalEffect: 'Ataque. Acerto: marca Leve no alvo; 1 inimigo adjacente sofre marca Leve (sem rolagem).',
-      narrativeConsequence: 'Zumbido; fala mais alto neste turno.',
+      narrativeConsequence: 'Zumbido na cabeça: −1 INT no próximo turno.',
       cooldownTurns: 3,
-    }),
-    skill('porradeiro', 4, {
-      icon: 'IG',
-      name: 'Ignorar a Dor',
-      description: 'Empurra o corpo além do razoável por um golpe.',
-      mechanicalEffect: 'Ignore 1 nível de penalidade de estado físico neste ataque (Ferido conta como saudável para o teste).',
-      narrativeConsequence: 'Após o golpe: +1 marca Leve em si mesmo (o corpo cobra).',
-      cooldownTurns: 3,
-    }),
-    skill('porradeiro', 5, {
-      icon: 'RU',
-      name: 'Ruptura Brutal',
-      description: 'Tudo no impacto — Eco e força no limite.',
-      mechanicalEffect: 'Ataque com +2 eficácia. Acerto: 1 marca Média (Grave se já Ferido).',
-      narrativeConsequence: '+1 sobrecarga extra. −1 VIT efetiva até descansar Eco.',
-      cooldownTurns: 4,
-      overloadCost: 2,
     }),
   ],
   magica: [
@@ -163,7 +114,7 @@ const BY_CLASS = {
       name: 'Pulso de Eco',
       description: 'Rajada curta de Eco puro.',
       mechanicalEffect: 'Ataque de Eco (RUP). Acerto: 1 marca Leve.',
-      narrativeConsequence: 'Formigamento nas mãos por 1 turno.',
+      narrativeConsequence: 'Canais formigam: −1 RUP no próximo turno.',
       cooldownTurns: 1,
     }),
     skill('magica', 2, {
@@ -171,7 +122,7 @@ const BY_CLASS = {
       name: 'Dobra Curta',
       description: 'Torce o instante — reposiciona a si ou um objeto leve.',
       mechanicalEffect: 'Mova-se (ou um objeto pequeno) para alcance curto sem provocação. Em combate: pode sair de zona.',
-      narrativeConsequence: 'Náusea leve; −1 INT no próximo teste mental.',
+      narrativeConsequence: 'Náusea temporal: −1 INT no próximo turno.',
       cooldownTurns: 2,
     }),
     skill('magica', 3, {
@@ -179,76 +130,41 @@ const BY_CLASS = {
       name: 'Fragmento Temporal',
       description: 'Atrasa a ação do alvo por um suspiro.',
       mechanicalEffect: 'Alvo em visão: age por último neste round (ou perde a próxima ação menor, a critério do mestre).',
-      narrativeConsequence: 'Sua própria percepção atrasa: −1 PER neste turno.',
+      narrativeConsequence: 'Sua percepção atrasa junto: −1 PER no próximo turno.',
       cooldownTurns: 3,
-    }),
-    skill('magica', 4, {
-      icon: 'VE',
-      name: 'Véu de Eco',
-      description: 'Camada fina que desvia atenção e projéteis leves.',
-      mechanicalEffect: 'Até o próximo turno: ignore a primeira marca Leve à distância que receberia.',
-      narrativeConsequence: 'Voz ecoa estranha; −1 CAR em diálogo imediato.',
-      cooldownTurns: 3,
-    }),
-    skill('magica', 5, {
-      icon: 'RT',
-      name: 'Ruptura Aberta',
-      description: 'Abre demais o canal — poder alto, custo alto.',
-      mechanicalEffect: 'Ataque de Eco com +2 eficácia. Acerto: 1 marca Média + alvo fica Deslocado.',
-      narrativeConsequence: '+1 sobrecarga extra. Tremor nas mãos até descanso de Eco.',
-      cooldownTurns: 4,
-      overloadCost: 2,
     }),
   ],
   suporte: [
     skill('suporte', 1, {
-      icon: 'LE',
-      name: 'Leitura de Campo',
-      description: 'Sente intenções e resíduos de Eco no ambiente.',
-      mechanicalEffect: 'Vantagem no próximo teste de percepção/investigação. Em combate: o mestre revela 1 intenção óbvia de um inimigo.',
-      narrativeConsequence: 'Dor de cabeça leve por 1 cena.',
-      cooldownTurns: 1,
+      icon: 'MC',
+      name: 'Mente Calma',
+      description: 'Acalma o Eco no corpo — em si ou em um aliado.',
+      mechanicalEffect: 'Alvo (você ou aliado): reduz 1 nível de marcas no corpo e reduz 1 uso/nível de sobrecarga de Eco (a critério do mestre na mesa).',
+      narrativeConsequence: 'Mente vazia depois do esforço: −1 INT no próximo turno.',
+      cooldownTurns: 2,
     }),
     skill('suporte', 2, {
-      icon: 'CO',
-      name: 'Cobertura Tática',
-      description: 'Puxa um aliado para fora da linha com um fio de Eco.',
-      mechanicalEffect: '1 aliado em alcance curto evita o próximo ataque direcionado a ele neste turno (1×).',
-      narrativeConsequence: 'Você fica Exposto até seu próximo turno.',
+      icon: 'FO',
+      name: 'Fortificação',
+      description: 'Reforça o limiar de marcas do alvo com Eco.',
+      mechanicalEffect: 'Alvo (você ou aliado): +1 limiar de marcas (nv.1), +2 (nv.2) ou +3 (nv.3) até o fim da cena ou conforme o mestre.',
+      narrativeConsequence: 'O Eco endurece demais em você: −1 DES no próximo turno.',
       cooldownTurns: 2,
     }),
     skill('suporte', 3, {
-      icon: 'SI',
-      name: 'Sinal Clareza',
-      description: 'Manda um pulso claro — o grupo entende o plano.',
-      mechanicalEffect: 'Até 2 aliados: vantagem narrativa na próxima ação coordenada neste turno.',
-      narrativeConsequence: 'Sua voz some por um instante (roleplay).',
+      icon: 'AB',
+      name: 'Abençoando',
+      description: 'Canaliza Eco para abençoar uma rolagem específica.',
+      mechanicalEffect: 'Bônus na rolagem: +1 (nv.1), +2 (nv.2) ou +3 (nv.3). Custo de usos de Eco: 1 se o atributo for aleatório; 2 se escolher só o grupo (físico ou cena); 3 se escolher o atributo exato (ex.: FOR, VIT, SAB).',
+      narrativeConsequence: 'Voz e presença falham: −1 CAR no próximo turno.',
       cooldownTurns: 2,
-    }),
-    skill('suporte', 4, {
-      icon: 'ES',
-      name: 'Estabilizar',
-      description: 'Atenua o Eco no aliado — alívio curto.',
-      mechanicalEffect: '1 aliado: remove 1 marca Leve ou reduz Média→Leve (não Grave/Incapacitado).',
-      narrativeConsequence: 'Você absorve residual: +1 sobrecarga.',
-      cooldownTurns: 3,
-    }),
-    skill('suporte', 5, {
-      icon: 'RE',
-      name: 'Rede de Eco',
-      description: 'Liga o grupo por um momento — informação e proteção leve.',
-      mechanicalEffect: 'Você + até 2 aliados: cada um ignora a primeira marca Leve neste round (1×).',
-      narrativeConsequence: '+1 sobrecarga extra. Fadiga mental até descansar Eco.',
-      cooldownTurns: 4,
-      overloadCost: 2,
+      overloadCost: 1,
     }),
   ],
 }
 
 /** Todas as skills de personagem (flat) — catálogo embutido. */
-export const CHARACTER_SKILLS_CATALOG = CHARACTER_CLASSES.flatMap(
-  cls => BY_CLASS[cls.id] || [],
-)
+export const CHARACTER_SKILLS_CATALOG = Object.values(BY_CLASS).flat()
 
 export function getClassSkills(classId) {
   return BY_CLASS[classId] || []

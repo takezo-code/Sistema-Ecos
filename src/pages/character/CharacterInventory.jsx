@@ -8,17 +8,11 @@ export function CharacterInventory({
   onAddItem,
   onUpdateItem,
   onRemoveItem,
-  onAddEquipped,
-  onRemoveEquipped,
 }) {
   return (
     <div style={{ padding: '1rem 1.5rem', overflowY: 'auto', height: '100%' }}>
       <PageHeader title="Inventário" subtitle="Mochila e equipamento" />
-      <EquippedSection
-        entity={character}
-        onAddItem={onAddEquipped}
-        onRemoveItem={onRemoveEquipped}
-      />
+      <EquippedSection entity={character} />
       <hr className="divide-line" style={{ margin: '1.25rem 0' }} />
       <BackpackSection
         entity={character}

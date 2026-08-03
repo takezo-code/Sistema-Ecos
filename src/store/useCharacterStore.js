@@ -39,6 +39,8 @@ import {
   clearDamageMarks as clearDamageMarksEngine,
   healDamageMarks as healDamageMarksEngine,
 } from '../mechanics/combat/damageMarksEngine'
+import { buildGearItem, getGearItem, GEAR_CATEGORIES } from '../mechanics/equipment/characterGear'
+import { upsertPassive } from '../mechanics/equipment/gearPassiveEngine'
 
 const load = () => (storage.get(KEYS.characters) || []).map(normalizeGameEntity)
 
@@ -486,8 +488,18 @@ export const useCharacterStore = create((set, get) => ({
         slot: payload.slot || '',
         category: payload.category || 'arma',
         type: payload.type || null,
+        image: payload.image || '',
+        description: payload.description || '',
+        passives: Array.isArray(payload.passives) ? payload.passives : [],
         equipmentId: payload.equipmentId || null,
       }],
+    }))
+  },
+
+  updateEquippedItem(characterId, itemId, data) {
+    patchCharacter(get, set, characterId, c => ({
+      ...c,
+      equipped: c.equipped.map(i => i.id === itemId ? { ...i, ...data, id: i.id } : i),
     }))
   },
 
@@ -496,5 +508,86 @@ export const useCharacterStore = create((set, get) => ({
       ...c,
       equipped: c.equipped.filter(i => i.id !== itemId),
     }))
+  },
+
+  /**
+   * Forja / reforja a peça do slot. Cada personagem tem uma arma e uma
+   * armadura, então a peça anterior da mesma categoria é substituída.
+   * Preserva passivas e skill da arma se não vierem no payload.
+   */
+  setGearItem(characterId, category, data) {
+    patchCharacter(get, set, characterId, c => {
+      const current = getGearItem(c, category)
+      const merged = {
+        ...(current || {}),
+        ...data,
+        passives: data.passives ?? current?.passives ?? [],
+        weaponSkill: data.weaponSkill !== undefined ? data.weaponSkill : current?.weaponSkill,
+      }
+      const item = buildGearItem(category, merged)
+      if (current) {
+        return {
+          ...c,
+          equipped: c.equipped.map(i => i.id === current.id
+            ? {
+                ...i,
+                ...item,
+                id: i.id,
+                passives: item.passives,
+                weaponSkill: item.weaponSkill ?? null,
+              }
+            : i),
+        }
+      }
+      return { ...c, equipped: [...(c.equipped || []), { id: genId(), ...item }] }
+    })
+  },
+
+  setGearPassive(characterId, category, passive) {
+    patchCharacter(get, set, characterId, c => {
+      const current = getGearItem(c, category)
+      if (!current || !passive) return c
+      const passives = upsertPassive(current.passives, passive)
+      return {
+        ...c,
+        equipped: c.equipped.map(i => i.id === current.id ? { ...i, passives } : i),
+      }
+    })
+  },
+
+  setGearPassives(characterId, category, rolledList) {
+    patchCharacter(get, set, characterId, c => {
+      const current = getGearItem(c, category)
+      if (!current || !Array.isArray(rolledList) || rolledList.length === 0) return c
+      let passives = [...(current.passives || [])]
+      for (const rolled of rolledList) {
+        if (rolled) passives = upsertPassive(passives, rolled)
+      }
+      return {
+        ...c,
+        equipped: c.equipped.map(i => i.id === current.id ? { ...i, passives } : i),
+      }
+    })
+  },
+
+  setWeaponSkill(characterId, weaponSkill) {
+    patchCharacter(get, set, characterId, c => {
+      const current = getGearItem(c, GEAR_CATEGORIES.WEAPON)
+      if (!current) return c
+      const skill = weaponSkill && typeof weaponSkill === 'object'
+        ? {
+            name: weaponSkill.name || '',
+            description: weaponSkill.description || '',
+            mechanicalEffect: weaponSkill.mechanicalEffect || '',
+            narrativeConsequence: weaponSkill.narrativeConsequence || '',
+            cooldownTurns: Number(weaponSkill.cooldownTurns) || 2,
+            overloadCost: Number(weaponSkill.overloadCost) || 1,
+          }
+        : null
+      return {
+        ...c,
+        equipped: c.equipped.map(i => i.id === current.id ? { ...i, weaponSkill: skill } : i),
+      }
+    })
   },
 }))

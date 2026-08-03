@@ -64,8 +64,8 @@ export function EntitySkillsPanel({
           textAlign: 'right',
         }}>
           {manualSkillPick
-            ? (hasEcoToSpend ? 'Eco disponível' : 'Ganhe +1 Eco por nível')
-            : (hasEcoToSpend ? 'Pode investir até nv.4' : 'Ganhe +1 Eco por nível')}
+            ? (hasEcoToSpend ? 'Eco disponível' : 'Eco nos pares + marco nv.15')
+            : (hasEcoToSpend ? 'Pode investir até nv.3' : 'Eco nos níveis pares · completo no 15')}
         </span>
       </div>
 

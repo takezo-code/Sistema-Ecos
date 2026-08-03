@@ -81,7 +81,7 @@ function RollResultBanner({ result, onDismiss }) {
 export function ManageCombat() {
   const {
     characters, updateCharacter, activateSkill, advanceTurn,
-    applyDamageMarks, healDamageMarks, clearDamageMarks, recoverGroupMembers,
+    applyDamageMarks, healDamageMarks, clearDamageMarks,
   } = useCharacterStore()
   const {
     npcs, updateNPC,
@@ -91,13 +91,11 @@ export function ManageCombat() {
   const { groups } = useGroupStore()
   const activeCampaignId = useCampaignStore(s => s.activeCampaignId)
   const {
-    turn,
     combatGroupId,
     activeEnemyId,
     setCampaign,
     setCombatGroup,
     setActiveEnemy,
-    incrementTurn,
   } = useCombatStore()
 
   const [rollResult, setRollResult] = useState(null)
@@ -171,7 +169,8 @@ export function ManageCombat() {
       characterName: character.name,
       attrLabel,
     })
-  }, [])
+    advanceTurn(character.id)
+  }, [advanceTurn])
 
   const handleApplyMarks = useCallback((character, markType) => {
     const result = applyDamageMarks(character.id, markType)
@@ -252,11 +251,6 @@ export function ManageCombat() {
     return res
   }, [activateSkill])
 
-  const handleAdvanceAllTurns = () => {
-    combatCharacters.forEach(c => advanceTurn(c.id))
-    incrementTurn()
-  }
-
   if (!activeCampaignId) {
     return <ActiveCampaignBanner />
   }
@@ -276,7 +270,6 @@ export function ManageCombat() {
         flexShrink: 0,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
         padding: '0.45rem 1rem',
         borderBottom: '1px solid #1a1a1a',
         background: '#0d0d0d',
@@ -303,60 +296,6 @@ export function ManageCombat() {
               </option>
             ))}
           </select>
-
-          {/* Seletor de inimigo ativo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Skull size={13} style={{ color: '#dc2626', flexShrink: 0 }} />
-            <select
-              className="input-base"
-              value={activeEnemyId || ''}
-              onChange={e => setActiveEnemy(e.target.value || null)}
-              style={{ fontSize: '0.65rem', padding: '3px 6px', maxWidth: '200px',
-                borderColor: activeEnemyId ? 'rgba(220,38,38,0.4)' : undefined }}
-              title="Inimigo ativo neste combate"
-            >
-              <option value="">Sem inimigo</option>
-              {campaignEnemies.map(n => (
-                <option key={n.id} value={n.id}>
-                  {n.papelCombate === 'boss' ? '★ BOSS · ' : n.papelCombate === 'elite' ? 'Elite · ' : ''}
-                  {n.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-          <span style={{ fontSize: '0.65rem', fontFamily: 'monospace', color: '#444' }}>
-            TURNO <strong style={{ color: '#e5e5e5' }}>{turn}</strong>
-          </span>
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={handleAdvanceAllTurns}
-            disabled={combatCharacters.length === 0}
-            style={{ fontSize: '0.6rem', padding: '3px 8px' }}
-          >
-            Avançar turno (todos)
-          </button>
-          {activeGroup && (
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={() => {
-                const { recovered } = recoverGroupMembers(activeGroup.memberIds)
-                setCombatNotice(
-                  recovered > 0
-                    ? `Grupo descansou — ${recovered} personagem${recovered > 1 ? 's' : ''} recuperado${recovered > 1 ? 's' : ''}.`
-                    : 'Nenhum membro recuperado.',
-                )
-              }}
-              disabled={activeGroup.memberIds.length === 0}
-              style={{ fontSize: '0.6rem', padding: '3px 8px', display: 'flex', alignItems: 'center', gap: '4px' }}
-              title="Zera sobrecarga Eco e marcas de dano de todo o grupo"
-            >
-              <RotateCcw size={12} /> Descansar grupo
-            </button>
-          )}
         </div>
       </div>
 
@@ -417,55 +356,83 @@ export function ManageCombat() {
                 onApplyMarks={(markType) => handleApplyMarks(c, markType)}
                 onHealMarks={(amount) => handleHealMarks(c, amount)}
                 onClearMarks={() => handleClearMarks(c)}
-                onAdvanceTurn={() => advanceTurn(c.id)}
               />
             ))}
           </div>
 
-          {/* Card do inimigo ativo — mesmo tamanho dos jogadores, centralizado */}
-          {activeEnemy && (
+          {/* Painel do inimigo / boss — seletor à esquerda do card */}
+          <div style={{
+            flex: 1,
+            minWidth: 0,
+            borderLeft: '1px solid rgba(220,38,38,0.25)',
+            padding: '0.875rem',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+            alignItems: 'flex-start',
+            gap: '0.5rem',
+          }}>
             <div style={{
-              flex: 1,
-              minWidth: 0,
-              borderLeft: '1px solid rgba(220,38,38,0.25)',
-              padding: '0.875rem',
-              overflowY: 'auto',
               display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'flex-start',
+              alignItems: 'center',
+              gap: '0.35rem',
+              paddingTop: '0.55rem',
+              flexShrink: 0,
             }}>
-              <div style={{
-                width: '230px',
-                flexShrink: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.5rem',
-              }}>
-                <div style={{
-                  fontSize: '0.45rem',
-                  color: '#dc2626',
-                  fontFamily: 'monospace',
-                  letterSpacing: '0.1em',
-                  textAlign: 'center',
-                }}>
-                  INIMIGO ATIVO
-                </div>
-                <CombatEnemyCard
-                  enemy={activeEnemy}
-                  targets={combatCharacters}
-                  onUpdate={data => updateNPC(activeEnemy.id, data)}
-                  onApplyMarks={handleEnemyApplyMarks}
-                  onHealMarks={(amount) => healNPCMarks(activeEnemy.id, amount)}
-                  onClearMarks={() => { clearNPCMarks(activeEnemy.id); setCombatNotice(`${activeEnemy.name}: marcas limpas.`) }}
-                  onNotice={msg => setCombatNotice(msg)}
-                  onRollAttribute={handleEnemyRollAttribute}
-                  onBossAttackRoll={handleBossAttackRoll}
-                  onApplyMarksToTarget={handleApplyMarksToTarget}
-                  onBossExpose={handleBossExpose}
-                />
-              </div>
+              <Skull size={13} style={{ color: '#dc2626', flexShrink: 0 }} />
+              <select
+                className="input-base"
+                value={activeEnemyId || ''}
+                onChange={e => setActiveEnemy(e.target.value || null)}
+                style={{
+                  fontSize: '0.65rem',
+                  padding: '3px 6px',
+                  width: '150px',
+                  borderColor: activeEnemyId ? 'rgba(220,38,38,0.4)' : undefined,
+                }}
+                title="Inimigo ativo neste combate"
+              >
+                <option value="">Sem inimigo</option>
+                {campaignEnemies.map(n => (
+                  <option key={n.id} value={n.id}>
+                    {n.papelCombate === 'boss' ? '★ BOSS · ' : n.papelCombate === 'elite' ? 'Elite · ' : ''}
+                    {n.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          )}
+
+            {activeEnemy ? (
+              <CombatEnemyCard
+                enemy={activeEnemy}
+                targets={combatCharacters}
+                onUpdate={data => updateNPC(activeEnemy.id, data)}
+                onApplyMarks={handleEnemyApplyMarks}
+                onHealMarks={(amount) => healNPCMarks(activeEnemy.id, amount)}
+                onClearMarks={() => { clearNPCMarks(activeEnemy.id); setCombatNotice(`${activeEnemy.name}: marcas limpas.`) }}
+                onNotice={msg => setCombatNotice(msg)}
+                onRollAttribute={handleEnemyRollAttribute}
+                onBossAttackRoll={handleBossAttackRoll}
+                onApplyMarksToTarget={handleApplyMarksToTarget}
+                onBossExpose={handleBossExpose}
+              />
+            ) : (
+              <div style={{
+                width: '220px',
+                flexShrink: 0,
+                padding: '1.25rem 0.75rem',
+                textAlign: 'center',
+                fontSize: '0.6rem',
+                color: '#444',
+                fontFamily: 'monospace',
+                border: '1px dashed #1e1e1e',
+                borderRadius: '8px',
+              }}>
+                Escolha um inimigo ou boss
+              </div>
+            )}
+          </div>
         </div>
       )}
 

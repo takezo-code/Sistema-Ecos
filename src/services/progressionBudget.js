@@ -1,4 +1,11 @@
-import { MAX_LEVEL, getXpRequiredForLevel, getSocialPointsFromLevel, ECO_SKILL_MAX_LEVEL } from '../constants/progression'
+import {
+  MAX_LEVEL,
+  getXpRequiredForLevel,
+  getSocialPointsFromLevel,
+  ECO_SKILL_MAX_LEVEL,
+  MAX_ECO_POINTS,
+  getEcoPointsFromLevel as getEcoPointsFromLevelRaw,
+} from '../constants/progression'
 import {
   ATTRIBUTES,
   STARTING_ATTRIBUTE_POINTS,
@@ -26,14 +33,13 @@ export function getSocialBudget(level) {
   return STARTING_SOCIAL_POINTS + getSocialPointsFromLevel(level)
 }
 
-/** Ecos totais: 1 por nível (nv.1 = 1 … nv.20 = 20). */
+/** Ecos totais até o nível (0 se a entidade não tem poderes de Eco). */
 export function getEcoPointsFromLevel(level, entity = null) {
   if (entity && !entityHasEcoPowers(entity)) return 0
-  const l = Math.max(1, Math.min(MAX_LEVEL, Number(level) || 1))
-  return l
+  return getEcoPointsFromLevelRaw(level)
 }
 
-/** Ecos gastos em skills: só níveis 1–3. Graus 4–5 usam item do mercador. */
+/** Ecos gastos em skills: níveis 1–3 por skill (sem grau). */
 export function getEcoSpentOnSkills(skills = []) {
   return (skills || []).reduce((sum, s) => {
     const tier = Math.max(0, Number(s.tier) || 0)

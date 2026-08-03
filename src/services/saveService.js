@@ -10,11 +10,9 @@ import { useNarrativeStore } from '../store/useNarrativeStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { useSettingsStore } from '../store/useSettingsStore'
 import { useSaveStore } from '../store/useSaveStore'
-import { useEquipmentStore } from '../store/useEquipmentStore'
 import { useTrashStore } from '../store/useTrashStore'
 import { useSkillsCatalogStore } from '../store/useSkillsCatalogStore'
 import { useCombatStore } from '../store/useCombatStore'
-import { useSceneStore } from '../store/useSceneStore'
 import { useCharacterPanelStore } from '../store/useCharacterPanelStore'
 import { genId } from '../utils/id'
 import { normalizeGameEntity } from '../constants/attributes'
@@ -378,13 +376,12 @@ export function initializeNewCampaign(campaignName = 'Nova Campanha') {
 }
 
 /**
- * Apaga personagens, NPCs, bosses, orgs, grupos, sessões, lixeira, equipamentos, etc.
+ * Apaga personagens, NPCs, bosses, orgs, grupos, sessões, lixeira, etc.
  * Mantém uma campanha vazia pronta para testes.
  */
 export function resetAllTestData(campaignName = 'Nova Campanha') {
   const empty = initializeNewCampaign(campaignName)
 
-  useEquipmentStore.setState({ items: [] })
   useTrashStore.setState({ items: [] })
   useSkillsCatalogStore.getState().reload()
   useCombatStore.setState({
@@ -394,13 +391,6 @@ export function resetAllTestData(campaignName = 'Nova Campanha') {
     combatGroupId: null,
     activeEnemyId: null,
     lastRoll: null,
-  })
-  useSceneStore.setState({
-    globalNotes: '',
-    turn: 0,
-    campaignId: empty.activeCampaignId,
-    sceneGroupId: null,
-    activeEnemyId: null,
   })
   useCharacterPanelStore.setState({ selectedCharacterId: null })
 

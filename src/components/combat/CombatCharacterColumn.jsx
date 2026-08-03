@@ -12,6 +12,7 @@ import { getCharacterClass } from '../../constants/classes'
 import { getClassAttributeBonus } from '../../mechanics/classes/classBonusEngine'
 import { getWeaponProficiencyPenalty } from '../../mechanics/equipment/weaponProficiencyEngine'
 import { getArmorDestrezaPenalty } from '../../mechanics/equipment/armorEffectsEngine'
+import { sumGearRollBonus, getRupturaUsesRemaining, getRupturaUsesMax } from '../../mechanics/equipment/gearPassiveEngine'
 
 function socialAttrShort(attr) {
   if (attr.key === 'carisma') return 'CAR'
@@ -26,7 +27,6 @@ export function CombatCharacterColumn({
   onUpdate,
   onRollAttribute,
   onActivateSkill,
-  onAdvanceTurn,
   onGrantHighlightXp,
   onSelectSkill,
   onApplyMarks,
@@ -34,9 +34,7 @@ export function CombatCharacterColumn({
   onClearMarks,
   onNotice,
   attributeList = null,
-  variant = 'combat',
 }) {
-  const isScene = variant === 'scene'
   const [skillsOpen, setSkillsOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
   const [xpFlash, setXpFlash] = useState(false)
@@ -54,6 +52,8 @@ export function CombatCharacterColumn({
   const safeLimit = getEcoSafeLimitFromEntity(character)
   const overloadPct = Math.min(overload / Math.max(safeLimit, 1), 1)
   const hasNotes = Boolean((character.combatNotes || '').trim())
+  const rupturaMax = getRupturaUsesMax(character)
+  const rupturaLeft = getRupturaUsesRemaining(character)
 
   return (
     <article style={{
@@ -62,10 +62,10 @@ export function CombatCharacterColumn({
       display: 'flex',
       flexDirection: 'column',
       background: '#0d0d0d',
-      border: `1px solid ${(isScene ? mentalOpt : physicalOpt).color}44`,
+      border: `1px solid ${physicalOpt.color}44`,
       borderRadius: '8px',
       overflow: 'hidden',
-      boxShadow: !isScene && physicalOpt.glow ? `0 0 16px ${physicalOpt.glow}` : 'none',
+      boxShadow: physicalOpt.glow ? `0 0 16px ${physicalOpt.glow}` : 'none',
     }}>
 
       <header style={{ padding: '0.5rem 0.625rem', background: '#111', borderBottom: '1px solid #1a1a1a' }}>
@@ -108,26 +108,6 @@ export function CombatCharacterColumn({
                   <Star size={9} fill={xpFlash ? '#d97706' : 'none'} />
                 </button>
               )}
-              {onAdvanceTurn && (
-                <button
-                  type="button"
-                  onClick={onAdvanceTurn}
-                  title="Avançar turno"
-                  style={{
-                    flexShrink: 0,
-                    background: 'transparent',
-                    border: '1px solid #2a2a2a',
-                    borderRadius: '3px',
-                    color: '#555',
-                    cursor: 'pointer',
-                    padding: '1px 5px',
-                    fontSize: '0.5rem',
-                    fontFamily: 'monospace',
-                  }}
-                >
-                  +T
-                </button>
-              )}
             </div>
             <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#555', marginTop: '1px' }}>
               Nv.{character.level ?? 1}
@@ -138,38 +118,40 @@ export function CombatCharacterColumn({
           </div>
         </div>
 
-        {!isScene && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.45rem' }}>
-            <Zap size={9} style={{ color: '#a855f7', flexShrink: 0 }} />
-            <div style={{ flex: 1, height: '3px', background: '#1a1a1a', borderRadius: '2px', overflow: 'hidden' }}>
-              <div style={{
-                height: '100%',
-                width: `${overloadPct * 100}%`,
-                background: overloadPct >= 0.8 ? '#dc2626' : overloadPct >= 0.5 ? '#f97316' : '#a855f7',
-                borderRadius: '2px',
-                transition: 'width 0.3s',
-              }} />
-            </div>
-            <span style={{ fontSize: '0.5rem', color: '#777', fontFamily: 'monospace', flexShrink: 0 }}>
-              {formatOverloadDisplay(overload, { safeLimit })}
-            </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.45rem' }}>
+          <Zap size={9} style={{ color: '#a855f7', flexShrink: 0 }} />
+          <div style={{ flex: 1, height: '3px', background: '#1a1a1a', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              width: `${overloadPct * 100}%`,
+              background: overloadPct >= 0.8 ? '#dc2626' : overloadPct >= 0.5 ? '#f97316' : '#a855f7',
+              borderRadius: '2px',
+              transition: 'width 0.3s',
+            }} />
+          </div>
+          <span style={{ fontSize: '0.5rem', color: '#777', fontFamily: 'monospace', flexShrink: 0 }}>
+            {formatOverloadDisplay(overload, { safeLimit })}
+          </span>
+        </div>
+
+        {rupturaMax > 0 && (
+          <div style={{ marginTop: '0.3rem', fontSize: '0.5rem', fontFamily: 'monospace', color: '#d97706' }}>
+            Usos Ruptura (gear) {rupturaLeft}/{rupturaMax}
           </div>
         )}
 
-        {isScene && (
-          <div style={{ marginTop: '0.45rem' }}>
-            <select
-              className="input-base"
-              value={mental}
-              onChange={e => onUpdate?.({ mentalState: e.target.value })}
-              style={{ fontSize: '0.65rem', padding: '3px 4px', borderColor: `${mentalOpt.color}55`, width: '100%' }}
-            >
-              {MENTAL_STATES.map(s => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div style={{ marginTop: '0.45rem' }}>
+          <select
+            className="input-base"
+            value={mental}
+            onChange={e => onUpdate?.({ mentalState: e.target.value })}
+            style={{ fontSize: '0.65rem', padding: '3px 4px', borderColor: `${mentalOpt.color}55`, width: '100%' }}
+          >
+            {MENTAL_STATES.map(s => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+        </div>
 
         {mentalStatuses.length > 0 && (
           <div style={{ marginTop: '0.3rem', fontSize: '0.5rem', color: '#eab308', fontFamily: 'monospace' }}>
@@ -178,19 +160,17 @@ export function CombatCharacterColumn({
         )}
       </header>
 
-      {!isScene && (
-        <section style={{ padding: '0.45rem 0.625rem', borderBottom: '1px solid #1a1a1a' }}>
-          <DamageMarksPanel
-            character={character}
-            markTypes={PLAYER_MARK_TYPES}
-            compact
-            onApplyMarks={onApplyMarks}
-            onHealMarks={onHealMarks}
-            onClearMarks={onClearMarks}
-            onNotice={onNotice}
-          />
-        </section>
-      )}
+      <section style={{ padding: '0.45rem 0.625rem', borderBottom: '1px solid #1a1a1a' }}>
+        <DamageMarksPanel
+          character={character}
+          markTypes={PLAYER_MARK_TYPES}
+          compact
+          onApplyMarks={onApplyMarks}
+          onHealMarks={onHealMarks}
+          onClearMarks={onClearMarks}
+          onNotice={onNotice}
+        />
+      </section>
 
       <section style={{ padding: '0.45rem 0.625rem', borderBottom: '1px solid #1a1a1a' }}>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '2px', marginBottom: '0.35rem' }}>
@@ -220,50 +200,45 @@ export function CombatCharacterColumn({
           })}
         </div>
         {(() => {
-          const list = isScene ? SOCIAL_ATTRIBUTES : (attributeList ?? ATTRIBUTES)
-          const isSocial = isScene || (attributeList?.[0] && SOCIAL_ATTRIBUTES.some(a => a.key === attributeList[0].key))
-          const attrs = isSocial ? (character.socialAttributes || {}) : (character.attributes || {})
-          return (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.2rem' }}>
-              {list.map(attr => {
-                const base = attrs[attr.key] ?? 0
-                const eff = isSocial
-                  ? getEffectiveSocialAttributeValue(character.socialAttributes || {}, attr.key, {
-                    ecoOverload: overload,
-                    mentalState: mental,
-                    safeLimit,
-                  })
-                  : getEffectiveAttributeValue(character.attributes, attr.key, {
-                    physicalState: physical,
-                    ecoOverload: overload,
-                    mentalState: mental,
-                    destrezaPenalty: armorDexPenalty,
-                    safeLimit,
-                  })
+          const physicalList = attributeList ?? ATTRIBUTES
+          const weaponPenalty = getWeaponProficiencyPenalty(character)
+
+          const renderPhysical = () => {
+            const list = physicalList
+            const top = list.length === 4 ? list.slice(0, 2) : list.slice(0, 3)
+            const bottom = list.length === 4 ? list.slice(2) : list.slice(top.length)
+
+            const renderBtn = (attr) => {
+              const base = character.attributes?.[attr.key] ?? 0
+              const eff = getEffectiveAttributeValue(character.attributes, attr.key, {
+                physicalState: physical,
+                ecoOverload: overload,
+                mentalState: mental,
+                destrezaPenalty: armorDexPenalty,
+                safeLimit,
+              })
                 const classBonus = getClassAttributeBonus(character, attr.key)
-                const weaponPenalty = isScene ? 0 : getWeaponProficiencyPenalty(character)
-                const rollBonus = eff + classBonus + weaponPenalty
+                const gearBonus = sumGearRollBonus(character, attr.key)
+                const rollBonus = eff + classBonus + weaponPenalty + gearBonus
                 const reduced = eff < base
-                const shortKey = isSocial
-                  ? socialAttrShort(attr)
-                  : (attr.key === 'inteligencia' ? 'INT'
-                    : attr.key === 'vitalidade' ? 'VIT'
-                    : attr.key === 'ruptura' ? 'RUP'
-                    : attr.label.slice(0, 3).toUpperCase())
+                const shortKey = attr.key === 'inteligencia' ? 'INT'
+                  : attr.key === 'vitalidade' ? 'VIT'
+                  : attr.key === 'ruptura' ? 'RUP'
+                  : attr.label.slice(0, 3).toUpperCase()
                 return (
                   <button
                     key={attr.key}
                     type="button"
                     onClick={() => onRollAttribute?.(
                       character, attr.key, attr.label, rollBonus, diceSides,
-                      { attrBonus: eff, classBonus, weaponPenalty },
+                      { attrBonus: eff, classBonus, weaponPenalty, gearBonus },
                     )}
                     title={`d${diceSides} + ${attr.label}`}
                     style={{
                       background: '#111',
                       border: `1px solid ${weaponPenalty
                         ? 'rgba(220,38,38,0.35)'
-                        : classBonus > 0 ? 'rgba(217,119,6,0.3)' : '#1e1e1e'}`,
+                        : (classBonus > 0 || gearBonus > 0) ? 'rgba(217,119,6,0.3)' : '#1e1e1e'}`,
                       borderRadius: '4px',
                       padding: '0.3rem 0.2rem',
                       cursor: 'pointer',
@@ -274,7 +249,73 @@ export function CombatCharacterColumn({
                       {shortKey}
                     </div>
                     <div style={{ fontSize: '0.95rem', fontWeight: 800, color: reduced ? '#ea580c' : '#e5e5e5', lineHeight: 1.1 }}>
-                      {eff}
+                      {eff + gearBonus}
+                      {classBonus > 0 && (
+                        <span style={{ fontSize: '0.5rem', color: '#d97706', marginLeft: '1px' }}>+{classBonus}</span>
+                      )}
+                    </div>
+                  </button>
+                )
+            }
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${top.length}, 1fr)`,
+                  gap: '0.2rem',
+                }}>
+                  {top.map(renderBtn)}
+                </div>
+                {bottom.length > 0 && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: `repeat(${bottom.length}, 1fr)`,
+                    gap: '0.2rem',
+                  }}>
+                    {bottom.map(renderBtn)}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          const renderSocial = () => (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.2rem' }}>
+              {SOCIAL_ATTRIBUTES.map(attr => {
+                const base = character.socialAttributes?.[attr.key] ?? 0
+                const eff = getEffectiveSocialAttributeValue(character.socialAttributes || {}, attr.key, {
+                  ecoOverload: overload,
+                  mentalState: mental,
+                  safeLimit,
+                })
+                const classBonus = getClassAttributeBonus(character, attr.key)
+                const gearBonus = sumGearRollBonus(character, attr.key)
+                const rollBonus = eff + classBonus + gearBonus
+                const reduced = eff < base
+                return (
+                  <button
+                    key={attr.key}
+                    type="button"
+                    onClick={() => onRollAttribute?.(
+                      character, attr.key, attr.label, rollBonus, diceSides,
+                      { attrBonus: eff, classBonus, weaponPenalty: 0, gearBonus },
+                    )}
+                    title={`d${diceSides} + ${attr.label}`}
+                    style={{
+                      background: '#111',
+                      border: `1px solid ${(classBonus > 0 || gearBonus > 0) ? 'rgba(217,119,6,0.3)' : '#1e1e1e'}`,
+                      borderRadius: '4px',
+                      padding: '0.3rem 0.2rem',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <div style={{ fontSize: '0.4rem', color: attr.color, fontFamily: 'monospace' }}>
+                      {socialAttrShort(attr)}
+                    </div>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 800, color: reduced ? '#ea580c' : '#e5e5e5', lineHeight: 1.1 }}>
+                      {eff + gearBonus}
                       {classBonus > 0 && (
                         <span style={{ fontSize: '0.5rem', color: '#d97706', marginLeft: '1px' }}>+{classBonus}</span>
                       )}
@@ -282,6 +323,23 @@ export function CombatCharacterColumn({
                   </button>
                 )
               })}
+            </div>
+          )
+
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+              <div>
+                <div style={{ fontSize: '0.4rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
+                  ATRIBUTOS
+                </div>
+                {renderPhysical()}
+              </div>
+              <div>
+                <div style={{ fontSize: '0.4rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
+                  CENA
+                </div>
+                {renderSocial()}
+              </div>
             </div>
           )
         })()}

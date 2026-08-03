@@ -14,14 +14,13 @@ Este manual descreve como o sistema funciona **hoje** no software: atributos, co
 4. [Estados físicos e marcas de dano](#4-estados-físicos-e-marcas-de-dano)
 5. [Estados mentais e Sobrecarga de Eco](#5-estados-mentais-e-sobrecarga-de-eco)
 6. [Rolagem e resultados](#6-rolagem-e-resultados)
-7. [Aba Cena (narrativa social)](#7-aba-cena-narrativa-social)
-8. [Aba Combate](#8-aba-combate)
-9. [Inimigos e Bosses](#9-inimigos-e-bosses)
-10. [Vitalidade](#10-vitalidade)
-11. [Skills e poderes de Eco](#11-skills-e-poderes-de-eco)
-12. [Progressão e experiência](#12-progressão-e-experiência)
-13. [Campanhas, grupos e sessões](#13-campanhas-grupos-e-sessões)
-14. [Referência rápida](#14-referência-rápida)
+7. [Aba Combate](#7-aba-combate)
+8. [Inimigos e Bosses](#8-inimigos-e-bosses)
+9. [Vitalidade](#9-vitalidade)
+10. [Skills e poderes de Eco](#10-skills-e-poderes-de-eco)
+11. [Progressão e experiência](#11-progressão-e-experiência)
+12. [Campanhas, grupos e sessões](#12-campanhas-grupos-e-sessões)
+13. [Referência rápida](#13-referência-rápida)
 
 ---
 
@@ -51,17 +50,15 @@ Este manual descreve como o sistema funciona **hoje** no software: atributos, co
 | Seção | Função |
 |-------|--------|
 | **Campanha** | História e registro de sessões. |
-| **Gerenciamento** | Personagens, NPCs, bosses, organizações, equipamentos e skills (NPC/Boss). |
+| **Gerenciamento** | Personagens, NPCs, bosses, organizações e skills (NPC/Boss). |
 | **Em jogo → Ficha** | Ficha completa do personagem (modo mestre). |
-| **Em jogo → Cena** | Interação narrativa com atributos **sociais**. |
-| **Em jogo → Combate** | Confronto com atributos **físicos** e marcas. |
-| **Em jogo → Mercador** | Itens especiais (ex.: Catalisador de Grau). |
-| **Criação** | Fluxo para criar artefatos, equipamentos e skills. |
+| **Em jogo → Combate** | Confronto e interação: atributos físicos + de cena, marcas, boss. |
+| **Criação** | Fluxo para criar artefatos e skills. |
 | **Lixeira** | Entidades excluídas recuperáveis. |
 
 ### Campanha ativa
 
-Quase tudo é filtrado pela **campanha ativa**. Personagens, NPCs, grupos e sessões de cena/combate pertencem a uma campanha.
+Quase tudo é filtrado pela **campanha ativa**. Personagens, NPCs, grupos e sessões de combate pertencem a uma campanha.
 
 ---
 
@@ -76,19 +73,19 @@ Usados na aba **Combate**, rolagens de ataque, defesa e habilidades físicas/Eco
 | FOR | Força | 10 | Ataques corpo a corpo, imposição física. |
 | DES | Destreza | 10 | Esquiva, precisão, reflexos. |
 | INT | Inteligência | 10 | Tática, análise, pressão mental dirigida. |
-| VIT | Vitalidade | 10 | Resistência ao trauma; ver [seção 10](#10-vitalidade). |
+| VIT | Vitalidade | 10 | Resistência ao trauma; ver [seção 9](#9-vitalidade). |
 | RUP | Ruptura | 10 | Potência de habilidades de Eco (só com poderes de Eco). |
 
 **Criação:** 10 pontos para distribuir; máximo **4** por atributo na criação. Também é obrigatório **gastar o 1 Eco inicial** desbloqueando **uma skill** da classe — só então a criação é liberada.
 
 **Progressão (nível 2–20):**
 
-- Com **poderes de Eco:** **+1 Eco a cada nível** (nv.1 começa com 1 → **20 Ecos no nível 20**). Níveis **pares** também dão +1 ponto de atributo.
+- Com **poderes de Eco:** Ecos até o orçamento de **9** (completo no **nível 15**): 1 na criação, +1 nos níveis **pares 2–14**, +1 marco no **15**. Níveis **pares** também dão +1 ponto de atributo.
 - **Sem** poderes de Eco (NPCs comuns): todo nível par dá atributo; sem Ruptura nem skills de Eco.
 
 ### Atributos sociais (cena)
 
-Usados **somente** na aba **Cena** (jogadores e boss/inimigo na cena).
+Usados na aba **Combate** junto com os atributos físicos (CAR, PER, VON, SAB).
 
 | Sigla | Nome | Máx. típico | Uso principal |
 |-------|------|-------------|---------------|
@@ -103,7 +100,7 @@ Usados **somente** na aba **Cena** (jogadores e boss/inimigo na cena).
 
 ### Valor efetivo na rolagem
 
-Na interface, ao clicar em um atributo no card de combate/cena:
+Na interface, ao clicar em um atributo no card de combate:
 
 ```
 Total = d20 + valor efetivo do atributo + bônus de classe + perícia de arma
@@ -129,20 +126,22 @@ Classe é **opcional**: sem classe, o personagem simplesmente não recebe bônus
 
 Usar uma arma **fora** da perícia da classe aplica **−3** nas rolagens de combate. A arma precisa estar equipada com o tipo definido na ficha.
 
-### Armas (criação)
+### Armas (equipamento pessoal)
 
-Armas **não** têm skills, bônus de ataque nem bônus de resistência. Só **passivas**, com slots pela raridade:
+Não existe catálogo global nem arma de loot. Cada personagem **forja** a sua arma e a sua armadura na criação e usa as mesmas peças pela campanha inteira — o loot das missões é sucata, material e dinheiro.
 
-| Raridade | Slots de passiva |
-|----------|------------------|
-| Comum | 1 |
-| Incomum | 2 |
-| Raro | 3 |
-| Lendário | 4 |
+A arma **não tem raridade**. Tem **3 passivas Metin** (rolar → ver → manter ou rerolar, sem custo) e **1 skill custom** no 4º slot (definida pelo player + mestre):
 
-**Tipos de arma:** Arma à Distância (2 mãos) · Orbe (1) · Varinha (1) · Cajado (2) · Livro (1) · Escudo Médio (1) · Escudo Grande (2) · Arma de Duas Mãos (2) · Arma de Uma Mão (1) · Manoplas (1).
+| Slot | Efeito | Roll |
+|------|--------|------|
+| 1 | Bônus em **um** atributo (físico ou cena) | 1–5 + qual atributo |
+| 2 | **+usos de poder de Ruptura** | 1–5 |
+| 3 | Bônus em **uma rolagem específica** | 1–3 + qual atributo |
+| 4 | **Skill da arma** | texto/efeito custom (não rola) |
 
-Passivas ainda serão randomizadas — por enquanto os slots ficam reservados.
+**Tipos de arma:** Arma à Distância (2 mãos) · Orbe (1) · Varinha (1) · Cajado (2) · Livro (1) · Escudo Médio (1) · Escudo Grande (2) · Arma de Duas Mãos (2) · Arma de Uma Mão (1) · Manoplas (1). Na forja, a lista fica restrita aos tipos com perícia da classe.
+
+**Onde gerenciar:** Em jogo → Ficha → botão **Equipamento** (paper-doll com arma e armadura; passivas Metin e skill da arma).
 
 ### Armaduras
 
@@ -152,7 +151,27 @@ Passivas ainda serão randomizadas — por enquanto os slots ficam reservados.
 | **Média** | −2 Destreza | +2 |
 | **Pesada** | −3 Destreza | +3 |
 
-O bônus de marcas soma ao buffer da Vitalidade (atrasa Ferido/Grave/Incapacitado). A −DES vale só no valor efetivo das rolagens. Equipar a armadura na ficha (Itens em uso) ativa os efeitos.
+A armadura tem **4 passivas Metin** (todas liberadas desde a forja):
+
+| Slot | Efeito | Roll |
+|------|--------|------|
+| 1 | Bônus em **um** atributo (físico ou cena) | 1–5 + qual atributo |
+| 2 | **+marcas de vida** (limiar / pool) | 1–5 |
+| 3 | **+usos de poder de Ruptura** | 1–5 |
+| 4 | Bônus em **uma rolagem específica** | 1–3 + qual atributo |
+
+**Raridade** da armadura acompanha o nível do personagem. Cada degrau acima de comum concede **+1 marca de vida** permanente (cumulativo), somado ao bônus do tipo e à passiva 2:
+
+| Nível | Raridade | Marcas (raridade) |
+|-------|----------|-------------------|
+| 1–5 | Comum | +0 |
+| 6–10 | Incomum | +1 |
+| 11–15 | Raro | +2 |
+| 16–20 | Lendário | +3 |
+
+O limiar total de marcas = tipo + raridade + passiva Metin de marcas. A −DES vale só no valor efetivo das rolagens. A armadura forjada na criação já entra ativa; dá para reforjá-la e rerolar passivas no botão Equipamento da ficha.
+
+**Usos de Ruptura (gear):** soma das passivas da arma (slot 2) e da armadura (slot 3). Ao ativar uma skill de Eco, um uso bônus é consumido antes da sobrecarga normal. Descansar zera os usos gastos.
 
 ### Bônus de classe na rolagem
 
@@ -260,61 +279,27 @@ Ao rolar **d20 + atributo + bônus de classe** (clique no atributo no card), o a
 
 ---
 
-## 7. Aba Cena (narrativa social)
-
-**Caminho:** Em jogo → Cena
-
-### Propósito
-
-Resolver **interação, investigação, diálogo e tensão social** — não combate armado direto.
-
-### O que aparece nos cards dos jogadores
-
-- Estado **mental** (dropdown).
-- **Sem** barra de sobrecarga Eco (oculta neste modo).
-- **Sem** estado físico nem painel de marcas de dano.
-- **Apenas atributos sociais** (CAR, PER, VON, SAB) — clique para rolar d20.
-- Skills, XP de destaque, turno, anotações.
-
-### Painel lateral
-
-| Situação | Painel direito |
-|----------|----------------|
-| **Sem inimigo** selecionado | **Notas da cena** (texto livre: ambiente, pistas, falas). |
-| **Com inimigo/boss** na cena | **Card do inimigo** (atributos sociais, estado mental, sem marcas). |
-
-Seletor de inimigo no topo (ícone caveira): escolha quem o grupo está enfrentando socialmente.
-
-### Sessão da cena
-
-- Grupo presente (filtro de personagens).
-- Contador de **turno** (narrativo).
-- Botão **Descansar grupo** (zera sobrecarga Eco e marcas dos membros).
-
----
-
-## 8. Aba Combate
+## 7. Aba Combate
 
 **Caminho:** Em jogo → Combate
 
 ### Propósito
 
-Confronto físico: ataques, ferimentos, marcas, estados e uso de Eco em combate.
+Confronto físico e interação na mesa: ataques, ferimentos, marcas, estados, atributos de cena e uso de Eco.
 
 ### Cards dos jogadores
 
 - Barra de **Sobrecarga de Eco**.
-- Estados **físico** e **mental**.
+- Estado **mental** (dropdown).
 - Painel de **marcas de dano** (Leve / Médio / Grave, curar, limpar).
-- **Atributos físicos** (FOR, DES, INT, VIT, RUP se aplicável).
+- **Atributos físicos** (FOR, DES, INT, VIT, RUP) e **de cena** (CAR, PER, VON, SAB) — clique para rolar.
 - Skills ativáveis, anotações de combate.
 
 ### Card do inimigo / boss
 
 - Resistência física, resistência mental, marcas máximas (referência).
-- Estados físico e mental.
-- Marcas de dano (mesmo painel dos jogadores).
-- **Somente atributos físicos** para rolagem — **não** exibe atributos sociais.
+- Estado mental; marcas de dano.
+- **Atributos físicos e de cena** para rolagem.
 - Fraquezas (texto livre, ex.: “fogo”, “luz”).
 
 ### Fluxo sugerido na mesa
@@ -324,13 +309,12 @@ Confronto físico: ataques, ferimentos, marcas, estados e uso de Eco em combate.
 3. Mestre interpreta o resultado (tabela da seção 6).
 4. Se houver dano, mestre aplica **marcas** no alvo.
 5. Inimigo age; repete rolagem e marcas no card do boss.
-6. **Avançar turno** quando a rodada narrativa fechar.
 
-Não há sistema automático de “ataque vs defesa” encadeado — **uma rolagem por ação** declarada.
+Não há sistema automático de “ataque vs defesa” encadeado — **uma rolagem por ação** declarada. Cada rolagem também avança o turno do personagem (cooldowns).
 
 ---
 
-## 9. Inimigos e Bosses
+## 8. Inimigos e Bosses
 
 ### Onde criar
 
@@ -354,14 +338,13 @@ Não há sistema automático de “ataque vs defesa” encadeado — **uma rolag
 
 ### Atributos do inimigo na mesa
 
-- **Combate:** grid físico (FOR, DES, INT, VIT, RUP).
-- **Cena:** grid social (CAR, PER, VON, SAB) no card lateral.
+- Grid **físico** (FOR, DES, INT, VIT, RUP) e **de cena** (CAR, PER, VON, SAB) no card.
 
 NPCs **sem** checkbox “poderes de Eco” não têm Ruptura nem grimório de skills.
 
 ---
 
-## 10. Vitalidade
+## 9. Vitalidade
 
 **Vitalidade não é HP.** Representa resistência corporal e tolerância à dor.
 
@@ -381,40 +364,41 @@ VIT aparece no grid de atributos físicos e sofre penalidade flat de estado fís
 
 ---
 
-## 11. Skills e poderes de Eco
+## 10. Skills e poderes de Eco
 
 ### Tipos de habilidade
 
-Skills de **personagem** são sempre **ativas** e vêm **pré-definidas por classe** (5 por classe). Jogadores não criam skills de PC.
+Skills de **personagem** são sempre **ativas**. Cada classe tem **3 skills** fixas; a **4ª** vem da **arma** (custom, player + mestre). Jogadores não criam skills de classe — só a skill da arma.
 
 | Tipo | Sobrecarga | Uso |
 |------|------------|-----|
-| **Ativa** | +1 por uso (ou mais) | Ação consciente de Eco. |
+| **Ativa** | +1 por uso (ou mais); usos de Ruptura do gear podem cobrir o custo | Ação consciente de Eco. |
 | **Passiva** (legado/NPC) | Não aumenta | Sempre ligada ou gatilho automático. |
 
 ### Livro de skills (personagem)
 
-- Cada classe tem **5 skills ativas** fixas.
-- **1 Eco** = desbloqueia (nível 1) ou sobe **+1 nível**, só até o **nível 4**.
-- A partir do **nível 5** a skill entra em **grau** (G5): sobe apenas com **Catalisador de Grau** comprado no **Mercador** (Em jogo → Mercador).
+- Cada classe tem **3 skills ativas** fixas.
+- A **skill da arma** aparece junto na mesa (total **3 + 1 = 4**).
+- **1 Eco** = desbloqueia (nível 1) ou sobe **+1 nível**, até o **nível 3**.
+- **3 Ecos** maxam uma skill; **9 Ecos** maxam as três — orçamento completo no **nível 15**.
 - Ícones cinza = bloqueadas; com nível = disponíveis para ativar.
-- Criação manual de skills existe só para **NPC** e **Boss**.
+- Criação manual de skills existe só para **NPC**, **Boss** e a **skill da arma** (no Equipamento).
 
 ### Catálogo por audiência
 
-- **Personagem** — skills pré-definidas por classe (livro de skills; sem aba de catálogo no Gerenciamento).
+- **Personagem** — 3 skills pré-definidas por classe + 1 da arma (sem aba de catálogo no Gerenciamento).
 - **NPC** — skills de NPCs (criação liberada no Gerenciamento).
 - **Boss** — skills de inimigos poderosos (criação liberada no Gerenciamento).
 
 ### Na mesa (aba Combate / Ficha)
 
-- Lista de skills no card; clique abre detalhe.
-- Botão **Ativar** consome cooldown e processa sobrecarga (se não for passiva).
+- Lista de skills no card (classe + arma); clique abre detalhe.
+- Botão **Ativar** consome cooldown e processa sobrecarga (ou um uso de Ruptura do gear, se houver).
 - Avisos de bloqueio (cooldown, sobrecarga, estado mental) aparecem como mensagem.
 
 ---
 
-## 12. Progressão e experiência
+## 11. Progressão e experiência
 
 ### Níveis
 
@@ -433,48 +417,34 @@ Skills de **personagem** são sempre **ativas** e vêm **pré-definidas por clas
 
 ### Ao subir de nível
 
-- **Com Eco:** +1 Eco em **todo** nível-up; nos níveis **pares**, também +1 ponto de atributo. Total: **20 Ecos no nível 20**.
+- **Com Eco:** +1 Eco nos níveis **pares (2–14)** e +1 marco no **nível 15** (total 9 com o Eco inicial). Nos níveis **pares**, também +1 ponto de atributo.
 - **Pontos sociais:** +1 por nível até o 15.
-- **Skills:** Eco sobe skills até o nível 4; nível 5 (grau) exige Catalisador de Grau do mercador.
+- **Skills:** Eco sobe skills até o nível 3; no nível 15 dá para maxar as três.
 
 ---
 
-## 13. Campanhas, grupos e sessões
+## 12. Campanhas, grupos e sessões
 
 ### Grupos
 
 - Agrupam personagens da campanha (Party Alpha, etc.).
-- Em **Cena** e **Combate**, o seletor de grupo filtra quais cards aparecem.
-- **Descansar grupo:** zera marcas e sobrecarga Eco de todos os membros.
+- Em **Combate**, o seletor de grupo filtra quais cards aparecem.
 
-### Sessões independentes
+### Sessão de combate
 
-| Aba | Dados salvos separadamente |
-|-----|----------------------------|
-| Cena | `scene_session` — turno, grupo, notas, inimigo ativo na cena |
-| Combate | `combat_session` — turno, grupo, inimigo ativo no combate |
-
-Trocar de aba não mistura turno nem inimigo selecionado entre cena e combate.
+Dados salvos em `combat_session` — grupo, notas, inimigo ativo no combate.
 
 ---
 
-## 14. Referência rápida
+## 13. Referência rápida
 
 ### Combate em 30 segundos
 
 1. Selecione campanha e grupo.
 2. **Combate** → escolha o inimigo ativo.
-3. Jogador clica atributo → rola d20 → leia faixa de resultado.
+3. Jogador clica atributo (físico ou de cena) → rola → leia faixa de resultado.
 4. Aplique marcas no card do alvo.
-5. Role para o inimigo (atributos físicos no card dele).
-6. Avance turno; repita.
-
-### Cena em 30 segundos
-
-1. **Cena** → grupo + inimigo opcional.
-2. Sem inimigo: use **Notas da cena**.
-3. Com inimigo: card lateral com atributos **sociais**.
-4. Clique em CAR/PER/VON/SAB para rolar interação.
+5. Role para o inimigo (atributos físicos e de cena no card dele).
 
 ### Tabela de marcas → estado
 
@@ -510,11 +480,15 @@ Arma fora da perícia            → −3 na rolagem (combate)
 | Bônus de classe | `src/mechanics/classes/classBonusEngine.js` |
 | Tipos de arma | `src/constants/equipmentTypes.js` |
 | Perícia de arma | `src/mechanics/equipment/weaponProficiencyEngine.js` |
+| Equipamento pessoal | `src/mechanics/equipment/characterGear.js` |
+| Passivas Metin | `src/mechanics/equipment/gearPassiveEngine.js` |
+| Raridade da armadura | `src/mechanics/equipment/armorProgressionEngine.js` |
+| Skill da arma | `src/mechanics/equipment/weaponProgressionEngine.js` · `src/services/ecoSkillRuntimeService.js` |
+| Skills de classe (3) | `src/data/classSkillsCatalog.js` |
 | Estados | `src/constants/states.js` |
 | Atributos | `src/constants/attributes.js` |
 | Sobrecarga Eco | `src/mechanics/ecoOverload/` |
 | UI Combate | `src/pages/ManageCombat.jsx` |
-| UI Cena | `src/pages/ManageScene.jsx` |
 
 ---
 

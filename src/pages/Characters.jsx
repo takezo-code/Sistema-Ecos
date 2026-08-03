@@ -36,6 +36,11 @@ import { ClassSkillBook } from '../components/skills/ClassSkillBook'
 import { getCharacterClass, normalizeClassId } from '../constants/classes'
 import { getClassAttributeBonus } from '../mechanics/classes/classBonusEngine'
 import { investSkillPoint } from '../mechanics/skills/classSkillProgressionEngine'
+import {
+  buildInitialGear,
+  getForgeableArmorTypes,
+  getForgeableWeaponTypes,
+} from '../mechanics/equipment/characterGear'
 
 const EMPTY_FORM = {
   name: '',
@@ -51,6 +56,74 @@ const EMPTY_FORM = {
   unspentSocialPoints: STARTING_SOCIAL_POINTS,
   ecoPoints: 1,
   skills: [],
+  starterWeapon: { name: '', type: null },
+  starterArmor: { name: '', type: getForgeableArmorTypes()[0].id },
+}
+
+/**
+ * Forja inicial: a arma e a armadura nascem com o personagem e o acompanham
+ * pela campanha inteira. Tipos de arma vêm da classe escolhida.
+ */
+function StarterGearSection({ classId, weapon, armor, onChangeWeapon, onChangeArmor }) {
+  const weaponTypes = getForgeableWeaponTypes(classId)
+  const armorTypes = getForgeableArmorTypes()
+  const weaponType = weaponTypes.find(t => t.id === weapon.type) ?? weaponTypes[0]
+  const armorType = armorTypes.find(t => t.id === armor.type) ?? armorTypes[0]
+
+  return (
+    <>
+      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+        EQUIPAMENTO INICIAL
+      </div>
+      <p style={{ fontSize: '0.72rem', color: '#666', margin: '0 0 0.75rem', lineHeight: 1.45 }}>
+        Esta arma e esta armadura acompanham o personagem pela campanha toda — elas sobem de raridade junto com o nível dele.
+      </p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <Field label="Arma">
+            <Input
+              value={weapon.name}
+              onChange={e => onChangeWeapon({ ...weapon, name: e.target.value })}
+              placeholder={weaponType ? weaponType.label : 'Nome da arma'}
+            />
+          </Field>
+          <Select
+            value={weaponType?.id ?? ''}
+            onChange={e => onChangeWeapon({ ...weapon, type: e.target.value })}
+          >
+            {weaponTypes.map(t => (
+              <option key={t.id} value={t.id}>{t.icon} {t.label}</option>
+            ))}
+          </Select>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <Field label="Armadura">
+            <Input
+              value={armor.name}
+              onChange={e => onChangeArmor({ ...armor, name: e.target.value })}
+              placeholder={armorType ? armorType.label : 'Nome da armadura'}
+            />
+          </Field>
+          <Select
+            value={armorType?.id ?? ''}
+            onChange={e => onChangeArmor({ ...armor, type: e.target.value })}
+          >
+            {armorTypes.map(t => (
+              <option key={t.id} value={t.id}>{t.icon} {t.label}</option>
+            ))}
+          </Select>
+        </div>
+      </div>
+
+      {armorType?.mechDesc && (
+        <p style={{ fontSize: '0.65rem', color: '#555', fontFamily: 'monospace', margin: '0.5rem 0 0', lineHeight: 1.5 }}>
+          {armorType.mechDesc}
+        </p>
+      )}
+    </>
+  )
 }
 
 const narrativeSectionLabel = {
@@ -122,6 +195,8 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
       unspentSocialPoints: initial.unspentSocialPoints ?? STARTING_SOCIAL_POINTS,
       ecoPoints: initial.ecoPoints ?? 0,
       skills: initial.skills ?? [],
+      starterWeapon: { ...EMPTY_FORM.starterWeapon },
+      starterArmor: { ...EMPTY_FORM.starterArmor },
     }
   })
   const [attrError, setAttrError] = useState(null)
@@ -146,6 +221,10 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
     setForm(p => ({
       ...p,
       classId,
+      starterWeapon: {
+        ...p.starterWeapon,
+        type: getForgeableWeaponTypes(classId)[0]?.id ?? null,
+      },
       ...(isNew ? { skills: [], ecoPoints: 1 } : {}),
     }))
     setAttrError(null)
@@ -213,7 +292,16 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
       }
     }
     setAttrError(null)
-    const { description: _d, narrativeStatus: _s, ...payload } = form
+    const {
+      description: _d,
+      narrativeStatus: _s,
+      starterWeapon,
+      starterArmor,
+      ...payload
+    } = form
+    if (isNew) {
+      payload.equipped = buildInitialGear({ weapon: starterWeapon, armor: starterArmor })
+    }
     onSave(payload)
   }
 
@@ -312,6 +400,19 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
               )
             })}
           </div>
+
+          {isNew && form.classId && (
+            <>
+              <hr className="divide-line" />
+              <StarterGearSection
+                classId={form.classId}
+                weapon={form.starterWeapon}
+                armor={form.starterArmor}
+                onChangeWeapon={v => set('starterWeapon', v)}
+                onChangeArmor={v => set('starterArmor', v)}
+              />
+            </>
+          )}
 
           {isNew && (
             <>

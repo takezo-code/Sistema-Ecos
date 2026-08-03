@@ -1,0 +1,107 @@
+/**
+ * Equipamento pessoal do personagem.
+ *
+ * Não existe catálogo nem loot de arma/armadura: cada personagem forja a sua
+ * na criação e evolui a mesma peça pela campanha inteira. Por isso `equipped[]`
+ * guarda no máximo duas peças — uma arma e uma armadura.
+ */
+
+import {
+  ARMOR_TYPES,
+  WEAPON_TYPES,
+  getArmorType,
+  getClassWeaponTypes,
+  getWeaponType,
+  normalizeWeaponTypeId,
+} from '../../constants/equipmentTypes'
+
+export const GEAR_CATEGORIES = Object.freeze({
+  WEAPON: 'arma',
+  ARMOR: 'armadura',
+})
+
+/** Slots do paper-doll: só arma e armadura. */
+export const GEAR_SLOTS = [
+  { id: 'arma',     label: 'Arma',     category: GEAR_CATEGORIES.WEAPON },
+  { id: 'armadura', label: 'Armadura', category: GEAR_CATEGORIES.ARMOR },
+]
+
+function isArmorEntry(item) {
+  if (!item) return false
+  if (item.category === GEAR_CATEGORIES.ARMOR) return true
+  return !!getArmorType(item.type) && !getWeaponType(item.type)
+}
+
+export function getCharacterWeapon(entity = {}) {
+  return (entity.equipped || []).find(i => !isArmorEntry(i)) ?? null
+}
+
+export function getCharacterArmor(entity = {}) {
+  return (entity.equipped || []).find(isArmorEntry) ?? null
+}
+
+export function getGearItem(entity, category) {
+  return category === GEAR_CATEGORIES.ARMOR
+    ? getCharacterArmor(entity)
+    : getCharacterWeapon(entity)
+}
+
+export function hasFullGear(entity = {}) {
+  return !!getCharacterWeapon(entity) && !!getCharacterArmor(entity)
+}
+
+/** Tipos de arma que a classe pode forjar. Sem classe, libera todos. */
+export function getForgeableWeaponTypes(classId) {
+  const allowed = getClassWeaponTypes(classId)
+  if (!allowed.length) return WEAPON_TYPES
+  return WEAPON_TYPES.filter(t => allowed.includes(t.id))
+}
+
+export function getForgeableArmorTypes() {
+  return ARMOR_TYPES
+}
+
+/** Monta a peça a ser guardada em `equipped[]`. */
+export function buildGearItem(category, data = {}) {
+  const isArmor = category === GEAR_CATEGORIES.ARMOR
+  const type = isArmor
+    ? (getArmorType(data.type)?.id ?? ARMOR_TYPES[0].id)
+    : (normalizeWeaponTypeId(data.type) ?? null)
+  const typeLabel = isArmor ? getArmorType(type)?.label : getWeaponType(type)?.label
+
+  const base = {
+    name: (data.name || '').trim() || typeLabel || (isArmor ? 'Armadura' : 'Arma'),
+    category: isArmor ? GEAR_CATEGORIES.ARMOR : GEAR_CATEGORIES.WEAPON,
+    type,
+    image: data.image || '',
+    description: data.description || '',
+    passives: Array.isArray(data.passives) ? data.passives : [],
+  }
+
+  if (isArmor) return base
+  return {
+    ...base,
+    weaponSkill: data.weaponSkill && typeof data.weaponSkill === 'object'
+      ? {
+          name: data.weaponSkill.name || '',
+          description: data.weaponSkill.description || '',
+          mechanicalEffect: data.weaponSkill.mechanicalEffect || '',
+          narrativeConsequence: data.weaponSkill.narrativeConsequence || '',
+          cooldownTurns: Number(data.weaponSkill.cooldownTurns) || 2,
+          overloadCost: Number(data.weaponSkill.overloadCost) || 1,
+        }
+      : null,
+  }
+}
+
+/** Equipamento inicial montado na criação do personagem. */
+export function buildInitialGear({ weapon, armor } = {}) {
+  const gear = []
+  if (weapon?.name?.trim() || normalizeWeaponTypeId(weapon?.type)) {
+    gear.push(buildGearItem(GEAR_CATEGORIES.WEAPON, weapon))
+  }
+  if (armor?.name?.trim() || getArmorType(armor?.type)) {
+    gear.push(buildGearItem(GEAR_CATEGORIES.ARMOR, armor))
+  }
+  return gear
+}

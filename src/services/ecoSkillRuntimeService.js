@@ -7,6 +7,11 @@ import { getCooldownRemaining } from '../mechanics/skills/cooldownEngine'
 import { resolveSkillVisualState, canActivateActiveSkill } from '../mechanics/skills/skillVisualState'
 import { activateActiveSkill, advanceTurnForEntity } from '../mechanics/skills/skillActivationEngine'
 import { genId } from '../utils/id'
+import { getCharacterWeapon } from '../mechanics/equipment/characterGear'
+import { getWeaponSkill } from '../mechanics/equipment/weaponProgressionEngine'
+
+export const WEAPON_SKILL_TEMPLATE_ID = 'weapon_skill'
+export const WEAPON_SKILL_INSTANCE_ID = 'weapon_skill'
 
 export function buildSkillInstanceFromCatalog(templateId) {
   const def = getCatalogSkill(templateId)
@@ -22,19 +27,24 @@ export function buildSkillInstanceFromCatalog(templateId) {
   }
 }
 
-/** Une instância do personagem com definição do catálogo */
-export function resolveSkillRuntime(entity, skillInstance) {
-  const catalog = getCatalogSkill(skillInstance.templateId)
-  if (!catalog) {
-    return {
-      instance: skillInstance,
-      catalog: null,
-      available: false,
-      visualState: 'bloqueada',
-      visualMeta: SKILL_VISUAL_STATE_META.bloqueada,
-    }
+function buildWeaponSkillCatalog(weaponSkill) {
+  return {
+    templateId: WEAPON_SKILL_TEMPLATE_ID,
+    name: weaponSkill.name || 'Skill da arma',
+    skillType: ECO_SKILL_TYPES.ATIVA,
+    cooldownTurns: Number(weaponSkill.cooldownTurns) || 2,
+    overloadCost: Number(weaponSkill.overloadCost) || 1,
+    description: weaponSkill.description || '',
+    mechanicalEffect: weaponSkill.mechanicalEffect || '',
+    narrativeConsequence: weaponSkill.narrativeConsequence || '',
+    effect: weaponSkill.mechanicalEffect || '',
+    sideEffect: weaponSkill.narrativeConsequence || '',
+    isWeaponSkill: true,
+    icon: 'AR',
   }
+}
 
+function resolveRuntimeFromCatalog(entity, skillInstance, catalog) {
   const safeLimit = getEcoSafeLimitFromEntity(entity)
   const cooldownRemaining = catalog.skillType === ECO_SKILL_TYPES.ATIVA
     ? getCooldownRemaining(entity.skillCooldowns, catalog.templateId)
@@ -61,7 +71,7 @@ export function resolveSkillRuntime(entity, skillInstance) {
   return {
     instance: skillInstance,
     catalog,
-    classMeta: getCharacterClass(catalog.classId),
+    classMeta: catalog.classId ? getCharacterClass(catalog.classId) : null,
     categoryMeta: null,
     cooldownRemaining,
     cooldownTotal: catalog.cooldownTurns ?? 0,
@@ -70,21 +80,79 @@ export function resolveSkillRuntime(entity, skillInstance) {
     canActivate: activation.allowed,
     blockReason: activation.reason,
     isPassive: catalog.skillType === ECO_SKILL_TYPES.PASSIVA,
+    isWeaponSkill: !!catalog.isWeaponSkill,
     overloadCost: catalog.overloadCost ?? (catalog.skillType === ECO_SKILL_TYPES.ATIVA ? 1 : 0),
   }
 }
 
+/** Une instância do personagem com definição do catálogo */
+export function resolveSkillRuntime(entity, skillInstance) {
+  if (skillInstance?.templateId === WEAPON_SKILL_TEMPLATE_ID || skillInstance?.isWeaponSkill) {
+    const weapon = getCharacterWeapon(entity)
+    const weaponSkill = getWeaponSkill(weapon)
+    if (!weaponSkill) {
+      return {
+        instance: skillInstance,
+        catalog: null,
+        available: false,
+        visualState: 'bloqueada',
+        visualMeta: SKILL_VISUAL_STATE_META.bloqueada,
+      }
+    }
+    return resolveRuntimeFromCatalog(entity, skillInstance, buildWeaponSkillCatalog(weaponSkill))
+  }
+
+  const catalog = getCatalogSkill(skillInstance.templateId)
+  if (!catalog) {
+    return {
+      instance: skillInstance,
+      catalog: null,
+      available: false,
+      visualState: 'bloqueada',
+      visualMeta: SKILL_VISUAL_STATE_META.bloqueada,
+    }
+  }
+
+  return resolveRuntimeFromCatalog(entity, skillInstance, catalog)
+}
+
+export function resolveWeaponSkillRuntime(entity) {
+  const weapon = getCharacterWeapon(entity)
+  const weaponSkill = getWeaponSkill(weapon)
+  if (!weaponSkill) return null
+
+  const instance = {
+    id: WEAPON_SKILL_INSTANCE_ID,
+    templateId: WEAPON_SKILL_TEMPLATE_ID,
+    name: weaponSkill.name || 'Skill da arma',
+    skillType: ECO_SKILL_TYPES.ATIVA,
+    tier: 1,
+    isWeaponSkill: true,
+  }
+
+  return resolveRuntimeFromCatalog(entity, instance, buildWeaponSkillCatalog(weaponSkill))
+}
+
 export function listCharacterSkillsRuntime(entity) {
-  return (entity.skills || [])
+  const classSkills = (entity.skills || [])
     .map(s => resolveSkillRuntime(entity, s))
     .filter(r => r.catalog)
+
+  const weaponRuntime = resolveWeaponSkillRuntime(entity)
+  if (weaponRuntime) classSkills.push(weaponRuntime)
+  return classSkills
 }
 
 export function activateCharacterSkill(entity, skillId) {
-  const skill = (entity.skills || []).find(s => s.id === skillId)
+  const weaponRuntime = skillId === WEAPON_SKILL_INSTANCE_ID
+    ? resolveWeaponSkillRuntime(entity)
+    : null
+
+  const skill = weaponRuntime?.instance
+    || (entity.skills || []).find(s => s.id === skillId)
   if (!skill) return { ok: false, error: { message: 'Habilidade não encontrada.' } }
 
-  const catalog = getCatalogSkill(skill.templateId)
+  const catalog = weaponRuntime?.catalog || getCatalogSkill(skill.templateId)
   if (!catalog) return { ok: false, error: { message: 'Definição de habilidade ausente no catálogo.' } }
 
   if (catalog.skillType !== ECO_SKILL_TYPES.ATIVA) {
@@ -119,6 +187,11 @@ export function advanceCharacterTurn(entity) {
       .filter(Boolean)
       .map(c => [c.templateId, c])
   )
+  const weapon = getCharacterWeapon(entity)
+  const weaponSkill = getWeaponSkill(weapon)
+  if (weaponSkill) {
+    catalogMap[WEAPON_SKILL_TEMPLATE_ID] = buildWeaponSkillCatalog(weaponSkill)
+  }
   const { patch, passiveWarnings } = advanceTurnForEntity(entity, catalogMap)
   return { ok: true, patch, warnings: passiveWarnings }
 }

@@ -14,10 +14,7 @@ import {
   Building2,
   ShieldAlert,
   Sword,
-  Shield,
   UsersRound,
-  Clapperboard,
-  Store,
 } from 'lucide-react'
 import { MANAGEMENT_VIEWS } from '../constants/managementViews'
 
@@ -33,14 +30,6 @@ const MANAGEMENT_SECTIONS = [
     ],
   },
   {
-    id: 'equipment',
-    label: 'Equipamentos',
-    items: [
-      { id: MANAGEMENT_VIEWS.ARMAS, label: 'Armas', icon: Sword },
-      { id: MANAGEMENT_VIEWS.ARMADURA, label: 'Armadura', icon: Shield },
-    ],
-  },
-  {
     id: 'skills',
     label: 'Skills',
     items: [
@@ -52,9 +41,7 @@ const MANAGEMENT_SECTIONS = [
 
 const EMJOGO_CHILDREN = [
   { id: 'ficha', label: 'Ficha', icon: UsersRound },
-  { id: 'cena', label: 'Cena', icon: Clapperboard },
   { id: 'combat', label: 'Combate', icon: Swords },
-  { id: 'mercador', label: 'Mercador', icon: Store },
 ]
 
 const CAMPANHA_CHILDREN = [
