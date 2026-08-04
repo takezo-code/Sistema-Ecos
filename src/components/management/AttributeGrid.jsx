@@ -1,8 +1,6 @@
 import React from 'react'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import {
-  STARTING_ATTRIBUTE_POINTS,
-  STARTING_SOCIAL_POINTS,
   SOCIAL_ATTRIBUTES,
   getTotalAttributePoints,
   getTotalSocialPoints,
@@ -204,10 +202,8 @@ export function AttributeGrid({
         <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', textAlign: 'right' }}>
           {isCreation ? (
             <>
-              <span style={{ color: '#16a34a' }}>{pool}</span>
-              <span style={{ color: '#333' }}> livres · </span>
-              <span style={{ color: '#888' }}>{spent}/{STARTING_ATTRIBUTE_POINTS}</span>
-              <span style={{ color: '#333' }}> · máx {getInitialAttributeMax()}/atrib.</span>
+              <span style={{ color: pool > 0 ? '#eab308' : '#16a34a' }}>{pool}</span>
+              <span style={{ color: '#444' }}> disponíveis</span>
             </>
           ) : adminMode && snapshot ? (
             <>
@@ -266,7 +262,7 @@ export function AttributeGrid({
         })}
       </div>
 
-      {/* ATRIBUTOS DE CENA (SOCIAL) */}
+      {/* ATRIBUTOS DE CENA */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
         <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
           ATRIBUTOS DE CENA
@@ -274,10 +270,8 @@ export function AttributeGrid({
         <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', textAlign: 'right' }}>
           {isCreation ? (
             <>
-              <span style={{ color: '#e879f9' }}>{socialPool}</span>
-              <span style={{ color: '#333' }}> livres · </span>
-              <span style={{ color: '#888' }}>{socialSpent}/{STARTING_SOCIAL_POINTS}</span>
-              <span style={{ color: '#333' }}> · máx {getInitialSocialMax()}/atrib.</span>
+              <span style={{ color: socialPool > 0 ? '#e879f9' : '#16a34a' }}>{socialPool}</span>
+              <span style={{ color: '#444' }}> disponíveis</span>
             </>
           ) : adminMode && socialBudget != null ? (
             <>

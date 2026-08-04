@@ -10,8 +10,8 @@ const VIEW_META = {
 }
 
 const SUBTITLES = {
-  ficha: 'PARTY · NÍVEIS · CONDIÇÃO · XP EM GRUPO',
-  combat: 'INIMIGOS · DANO · ATRIBUTOS · CENA · BOSS',
+  ficha: '',
+  combat: '',
 }
 
 export function EmJogo({ initialView = 'ficha', onViewChange }) {

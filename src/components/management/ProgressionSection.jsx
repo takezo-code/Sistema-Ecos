@@ -5,7 +5,7 @@ import { MAX_LEVEL } from '../../constants/progression'
 import { getXpProgress } from '../../services/progressionService'
 import { getProgressionSnapshot, validateProgression } from '../../services/progressionBudget'
 import { entityHasEcoPowers, isNpcEntity } from '../../constants/entityProgression'
-import { isInCreationPhase, STARTING_ATTRIBUTE_POINTS, STARTING_SOCIAL_POINTS } from '../../constants/attributes'
+import { isInCreationPhase, STARTING_ATTRIBUTE_POINTS } from '../../constants/attributes'
 
 function clampLevel(value) {
   return Math.min(MAX_LEVEL, Math.max(1, value))
@@ -124,9 +124,6 @@ export function ProgressionSection({
               <div style={{ height: '4px', background: '#1a1a1a', borderRadius: '2px', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${progress.percent}%`, background: '#d97706', transition: 'width 0.3s' }} />
               </div>
-              <div style={{ fontSize: '0.6rem', color: '#333', fontFamily: 'monospace', marginTop: '4px' }}>
-                Fórmula: nível × 150 XP
-              </div>
             </>
           )}
         </div>
@@ -142,15 +139,15 @@ export function ProgressionSection({
       {!adminMode && (pending > 0 || pool > 0 || (entity.ecoPoints ?? 0) > 0 || (entity.pendingSocialPoints ?? 0) > 0) && (
         <div style={{
           display: 'flex',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
+          flexDirection: 'column',
+          gap: '0.35rem',
           marginBottom: '0.75rem',
           padding: '0.625rem 0.75rem',
           background: '#0d0d0d',
           border: '1px solid #1a1a1a',
           borderRadius: '4px',
         }}>
-          <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', width: '100%', marginBottom: '2px' }}>
+          <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', marginBottom: '2px' }}>
             PONTOS DISPONÍVEIS
           </div>
           {pending > 0 && (
@@ -228,9 +225,6 @@ export function ProgressionSection({
               <div style={{ fontSize: '1.1rem', fontWeight: 700, color: snapshot.spent > snapshot.budget ? '#dc2626' : '#e5e5e5' }}>
                 {snapshot.spent}<span style={{ fontSize: '0.7rem', color: '#555' }}> / {snapshot.budget}</span>
               </div>
-              <div style={{ fontSize: '0.55rem', color: pending > 0 ? '#d97706' : '#333', marginTop: '2px' }}>
-                {pending > 0 ? `${pending} para distribuir` : `${STARTING_ATTRIBUTE_POINTS} criação + ${Math.max(0, snapshot.budget - STARTING_ATTRIBUTE_POINTS)} nível`}
-              </div>
             </div>
             <div style={{
               background: pendingSocial > 0 ? 'rgba(232,121,249,0.08)' : '#0d0d0d',
@@ -242,19 +236,11 @@ export function ProgressionSection({
               <div style={{ fontSize: '1.1rem', fontWeight: 700, color: snapshot.socialSpent > snapshot.socialBudget ? '#dc2626' : '#e5e5e5' }}>
                 {snapshot.socialSpent}<span style={{ fontSize: '0.7rem', color: '#555' }}> / {snapshot.socialBudget}</span>
               </div>
-              <div style={{ fontSize: '0.55rem', color: pendingSocial > 0 ? '#e879f9' : '#333', marginTop: '2px' }}>
-                {pendingSocial > 0
-                  ? `${pendingSocial} para distribuir`
-                  : `${STARTING_SOCIAL_POINTS} criação + ${snapshot.socialFromLevel} nível`}
-              </div>
             </div>
             {hasEco && (
               <div style={{ background: '#0d0d0d', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '4px', padding: '0.625rem 0.75rem' }}>
                 <div style={{ fontSize: '0.55rem', color: '#a855f7', fontFamily: 'monospace' }}>PTS ECO</div>
                 <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e5e5e5' }}>{snapshot.ecoFree}</div>
-                <div style={{ fontSize: '0.55rem', color: '#333', marginTop: '2px' }}>
-                  livres · máx. {snapshot.maxEcoFree} · {snapshot.ecoSpent} em skills
-                </div>
               </div>
             )}
           </div>
@@ -344,14 +330,6 @@ export function ProgressionSection({
           marginBottom: '0.75rem',
         }}>
           {masterError?.message || validation?.errors[0]?.message}
-        </div>
-      )}
-
-      {adminMode && snapshot && (
-        <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', marginBottom: '0.75rem' }}>
-          Nv.{level}: {snapshot.budget} pts atributos · {snapshot.socialBudget} pts cena
-          {hasEco ? ` · ${snapshot.ecoBudget} Ecos` : ' · sem Ecos'}
-          {snapshot.ecoSpent > 0 && ` · ${snapshot.ecoSpent} Eco(s) em skills`}
         </div>
       )}
 

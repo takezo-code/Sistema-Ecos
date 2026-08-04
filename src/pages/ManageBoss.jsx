@@ -69,7 +69,6 @@ function BossManageCard({ npc, onManage, onDelete }) {
             </div>
             <div style={{ fontSize: '0.65rem', color: '#dc2626', fontFamily: 'monospace', marginBottom: '6px' }}>
               NVL {npc.level || 1}
-              {(npc.xpRecompensa ?? 0) > 0 && <span style={{ color: '#d97706' }}> · {npc.xpRecompensa} XP ao derrotar</span>}
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '6px', flexWrap: 'wrap' }}>
@@ -142,7 +141,12 @@ export function ManageBoss({ embedded = false }) {
     spendPendingSocialAttribute,
     changeSocialAttribute,
     learnCatalogSkill,
+    addInlineSkill,
+    updateInlineSkill,
     removeSkill,
+    setGearItem,
+    setGearPassives,
+    setWeaponSkill,
     restEcoOverload,
     setEcoOverloadLevel,
     lastOverloadEvents,
@@ -241,7 +245,12 @@ export function ManageBoss({ embedded = false }) {
               masterError={lastMasterError}
               onSpendPendingAttribute={key => spendPendingAttribute(current.id, key)}
               onLearnCatalogSkill={templateId => learnCatalogSkill(current.id, templateId, { free: true })}
+              onAddInlineSkill={draft => addInlineSkill(current.id, draft)}
+              onUpdateInlineSkill={(skillId, draft) => updateInlineSkill(current.id, skillId, draft)}
               onRemoveSkill={skillId => removeSkill(current.id, skillId)}
+              onForgeGear={(category, data) => setGearItem(current.id, category, data)}
+              onSetGearPassive={(category, passives) => setGearPassives(current.id, category, passives)}
+              onSetWeaponSkill={data => setWeaponSkill(current.id, data)}
               onRestOverload={() => restEcoOverload(current.id)}
               onSetOverload={level => setEcoOverloadLevel(current.id, level)}
               lastOverloadEvents={lastOverloadEvents}

@@ -1,10 +1,7 @@
 /**
  * Tipos de equipamento do sistema.
- * Armas → tipos com mãos + atributo principal
+ * Armas → tipos + atributo principal (neutros quanto a mãos)
  * Armaduras → leve / média / pesada
- *
- * Armas NÃO concedem skills nem bônus de ataque/resistência.
- * Passivas (slots pela raridade) serão preenchidas depois.
  */
 
 import { CHARACTER_CLASSES } from './classes'
@@ -18,116 +15,96 @@ export const WEAPON_TYPES = [
     label: 'Arma à Distância',
     icon: '🏹',
     color: '#06b6d4',
-    hands: 2,
-    handsLabel: 'duas mãos',
     mainAttr: 'destreza',
     mainAttrLabel: 'DES',
     tags: ['distância'],
-    mechDesc: 'Armas de longa distância (arco, rifle, etc.). Ocupa as duas mãos. Usa Destreza.',
+    mechDesc: 'Armas de longa distância (arco, rifle, etc.). Usa Destreza.',
   },
   {
     id: 'orbe',
     label: 'Orbe',
     icon: '🔮',
     color: '#a855f7',
-    hands: 1,
-    handsLabel: 'uma mão',
     mainAttr: 'ruptura',
     mainAttrLabel: 'RUP',
     tags: ['mágica', 'eco'],
-    mechDesc: 'Foco arcano de uma mão. Preferido por Mágica e Suporte. Usa Ruptura.',
+    mechDesc: 'Foco arcano. Preferido por Mágica e Suporte. Usa Ruptura.',
   },
   {
     id: 'varinha',
     label: 'Varinha',
     icon: '✨',
     color: '#c084fc',
-    hands: 1,
-    handsLabel: 'uma mão',
     mainAttr: 'ruptura',
     mainAttrLabel: 'RUP',
     tags: ['mágica', 'eco'],
-    mechDesc: 'Canal fino de Eco. Uma mão. Preferido por Mágica e Suporte. Usa Ruptura.',
+    mechDesc: 'Canal fino de Eco. Preferido por Mágica e Suporte. Usa Ruptura.',
   },
   {
     id: 'cajado',
     label: 'Cajado',
     icon: '🪄',
     color: '#8b5cf6',
-    hands: 2,
-    handsLabel: 'duas mãos',
     mainAttr: 'inteligencia',
     mainAttrLabel: 'INT',
     tags: ['mágica', 'eco'],
-    mechDesc: 'Canal de Eco de duas mãos. Preferido por Mágica e Suporte. Usa Inteligência ou Ruptura.',
+    mechDesc: 'Canal de Eco. Preferido por Mágica e Suporte. Usa Inteligência ou Ruptura.',
   },
   {
     id: 'livro',
     label: 'Livro',
     icon: '📖',
     color: '#06b6d4',
-    hands: 1,
-    handsLabel: 'uma mão',
     mainAttr: 'inteligencia',
     mainAttrLabel: 'INT',
     tags: ['mágica', 'suporte'],
-    mechDesc: 'Grimório ou tomo. Uma mão. Preferido por Mágica e Suporte. Usa Inteligência.',
+    mechDesc: 'Grimório ou tomo. Preferido por Mágica e Suporte. Usa Inteligência.',
   },
   {
     id: 'escudo_medio',
     label: 'Escudo Médio',
     icon: '🛡️',
     color: '#6b7280',
-    hands: 1,
-    handsLabel: 'uma mão',
     mainAttr: 'vitalidade',
     mainAttrLabel: 'VIT',
     tags: ['defesa'],
-    mechDesc: 'Escudo de uma mão. Combina com arma de uma mão. Preferido por Tank. Usa Vitalidade.',
+    mechDesc: 'Escudo médio. Preferido por Tank. Usa Vitalidade.',
   },
   {
     id: 'escudo_grande',
     label: 'Escudo Grande',
     icon: '🛡',
     color: '#9ca3af',
-    hands: 2,
-    handsLabel: 'duas mãos',
     mainAttr: 'vitalidade',
     mainAttrLabel: 'VIT',
     tags: ['defesa', 'pesada'],
-    mechDesc: 'Escudo de torre / grande. Ocupa as duas mãos. Preferido por Tank. Usa Vitalidade.',
+    mechDesc: 'Escudo de torre / grande. Preferido por Tank. Usa Vitalidade.',
   },
   {
     id: 'arma_duas_maos',
-    label: 'Arma de Duas Mãos',
+    label: 'Arma Pesada',
     icon: '⚔️',
     color: '#ef4444',
-    hands: 2,
-    handsLabel: 'duas mãos',
     mainAttr: 'forca',
     mainAttrLabel: 'FOR',
     tags: ['corpo a corpo', 'pesada'],
-    mechDesc: 'Espadas grandes, porretes, machados. Ocupa as duas mãos. Preferido por Tank e Porradeiro. Usa Força.',
+    mechDesc: 'Espadas grandes, porretes, machados. Preferido por Tank e Porradeiro. Usa Força.',
   },
   {
     id: 'arma_uma_mao',
-    label: 'Arma de Uma Mão',
+    label: 'Arma',
     icon: '🗡️',
     color: '#f97316',
-    hands: 1,
-    handsLabel: 'uma mão',
     mainAttr: 'forca',
     mainAttrLabel: 'FOR',
     tags: ['corpo a corpo'],
-    mechDesc: 'Espada, maça ou similar de uma mão. Combina com escudo. Preferido por Tank. Usa Força.',
+    mechDesc: 'Espada, maça ou similar. Preferido por Tank. Usa Força.',
   },
   {
     id: 'manoplas',
     label: 'Manoplas',
     icon: '🥊',
     color: '#dc2626',
-    hands: 1,
-    handsLabel: 'uma mão',
     mainAttr: 'forca',
     mainAttrLabel: 'FOR',
     tags: ['corpo a corpo', 'impacto'],
@@ -203,7 +180,7 @@ export function getEquipmentType(category, id) {
 }
 
 // ─────────────────────────────────────────────
-// Raridade → slots de passivas (armas)
+// Raridade → slots de atributos de item (legado)
 // ─────────────────────────────────────────────
 export const RARITY_META = {
   comum:    { label: 'Comum',    color: '#6b7280', passiveSlots: 1 },
@@ -218,15 +195,15 @@ export function getRarityMeta(rarity) {
   return RARITY_META[rarity] ?? RARITY_META.comum
 }
 
-/** Quantidade de slots de passiva pela raridade (armas). */
+/** Quantidade de slots de atributo pela raridade (legado de armas). */
 export function getPassiveSlotsForRarity(rarity) {
   return getRarityMeta(rarity).passiveSlots
 }
 
 /**
- * Tipos de arma que a classe usa sem penalidade.
+ * Tipos de arma sugeridos da classe (forja / flavor).
  * Fonte: CHARACTER_CLASSES[].weapons
- * Fora disso → −3 nas rolagens (ver weaponProficiencyEngine).
+ * Não há penalidade por usar outro tipo.
  */
 export function getClassWeaponTypes(classId) {
   const cls = CHARACTER_CLASSES.find(c => c.id === classId)

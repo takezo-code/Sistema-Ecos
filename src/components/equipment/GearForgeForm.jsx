@@ -4,31 +4,46 @@ import { ImageUpload } from '../ui/ImageUpload'
 import {
   GEAR_CATEGORIES,
   getForgeableArmorTypes,
-  getForgeableWeaponTypes,
 } from '../../mechanics/equipment/characterGear'
 
 /**
- * Forja da peça pessoal: nome, tipo, arte.
- * Armas ficam restritas aos tipos da classe — fora deles a rolagem leva −3.
+ * Forja da peça pessoal.
+ * Arma: campos livres (nome, o que é, descrição, arte) — sem tipos pré-setados.
+ * Armadura: ainda usa tipos leves/médios/pesados (efeito mecânico).
  */
-export function GearForgeForm({ category, classId, initial, onSave, onCancel }) {
+export function GearForgeForm({ category, initial, onSave, onCancel }) {
   const isArmor = category === GEAR_CATEGORIES.ARMOR
-  const typeOptions = isArmor ? getForgeableArmorTypes() : getForgeableWeaponTypes(classId)
+  const armorTypes = getForgeableArmorTypes()
 
   const [form, setForm] = useState({
     name: initial?.name ?? '',
-    type: initial?.type ?? typeOptions[0]?.id ?? '',
+    kind: initial?.kind ?? '',
+    type: initial?.type ?? (isArmor ? armorTypes[0]?.id ?? '' : null),
     image: initial?.image ?? '',
     description: initial?.description ?? '',
   })
 
   const set = (key, value) => setForm(prev => ({ ...prev, [key]: value }))
-  const selectedType = typeOptions.find(t => t.id === form.type)
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!form.name.trim()) return
-    onSave({ ...form, name: form.name.trim() })
+    if (isArmor) {
+      onSave({
+        name: form.name.trim(),
+        type: form.type,
+        image: form.image,
+        description: form.description,
+      })
+      return
+    }
+    onSave({
+      name: form.name.trim(),
+      kind: form.kind.trim(),
+      type: null,
+      image: form.image,
+      description: form.description,
+    })
   }
 
   return (
@@ -42,19 +57,34 @@ export function GearForgeForm({ category, classId, initial, onSave, onCancel }) 
         />
       </Field>
 
-      <Field label={isArmor ? 'Tipo de armadura' : 'Tipo de arma'} required>
-        <Select value={form.type} onChange={e => set('type', e.target.value)}>
-          {typeOptions.map(t => (
-            <option key={t.id} value={t.id}>{t.icon} {t.label}</option>
-          ))}
-        </Select>
-      </Field>
-
-      {selectedType?.mechDesc && (
-        <p style={{ fontSize: '0.65rem', color: '#555', fontFamily: 'monospace', lineHeight: 1.5, margin: 0 }}>
-          {selectedType.mechDesc}
-        </p>
+      {isArmor ? (
+        <Field label="Tipo de armadura" required>
+          <Select value={form.type} onChange={e => set('type', e.target.value)}>
+            {armorTypes.map(t => (
+              <option key={t.id} value={t.id}>{t.icon} {t.label}</option>
+            ))}
+          </Select>
+        </Field>
+      ) : (
+        <Field label="O que é a arma">
+          <Input
+            value={form.kind}
+            onChange={e => set('kind', e.target.value)}
+            placeholder="Ex.: rifle de precisão, katana quebrada, orbe de vidro…"
+          />
+        </Field>
       )}
+
+      <Field label="Descrição">
+        <Textarea
+          rows={3}
+          value={form.description}
+          onChange={e => set('description', e.target.value)}
+          placeholder={isArmor
+            ? 'História da peça, marcas de uso, quem forjou…'
+            : 'Como parece, de onde veio, como o personagem usa…'}
+        />
+      </Field>
 
       <ImageUpload
         value={form.image}
@@ -62,15 +92,6 @@ export function GearForgeForm({ category, classId, initial, onSave, onCancel }) 
         label={isArmor ? 'Arte da armadura' : 'Arte da arma'}
         outputSize={256}
       />
-
-      <Field label="Descrição">
-        <Textarea
-          rows={2}
-          value={form.description}
-          onChange={e => set('description', e.target.value)}
-          placeholder="História da peça, marcas de uso, quem forjou…"
-        />
-      </Field>
 
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         {onCancel && (

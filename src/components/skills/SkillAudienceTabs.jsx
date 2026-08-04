@@ -1,10 +1,9 @@
 import React from 'react'
-import { Skull, ShieldAlert } from 'lucide-react'
+import { Skull } from 'lucide-react'
 import { SKILL_AUDIENCE, SKILL_AUDIENCE_META } from '../../constants/skillAudience'
 
 const TABS = [
   { id: SKILL_AUDIENCE.NPC, icon: Skull },
-  { id: SKILL_AUDIENCE.BOSS, icon: ShieldAlert },
 ]
 
 export function SkillAudienceTabs({ active, onChange, counts = {} }) {

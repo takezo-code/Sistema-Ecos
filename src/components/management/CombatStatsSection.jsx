@@ -19,7 +19,7 @@ export function CombatStatsSection({ entity, onUpdate }) {
         ESTATÍSTICAS DE COMBATE
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
         <Field label="Papel no Combate">
           <Select
             value={entity.papelCombate ?? 'capanga'}
@@ -29,14 +29,6 @@ export function CombatStatsSection({ entity, onUpdate }) {
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </Select>
-        </Field>
-        <Field label="XP de Recompensa">
-          <Input
-            type="number"
-            min={0}
-            value={entity.xpRecompensa ?? 0}
-            onChange={e => set('xpRecompensa', Math.max(0, parseInt(e.target.value, 10) || 0))}
-          />
         </Field>
         <Field label="Vida" required>
           <Input
@@ -48,10 +40,6 @@ export function CombatStatsSection({ entity, onUpdate }) {
           />
         </Field>
       </div>
-
-      <p style={{ fontSize: '0.6rem', color: '#555', fontFamily: 'monospace', margin: 0, lineHeight: 1.5 }}>
-        VIDA — cada ponto de dano aplica uma marca. Ao atingir o total, o inimigo é derrotado.
-      </p>
 
       {vida > 0 && (
         <div style={{ fontSize: '0.55rem', color: '#333', fontFamily: 'monospace' }}>

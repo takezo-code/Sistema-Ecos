@@ -293,27 +293,41 @@
   <section>
     <h2>04 · Testes e dados</h2>
     <p>
-      Quando o resultado é incerto, você rola <strong>d20</strong> (padrão) ou <strong>d6</strong>
-      (se o mestre alternar) e soma o atributo <em>efetivo</em>
-      (já com penalidades de ferimentos/sobrecarga, se houver).
+      Quando o resultado é incerto, o mestre pede um dado (<strong>d20</strong> padrão ou <strong>d8</strong>)
+      + atributo <em>efetivo</em>, e define uma <strong>CD</strong> (ex.: “precisa 15”).
     </p>
-    <p><span class="formula">Resultado = dado + atributo</span></p>
+    <p><span class="formula">Resultado = dado + atributo · sucesso se total ≥ CD</span></p>
 
-    <h3>Graus de sucesso (escala d20)</h3>
+    <h3>Graus de sucesso (mesa tradicional)</h3>
     <table>
       <thead>
         <tr><th>Condição</th><th>Resultado</th><th>Significado</th></tr>
       </thead>
       <tbody>
-        <tr><td>Face <strong>1</strong></td><td>Falha Crítica</td><td>Dá muito errado. Consequência severa.</td></tr>
-        <tr><td>Total ≤ 9</td><td>Falha</td><td>Não funciona como queria.</td></tr>
-        <tr><td>Total ≤ 17</td><td>Sucesso Parcial</td><td>Consegue, com custo ou complicação.</td></tr>
-        <tr><td>Face máxima (20 no d20)</td><td>Sucesso Crítico</td><td>Excepcional. Além do esperado.</td></tr>
-        <tr><td>Demais casos altos</td><td>Sucesso</td><td>Ação clara e limpa.</td></tr>
+        <tr><td>Face <strong>1</strong></td><td>Falha Crítica</td><td>Dá muito errado.</td></tr>
+        <tr><td>Total &lt; CD − 3</td><td>Falha</td><td>Não alcançou a CD.</td></tr>
+        <tr><td>Total CD − 3 … CD − 1</td><td>Sucesso Parcial</td><td>Quase — com custo.</td></tr>
+        <tr><td>Total ≥ CD</td><td>Sucesso</td><td>Passou.</td></tr>
+        <tr><td>Face máx. (20 / 8) e ≥ CD</td><td>Sucesso Crítico</td><td>Excepcional.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Tabela de CD — o que o mestre pede</h3>
+    <table>
+      <thead>
+        <tr><th>Nível</th><th>Fala na mesa</th><th>d20</th><th>d8</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Trivial</td><td>“precisa 5”</td><td>5</td><td>3</td></tr>
+        <tr><td>Fácil</td><td>“precisa 10”</td><td>10</td><td>4</td></tr>
+        <tr><td><strong>Médio</strong></td><td><strong>“precisa 15”</strong></td><td><strong>15</strong></td><td><strong>6</strong></td></tr>
+        <tr><td>Difícil</td><td>“precisa 20”</td><td>20</td><td>8</td></tr>
+        <tr><td>Muito difícil</td><td>“precisa 25”</td><td>25</td><td>10</td></tr>
+        <tr><td>Extremo</td><td>“precisa 30”</td><td>30</td><td>12</td></tr>
       </tbody>
     </table>
     <p class="small">
-      No d6, o sistema traduz a face para a escala d20 para manter as mesmas faixas de sucesso/falha.
+      Ex.: SAB 7 vs CD 15 no d20 → precisa tirar 8 ou mais no dado (8+7=15).
     </p>
   </section>
 
@@ -520,7 +534,7 @@
     <p>Buffer VIT = metade da Vitalidade (↓).</p>
 
     <h3>Teste</h3>
-    <p>1 = falha crítica · ≤9 falha · ≤17 parcial · face máx. = crítico · senão sucesso</p>
+    <p>1 = falha crítica · face máx. + ≥ CD = crítico · ≥ CD sucesso · CD−3…CD−1 parcial · senão falha</p>
 
     <h3>Eco</h3>
     <p>1 Eco = descobrir skill aleatória · Ativa = +sobrecarga · 5/5 abala · 10 = ruptura total</p>

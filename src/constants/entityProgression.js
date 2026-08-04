@@ -8,7 +8,7 @@ export function isNpcEntity(entity) {
 
 /**
  * Personagens (sem flag): progressão alternada atributo/eco.
- * Boss: sempre tem Eco (skills manuais do catálogo boss).
+ * Boss: sempre tem Eco (skills criadas na ficha / criação).
  * NPC: só com hasEcoPowers === true; caso contrário só atributos (sem Ruptura).
  */
 export function entityHasEcoPowers(entity) {

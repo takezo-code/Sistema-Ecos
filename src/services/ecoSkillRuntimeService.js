@@ -27,6 +27,54 @@ export function buildSkillInstanceFromCatalog(templateId) {
   }
 }
 
+/** Skill criada direto na ficha/criação (sem catálogo/grimório). */
+export function buildInlineSkillInstance(data = {}) {
+  const id = genId()
+  const mechanicalEffect = data.mechanicalEffect || data.effect || ''
+  const narrativeConsequence = data.narrativeConsequence || data.sideEffect || ''
+  return {
+    id,
+    templateId: id,
+    name: (data.name || '').trim() || 'Skill',
+    skillType: data.skillType || ECO_SKILL_TYPES.ATIVA,
+    tier: 1,
+    basePower: Number(data.basePower) || 0,
+    fromCatalog: false,
+    cooldownTurns: Math.max(0, Number(data.cooldownTurns) || 0),
+    overloadCost: Math.max(0, Number(data.overloadCost) || 1),
+    description: data.description || '',
+    mechanicalEffect,
+    narrativeConsequence,
+    effect: mechanicalEffect,
+    sideEffect: narrativeConsequence,
+  }
+}
+
+/** Catálogo efetivo: entrada global ou definição embutida na instância. */
+export function resolveSkillCatalog(skillInstance) {
+  if (!skillInstance) return null
+  if (skillInstance.templateId === WEAPON_SKILL_TEMPLATE_ID || skillInstance.isWeaponSkill) {
+    return null
+  }
+  const fromCat = getCatalogSkill(skillInstance.templateId)
+  if (fromCat) return fromCat
+  if (skillInstance.fromCatalog === false || skillInstance.name) {
+    return {
+      templateId: skillInstance.templateId || skillInstance.id,
+      name: skillInstance.name || 'Skill',
+      skillType: skillInstance.skillType || ECO_SKILL_TYPES.ATIVA,
+      cooldownTurns: Number(skillInstance.cooldownTurns) || 0,
+      overloadCost: Number(skillInstance.overloadCost) || 1,
+      description: skillInstance.description || '',
+      mechanicalEffect: skillInstance.mechanicalEffect || skillInstance.effect || '',
+      narrativeConsequence: skillInstance.narrativeConsequence || skillInstance.sideEffect || '',
+      effect: skillInstance.effect || skillInstance.mechanicalEffect || '',
+      sideEffect: skillInstance.sideEffect || skillInstance.narrativeConsequence || '',
+    }
+  }
+  return null
+}
+
 function buildWeaponSkillCatalog(weaponSkill) {
   return {
     templateId: WEAPON_SKILL_TEMPLATE_ID,
@@ -102,7 +150,7 @@ export function resolveSkillRuntime(entity, skillInstance) {
     return resolveRuntimeFromCatalog(entity, skillInstance, buildWeaponSkillCatalog(weaponSkill))
   }
 
-  const catalog = getCatalogSkill(skillInstance.templateId)
+  const catalog = resolveSkillCatalog(skillInstance)
   if (!catalog) {
     return {
       instance: skillInstance,
@@ -152,8 +200,8 @@ export function activateCharacterSkill(entity, skillId) {
     || (entity.skills || []).find(s => s.id === skillId)
   if (!skill) return { ok: false, error: { message: 'Habilidade não encontrada.' } }
 
-  const catalog = weaponRuntime?.catalog || getCatalogSkill(skill.templateId)
-  if (!catalog) return { ok: false, error: { message: 'Definição de habilidade ausente no catálogo.' } }
+  const catalog = weaponRuntime?.catalog || resolveSkillCatalog(skill)
+  if (!catalog) return { ok: false, error: { message: 'Definição de habilidade ausente.' } }
 
   if (catalog.skillType !== ECO_SKILL_TYPES.ATIVA) {
     return { ok: false, error: { message: 'Habilidades passivas não são ativadas manualmente.' } }
@@ -183,7 +231,7 @@ export function activateCharacterSkill(entity, skillId) {
 export function advanceCharacterTurn(entity) {
   const catalogMap = Object.fromEntries(
     (entity.skills || [])
-      .map(s => getCatalogSkill(s.templateId))
+      .map(s => resolveSkillCatalog(s))
       .filter(Boolean)
       .map(c => [c.templateId, c])
   )

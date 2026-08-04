@@ -26,7 +26,7 @@ export const PHYSICAL_STATES = [
   },
   {
     value: 'ferido',
-    label: 'Ferido (−1)',
+    label: 'Ferido',
     multiplier: 1.0,
     penaltyPercent: 0,
     attrPenalty: 1,
@@ -36,7 +36,7 @@ export const PHYSICAL_STATES = [
   },
   {
     value: 'grave',
-    label: 'Grave (−2)',
+    label: 'Grave',
     multiplier: 1.0,
     penaltyPercent: 0,
     attrPenalty: 2,
@@ -46,7 +46,7 @@ export const PHYSICAL_STATES = [
   },
   {
     value: 'incapacitado',
-    label: 'Incapacitado (−3)',
+    label: 'Incapacitado',
     multiplier: 1.0,
     penaltyPercent: 0,
     attrPenalty: 3,

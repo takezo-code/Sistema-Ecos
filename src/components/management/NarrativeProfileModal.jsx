@@ -23,7 +23,7 @@ export function NarrativeProfileModal({ open, onClose, entity }) {
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: '1rem', fontWeight: 700, color: '#e5e5e5' }}>{entity.name}</div>
           <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', marginTop: '4px' }}>
-            {isNpc ? 'NPC' : 'PERSONAGEM'} · APENAS LEITURA
+            {isNpc ? 'NPC' : 'PERSONAGEM'}
           </div>
         </div>
       </div>

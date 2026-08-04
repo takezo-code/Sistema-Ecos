@@ -1,16 +1,5 @@
 import React from 'react'
 import { CHARACTER_CLASSES, getAttributeLabel } from '../../constants/classes'
-import { getWeaponType } from '../../constants/equipmentTypes'
-import { CLASS_BONUS_TIERS } from '../../mechanics/classes/classBonusEngine'
-
-const BONUS_HINT = CLASS_BONUS_TIERS
-  .map(t => `${t.points} pts = +${t.bonus}`)
-  .reverse()
-  .join(' · ')
-
-function weaponLabels(cls) {
-  return (cls.weapons || []).map(id => getWeaponType(id)?.label ?? id)
-}
 
 export function ClassPicker({ value, onChange }) {
   return (
@@ -22,7 +11,7 @@ export function ClassPicker({ value, onChange }) {
         letterSpacing: '0.1em',
         marginBottom: '0.5rem',
       }}>
-        CLASSE · <span style={{ color: '#666' }}>bônus nos atributos — {BONUS_HINT} · arma fora da perícia −3</span>
+        CLASSE
       </div>
 
       <div style={{
@@ -32,7 +21,6 @@ export function ClassPicker({ value, onChange }) {
       }}>
         {CHARACTER_CLASSES.map(cls => {
           const selected = value === cls.id
-          const weapons = weaponLabels(cls)
           return (
             <button
               key={cls.id}
@@ -71,17 +59,6 @@ export function ClassPicker({ value, onChange }) {
               }}>
                 {cls.attributes.map(getAttributeLabel).join(' · ')}
               </div>
-              {weapons.length > 0 && (
-                <div style={{
-                  fontSize: '0.5rem',
-                  color: selected ? '#666' : '#333',
-                  fontFamily: 'monospace',
-                  marginTop: '4px',
-                  lineHeight: 1.35,
-                }}>
-                  {weapons.join(' · ')}
-                </div>
-              )}
             </button>
           )
         })}

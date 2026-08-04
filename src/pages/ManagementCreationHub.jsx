@@ -29,7 +29,7 @@ const CREATION_TYPES = [
   {
     id: 'boss',
     label: 'Boss',
-    description: 'Inimigo de combate — resistências física e mental, marcas e XP ao derrotar.',
+    description: 'Inimigo de combate — resistências física e mental, marcas.',
     icon: ShieldAlert,
     color: '#dc2626',
     border: 'rgba(220,38,38,0.2)',

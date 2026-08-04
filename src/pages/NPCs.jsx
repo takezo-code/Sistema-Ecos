@@ -12,6 +12,11 @@ import { ImageUpload } from '../components/ui/ImageUpload'
 import { StatusTag } from '../components/ui/StatusTag'
 import { EmptyState } from '../components/ui/EmptyState'
 import { AttributePointsEditor } from '../components/creation/AttributePointsEditor'
+import { SkillForm } from '../components/skills/SkillForm'
+import { SKILL_AUDIENCE } from '../constants/skillAudience'
+import { buildInlineSkillInstance } from '../services/ecoSkillRuntimeService'
+import { StarterGearSection } from '../components/equipment/StarterGearSection'
+import { buildInitialGear, getForgeableArmorTypes } from '../mechanics/equipment/characterGear'
 import {
   defaultAttributes,
   defaultSocialAttributes,
@@ -31,7 +36,6 @@ export const BOSS_DEFAULTS = {
   resistenciaFisica: 0,
   resistenciaMental: 0,
   marcasMaximas: 15,
-  xpRecompensa: 500,
 }
 
 const EMPTY_FORM = {
@@ -56,7 +60,9 @@ const EMPTY_FORM = {
   resistenciaFisica: 0,
   resistenciaMental: 0,
   marcasMaximas: 0,
-  xpRecompensa: 0,
+  skills: [],
+  starterWeapon: { name: '', kind: '', description: '', image: '' },
+  starterArmor: { name: '', type: getForgeableArmorTypes()[0].id },
 }
 
 const PAPEL_OPTIONS = [
@@ -67,13 +73,29 @@ const PAPEL_OPTIONS = [
 ]
 
 export function buildNpcPayloadForSave(data, isNewEntity) {
-  const { description: _legacy, ...npcData } = data
+  const {
+    description: _legacy,
+    starterWeapon,
+    starterArmor,
+    ...npcData
+  } = data
+  const isBoss = data.papelCombate === 'boss'
   let payload = {
     ...npcData,
-    ...(isNewEntity ? { level: 1, xp: 0, ecoPoints: 0, skills: [] } : {}),
+    ...(isNewEntity
+      ? {
+          level: 1,
+          xp: 0,
+          ecoPoints: 0,
+          skills: Array.isArray(data.skills) ? data.skills : [],
+        }
+      : {}),
     ...finalizeCreationAttributes(data, { isNew: isNewEntity && (data.unspentAttributePoints ?? 0) > 0 }),
   }
-  if (!entityHasEcoPowers(data)) {
+  if (isNewEntity) {
+    payload.equipped = buildInitialGear({ weapon: starterWeapon, armor: starterArmor })
+  }
+  if (!entityHasEcoPowers(data) && !isBoss) {
     payload = {
       ...payload,
       skills: [],
@@ -134,9 +156,46 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
     resistenciaFisica: isBoss ? 0 : (initial?.resistenciaFisica ?? 0),
     resistenciaMental: isBoss ? 0 : (initial?.resistenciaMental ?? 0),
     marcasMaximas: initial?.marcasMaximas ?? (isBoss && isNew ? BOSS_DEFAULTS.marcasMaximas : 0),
-    xpRecompensa: initial?.xpRecompensa ?? (isBoss && isNew ? BOSS_DEFAULTS.xpRecompensa : 0),
+    skills: Array.isArray(initial?.skills) ? initial.skills : [],
+    starterWeapon: { ...EMPTY_FORM.starterWeapon },
+    starterArmor: { ...EMPTY_FORM.starterArmor },
   }))
+  const [skillEditorOpen, setSkillEditorOpen] = useState(false)
+  const [editingSkill, setEditingSkill] = useState(null)
   const set = (f, v) => setForm(p => ({ ...p, [f]: v }))
+
+  const openCreateSkill = () => {
+    setEditingSkill(null)
+    setSkillEditorOpen(true)
+  }
+
+  const openEditSkill = (skill) => {
+    setEditingSkill(skill)
+    setSkillEditorOpen(true)
+  }
+
+  const handleSkillSubmit = (draft) => {
+    if (editingSkill) {
+      const mechanicalEffect = draft.mechanicalEffect || ''
+      const narrativeConsequence = draft.narrativeConsequence || ''
+      set('skills', (form.skills || []).map(s => s.id !== editingSkill.id ? s : {
+        ...s,
+        name: draft.name.trim(),
+        cooldownTurns: Math.max(0, Number(draft.cooldownTurns) || 0),
+        overloadCost: Math.max(0, Number(draft.overloadCost) || 1),
+        description: draft.description || '',
+        mechanicalEffect,
+        narrativeConsequence,
+        effect: mechanicalEffect,
+        sideEffect: narrativeConsequence,
+        fromCatalog: false,
+      }))
+    } else {
+      set('skills', [...(form.skills || []), buildInlineSkillInstance(draft)])
+    }
+    setSkillEditorOpen(false)
+    setEditingSkill(null)
+  }
 
   return (
     <form
@@ -259,12 +318,6 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
       </label>
       )}
 
-      {isBoss && (
-        <p style={{ fontSize: '0.75rem', color: '#888', margin: 0, lineHeight: 1.45 }}>
-          Bosses usam o catálogo <strong style={{ color: '#a855f7' }}>Skills Boss</strong> — você escolhe as habilidades manualmente no Gerenciamento.
-        </p>
-      )}
-
       <AttributePointsEditor
         form={form}
         onFormChange={setForm}
@@ -281,36 +334,134 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
       )}
 
       {isBoss && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <Field label="Papel no Combate">
+            <Select value={form.papelCombate} onChange={e => set('papelCombate', e.target.value)}>
+              {PAPEL_OPTIONS.filter(o => o.value !== 'nenhum').map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Vida" required>
+            <Input
+              type="number"
+              min={1}
+              value={form.marcasMaximas || ''}
+              onChange={e => set('marcasMaximas', Math.max(1, parseInt(e.target.value, 10) || 1))}
+              placeholder="Ex: 15"
+              title="Pontos de vida do boss (marcas até derrotar)"
+            />
+          </Field>
+        </div>
+      )}
+
+      {isNew && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
-            <Field label="Papel no Combate">
-              <Select value={form.papelCombate} onChange={e => set('papelCombate', e.target.value)}>
-                {PAPEL_OPTIONS.filter(o => o.value !== 'nenhum').map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="XP de Recompensa">
-              <Input
-                type="number" min={0}
-                value={form.xpRecompensa}
-                onChange={e => set('xpRecompensa', Math.max(0, parseInt(e.target.value, 10) || 0))}
-              />
-            </Field>
-            <Field label="Vida" required>
-              <Input
-                type="number"
-                min={1}
-                value={form.marcasMaximas || ''}
-                onChange={e => set('marcasMaximas', Math.max(1, parseInt(e.target.value, 10) || 1))}
-                placeholder="Ex: 15"
-                title="Pontos de vida do boss (marcas até derrotar)"
-              />
-            </Field>
+          <hr className="divide-line" />
+          <StarterGearSection
+            weapon={form.starterWeapon}
+            armor={form.starterArmor}
+            onChangeWeapon={v => set('starterWeapon', v)}
+            onChangeArmor={v => set('starterArmor', v)}
+            subtitle={isBoss
+              ? 'Arma e armadura do boss — dá para editar depois na ficha.'
+              : 'Arma e armadura do NPC — dá para editar depois na ficha.'}
+          />
+        </>
+      )}
+
+      {(isBoss || form.hasEcoPowers) && (
+        <>
+          <hr className="divide-line" />
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.5rem',
+            marginBottom: '0.5rem',
+          }}>
+            <div style={{ fontSize: '0.65rem', color: '#a855f7', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+              SKILLS · {(form.skills || []).length}
+            </div>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={openCreateSkill}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}
+            >
+              <Plus size={13} /> Criar skill
+            </button>
           </div>
-          <p style={{ fontSize: '0.6rem', color: '#555', fontFamily: 'monospace', margin: 0, lineHeight: 1.5 }}>
-            VIDA — cada ponto de dano aplica uma marca. Ao atingir o total, o boss é derrotado.
-          </p>
+
+          {(form.skills || []).length === 0 ? (
+            <div style={{
+              fontSize: '0.75rem',
+              color: '#444',
+              padding: '0.85rem',
+              border: '1px dashed #1a1a1a',
+              borderRadius: '3px',
+              textAlign: 'center',
+            }}>
+              Nenhuma skill ainda — crie na criação ou depois na ficha.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {(form.skills || []).map(skill => (
+                <div
+                  key={skill.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    gap: '0.5rem',
+                    padding: '0.65rem 0.75rem',
+                    background: '#0d0d0d',
+                    border: '1px solid #1a1a1a',
+                    borderRadius: '3px',
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#e5e5e5' }}>{skill.name}</div>
+                    {(skill.mechanicalEffect || skill.effect) && (
+                      <div style={{ fontSize: '0.7rem', color: '#666', marginTop: '3px', lineHeight: 1.4 }}>
+                        {skill.mechanicalEffect || skill.effect}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
+                    <button type="button" className="btn-ghost" onClick={() => openEditSkill(skill)} style={{ padding: '0.25rem' }}>
+                      <Pencil size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost"
+                      onClick={() => set('skills', (form.skills || []).filter(s => s.id !== skill.id))}
+                      style={{ padding: '0.25rem', color: '#dc2626' }}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <Modal
+            open={skillEditorOpen}
+            onClose={() => { setSkillEditorOpen(false); setEditingSkill(null) }}
+            title={editingSkill ? 'Editar skill' : 'Criar skill'}
+            maxWidth="520px"
+          >
+            <SkillForm
+              key={editingSkill?.id || 'new'}
+              initial={editingSkill || undefined}
+              defaultAudience={isBoss ? SKILL_AUDIENCE.BOSS : SKILL_AUDIENCE.NPC}
+              lockAudience
+              submitLabel={editingSkill ? 'Salvar' : 'Criar'}
+              onCancel={() => { setSkillEditorOpen(false); setEditingSkill(null) }}
+              onSubmit={handleSkillSubmit}
+            />
+          </Modal>
         </>
       )}
 

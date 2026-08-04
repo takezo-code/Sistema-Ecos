@@ -14,7 +14,6 @@ import {
   canUpgradeSkillGrade,
 } from '../../mechanics/skills/classSkillProgressionEngine'
 import { countGradeCatalysts } from '../../constants/merchantItems'
-import { formatRuptureBonus } from '../../services/ruptureBonus'
 
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
@@ -123,7 +122,6 @@ export function ClassSkillBook({
   const book = useMemo(() => listClassSkillBook(entity), [entity])
   const [selectedId, setSelectedId] = useState(book[0]?.def.templateId || null)
   const eco = entity.ecoPoints ?? 0
-  const rupture = entity.attributes?.ruptura ?? 0
   const catalysts = countGradeCatalysts(entity.inventory)
 
   const selected = book.find(e => e.def.templateId === selectedId) || book[0] || null
@@ -168,11 +166,6 @@ export function ClassSkillBook({
           <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
             LIVRO DE SKILLS · {classMeta.label.toUpperCase()}
           </div>
-          {!compact && (
-            <div style={{ fontSize: '0.7rem', color: '#555', marginTop: '0.2rem' }}>
-              3 de classe · +1 da arma · Eco até nv.{ECO_SKILL_MAX_LEVEL} · RUP {formatRuptureBonus(rupture)}
-            </div>
-          )}
         </div>
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
           <div style={{

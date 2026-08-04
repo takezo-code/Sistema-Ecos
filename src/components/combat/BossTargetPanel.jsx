@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { Crosshair, Dices } from 'lucide-react'
 import { ATTRIBUTES } from '../../constants/attributes'
 import { DAMAGE_MARK_META } from '../../mechanics/combat/damageMarksEngine'
-import { getRollOutcome, getBossAttackDamage } from '../../mechanics/combat/rollOutcome'
+import { getRollOutcome, getBossAttackDamage, getDefaultDc } from '../../mechanics/combat/rollOutcome'
 import { getEffectiveAttributeValue } from '../../services/stateModifiers'
 
 function attrShort(attr) {
@@ -21,6 +21,7 @@ export function BossTargetPanel({
   targets = [],
   diceSides = 20,
   onDiceSidesChange,
+  getRollDc,
   onRollResult,
   onApplyMarksToTarget,
   onBossExpose,
@@ -56,7 +57,8 @@ export function BossTargetPanel({
     const dice = Math.floor(Math.random() * diceSides) + 1
     const bonus = attrBonus
     const total = dice + bonus
-    const outcome = getRollOutcome(dice, bonus, diceSides)
+    const dc = typeof getRollDc === 'function' ? getRollDc(diceSides) : getDefaultDc(diceSides)
+    const outcome = getRollOutcome(dice, bonus, diceSides, dc)
     const damage = getBossAttackDamage(outcome.key)
     const hit = !!damage.markType
 
@@ -83,6 +85,7 @@ export function BossTargetPanel({
       sides: diceSides,
       bonus,
       total,
+      dc,
       characterName: enemy.name,
       attrLabel: `${selectedAttr.label} vs ${target.name}`,
       targetId: target.id,
@@ -130,7 +133,7 @@ export function BossTargetPanel({
           </span>
         </div>
         <div style={{ display: 'flex', gap: '2px' }} role="group" aria-label="Dado do ataque">
-          {[6, 20].map(sides => {
+          {[8, 20].map(sides => {
             const active = diceSides === sides
             return (
               <button
@@ -144,9 +147,9 @@ export function BossTargetPanel({
                   fontWeight: 700,
                   borderRadius: '3px',
                   cursor: 'pointer',
-                  border: `1px solid ${active ? (sides === 6 ? '#06b6d4' : '#888') : '#222'}`,
-                  background: active ? (sides === 6 ? 'rgba(6,182,212,0.12)' : 'rgba(255,255,255,0.06)') : 'transparent',
-                  color: active ? (sides === 6 ? '#06b6d4' : '#ccc') : '#444',
+                  border: `1px solid ${active ? (sides === 8 ? '#06b6d4' : '#888') : '#222'}`,
+                  background: active ? (sides === 8 ? 'rgba(6,182,212,0.12)' : 'rgba(255,255,255,0.06)') : 'transparent',
+                  color: active ? (sides === 8 ? '#06b6d4' : '#ccc') : '#444',
                 }}
               >
                 d{sides}

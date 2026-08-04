@@ -1,16 +1,25 @@
 import React, { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 export function Modal({ open, onClose, title, children, maxWidth = '560px' }) {
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose() }
-    if (open) window.addEventListener('keydown', handler)
+    if (open) {
+      window.addEventListener('keydown', handler)
+      const prev = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        window.removeEventListener('keydown', handler)
+        document.body.style.overflow = prev
+      }
+    }
     return () => window.removeEventListener('keydown', handler)
   }, [open, onClose])
 
   if (!open) return null
 
-  return (
+  return createPortal(
     <div
       className="modal-overlay"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
@@ -29,6 +38,7 @@ export function Modal({ open, onClose, title, children, maxWidth = '560px' }) {
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

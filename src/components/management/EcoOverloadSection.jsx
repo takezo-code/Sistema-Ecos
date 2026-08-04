@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Activity, RotateCcw, AlertTriangle } from 'lucide-react'
-import { getEcoOverloadSnapshot, RUPTURE_TOTAL_OUTCOMES } from '../../services/ecoOverloadService'
+import { getEcoOverloadSnapshot } from '../../services/ecoOverloadService'
 import { ECO_OVERLOAD_PHASES, ECO_OVERLOAD_OVERAGE_TO_TOTAL } from '../../constants/ecoOverload'
 
 const PHASE_LABELS = {
@@ -21,7 +21,6 @@ export function EcoOverloadSection({
   const phaseMeta = PHASE_LABELS[snapshot.phase] || PHASE_LABELS[ECO_OVERLOAD_PHASES.STABLE]
   const [masterLevel, setMasterLevel] = useState(String(snapshot.overload))
   const lim = snapshot.safeLimit
-  const ruptura = entity?.attributes?.ruptura ?? 0
 
   const barPercent = Math.min(100, (snapshot.overload / Math.max(lim, 1)) * 100)
   const barColor = snapshot.inRupturePhase ? '#dc2626' : snapshot.atCap ? '#eab308' : '#a855f7'
@@ -50,15 +49,11 @@ export function EcoOverloadSection({
         }} />
       </div>
 
-        <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', color: '#555', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <span style={{ color: '#666' }}>Limite 5+RUP ({ruptura}) = {lim}</span>
-        {snapshot.mentalAttrPenaltyPercent > 0 && (
-          <span style={{ color: '#dc2626' }}>−{snapshot.mentalAttrPenaltyPercent} INT · PER · SAB · CAR</span>
-        )}
-        {!snapshot.mentalAttrPenaltyPercent && (
-          <span style={{ color: '#333' }}>Sem penalidade mecânica</span>
-        )}
-      </div>
+      {snapshot.mentalAttrPenaltyPercent > 0 && (
+        <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', color: '#dc2626' }}>
+          −{snapshot.mentalAttrPenaltyPercent} INT · PER · SAB · CAR
+        </div>
+      )}
 
       {snapshot.activeMentalStatuses.length > 0 && (
         <div style={{
@@ -141,37 +136,6 @@ export function EcoOverloadSection({
         </div>
       )}
 
-      <details style={{ fontSize: '0.65rem', color: '#444' }}>
-        <summary style={{ cursor: 'pointer', fontFamily: 'monospace' }}>TABELA DE SOBRECARGA</summary>
-        <p style={{ margin: '0.4rem 0', color: '#555', lineHeight: 1.5 }}>
-          Limite seguro = 5 + Ruptura (seu limite atual: {lim}). Dentro do limite: sem −atributos.
-          No limite e acima: −flat em INT · PER · SAB · CAR conforme o estado.
-        </p>
-        <table style={{ marginTop: '0.2rem', borderCollapse: 'collapse', width: '100%', fontSize: '0.6rem', lineHeight: 1.7 }}>
-          <thead>
-            <tr style={{ color: '#555', fontFamily: 'monospace' }}>
-              <th style={{ textAlign: 'left', paddingRight: '0.75rem' }}>Situação</th>
-              <th style={{ textAlign: 'left', paddingRight: '0.75rem' }}>Estado</th>
-              <th style={{ textAlign: 'left' }}>INT·PER·SAB·CAR</th>
-            </tr>
-          </thead>
-          <tbody style={{ color: '#666' }}>
-            {[
-              { l: `abaixo de ${lim}`, estado: 'Estável', attr: '—' },
-              { l: `${lim}/${lim}`, estado: 'Abalado', attr: '−1', danger: true },
-              { l: `${lim + 1}/${lim}`, estado: 'Fragmentado', attr: '−2', danger: true },
-              { l: `${lim + 2}–${lim + 3}/${lim}`, estado: 'Dissociado', attr: '−3', danger: true },
-              { l: `${lim + 4}+/${lim}`, estado: 'Perdido no Tempo', attr: '−4', danger: true },
-            ].map(row => (
-              <tr key={row.l} style={{ color: row.danger ? '#dc2626' : '#666' }}>
-                <td style={{ paddingRight: '0.75rem', fontFamily: 'monospace' }}>{row.l}</td>
-                <td style={{ paddingRight: '0.75rem' }}>{row.estado}</td>
-                <td>{row.attr}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </details>
     </div>
   )
 }

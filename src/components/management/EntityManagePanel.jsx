@@ -10,7 +10,6 @@ import { EntitySkillsPanel } from './EntitySkillsPanel'
 import { CharacterGearPanel } from '../equipment/CharacterGearPanel'
 import { isInCreationPhase } from '../../constants/attributes'
 import { entityHasEcoPowers, isNpcEntity } from '../../constants/entityProgression'
-import { getPhysicalStateOption, getMentalStateOption } from '../../constants/states'
 
 export function EntityManagePanel({
   entity,
@@ -30,6 +29,8 @@ export function EntityManagePanel({
   onInvestSkillPoint,
   onUpgradeSkillGrade,
   onLearnCatalogSkill,
+  onAddInlineSkill,
+  onUpdateInlineSkill,
   onRemoveSkill,
   onUseSkill,
   onRestOverload,
@@ -43,41 +44,45 @@ export function EntityManagePanel({
   const [skillsOpen, setSkillsOpen] = useState(false)
   const [narrativeOpen, setNarrativeOpen] = useState(false)
   const [gearOpen, setGearOpen] = useState(false)
-  const showNarrative = !isNpcEntity(entity)
-  const showGear = typeof onForgeGear === 'function' && !isNpcEntity(entity)
+  const showGear = typeof onForgeGear === 'function'
   const isCreation = isInCreationPhase(entity)
   const hasEco = entityHasEcoPowers(entity)
 
   const physicalState = entity.physicalState ?? 'bem'
   const mentalState = entity.mentalState ?? 'estavel'
-  const physicalOpt = getPhysicalStateOption(physicalState)
-  const mentalOpt = getMentalStateOption(mentalState)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <EntityThumb src={entity.image} alt={entity.name} size={48} borderRadius="4px" />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '1rem', fontWeight: 700, color: '#e5e5e5' }}>{entity.name}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', minWidth: 0, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#e5e5e5' }}>{entity.name}</div>
+            {onEditProfile && (
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={onEditProfile}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.65rem', padding: '0.2rem 0.45rem' }}
+              >
+                <Pencil size={11} /> Editar ficha
+              </button>
+            )}
+          </div>
           <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', marginTop: '2px' }}>
             NVL {entity.level || 1}
-            {showProgression && hasEco && ` · ${entity.ecoPoints ?? 0} Ecos`}
-            <span style={{ color: physicalOpt.color }}> · {physicalOpt.label.toUpperCase()}</span>
-            <span style={{ color: mentalOpt.color }}> · {mentalOpt.label.toUpperCase()}</span>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          {showNarrative && (
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => setNarrativeOpen(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}
-            >
-              <BookOpen size={12} style={{ color: '#06b6d4' }} />
-              Perfil narrativo
-            </button>
-          )}
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => setNarrativeOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}
+          >
+            <BookOpen size={12} style={{ color: '#06b6d4' }} />
+            Perfil narrativo
+          </button>
           {hasEco && (
             <button
               type="button"
@@ -98,12 +103,6 @@ export function EntityManagePanel({
             >
               <Sword size={12} style={{ color: '#f97316' }} />
               Equipamento
-            </button>
-          )}
-          {onEditProfile && (
-            <button type="button" className="btn-ghost" onClick={onEditProfile}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}>
-              <Pencil size={12} /> Editar ficha
             </button>
           )}
         </div>
@@ -144,13 +143,11 @@ export function EntityManagePanel({
         onSpendPendingSocial={adminMode ? undefined : onSpendPendingSocialAttribute}
       />
 
-      {showNarrative && (
-        <NarrativeProfileModal
-          open={narrativeOpen}
-          onClose={() => setNarrativeOpen(false)}
-          entity={entity}
-        />
-      )}
+      <NarrativeProfileModal
+        open={narrativeOpen}
+        onClose={() => setNarrativeOpen(false)}
+        entity={entity}
+      />
 
       <Modal open={hasEco && skillsOpen} onClose={() => setSkillsOpen(false)} title={`Skills — ${entity.name}`} maxWidth="720px">
         <EntitySkillsPanel
@@ -159,7 +156,9 @@ export function EntityManagePanel({
           manualSkillPick={isNpcEntity(entity)}
           onInvestSkillPoint={isNpcEntity(entity) ? undefined : onInvestSkillPoint}
           onUpgradeSkillGrade={isNpcEntity(entity) ? undefined : onUpgradeSkillGrade}
-          onLearnCatalogSkill={isNpcEntity(entity) ? onLearnCatalogSkill : undefined}
+          onLearnCatalogSkill={isNpcEntity(entity) ? undefined : onLearnCatalogSkill}
+          onAddInlineSkill={isNpcEntity(entity) ? onAddInlineSkill : undefined}
+          onUpdateInlineSkill={isNpcEntity(entity) ? onUpdateInlineSkill : undefined}
           onRemoveSkill={onRemoveSkill}
           onRestOverload={onRestOverload}
           onSetOverload={onSetOverload}

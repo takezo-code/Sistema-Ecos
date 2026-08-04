@@ -14,12 +14,14 @@ import { CombatEnemyCard } from '../components/combat/CombatEnemyCard'
 import { CombatSkillDetailModal } from '../components/combat/CombatSkillDetailModal'
 import { EmptyState } from '../components/ui/EmptyState'
 import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
-import { getRollOutcome } from '../mechanics/combat/rollOutcome'
+import { getRollOutcome, DIFFICULTY_PRESETS, getDefaultDc, getDcForPreset } from '../mechanics/combat/rollOutcome'
 
 function RollResultBanner({ result, onDismiss }) {
   if (!result) return null
   const sides = result.sides || 20
-  const outcome = getRollOutcome(result.dice, result.bonus, sides)
+  const dc = result.dc ?? getDefaultDc(sides)
+  const outcome = getRollOutcome(result.dice, result.bonus, sides, dc)
+  const attrPart = result.attrBonus ?? result.bonus
 
   return (
     <div style={{
@@ -36,14 +38,20 @@ function RollResultBanner({ result, onDismiss }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '1rem', fontWeight: 900, color: outcome.color }}>{result.total}</span>
+          <span style={{ fontSize: '0.65rem', color: '#777', fontFamily: 'monospace' }}>
+            vs CD {dc}
+          </span>
           <span style={{ fontSize: '0.65rem', color: '#aaa', fontFamily: 'monospace' }}>
-            d{sides}({result.dice}) + {result.attrBonus ?? result.bonus}
+            d{sides}({result.dice}) + {attrPart}
             {result.classBonus > 0 && (
               <span style={{ color: '#d97706' }}> + {result.classBonus} classe</span>
             )}
             {result.weaponPenalty ? (
               <span style={{ color: '#dc2626' }}> {result.weaponPenalty} arma</span>
             ) : null}
+            {result.gearBonus > 0 && (
+              <span style={{ color: '#94a3b8' }}> + {result.gearBonus} gear</span>
+            )}
           </span>
           <span style={{ fontSize: '0.75rem', fontWeight: 700, color: outcome.color }}>{outcome.label}</span>
           {result.characterName && (
@@ -101,6 +109,9 @@ export function ManageCombat() {
   const [rollResult, setRollResult] = useState(null)
   const [combatNotice, setCombatNotice] = useState(null)
   const [skillDetailRef, setSkillDetailRef] = useState(null)
+  const [dcPreset, setDcPreset] = useState('medium')
+
+  const activeDcPreset = DIFFICULTY_PRESETS.find(p => p.id === dcPreset) || DIFFICULTY_PRESETS[2]
 
   useEffect(() => {
     setCampaign(activeCampaignId)
@@ -158,6 +169,7 @@ export function ManageCombat() {
   const handleRollAttribute = useCallback((character, _attrKey, attrLabel, eff, sides = 20, breakdown = null) => {
     const dice = Math.floor(Math.random() * sides) + 1
     const total = dice + eff
+    const dc = getDcForPreset(dcPreset, sides)
     setRollResult({
       dice,
       sides,
@@ -165,12 +177,14 @@ export function ManageCombat() {
       attrBonus: breakdown?.attrBonus ?? eff,
       classBonus: breakdown?.classBonus ?? 0,
       weaponPenalty: breakdown?.weaponPenalty ?? 0,
+      gearBonus: breakdown?.gearBonus ?? 0,
       total,
+      dc,
       characterName: character.name,
       attrLabel,
     })
     advanceTurn(character.id)
-  }, [advanceTurn])
+  }, [advanceTurn, dcPreset])
 
   const handleApplyMarks = useCallback((character, markType) => {
     const result = applyDamageMarks(character.id, markType)
@@ -192,8 +206,9 @@ export function ManageCombat() {
   const handleEnemyRollAttribute = useCallback((enemy, _attrKey, attrLabel, eff, sides = 20) => {
     const dice = Math.floor(Math.random() * sides) + 1
     const total = dice + eff
-    setRollResult({ dice, sides, bonus: eff, total, characterName: enemy.name, attrLabel })
-  }, [])
+    const dc = getDcForPreset(dcPreset, sides)
+    setRollResult({ dice, sides, bonus: eff, total, dc, characterName: enemy.name, attrLabel })
+  }, [dcPreset])
 
   const handleBossAttackRoll = useCallback((result) => {
     setRollResult({
@@ -201,6 +216,7 @@ export function ManageCombat() {
       sides: result.sides,
       bonus: result.bonus,
       total: result.total,
+      dc: result.dc ?? getDcForPreset(dcPreset, result.sides || 20),
       characterName: result.characterName,
       attrLabel: result.attrLabel,
     })
@@ -213,7 +229,7 @@ export function ManageCombat() {
     } else {
       setCombatNotice(`${result.characterName} errou o ataque contra ${result.targetName}.`)
     }
-  }, [])
+  }, [dcPreset])
 
   const handleApplyMarksToTarget = useCallback((targetId, markType) => {
     const target = combatCharacters.find(c => c.id === targetId)
@@ -297,6 +313,46 @@ export function ManageCombat() {
             ))}
           </select>
         </div>
+      </div>
+
+      {/* CD — linha abaixo do seletor de grupo */}
+      <div style={{
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.35rem',
+        flexWrap: 'wrap',
+        padding: '0.35rem 1rem',
+        borderBottom: '1px solid #1a1a1a',
+        background: '#0b0b0b',
+      }}>
+        {DIFFICULTY_PRESETS.map(p => {
+          const active = p.id === dcPreset
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setDcPreset(p.id)}
+              title={`d20: ${p.dc20} · d8: ${p.dc8}`}
+              style={{
+                padding: '2px 6px',
+                fontSize: '0.55rem',
+                fontFamily: 'monospace',
+                fontWeight: 700,
+                borderRadius: '3px',
+                cursor: 'pointer',
+                border: `1px solid ${active ? '#d97706' : '#2a2a2a'}`,
+                background: active ? 'rgba(217,119,6,0.15)' : 'transparent',
+                color: active ? '#d97706' : '#666',
+              }}
+            >
+              {p.label}
+            </button>
+          )
+        })}
+        <span style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#888' }}>
+          d20:{activeDcPreset.dc20} · d8:{activeDcPreset.dc8}
+        </span>
       </div>
 
       {/* Banner de resultado da rolagem */}
@@ -407,6 +463,7 @@ export function ManageCombat() {
               <CombatEnemyCard
                 enemy={activeEnemy}
                 targets={combatCharacters}
+                getRollDc={(sides) => getDcForPreset(dcPreset, sides)}
                 onUpdate={data => updateNPC(activeEnemy.id, data)}
                 onApplyMarks={handleEnemyApplyMarks}
                 onHealMarks={(amount) => healNPCMarks(activeEnemy.id, amount)}

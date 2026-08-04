@@ -25,7 +25,6 @@ export function CharacterSkills({
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <PageHeader
         title="Habilidades"
-        subtitle="3 skills de classe + 1 da arma · 9 Ecos no nv.15 maxam tudo"
       />
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.5rem' }}>

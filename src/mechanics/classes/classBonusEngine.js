@@ -3,11 +3,12 @@
  *
  * Os 2 atributos-chave da classe rendem bônus extra conforme os pontos
  * investidos neles:
- *   5 pontos  → +1 na rolagem
- *   10 pontos → +2 na rolagem
+ *   3 pontos  → +1 na rolagem
+ *   6 pontos  → +2 na rolagem
+ *   9 pontos  → +3 na rolagem
  *
- * Exemplo: Porradeiro com Força 5 rola d20 → 12 do dado + 5 de Força + 1 de
- * classe = 18.
+ * Exemplo: Atirador com Destreza 6 rola d20 → 12 do dado + 6 de Destreza + 2 de
+ * classe = 20.
  *
  * O bônus usa os pontos **base** do atributo. Ficar Ferido reduz o valor
  * efetivo nas rolagens, mas não tira o bônus de classe já conquistado.
@@ -20,13 +21,14 @@ import {
 
 /** Ordem decrescente — o primeiro limiar atingido define o bônus. */
 export const CLASS_BONUS_TIERS = [
-  { points: 10, bonus: 2 },
-  { points: 5, bonus: 1 },
+  { points: 9, bonus: 3 },
+  { points: 6, bonus: 2 },
+  { points: 3, bonus: 1 },
 ]
 
 export const MAX_CLASS_BONUS = CLASS_BONUS_TIERS[0].bonus
 
-/** Bônus para um total de pontos, ignorando classe (0, +1 ou +2). */
+/** Bônus para um total de pontos, ignorando classe (0, +1, +2 ou +3). */
 export function getClassBonusForPoints(points) {
   const n = Math.max(0, Number(points) || 0)
   return CLASS_BONUS_TIERS.find(tier => n >= tier.points)?.bonus ?? 0

@@ -82,7 +82,7 @@ export function AttributePointsEditor({ form, onFormChange, showRuptureHint = fa
     <>
       <hr className="divide-line" />
       <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-        PONTOS DE STATUS · <span style={{ color: '#16a34a' }}>{pool}</span> disponíveis · máx {INITIAL_ATTRIBUTE_MAX}/atributo
+        <span style={{ color: pool > 0 ? '#eab308' : '#16a34a' }}>{pool}</span> disponíveis
       </div>
       {showRuptureHint && (
         <p style={{ fontSize: '0.7rem', color: '#555', marginBottom: '0.75rem', lineHeight: 1.5 }}>
@@ -106,7 +106,7 @@ export function AttributePointsEditor({ form, onFormChange, showRuptureHint = fa
 
       <hr className="divide-line" />
       <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-        PONTOS DE CENA (SOCIAL) · <span style={{ color: socialPool > 0 ? '#e879f9' : '#16a34a' }}>{socialPool}</span> disponíveis · máx {INITIAL_SOCIAL_MAX}/atributo
+        <span style={{ color: socialPool > 0 ? '#e879f9' : '#16a34a' }}>{socialPool}</span> disponíveis
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
         {SOCIAL_ATTRIBUTES.map(attr => {

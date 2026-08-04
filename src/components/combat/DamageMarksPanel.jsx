@@ -3,13 +3,9 @@ import { Shield, Trash2, Plus } from 'lucide-react'
 import {
   DAMAGE_MARK_META,
   DAMAGE_MARK_TYPES,
-  getBufferedTierRange,
   getRemainingLife,
-  getVitalityMarkBuffer,
-  MARK_STATE_THRESHOLDS,
 } from '../../mechanics/combat/damageMarksEngine'
 import { getPhysicalStateOption } from '../../constants/states'
-import { getArmorMarkBonus } from '../../mechanics/equipment/armorEffectsEngine'
 
 /** Botões de marca no card do player (sem Médio). */
 export const PLAYER_MARK_TYPES = [DAMAGE_MARK_TYPES.LEVE, DAMAGE_MARK_TYPES.GRAVE]
@@ -77,7 +73,6 @@ export function DamageMarksPanel({
 
   const physicalState = character.physicalState ?? 'bem'
   const stateOpt = getPhysicalStateOption(physicalState)
-  const vitalityBuffer = getVitalityMarkBuffer(character)
   const life = getRemainingLife(
     maxMarks > 0 ? { ...character, marcasMaximas: maxMarks } : character,
   )
@@ -98,21 +93,9 @@ export function DamageMarksPanel({
   }
 
   if (compact) {
-    const armorMarks = getArmorMarkBonus(character)
-    const feridoAt = getBufferedTierRange(MARK_STATE_THRESHOLDS[1], vitalityBuffer).min
-    const vidaWhenFerido = Math.max(0, max - feridoAt)
-
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
         <LifeCountBlock current={current} max={max} stateOpt={stateOpt} compact />
-
-        {vitalityBuffer > 0 && (
-          <div style={{ fontSize: '0.45rem', color: '#555', fontFamily: 'monospace', lineHeight: 1.35 }}>
-            +{vitalityBuffer} vida (2 VIT = 1)
-            {armorMarks > 0 ? ` · armadura +${armorMarks}` : ''}
-            {' · '}Ferido com {vidaWhenFerido} vida
-          </div>
-        )}
 
         <div style={{ display: 'flex', gap: '0.25rem' }}>
           {types.map(type => {

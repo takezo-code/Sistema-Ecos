@@ -42,7 +42,7 @@ export function StatesSection({ entity, physicalState, mentalState, onPhysicalCh
       )}
 
       <StatePicker
-        title="ESTADO MENTAL (BASE)"
+        title="ESTADO MENTAL"
         icon={Brain}
         iconColor="#06b6d4"
         options={MENTAL_STATES}

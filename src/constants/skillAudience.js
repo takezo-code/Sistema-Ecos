@@ -4,10 +4,9 @@ export const SKILL_AUDIENCE = Object.freeze({
   BOSS: 'boss',
 })
 
-/** Audiences que o mestre pode criar/editar no app. Skills de personagem vêm pré-definidas por classe. */
+/** Audiences que o mestre pode criar/editar no catálogo. Skills de boss ficam na ficha. */
 export const CREATABLE_SKILL_AUDIENCES = Object.freeze([
   SKILL_AUDIENCE.NPC,
-  SKILL_AUDIENCE.BOSS,
 ])
 
 export const SKILL_AUDIENCE_META = {

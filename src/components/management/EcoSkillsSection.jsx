@@ -1,11 +1,12 @@
 import React from 'react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { ClassSkillBook } from '../skills/ClassSkillBook'
 import { getSkillDisplay } from '../../services/skillService'
 import { MAX_CLASS_SKILL_LEVEL } from '../../constants/progression'
 import { getCharacterClass } from '../../constants/classes'
 
 /**
- * Skills de Eco do personagem — livro de classe (investir Eco) ou lista legada/NPC.
+ * Skills de Eco do personagem — livro de classe (investir Eco) ou lista legada/NPC/boss.
  */
 export function EcoSkillsSection({
   entity,
@@ -13,6 +14,9 @@ export function EcoSkillsSection({
   onUpgradeSkillGrade,
   onActivateSkill,
   manualSkillPick = false,
+  inlineOwned = false,
+  onEditSkill,
+  onRemoveSkill,
 }) {
   const classMeta = getCharacterClass(entity)
   const skills = entity.skills || []
@@ -20,7 +24,7 @@ export function EcoSkillsSection({
   const mentalState = entity.mentalState ?? 'estavel'
   const ecoOverload = entity.ecoOverload ?? 0
 
-  // Personagem com classe → livro Metin
+  // Personagem com classe → livro de skills
   if (!manualSkillPick && classMeta) {
     return (
       <ClassSkillBook
@@ -32,11 +36,11 @@ export function EcoSkillsSection({
     )
   }
 
-  // NPC / sem classe / grimório manual: lista simples
+  // NPC / boss / sem classe: lista simples
   return (
     <div>
       <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>
-        HABILIDADES · {skills.length} DESBLOQUEADA(S)
+        HABILIDADES · {skills.length}
       </div>
       {skills.length === 0 ? (
         <div style={{
@@ -47,9 +51,9 @@ export function EcoSkillsSection({
           color: '#333',
           fontSize: '0.775rem',
         }}>
-          Nenhuma habilidade desbloqueada.
-          {manualSkillPick && (
-            <div style={{ marginTop: '0.5rem', color: '#555' }}>Use &quot;Adicionar skill&quot; no grimório acima.</div>
+          Nenhuma habilidade.
+          {inlineOwned && (
+            <div style={{ marginTop: '0.5rem', color: '#555' }}>Use &quot;Criar skill&quot; acima.</div>
           )}
           {!manualSkillPick && !classMeta && (
             <div style={{ marginTop: '0.5rem', color: '#555' }}>Defina a classe para abrir o livro de skills.</div>
@@ -70,17 +74,49 @@ export function EcoSkillsSection({
                   padding: '0.875rem 1rem',
                 }}
               >
-                <div style={{ marginBottom: '0.5rem' }}>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#e5e5e5' }}>{skill.name}</div>
-                  <div style={{ fontSize: '0.6rem', color: '#a855f7', fontFamily: 'monospace', marginTop: '2px' }}>
-                    <span style={{ color: display.typeMeta?.color }}>{display.typeMeta?.label?.toUpperCase()} · </span>
-                    NÍVEL {skill.tier}{atMaxTier ? ' (máx)' : ''} · PODER {display.effectivePower}
-                    {display.overloadAttrPenalty > 0 && (
-                      <span style={{ color: '#dc2626' }}> (−{display.overloadAttrPenalty} INT/PER/SAB/CAR)</span>
-                    )}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#e5e5e5' }}>{skill.name}</div>
+                    <div style={{ fontSize: '0.6rem', color: '#a855f7', fontFamily: 'monospace', marginTop: '2px' }}>
+                      <span style={{ color: display.typeMeta?.color }}>{display.typeMeta?.label?.toUpperCase()} · </span>
+                      {inlineOwned
+                        ? `CD ${skill.cooldownTurns ?? 0} · Sobrecarga ${skill.overloadCost ?? 1}`
+                        : `NÍVEL ${skill.tier}${atMaxTier ? ' (máx)' : ''} · PODER ${display.effectivePower}`}
+                      {!inlineOwned && display.overloadAttrPenalty > 0 && (
+                        <span style={{ color: '#dc2626' }}> (−{display.overloadAttrPenalty} INT/PER/SAB/CAR)</span>
+                      )}
+                    </div>
                   </div>
+                  {inlineOwned && (onEditSkill || onRemoveSkill) && (
+                    <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
+                      {onEditSkill && (
+                        <button
+                          type="button"
+                          className="btn-ghost"
+                          onClick={() => onEditSkill(skill)}
+                          title="Editar"
+                          style={{ padding: '0.25rem' }}
+                        >
+                          <Pencil size={13} />
+                        </button>
+                      )}
+                      {onRemoveSkill && (
+                        <button
+                          type="button"
+                          className="btn-ghost"
+                          onClick={() => onRemoveSkill(skill.id)}
+                          title="Remover"
+                          style={{ padding: '0.25rem', color: '#dc2626' }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <p style={{ fontSize: '0.75rem', color: '#666', lineHeight: 1.6, marginBottom: '0.5rem' }}>{skill.description}</p>
+                {skill.description && (
+                  <p style={{ fontSize: '0.75rem', color: '#666', lineHeight: 1.6, marginBottom: '0.5rem' }}>{skill.description}</p>
+                )}
                 {(skill.effect || skill.mechanicalEffect) && (
                   <div style={{ background: '#111', border: '1px solid #1a1a1a', borderRadius: '3px', padding: '0.5rem 0.625rem', marginBottom: '0.35rem' }}>
                     <div style={{ fontSize: '0.55rem', color: '#06b6d4', fontFamily: 'monospace', marginBottom: '2px' }}>EFEITO</div>

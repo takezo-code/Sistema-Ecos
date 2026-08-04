@@ -5,7 +5,7 @@
  * concede +1 marca de vida (cumulativo):
  *   comum 0 · incomum +1 · raro +2 · lendário +3
  *
- * Passivas Metin da armadura são sempre 4 slots — ver gearPassiveEngine.
+ * Atributos de item da armadura são sempre 4 slots — ver gearPassiveEngine.
  */
 
 import { getRarityMeta } from '../../constants/equipmentTypes'

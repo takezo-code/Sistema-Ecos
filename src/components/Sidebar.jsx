@@ -29,14 +29,6 @@ const MANAGEMENT_SECTIONS = [
       { id: MANAGEMENT_VIEWS.ORGANIZATIONS, label: 'Organizações', icon: Building2 },
     ],
   },
-  {
-    id: 'skills',
-    label: 'Skills',
-    items: [
-      { id: MANAGEMENT_VIEWS.SKILLS_NPC, label: 'NPC', icon: Skull },
-      { id: MANAGEMENT_VIEWS.SKILLS_BOSS, label: 'Boss', icon: ShieldAlert },
-    ],
-  },
 ]
 
 const EMJOGO_CHILDREN = [

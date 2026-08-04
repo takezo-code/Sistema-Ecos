@@ -6,7 +6,7 @@ import { filterByActiveCampaign, withActiveCampaign } from '../utils/campaignSco
 import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Modal } from '../components/ui/Modal'
-import { Field, Input, Textarea, Select } from '../components/ui/Field'
+import { Field, Input, Textarea } from '../components/ui/Field'
 import { ImageUpload } from '../components/ui/ImageUpload'
 import { EntityThumb } from '../components/ui/EntityThumb'
 import { EmptyState } from '../components/ui/EmptyState'
@@ -28,7 +28,6 @@ import {
   validateStartingSocialDistributed,
   validateStartingEcoSkillSelected,
 } from '../services/progressionService'
-import { getTotalAttributePoints, getTotalSocialPoints } from '../constants/attributes'
 import { resolveCharacterNarrative } from '../utils/entityNarrative'
 import { getEntityEffectiveAttributes } from '../services/stateModifiers'
 import { ClassPicker } from '../components/creation/ClassPicker'
@@ -36,11 +35,8 @@ import { ClassSkillBook } from '../components/skills/ClassSkillBook'
 import { getCharacterClass, normalizeClassId } from '../constants/classes'
 import { getClassAttributeBonus } from '../mechanics/classes/classBonusEngine'
 import { investSkillPoint } from '../mechanics/skills/classSkillProgressionEngine'
-import {
-  buildInitialGear,
-  getForgeableArmorTypes,
-  getForgeableWeaponTypes,
-} from '../mechanics/equipment/characterGear'
+import { buildInitialGear, getForgeableArmorTypes } from '../mechanics/equipment/characterGear'
+import { StarterGearSection } from '../components/equipment/StarterGearSection'
 
 const EMPTY_FORM = {
   name: '',
@@ -56,74 +52,8 @@ const EMPTY_FORM = {
   unspentSocialPoints: STARTING_SOCIAL_POINTS,
   ecoPoints: 1,
   skills: [],
-  starterWeapon: { name: '', type: null },
+  starterWeapon: { name: '', kind: '', description: '', image: '' },
   starterArmor: { name: '', type: getForgeableArmorTypes()[0].id },
-}
-
-/**
- * Forja inicial: a arma e a armadura nascem com o personagem e o acompanham
- * pela campanha inteira. Tipos de arma vêm da classe escolhida.
- */
-function StarterGearSection({ classId, weapon, armor, onChangeWeapon, onChangeArmor }) {
-  const weaponTypes = getForgeableWeaponTypes(classId)
-  const armorTypes = getForgeableArmorTypes()
-  const weaponType = weaponTypes.find(t => t.id === weapon.type) ?? weaponTypes[0]
-  const armorType = armorTypes.find(t => t.id === armor.type) ?? armorTypes[0]
-
-  return (
-    <>
-      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-        EQUIPAMENTO INICIAL
-      </div>
-      <p style={{ fontSize: '0.72rem', color: '#666', margin: '0 0 0.75rem', lineHeight: 1.45 }}>
-        Esta arma e esta armadura acompanham o personagem pela campanha toda — elas sobem de raridade junto com o nível dele.
-      </p>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <Field label="Arma">
-            <Input
-              value={weapon.name}
-              onChange={e => onChangeWeapon({ ...weapon, name: e.target.value })}
-              placeholder={weaponType ? weaponType.label : 'Nome da arma'}
-            />
-          </Field>
-          <Select
-            value={weaponType?.id ?? ''}
-            onChange={e => onChangeWeapon({ ...weapon, type: e.target.value })}
-          >
-            {weaponTypes.map(t => (
-              <option key={t.id} value={t.id}>{t.icon} {t.label}</option>
-            ))}
-          </Select>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <Field label="Armadura">
-            <Input
-              value={armor.name}
-              onChange={e => onChangeArmor({ ...armor, name: e.target.value })}
-              placeholder={armorType ? armorType.label : 'Nome da armadura'}
-            />
-          </Field>
-          <Select
-            value={armorType?.id ?? ''}
-            onChange={e => onChangeArmor({ ...armor, type: e.target.value })}
-          >
-            {armorTypes.map(t => (
-              <option key={t.id} value={t.id}>{t.icon} {t.label}</option>
-            ))}
-          </Select>
-        </div>
-      </div>
-
-      {armorType?.mechDesc && (
-        <p style={{ fontSize: '0.65rem', color: '#555', fontFamily: 'monospace', margin: '0.5rem 0 0', lineHeight: 1.5 }}>
-          {armorType.mechDesc}
-        </p>
-      )}
-    </>
-  )
 }
 
 const narrativeSectionLabel = {
@@ -221,10 +151,6 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
     setForm(p => ({
       ...p,
       classId,
-      starterWeapon: {
-        ...p.starterWeapon,
-        type: getForgeableWeaponTypes(classId)[0]?.id ?? null,
-      },
       ...(isNew ? { skills: [], ecoPoints: 1 } : {}),
     }))
     setAttrError(null)
@@ -247,9 +173,7 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
 
   const classAttrKeys = getCharacterClass(form.classId)?.attributes ?? []
   const pool = form.unspentAttributePoints ?? 0
-  const spent = getTotalAttributePoints(form.attributes)
   const socialPool = form.unspentSocialPoints ?? 0
-  const socialSpent = getTotalSocialPoints(form.socialAttributes)
   const ecoCheck = validateStartingEcoSkillSelected(form)
   const creationReady = !isNew || profileOnly
     || (
@@ -347,15 +271,8 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
 
           <hr className="divide-line" />
           <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-            PONTOS DE STATUS · <span style={{ color: pool > 0 ? '#eab308' : '#16a34a' }}>{pool}</span> disponíveis
-            · <span style={{ color: '#666' }}>{spent}/{STARTING_ATTRIBUTE_POINTS} usados</span>
-            · máx {INITIAL_ATTRIBUTE_MAX}/atributo
+            <span style={{ color: pool > 0 ? '#eab308' : '#16a34a' }}>{pool}</span> disponíveis
           </div>
-          {isNew && pool > 0 && (
-            <p style={{ fontSize: '0.72rem', color: '#eab308', margin: '0 0 0.5rem', lineHeight: 1.45 }}>
-              Distribua todos os {STARTING_ATTRIBUTE_POINTS} pontos iniciais para criar o personagem.
-            </p>
-          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem' }}>
             {ATTRIBUTES.map(attr => {
               const v = form.attributes[attr.key] || 0
@@ -375,15 +292,8 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
 
           <hr className="divide-line" />
           <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-            PONTOS DE CENA (SOCIAL) · <span style={{ color: socialPool > 0 ? '#e879f9' : '#16a34a' }}>{socialPool}</span> disponíveis
-            · <span style={{ color: '#666' }}>{socialSpent}/{STARTING_SOCIAL_POINTS} usados</span>
-            · máx {INITIAL_SOCIAL_MAX}/atributo
+            <span style={{ color: socialPool > 0 ? '#e879f9' : '#16a34a' }}>{socialPool}</span> disponíveis
           </div>
-          {isNew && socialPool > 0 && (
-            <p style={{ fontSize: '0.72rem', color: '#e879f9', margin: '0 0 0.5rem', lineHeight: 1.45 }}>
-              Distribua todos os {STARTING_SOCIAL_POINTS} pontos de cena para criar o personagem.
-            </p>
-          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
             {SOCIAL_ATTRIBUTES.map(attr => {
               const v = form.socialAttributes?.[attr.key] || 0
@@ -405,11 +315,11 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
             <>
               <hr className="divide-line" />
               <StarterGearSection
-                classId={form.classId}
                 weapon={form.starterWeapon}
                 armor={form.starterArmor}
                 onChangeWeapon={v => set('starterWeapon', v)}
                 onChangeArmor={v => set('starterArmor', v)}
+                subtitle="Esta arma e esta armadura acompanham o personagem pela campanha toda."
               />
             </>
           )}

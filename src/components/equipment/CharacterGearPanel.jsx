@@ -7,6 +7,7 @@ import {
   GEAR_CATEGORIES,
   GEAR_SLOTS,
   getGearItem,
+  getWeaponKindLabel,
 } from '../../mechanics/equipment/characterGear'
 import {
   formatPassive,
@@ -18,11 +19,9 @@ import {
 } from '../../mechanics/equipment/gearPassiveEngine'
 import {
   getArmorTier,
-  getLevelsToNextArmorTier,
 } from '../../mechanics/equipment/armorProgressionEngine'
 import { getWeaponSkill } from '../../mechanics/equipment/weaponProgressionEngine'
-import { getArmorType, getWeaponType, isWeaponProficientForClass } from '../../constants/equipmentTypes'
-import { getArmorEffects } from '../../mechanics/equipment/armorEffectsEngine'
+import { getArmorType } from '../../constants/equipmentTypes'
 
 const ACCENT = '#a855f7'
 
@@ -91,7 +90,7 @@ function GearSlot({ item, label, icon: Icon, color, onClick }) {
   )
 }
 
-function MetinPassiveRow({ category, item, color, onKeepAll }) {
+function ItemAttributesRow({ category, item, color, onKeepAll }) {
   const slots = getPassiveSlotsForCategory(category)
   const aligned = getItemPassivesAligned(category, item)
   const [drafts, setDrafts] = useState(null)
@@ -137,9 +136,6 @@ function MetinPassiveRow({ category, item, color, onKeepAll }) {
             Manter tudo
           </button>
         )}
-        <span style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#555', flex: 1, minWidth: '8rem' }}>
-          Rola todos os slots juntos — aceita o pacote ou joga de novo
-        </span>
       </div>
 
       {slots.map((def, i) => {
@@ -160,10 +156,7 @@ function MetinPassiveRow({ category, item, color, onKeepAll }) {
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '0.45rem', color: '#555', fontFamily: 'monospace', letterSpacing: '0.06em' }}>
-                P{def.slot} · {def.label.toUpperCase()}
-              </div>
-              <div style={{ fontSize: '0.7rem', color: shown ? '#ccc' : '#333', fontFamily: 'monospace', marginTop: '2px' }}>
+              <div style={{ fontSize: '0.7rem', color: shown ? '#ccc' : '#333', fontFamily: 'monospace' }}>
                 {shown ? formatPassive(shown) : (hasDrafts ? '—' : 'não rolado')}
               </div>
             </div>
@@ -222,9 +215,7 @@ function WeaponSkillEditor({ skill, onSave }) {
 }
 
 function WeaponDetails({ character, weapon, onSetPassive, onSetWeaponSkill }) {
-  const typeMeta = getWeaponType(weapon.type)
-  const proficient = !character.classId || !weapon.type
-    || isWeaponProficientForClass(character.classId, weapon.type)
+  const kindLabel = getWeaponKindLabel(weapon)
   const weaponSkill = getWeaponSkill(weapon)
   const [editingSkill, setEditingSkill] = useState(false)
 
@@ -235,15 +226,14 @@ function WeaponDetails({ character, weapon, onSetPassive, onSetWeaponSkill }) {
         <span style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#888' }}>ARMA · SEM RARIDADE</span>
       </div>
 
-      {typeMeta && (
-        <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: proficient ? typeMeta.color : '#dc2626' }}>
-          {typeMeta.icon} {typeMeta.label} · {typeMeta.handsLabel} · {typeMeta.mainAttrLabel}
-          {!proficient && ' · fora da perícia (−3)'}
+      {kindLabel && (
+        <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#f97316' }}>
+          {kindLabel}
         </div>
       )}
 
-      <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#444' }}>PASSIVAS METIN</div>
-      <MetinPassiveRow
+      <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#444' }}>ATRIBUTOS DE ITEM</div>
+      <ItemAttributesRow
         category={GEAR_CATEGORIES.WEAPON}
         item={weapon}
         color="#f97316"
@@ -294,9 +284,7 @@ function WeaponDetails({ character, weapon, onSetPassive, onSetWeaponSkill }) {
 
 function ArmorDetails({ character, armor, onSetPassive }) {
   const typeMeta = getArmorType(armor.type)
-  const fx = getArmorEffects(character)
   const tier = getArmorTier(character)
-  const next = getLevelsToNextArmorTier(character)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
@@ -313,21 +301,8 @@ function ArmorDetails({ character, armor, onSetPassive }) {
         </div>
       )}
 
-      <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#16a34a' }}>
-        −{fx.penaltyDestreza} DES · +{fx.markBonus} limiar de marcas
-        {fx.rarityMarkBonus > 0 && ` (raridade +${fx.rarityMarkBonus}`}
-        {fx.passiveMarkBonus > 0 && `${fx.rarityMarkBonus > 0 ? '' : ' ('}passiva +${fx.passiveMarkBonus}`}
-        {(fx.rarityMarkBonus > 0 || fx.passiveMarkBonus > 0) && ')'}
-      </div>
-
-      {next && (
-        <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#444' }}>
-          Próxima raridade no nv {next.atLevel} (+{next.lifeMarks} marcas)
-        </div>
-      )}
-
-      <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#444' }}>PASSIVAS METIN</div>
-      <MetinPassiveRow
+      <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#444' }}>ATRIBUTOS DE ITEM</div>
+      <ItemAttributesRow
         category={GEAR_CATEGORIES.ARMOR}
         item={armor}
         color="#16a34a"
@@ -342,7 +317,7 @@ function ArmorDetails({ character, armor, onSetPassive }) {
 }
 
 /**
- * Equipamento pessoal: arma (3 passivas Metin + skill) e armadura (4 Metin + raridade).
+ * Equipamento pessoal: arma (3 atributos de item + skill) e armadura (4 atributos + raridade).
  */
 export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeaponSkill }) {
   const [forging, setForging] = useState(null)
@@ -488,7 +463,6 @@ export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeap
         {forging && (
           <GearForgeForm
             category={forging.category}
-            classId={character.classId}
             initial={forging.item}
             onSave={handleSave}
             onCancel={() => setForging(null)}

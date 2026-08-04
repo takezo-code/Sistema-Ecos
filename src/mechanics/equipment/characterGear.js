@@ -14,6 +14,7 @@ import {
   getWeaponType,
   normalizeWeaponTypeId,
 } from '../../constants/equipmentTypes'
+import { genId } from '../../utils/id'
 
 export const GEAR_CATEGORIES = Object.freeze({
   WEAPON: 'arma',
@@ -50,7 +51,7 @@ export function hasFullGear(entity = {}) {
   return !!getCharacterWeapon(entity) && !!getCharacterArmor(entity)
 }
 
-/** Tipos de arma que a classe pode forjar. Sem classe, libera todos. */
+/** Tipos de arma (legado / flavor). Forja livre não depende disso. */
 export function getForgeableWeaponTypes(classId) {
   const allowed = getClassWeaponTypes(classId)
   if (!allowed.length) return WEAPON_TYPES
@@ -61,6 +62,14 @@ export function getForgeableArmorTypes() {
   return ARMOR_TYPES
 }
 
+/** Rótulo livre da arma: `kind` custom ou tipo legado. */
+export function getWeaponKindLabel(weapon) {
+  if (!weapon) return null
+  const kind = (weapon.kind || '').trim()
+  if (kind) return kind
+  return getWeaponType(weapon.type)?.label ?? null
+}
+
 /** Monta a peça a ser guardada em `equipped[]`. */
 export function buildGearItem(category, data = {}) {
   const isArmor = category === GEAR_CATEGORIES.ARMOR
@@ -68,9 +77,10 @@ export function buildGearItem(category, data = {}) {
     ? (getArmorType(data.type)?.id ?? ARMOR_TYPES[0].id)
     : (normalizeWeaponTypeId(data.type) ?? null)
   const typeLabel = isArmor ? getArmorType(type)?.label : getWeaponType(type)?.label
+  const kind = isArmor ? '' : ((data.kind || '').trim() || typeLabel || '')
 
   const base = {
-    name: (data.name || '').trim() || typeLabel || (isArmor ? 'Armadura' : 'Arma'),
+    name: (data.name || '').trim() || kind || typeLabel || (isArmor ? 'Armadura' : 'Arma'),
     category: isArmor ? GEAR_CATEGORIES.ARMOR : GEAR_CATEGORIES.WEAPON,
     type,
     image: data.image || '',
@@ -81,6 +91,7 @@ export function buildGearItem(category, data = {}) {
   if (isArmor) return base
   return {
     ...base,
+    kind,
     weaponSkill: data.weaponSkill && typeof data.weaponSkill === 'object'
       ? {
           name: data.weaponSkill.name || '',
@@ -97,11 +108,11 @@ export function buildGearItem(category, data = {}) {
 /** Equipamento inicial montado na criação do personagem. */
 export function buildInitialGear({ weapon, armor } = {}) {
   const gear = []
-  if (weapon?.name?.trim() || normalizeWeaponTypeId(weapon?.type)) {
-    gear.push(buildGearItem(GEAR_CATEGORIES.WEAPON, weapon))
+  if (weapon?.name?.trim() || (weapon?.kind || '').trim() || normalizeWeaponTypeId(weapon?.type)) {
+    gear.push({ id: genId(), ...buildGearItem(GEAR_CATEGORIES.WEAPON, weapon) })
   }
   if (armor?.name?.trim() || getArmorType(armor?.type)) {
-    gear.push(buildGearItem(GEAR_CATEGORIES.ARMOR, armor))
+    gear.push({ id: genId(), ...buildGearItem(GEAR_CATEGORIES.ARMOR, armor) })
   }
   return gear
 }

@@ -1,10 +1,10 @@
 /**
- * Passivas Metin de arma e armadura.
+ * Atributos de item (arma e armadura).
  *
  * Armadura (4 slots, todos liberados desde a forja):
  *   1 attr (1–5) · 2 life_marks (1–5) · 3 ruptura_uses (1–5) · 4 roll_bonus (1–3)
  *
- * Arma (3 slots Metin + skill custom no 4º):
+ * Arma (3 atributos + skill custom no 4º):
  *   1 attr (1–5) · 2 ruptura_uses (1–5) · 3 roll_bonus (1–3)
  *
  * Rolar → ver → manter ou rolar de novo (sem custo).
@@ -82,7 +82,7 @@ export function getPassiveSlotsForCategory(category) {
   return GEAR_PASSIVE_SLOTS[category] || []
 }
 
-/** Rola uma passiva Metin do slot (não grava — a UI decide manter). */
+/** Rola um atributo de item do slot (não grava — a UI decide manter). */
 export function rollPassive(category, slot) {
   const def = getPassiveSlotDef(category, slot)
   if (!def) return null

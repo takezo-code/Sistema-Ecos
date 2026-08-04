@@ -144,8 +144,12 @@ export function ManageNPCs({ embedded = false }) {
     spendPendingAttribute,
     spendPendingSocialAttribute,
     changeSocialAttribute,
-    learnCatalogSkill,
+    addInlineSkill,
+    updateInlineSkill,
     removeSkill,
+    setGearItem,
+    setGearPassives,
+    setWeaponSkill,
     restEcoOverload,
     setEcoOverloadLevel,
     lastOverloadEvents,
@@ -242,8 +246,12 @@ export function ManageNPCs({ embedded = false }) {
             onScaleAttributes={() => scaleMasterAttributesToBudget(current.id)}
             masterError={lastMasterError}
             onSpendPendingAttribute={key => spendPendingAttribute(current.id, key)}
-            onLearnCatalogSkill={showEcoProgression ? templateId => learnCatalogSkill(current.id, templateId, { free: true }) : undefined}
+            onAddInlineSkill={showEcoProgression ? draft => addInlineSkill(current.id, draft) : undefined}
+            onUpdateInlineSkill={showEcoProgression ? (skillId, draft) => updateInlineSkill(current.id, skillId, draft) : undefined}
             onRemoveSkill={showEcoProgression ? skillId => removeSkill(current.id, skillId) : undefined}
+            onForgeGear={(category, data) => setGearItem(current.id, category, data)}
+            onSetGearPassive={(category, passives) => setGearPassives(current.id, category, passives)}
+            onSetWeaponSkill={data => setWeaponSkill(current.id, data)}
             onRestOverload={showEcoProgression ? () => restEcoOverload(current.id) : undefined}
             onSetOverload={showEcoProgression ? level => setEcoOverloadLevel(current.id, level) : undefined}
             lastOverloadEvents={lastOverloadEvents}

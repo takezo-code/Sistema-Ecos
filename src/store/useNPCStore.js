@@ -23,7 +23,7 @@ import {
 } from '../services/progressionService'
 import { unlockRandomSkill } from '../services/skillService'
 import { useEcoSkill, restEcoOverload, masterSetEcoOverload } from '../services/ecoOverloadService'
-import { buildSkillInstanceFromCatalog } from '../services/ecoSkillRuntimeService'
+import { buildSkillInstanceFromCatalog, buildInlineSkillInstance } from '../services/ecoSkillRuntimeService'
 import { catalogSkillAllowedForEntity, getCatalogSkill } from '../services/skillsCatalogService'
 import { enforceProgressionCaps } from '../services/progressionBudget'
 import {
@@ -33,6 +33,8 @@ import {
   healDamageMarks as healDamageMarksEngine,
   DAMAGE_MARK_VALUES,
 } from '../mechanics/combat/damageMarksEngine'
+import { buildGearItem, getGearItem, GEAR_CATEGORIES } from '../mechanics/equipment/characterGear'
+import { upsertPassive } from '../mechanics/equipment/gearPassiveEngine'
 
 const load = () => (storage.get(KEYS.npcs) || []).map(normalizeGameEntity)
 
@@ -305,6 +307,45 @@ export const useNPCStore = create((set, get) => ({
     return { ok: true, skill: instance }
   },
 
+  addInlineSkill(npcId, draft) {
+    const n = get().npcs.find(npc => npc.id === npcId)
+    if (!n) return { ok: false, message: 'NPC não encontrado' }
+    if (!(draft?.name || '').trim()) return { ok: false, message: 'Nome da skill é obrigatório.' }
+    const instance = buildInlineSkillInstance(draft)
+    patchNPC(get, set, npcId, npc => ({
+      ...npc,
+      skills: [...(npc.skills || []), instance],
+    }))
+    return { ok: true, skill: instance }
+  },
+
+  updateInlineSkill(npcId, skillId, draft) {
+    const n = get().npcs.find(npc => npc.id === npcId)
+    if (!n) return { ok: false, message: 'NPC não encontrado' }
+    if (!(draft?.name || '').trim()) return { ok: false, message: 'Nome da skill é obrigatório.' }
+    const existing = (n.skills || []).find(s => s.id === skillId)
+    if (!existing) return { ok: false, message: 'Skill não encontrada.' }
+    const mechanicalEffect = draft.mechanicalEffect || draft.effect || ''
+    const narrativeConsequence = draft.narrativeConsequence || draft.sideEffect || ''
+    patchNPC(get, set, npcId, npc => ({
+      ...npc,
+      skills: (npc.skills || []).map(s => s.id !== skillId ? s : {
+        ...s,
+        name: draft.name.trim(),
+        skillType: draft.skillType || s.skillType,
+        cooldownTurns: Math.max(0, Number(draft.cooldownTurns) || 0),
+        overloadCost: Math.max(0, Number(draft.overloadCost) || 1),
+        description: draft.description || '',
+        mechanicalEffect,
+        narrativeConsequence,
+        effect: mechanicalEffect,
+        sideEffect: narrativeConsequence,
+        fromCatalog: false,
+      }),
+    }))
+    return { ok: true }
+  },
+
   removeSkill(npcId, skillId) {
     patchNPC(get, set, npcId, npc => ({
       ...npc,
@@ -419,5 +460,81 @@ export const useNPCStore = create((set, get) => ({
     })
     persist(npcs)
     set({ npcs })
+  },
+
+  setGearItem(npcId, category, data) {
+    patchNPC(get, set, npcId, n => {
+      const current = getGearItem(n, category)
+      const merged = {
+        ...(current || {}),
+        ...data,
+        passives: data.passives ?? current?.passives ?? [],
+        weaponSkill: data.weaponSkill !== undefined ? data.weaponSkill : current?.weaponSkill,
+      }
+      const item = buildGearItem(category, merged)
+      if (current) {
+        return {
+          ...n,
+          equipped: n.equipped.map(i => i.id === current.id
+            ? {
+                ...i,
+                ...item,
+                id: i.id,
+                passives: item.passives,
+                weaponSkill: item.weaponSkill ?? null,
+              }
+            : i),
+        }
+      }
+      return { ...n, equipped: [...(n.equipped || []), { id: genId(), ...item }] }
+    })
+  },
+
+  setGearPassive(npcId, category, passive) {
+    patchNPC(get, set, npcId, n => {
+      const current = getGearItem(n, category)
+      if (!current || !passive) return n
+      const passives = upsertPassive(current.passives, passive)
+      return {
+        ...n,
+        equipped: n.equipped.map(i => i.id === current.id ? { ...i, passives } : i),
+      }
+    })
+  },
+
+  setGearPassives(npcId, category, rolledList) {
+    patchNPC(get, set, npcId, n => {
+      const current = getGearItem(n, category)
+      if (!current || !Array.isArray(rolledList) || rolledList.length === 0) return n
+      let passives = [...(current.passives || [])]
+      for (const rolled of rolledList) {
+        if (rolled) passives = upsertPassive(passives, rolled)
+      }
+      return {
+        ...n,
+        equipped: n.equipped.map(i => i.id === current.id ? { ...i, passives } : i),
+      }
+    })
+  },
+
+  setWeaponSkill(npcId, weaponSkill) {
+    patchNPC(get, set, npcId, n => {
+      const current = getGearItem(n, GEAR_CATEGORIES.WEAPON)
+      if (!current) return n
+      const skill = weaponSkill && typeof weaponSkill === 'object'
+        ? {
+            name: weaponSkill.name || '',
+            description: weaponSkill.description || '',
+            mechanicalEffect: weaponSkill.mechanicalEffect || '',
+            narrativeConsequence: weaponSkill.narrativeConsequence || '',
+            cooldownTurns: Number(weaponSkill.cooldownTurns) || 2,
+            overloadCost: Number(weaponSkill.overloadCost) || 1,
+          }
+        : null
+      return {
+        ...n,
+        equipped: n.equipped.map(i => i.id === current.id ? { ...i, weaponSkill: skill } : i),
+      }
+    })
   },
 }))

@@ -7,7 +7,7 @@
  *   Pesada→ −3 DES · +3 limiar de marcas
  *
  * Raridade (nível do personagem): +0/+1/+2/+3 marcas de vida.
- * Passiva Metin life_marks: +1–5 marcas de vida.
+ * Atributo de item life_marks: +1–5 marcas de vida.
  */
 import { getArmorType } from '../../constants/equipmentTypes'
 import { getArmorRarityLifeMarks } from './armorProgressionEngine'

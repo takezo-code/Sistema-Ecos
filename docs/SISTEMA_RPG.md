@@ -103,34 +103,30 @@ Usados na aba **Combate** junto com os atributos físicos (CAR, PER, VON, SAB).
 Na interface, ao clicar em um atributo no card de combate:
 
 ```
-Total = d20 + valor efetivo do atributo + bônus de classe + perícia de arma
+Total = dado + valor efetivo do atributo + bônus de classe (+ atributos de item, se houver)
 ```
 
-O **valor efetivo** pode ser menor que o valor na ficha quando há penalidades de estado físico ou sobrecarga de Eco (atributos mentais). O **bônus de classe** e a **perícia de arma** são descritos abaixo.
+O **valor efetivo** pode ser menor que o valor na ficha quando há penalidades de estado físico ou sobrecarga de Eco (atributos mentais). O **bônus de classe** é descrito abaixo.
 
 ### Classes
 
-Cada personagem escolhe uma classe na criação (ou depois, ao editar a ficha). A classe define **2 atributos-chave** — um físico e um de cena — e os **tipos de arma** com perícia.
+Cada personagem escolhe uma classe na criação (ou depois, ao editar a ficha). A classe define **2 atributos-chave** — um físico e um de cena — e os **tipos de arma** sugeridos da classe.
 
-| Classe | Atributos-chave | Armas com perícia |
-|--------|-----------------|-------------------|
+| Classe | Atributos-chave | Armas da classe |
+|--------|-----------------|-----------------|
 | **Atirador** | Destreza · Carisma | Arma à Distância |
-| **Tank** | Vitalidade · Vontade | Escudo Médio · Escudo Grande · Arma de Duas Mãos · Arma de Uma Mão |
-| **Porradeiro** | Força · Vontade | Arma de Duas Mãos · Manoplas |
+| **Tank** | Vitalidade · Vontade | Escudo Médio · Escudo Grande · Arma Pesada · Arma |
+| **Porradeiro** | Força · Vontade | Arma Pesada · Manoplas |
 | **Mágica** | Ruptura · Sabedoria | Orbe · Varinha · Cajado · Livro |
 | **Suporte** | Inteligência · Percepção | Orbe · Varinha · Cajado · Livro (iguais à Mágica) |
 
-Classe é **opcional**: sem classe, o personagem simplesmente não recebe bônus de atributo nem exige perícia de arma.
-
-### Perícia de arma (−3)
-
-Usar uma arma **fora** da perícia da classe aplica **−3** nas rolagens de combate. A arma precisa estar equipada com o tipo definido na ficha.
+Classe é **opcional**: sem classe, o personagem simplesmente não recebe bônus de atributo.
 
 ### Armas (equipamento pessoal)
 
 Não existe catálogo global nem arma de loot. Cada personagem **forja** a sua arma e a sua armadura na criação e usa as mesmas peças pela campanha inteira — o loot das missões é sucata, material e dinheiro.
 
-A arma **não tem raridade**. Tem **3 passivas Metin** (rolar → ver → manter ou rerolar, sem custo) e **1 skill custom** no 4º slot (definida pelo player + mestre):
+A arma **não tem raridade**. Tem **3 atributos de item** (rolar → ver → manter ou rerolar, sem custo) e **1 skill custom** no 4º slot (definida pelo player + mestre):
 
 | Slot | Efeito | Roll |
 |------|--------|------|
@@ -139,9 +135,9 @@ A arma **não tem raridade**. Tem **3 passivas Metin** (rolar → ver → manter
 | 3 | Bônus em **uma rolagem específica** | 1–3 + qual atributo |
 | 4 | **Skill da arma** | texto/efeito custom (não rola) |
 
-**Tipos de arma:** Arma à Distância (2 mãos) · Orbe (1) · Varinha (1) · Cajado (2) · Livro (1) · Escudo Médio (1) · Escudo Grande (2) · Arma de Duas Mãos (2) · Arma de Uma Mão (1) · Manoplas (1). Na forja, a lista fica restrita aos tipos com perícia da classe.
+**Tipos de arma:** Arma à Distância · Orbe · Varinha · Cajado · Livro · Escudo Médio · Escudo Grande · Arma Pesada · Arma · Manoplas. Na forja, a lista fica restrita aos tipos da classe.
 
-**Onde gerenciar:** Em jogo → Ficha → botão **Equipamento** (paper-doll com arma e armadura; passivas Metin e skill da arma).
+**Onde gerenciar:** Em jogo → Ficha → botão **Equipamento** (paper-doll com arma e armadura; atributos de item e skill da arma).
 
 ### Armaduras
 
@@ -151,7 +147,7 @@ A arma **não tem raridade**. Tem **3 passivas Metin** (rolar → ver → manter
 | **Média** | −2 Destreza | +2 |
 | **Pesada** | −3 Destreza | +3 |
 
-A armadura tem **4 passivas Metin** (todas liberadas desde a forja):
+A armadura tem **4 atributos de item** (todas liberadas desde a forja):
 
 | Slot | Efeito | Roll |
 |------|--------|------|
@@ -160,7 +156,7 @@ A armadura tem **4 passivas Metin** (todas liberadas desde a forja):
 | 3 | **+usos de poder de Ruptura** | 1–5 |
 | 4 | Bônus em **uma rolagem específica** | 1–3 + qual atributo |
 
-**Raridade** da armadura acompanha o nível do personagem. Cada degrau acima de comum concede **+1 marca de vida** permanente (cumulativo), somado ao bônus do tipo e à passiva 2:
+**Raridade** da armadura acompanha o nível do personagem. Cada degrau acima de comum concede **+1 marca de vida** permanente (cumulativo), somado ao bônus do tipo e ao atributo 2:
 
 | Nível | Raridade | Marcas (raridade) |
 |-------|----------|-------------------|
@@ -169,9 +165,9 @@ A armadura tem **4 passivas Metin** (todas liberadas desde a forja):
 | 11–15 | Raro | +2 |
 | 16–20 | Lendário | +3 |
 
-O limiar total de marcas = tipo + raridade + passiva Metin de marcas. A −DES vale só no valor efetivo das rolagens. A armadura forjada na criação já entra ativa; dá para reforjá-la e rerolar passivas no botão Equipamento da ficha.
+O limiar total de marcas = tipo + raridade + atributo de item de marcas. A −DES vale só no valor efetivo das rolagens. A armadura forjada na criação já entra ativa; dá para reforjá-la e rerolar atributos no botão Equipamento da ficha.
 
-**Usos de Ruptura (gear):** soma das passivas da arma (slot 2) e da armadura (slot 3). Ao ativar uma skill de Eco, um uso bônus é consumido antes da sobrecarga normal. Descansar zera os usos gastos.
+**Usos de Ruptura (gear):** soma dos atributos da arma (slot 2) e da armadura (slot 3). Ao ativar uma skill de Eco, um uso bônus é consumido antes da sobrecarga normal. Descansar zera os usos gastos.
 
 ### Bônus de classe na rolagem
 
@@ -179,17 +175,18 @@ Os atributos-chave da classe rendem pontos **extras** na rolagem conforme o quan
 
 | Pontos no atributo | Bônus na rolagem |
 |--------------------|------------------|
-| 0–4 | — |
-| 5–9 | **+1** |
-| 10+ | **+2** |
+| 0–2 | — |
+| 3–5 | **+1** |
+| 6–8 | **+2** |
+| 9+ | **+3** |
 
-**Exemplo:** Porradeiro com Força 5 rola d20 e tira 12 → `12 (dado) + 5 (Força) + 1 (classe) = 18`. Ao chegar em Força 10, o bônus vira +2.
+**Exemplo:** Atirador com Destreza 6 rola d20 e tira 12 → `12 (dado) + 6 (Destreza) + 2 (classe) = 20`. Ao chegar em Destreza 9, o bônus vira +3.
 
 O bônus só vale para os 2 atributos da classe — os demais rolam normalmente.
 
-**Importante:** o degrau usa os pontos **base** do atributo. Ficar Ferido reduz o valor efetivo nas rolagens, mas não derruba o bônus de classe já conquistado. No exemplo acima, um Porradeiro Ferido rola `12 + 4 (Força efetiva) + 1 (classe) = 17`.
+**Importante:** o degrau usa os pontos **base** do atributo. Ficar Ferido reduz o valor efetivo nas rolagens, mas não derruba o bônus de classe já conquistado. No exemplo acima, um Atirador Ferido (DES efetiva 5) rola `12 + 5 + 2 (classe) = 19`.
 
-**Tetos por atributo:** os físicos (incluindo Ruptura) vão até 10 e alcançam **+2**. Os atributos de cena vão até 8, então chegam no máximo a **+1**.
+**Tetos por atributo:** os físicos (incluindo Ruptura) vão até 10 e alcançam **+3**. Os atributos de cena vão até 8, então chegam no máximo a **+2**.
 
 ---
 
@@ -265,17 +262,30 @@ Documentação técnica adicional: `docs/ECO_OVERLOAD.md`, `docs/ECO_SKILLS.md`.
 
 ## 6. Rolagem e resultados
 
-Ao rolar **d20 + atributo + bônus de classe** (clique no atributo no card), o app classifica o resultado:
+Ao rolar **d20 ou d8 + atributo + bônus**, o mestre define uma **CD** (classe de dificuldade). O app compara o total com a CD:
 
 | Condição | Resultado | Orientação narrativa |
 |----------|-----------|----------------------|
-| Natural **1** no d20 | **Falha crítica** | Erro grave, vulnerabilidade, consequência forte. |
-| Total **≤ 9** | **Falha** | Ação não funciona como esperado. |
-| Total **10–17** | **Sucesso parcial** | Funciona com pequena consequência. |
-| Total **≥ 18** e d20 ≠ 20 | **Sucesso** | Ação clara e eficaz. |
-| Natural **20** no d20 | **Sucesso crítico** | Resultado excepcional; grande vantagem narrativa. |
+| Natural **1** | **Falha crítica** | Erro grave, vulnerabilidade, consequência forte. |
+| Total **< CD − 3** | **Falha** | Não alcançou a dificuldade. |
+| Total **CD − 3 … CD − 1** | **Sucesso parcial** | Quase passou — custo ou complicação. |
+| Total **≥ CD** (sem face máxima) | **Sucesso** | Passou a CD. |
+| Face máxima (**20** / **8**) **e** total ≥ CD | **Sucesso crítico** | Passou com face máxima. |
 
-> **Nota:** Aplicar marcas de dano após a rolagem é **manual** pelo mestre (botões de marcas), salvo ajustes futuros. A rolagem informa o *quão bem* a ação foi; as marcas registram o *dano concretizado*.
+### Tabela de CD (como pedir na mesa)
+
+| Nível | O que dizer | CD d20 | CD d8 | Quando usar |
+|-------|-------------|--------|-------|-------------|
+| Trivial | “precisa 5” | 5 | 3 | Quase automático; só rola se falhar for engraçado |
+| Fácil | “precisa 10” | 10 | 4 | Situação favorável, pouco risco |
+| **Médio** | **“precisa 15”** | **15** | **6** | Padrão da mesa |
+| Difícil | “precisa 20” | 20 | 8 | Pressão, inimigo forte, terreno ruim |
+| Muito difícil | “precisa 25” | 25 | 10 | Heroico, pouco provável |
+| Extremo | “precisa 30” | 30 | 12 | Quase impossível sem bônus alto |
+
+**Como escolher o número:** pense “quão difícil é isso **sem** o atributo do personagem?”. Personagem com SAB 7 em CD 15 precisa tirar **8+** no d20 (`8+7=15`). Em CD 6 no d8 com SAB 7, precisa tirar **1+** — por isso o d8 em desafio médio favorece quem é bom no atributo.
+
+> **Nota:** No combate, use os botões de CD no topo (Trivial → Extremo). O valor certo é aplicado conforme o dado do card (d20 ou d8). Aplicar marcas após a rolagem continua **manual**, salvo ataque automático do boss.
 
 ---
 
@@ -460,14 +470,14 @@ Dados salvos em `combat_session` — grupo, notas, inimigo ativo no combate.
 
 ```
 Atirador    → Destreza · Carisma          · arma à distância
-Tank        → Vitalidade · Vontade        · escudo médio/grande / duas mãos / uma mão
-Porradeiro  → Força · Vontade             · duas mãos / manoplas
+Tank        → Vitalidade · Vontade        · escudo médio/grande / arma pesada / arma
+Porradeiro  → Força · Vontade             · arma pesada / manoplas
 Mágica      → Ruptura · Sabedoria         · orbe / varinha / cajado / livro
 Suporte     → Inteligência · Percepção    · iguais à Mágica
 
-5 pontos no atributo da classe  → +1 na rolagem
-10 pontos no atributo da classe → +2 na rolagem
-Arma fora da perícia            → −3 na rolagem (combate)
+3 pontos no atributo da classe  → +1 na rolagem
+6 pontos no atributo da classe  → +2 na rolagem
+9 pontos no atributo da classe  → +3 na rolagem
 ```
 
 ### Contatos no código (desenvolvedores)
@@ -479,9 +489,9 @@ Arma fora da perícia            → −3 na rolagem (combate)
 | Classes | `src/constants/classes.js` |
 | Bônus de classe | `src/mechanics/classes/classBonusEngine.js` |
 | Tipos de arma | `src/constants/equipmentTypes.js` |
-| Perícia de arma | `src/mechanics/equipment/weaponProficiencyEngine.js` |
+| Armas sugeridas da classe | `src/mechanics/equipment/weaponProficiencyEngine.js` |
 | Equipamento pessoal | `src/mechanics/equipment/characterGear.js` |
-| Passivas Metin | `src/mechanics/equipment/gearPassiveEngine.js` |
+| Atributos de item | `src/mechanics/equipment/gearPassiveEngine.js` |
 | Raridade da armadura | `src/mechanics/equipment/armorProgressionEngine.js` |
 | Skill da arma | `src/mechanics/equipment/weaponProgressionEngine.js` · `src/services/ecoSkillRuntimeService.js` |
 | Skills de classe (3) | `src/data/classSkillsCatalog.js` |

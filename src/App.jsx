@@ -51,13 +51,8 @@ function migrateUiState(savedUi) {
     page = 'management'
     managementView = MANAGEMENT_VIEWS.CHARACTERS
   } else if (page === 'skills') {
-    if (savedUi.skillsView === 'creation') {
-      page = 'creation'
-      managementView = MANAGEMENT_VIEWS.SKILLS_NPC
-    } else {
-      page = 'management'
-      managementView = skillAudienceToManagementView(savedUi.skillsView)
-    }
+    page = 'management'
+    managementView = skillAudienceToManagementView(savedUi.skillsView)
   }
 
   if (managementView === 'creation') {
@@ -65,11 +60,18 @@ function migrateUiState(savedUi) {
     managementView = MANAGEMENT_VIEWS.CHARACTERS
   }
 
-  // Audiences antigas gravadas como managementView
-  if (managementView === 'character' || managementView === MANAGEMENT_VIEWS.SKILLS_CHARACTER) {
-    managementView = MANAGEMENT_VIEWS.SKILLS_NPC
+  // Audiences / catálogos antigos gravados como managementView
+  if (
+    managementView === 'character'
+    || managementView === MANAGEMENT_VIEWS.SKILLS_CHARACTER
+    || managementView === MANAGEMENT_VIEWS.SKILLS_NPC
+    || managementView === 'npc'
+  ) {
+    managementView = MANAGEMENT_VIEWS.NPCS
   }
-  if (managementView === 'npc') managementView = MANAGEMENT_VIEWS.SKILLS_NPC
+  if (managementView === MANAGEMENT_VIEWS.SKILLS_BOSS) {
+    managementView = MANAGEMENT_VIEWS.BOSS
+  }
 
   return { page, managementView, campanhaView, emjogoView }
 }
