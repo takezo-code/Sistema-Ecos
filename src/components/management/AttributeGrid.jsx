@@ -17,10 +17,11 @@ import { getAttributesForEntity } from '../../constants/entityProgression'
 import {
   calculateEffectiveAttributes,
   calculateEffectiveSocialAttributes,
-  formatPhysicalPenalty,
+  getPhysicalPenaltyLines,
   formatMentalPenaltiesSummary,
 } from '../../services/stateModifiers'
 import { getArmorDestrezaPenalty } from '../../mechanics/equipment/armorEffectsEngine'
+import { sumAttrBonus } from '../../mechanics/equipment/gearPassiveEngine'
 import { getProgressionSnapshot, validateProgression, getSocialBudget } from '../../services/progressionBudget'
 import { getSocialPointsFromLevel } from '../../constants/progression'
 
@@ -113,12 +114,18 @@ export function AttributeGrid({
     destrezaPenalty: getArmorDestrezaPenalty(entity),
     ruptura: entity.attributes?.ruptura,
   })
+  for (const key of Object.keys(effectiveAttrs)) {
+    effectiveAttrs[key] = (Number(effectiveAttrs[key]) || 0) + sumAttrBonus(entity, key)
+  }
   const { effective: effectiveSocial } = calculateEffectiveSocialAttributes(entity.socialAttributes || {}, {
     ecoOverload,
     mentalState,
     ruptura: entity.attributes?.ruptura,
   })
-  const physicalPenalty = formatPhysicalPenalty(physicalState)
+  for (const key of Object.keys(effectiveSocial)) {
+    effectiveSocial[key] = (Number(effectiveSocial[key]) || 0) + sumAttrBonus(entity, key)
+  }
+  const physicalPenaltyLines = getPhysicalPenaltyLines(physicalState)
   const mentalPenalties = formatMentalPenaltiesSummary({
     ecoOverload,
     mentalState,
@@ -199,27 +206,34 @@ export function AttributeGrid({
             <span style={{ marginLeft: '0.5rem', color: '#d97706', fontSize: '0.6rem' }}>· MODO MESTRE</span>
           )}
         </div>
-        <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', textAlign: 'right' }}>
+        <div style={{
+          fontSize: '0.65rem',
+          fontFamily: 'monospace',
+          textAlign: 'right',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+        }}>
           {isCreation ? (
-            <>
+            <span>
               <span style={{ color: pool > 0 ? '#eab308' : '#16a34a' }}>{pool}</span>
               <span style={{ color: '#444' }}> disponíveis</span>
-            </>
+            </span>
           ) : adminMode && snapshot ? (
             <>
               <span style={{ color: spent > snapshot.budget ? '#dc2626' : '#888' }}>
                 {spent}/{snapshot.budget} usados
               </span>
-              {pending > 0 && <span style={{ color: '#d97706' }}> · {pending} pend.</span>}
+              {pending > 0 && <span style={{ color: '#d97706' }}>{pending} pend.</span>}
             </>
           ) : (
             <>
-              {physicalPenalty && <span style={{ color: '#ea580c' }}>{physicalPenalty}</span>}
-              {mentalPenalties.mentalAttrLine && (
-                <span style={{ color: '#06b6d4' }}>
-                  {physicalPenalty ? ' · ' : ''}{mentalPenalties.mentalAttrLine}
-                </span>
-              )}
+              {physicalPenaltyLines.map(line => (
+                <span key={line} style={{ color: '#ea580c' }}>{line}</span>
+              ))}
+              {mentalPenalties.lines.map(line => (
+                <span key={line} style={{ color: '#06b6d4' }}>{line}</span>
+              ))}
             </>
           )}
         </div>

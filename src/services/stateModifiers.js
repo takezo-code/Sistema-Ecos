@@ -1,5 +1,7 @@
 import {
   PHYSICAL_AFFECTED_KEYS,
+  PHYSICAL_PENALTY_LABELS,
+  buildPenaltyLines,
   getPhysicalStateOption,
   getMentalStateOption,
   normalizePhysicalState,
@@ -14,6 +16,7 @@ import {
   formatMentalPenaltiesSummary,
   formatSkillPowerPenalty,
   formatMentalAttrPenalty,
+  getMentalAttrPenaltyLines,
 } from '../mechanics/ecoOverload/overloadPenalties'
 import { getArmorDestrezaPenalty } from '../mechanics/equipment/armorEffectsEngine'
 import { sumAttrBonus } from '../mechanics/equipment/gearPassiveEngine'
@@ -136,9 +139,14 @@ export function getEffectiveAttributeValue(attributes, attrKey, physicalState, e
   return effective[attrKey] ?? 0
 }
 
+/** Uma linha por atributo: `−1 Força`, `−1 Destreza`… */
+export function getPhysicalPenaltyLines(physicalState) {
+  return buildPenaltyLines(getPhysicalAttrPenalty(physicalState), PHYSICAL_PENALTY_LABELS)
+}
+
 export function formatPhysicalPenalty(physicalState) {
-  const n = getPhysicalAttrPenalty(physicalState)
-  return n > 0 ? `−${n} FOR · DES · VIT` : null
+  const lines = getPhysicalPenaltyLines(physicalState)
+  return lines.length > 0 ? lines.join('\n') : null
 }
 
 export function formatMentalPenalty() {
@@ -154,6 +162,7 @@ export {
   formatMentalPenaltiesSummary,
   formatSkillPowerPenalty,
   formatMentalAttrPenalty,
+  getMentalAttrPenaltyLines,
   resolveMentalPenalties,
 }
 

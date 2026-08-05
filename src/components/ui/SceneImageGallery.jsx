@@ -121,10 +121,6 @@ export function SceneImageGalleryEditor({
         style={{ display: 'none' }}
       />
 
-      <p style={{ fontSize: '0.65rem', color: '#444', lineHeight: 1.45, margin: '0 0 0.65rem' }}>
-        Mapas, locais, clima, referências de atmosfera · JPG/PNG/WebP/GIF · até 5 MB · comprimido automaticamente
-      </p>
-
       {showUrl && (
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.65rem', flexWrap: 'wrap' }}>
           <Input
@@ -222,9 +218,6 @@ export function SceneImageGalleryView({ images = [], title = 'Ambiente' }) {
   return (
     <>
       <div style={{ marginTop: '0.65rem', marginBottom: '0.35rem' }}>
-        <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.4rem' }}>
-          {title.toUpperCase()} · {list.length}
-        </div>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',

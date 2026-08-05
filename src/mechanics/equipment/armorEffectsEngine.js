@@ -10,16 +10,14 @@
  * Atributo de item life_marks: +1–5 marcas de vida.
  */
 import { getArmorType } from '../../constants/equipmentTypes'
+import { getCharacterArmor } from './characterGear'
 import { getArmorRarityLifeMarks } from './armorProgressionEngine'
 import { sumLifeMarksBonus } from './gearPassiveEngine'
 
-/** Itens equipados reconhecidos como armadura. */
+/** Armadura ativa — mesma resolução da ficha / card de combate. */
 export function getEquippedArmor(entity = {}) {
-  return (entity.equipped || []).filter(item => {
-    if (item.category === 'arma') return false
-    if (item.category === 'armadura') return true
-    return !!getArmorType(item.type)
-  })
+  const armor = getCharacterArmor(entity)
+  return armor ? [armor] : []
 }
 
 /**

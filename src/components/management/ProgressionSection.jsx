@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import { Input } from '../ui/Field'
 import { MAX_LEVEL } from '../../constants/progression'
-import { getXpProgress } from '../../services/progressionService'
 import { getProgressionSnapshot, validateProgression } from '../../services/progressionBudget'
 import { entityHasEcoPowers, isNpcEntity } from '../../constants/entityProgression'
 import { isInCreationPhase, STARTING_ATTRIBUTE_POINTS } from '../../constants/attributes'
@@ -52,7 +51,6 @@ export function ProgressionSection({
   }, [entity.id, entity.level, entity.ecoPoints, entity.unspentAttributePoints])
 
   const level = entity.level ?? 1
-  const progress = getXpProgress(entity)
   const atMax = level >= MAX_LEVEL
   const snapshot = getProgressionSnapshot(entity)
   const validation = adminMode ? validateProgression(entity) : null
@@ -109,23 +107,6 @@ export function ProgressionSection({
             {level}
             <span style={{ fontSize: '0.65rem', color: '#444', fontWeight: 400 }}> / {MAX_LEVEL}</span>
           </div>
-        </div>
-
-        <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '4px', padding: '0.75rem 1rem', flex: 1, minWidth: '200px' }}>
-          <div style={{ fontSize: '0.6rem', color: '#d97706', fontFamily: 'monospace', marginBottom: '4px' }}>XP (PRÓXIMO NÍVEL)</div>
-          {atMax ? (
-            <div style={{ fontSize: '0.8rem', color: '#d97706', fontStyle: 'italic' }}>Nível máximo atingido</div>
-          ) : (
-            <>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e5e5e5', marginBottom: '6px' }}>
-                {progress.current}
-                <span style={{ fontSize: '0.75rem', color: '#444', fontWeight: 400 }}> / {progress.needed}</span>
-              </div>
-              <div style={{ height: '4px', background: '#1a1a1a', borderRadius: '2px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${progress.percent}%`, background: '#d97706', transition: 'width 0.3s' }} />
-              </div>
-            </>
-          )}
         </div>
 
         {hasEco && (

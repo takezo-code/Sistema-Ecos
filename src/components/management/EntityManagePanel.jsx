@@ -178,6 +178,7 @@ export function EntityManagePanel({
           onForge={onForgeGear}
           onSetPassive={onSetGearPassive}
           onSetWeaponSkill={onSetWeaponSkill}
+          manualValues={isNpcEntity(entity)}
         />
       </Modal>
     </div>

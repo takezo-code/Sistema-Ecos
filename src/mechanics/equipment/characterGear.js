@@ -30,15 +30,57 @@ export const GEAR_SLOTS = [
 function isArmorEntry(item) {
   if (!item) return false
   if (item.category === GEAR_CATEGORIES.ARMOR) return true
+  if (item.category === GEAR_CATEGORIES.WEAPON) return false
   return !!getArmorType(item.type) && !getWeaponType(item.type)
 }
 
+/**
+ * Garante category/name/passives em cada peça.
+ * Não remove itens extras — a resolução de slot prefere category explícita.
+ * Evita importar getArmorType aqui (ciclo attributes ↔ classes ↔ equipmentTypes).
+ */
+export function normalizeEquippedGear(equipped = []) {
+  if (!Array.isArray(equipped)) return []
+  const ARMOR_TYPES_IDS = new Set(['leve', 'media', 'pesada'])
+  return equipped
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null
+      let category = item.category
+      if (category !== GEAR_CATEGORIES.WEAPON && category !== GEAR_CATEGORIES.ARMOR) {
+        if (
+          item.slot === 'armadura'
+          || ARMOR_TYPES_IDS.has(item.type)
+        ) {
+          category = GEAR_CATEGORIES.ARMOR
+        } else {
+          category = GEAR_CATEGORIES.WEAPON
+        }
+      }
+      const name = (item.name || '').trim()
+        || (category === GEAR_CATEGORIES.ARMOR ? 'Armadura' : 'Arma')
+      return {
+        ...item,
+        id: item.id || genId(),
+        category,
+        name,
+        passives: Array.isArray(item.passives) ? item.passives : [],
+      }
+    })
+    .filter(Boolean)
+}
+
 export function getCharacterWeapon(entity = {}) {
-  return (entity.equipped || []).find(i => !isArmorEntry(i)) ?? null
+  const list = entity.equipped || []
+  return list.find(i => i?.category === GEAR_CATEGORIES.WEAPON)
+    ?? list.find(i => i && !isArmorEntry(i))
+    ?? null
 }
 
 export function getCharacterArmor(entity = {}) {
-  return (entity.equipped || []).find(isArmorEntry) ?? null
+  const list = entity.equipped || []
+  return list.find(i => i?.category === GEAR_CATEGORIES.ARMOR)
+    ?? list.find(isArmorEntry)
+    ?? null
 }
 
 export function getGearItem(entity, category) {

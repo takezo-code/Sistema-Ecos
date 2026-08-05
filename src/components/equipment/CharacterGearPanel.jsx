@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Dices, Plus, Shirt, Sword, User } from 'lucide-react'
 import { Modal } from '../ui/Modal'
-import { Field, Input, Textarea } from '../ui/Field'
+import { Field, Input, Select, Textarea } from '../ui/Field'
 import { GearForgeForm } from './GearForgeForm'
 import {
   GEAR_CATEGORIES,
@@ -15,6 +15,7 @@ import {
   getPassiveSlotsForCategory,
   getRupturaUsesMax,
   getRupturaUsesRemaining,
+  PASSIVE_KINDS,
   rollPassive,
 } from '../../mechanics/equipment/gearPassiveEngine'
 import {
@@ -22,6 +23,7 @@ import {
 } from '../../mechanics/equipment/armorProgressionEngine'
 import { getWeaponSkill } from '../../mechanics/equipment/weaponProgressionEngine'
 import { getArmorType } from '../../constants/equipmentTypes'
+import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
 
 const ACCENT = '#a855f7'
 
@@ -167,6 +169,126 @@ function ItemAttributesRow({ category, item, color, onKeepAll }) {
   )
 }
 
+const ATTRIBUTE_OPTIONS = [...ATTRIBUTES, ...SOCIAL_ATTRIBUTES]
+
+function ManualItemAttributesRow({ category, item, color, onSave }) {
+  const slots = getPassiveSlotsForCategory(category)
+  const aligned = getItemPassivesAligned(category, item)
+  const [drafts, setDrafts] = useState(null)
+
+  const editing = drafts != null
+
+  const openEditor = () => {
+    setDrafts(slots.map((def, index) => ({
+      slot: def.slot,
+      kind: def.kind,
+      attrKey: aligned[index]?.attrKey || ATTRIBUTE_OPTIONS[0].key,
+      value: aligned[index]?.value ?? 0,
+    })))
+  }
+
+  const setDraft = (index, patch) => {
+    setDrafts(current => current.map((draft, i) => i === index ? { ...draft, ...patch } : draft))
+  }
+
+  const handleSave = () => {
+    onSave?.(drafts
+      .map(draft => ({ ...draft, value: Number(draft.value) || 0 }))
+      .filter(draft => draft.value !== 0))
+    setDrafts(null)
+  }
+
+  if (!editing) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+        {slots.map((def, index) => {
+          const kept = aligned[index]
+          return (
+            <div
+              key={def.slot}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.4rem 0.5rem',
+                border: `1px solid ${kept ? `${color}44` : '#1e1e1e'}`,
+                borderRadius: '3px',
+                background: '#0a0a0a',
+              }}
+            >
+              <div style={{ fontSize: '0.7rem', color: kept ? '#ccc' : '#333', fontFamily: 'monospace' }}>
+                {kept ? formatPassive(kept) : 'sem valor'}
+              </div>
+            </div>
+          )
+        })}
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={openEditor}
+          style={{ alignSelf: 'flex-end', fontSize: '0.65rem', padding: '4px 10px' }}
+        >
+          Editar valores
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+      {slots.map((def, index) => {
+        const draft = drafts[index]
+        const needsAttribute = def.kind === PASSIVE_KINDS.ATTR || def.kind === PASSIVE_KINDS.ROLL_BONUS
+        return (
+          <div
+            key={def.slot}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 90px',
+              gap: '0.4rem',
+              alignItems: 'end',
+              padding: '0.5rem',
+              border: `1px solid ${color}33`,
+              borderRadius: '3px',
+              background: '#0a0a0a',
+            }}
+          >
+            {needsAttribute ? (
+              <Field label={def.label}>
+                <Select
+                  value={draft.attrKey}
+                  onChange={event => setDraft(index, { attrKey: event.target.value })}
+                >
+                  {ATTRIBUTE_OPTIONS.map(attribute => (
+                    <option key={attribute.key} value={attribute.key}>{attribute.label}</option>
+                  ))}
+                </Select>
+              </Field>
+            ) : (
+              <div style={{ fontSize: '0.7rem', color: '#888', paddingBottom: '0.55rem' }}>{def.label}</div>
+            )}
+            <Field label="Valor">
+              <Input
+                type="number"
+                value={draft.value}
+                onChange={event => setDraft(index, { value: event.target.value })}
+              />
+            </Field>
+          </div>
+        )
+      })}
+      <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
+        <button type="button" className="btn-ghost" onClick={() => setDrafts(null)} style={{ fontSize: '0.7rem' }}>
+          Cancelar
+        </button>
+        <button type="button" className="btn-primary" onClick={handleSave} style={{ fontSize: '0.7rem' }}>
+          Salvar valores
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function WeaponSkillEditor({ skill, onSave }) {
   const [form, setForm] = useState({
     name: skill?.name ?? '',
@@ -214,7 +336,7 @@ function WeaponSkillEditor({ skill, onSave }) {
   )
 }
 
-function WeaponDetails({ character, weapon, onSetPassive, onSetWeaponSkill }) {
+function WeaponDetails({ character, weapon, onSetPassive, onSetWeaponSkill, manualValues = false }) {
   const kindLabel = getWeaponKindLabel(weapon)
   const weaponSkill = getWeaponSkill(weapon)
   const [editingSkill, setEditingSkill] = useState(false)
@@ -233,12 +355,21 @@ function WeaponDetails({ character, weapon, onSetPassive, onSetWeaponSkill }) {
       )}
 
       <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#444' }}>ATRIBUTOS DE ITEM</div>
-      <ItemAttributesRow
-        category={GEAR_CATEGORIES.WEAPON}
-        item={weapon}
-        color="#f97316"
-        onKeepAll={list => onSetPassive?.(GEAR_CATEGORIES.WEAPON, list)}
-      />
+      {manualValues ? (
+        <ManualItemAttributesRow
+          category={GEAR_CATEGORIES.WEAPON}
+          item={weapon}
+          color="#f97316"
+          onSave={list => onSetPassive?.(GEAR_CATEGORIES.WEAPON, list)}
+        />
+      ) : (
+        <ItemAttributesRow
+          category={GEAR_CATEGORIES.WEAPON}
+          item={weapon}
+          color="#f97316"
+          onKeepAll={list => onSetPassive?.(GEAR_CATEGORIES.WEAPON, list)}
+        />
+      )}
 
       <div style={{
         marginTop: '0.25rem',
@@ -282,7 +413,7 @@ function WeaponDetails({ character, weapon, onSetPassive, onSetWeaponSkill }) {
   )
 }
 
-function ArmorDetails({ character, armor, onSetPassive }) {
+function ArmorDetails({ character, armor, onSetPassive, manualValues = false }) {
   const typeMeta = getArmorType(armor.type)
   const tier = getArmorTier(character)
 
@@ -302,12 +433,21 @@ function ArmorDetails({ character, armor, onSetPassive }) {
       )}
 
       <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#444' }}>ATRIBUTOS DE ITEM</div>
-      <ItemAttributesRow
-        category={GEAR_CATEGORIES.ARMOR}
-        item={armor}
-        color="#16a34a"
-        onKeepAll={list => onSetPassive?.(GEAR_CATEGORIES.ARMOR, list)}
-      />
+      {manualValues ? (
+        <ManualItemAttributesRow
+          category={GEAR_CATEGORIES.ARMOR}
+          item={armor}
+          color="#16a34a"
+          onSave={list => onSetPassive?.(GEAR_CATEGORIES.ARMOR, list)}
+        />
+      ) : (
+        <ItemAttributesRow
+          category={GEAR_CATEGORIES.ARMOR}
+          item={armor}
+          color="#16a34a"
+          onKeepAll={list => onSetPassive?.(GEAR_CATEGORIES.ARMOR, list)}
+        />
+      )}
 
       {armor.description && (
         <p style={{ fontSize: '0.65rem', color: '#666', lineHeight: 1.5, margin: 0 }}>{armor.description}</p>
@@ -319,7 +459,7 @@ function ArmorDetails({ character, armor, onSetPassive }) {
 /**
  * Equipamento pessoal: arma (3 atributos de item + skill) e armadura (4 atributos + raridade).
  */
-export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeaponSkill }) {
+export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeaponSkill, manualValues = false }) {
   const [forging, setForging] = useState(null)
 
   if (!character) return null
@@ -418,6 +558,7 @@ export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeap
               weapon={weapon}
               onSetPassive={onSetPassive}
               onSetWeaponSkill={onSetWeaponSkill}
+              manualValues={manualValues}
             />
           ) : (
             <button
@@ -438,7 +579,7 @@ export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeap
           padding: '0.65rem 0.75rem',
         }}>
           {armor ? (
-            <ArmorDetails character={character} armor={armor} onSetPassive={onSetPassive} />
+            <ArmorDetails character={character} armor={armor} onSetPassive={onSetPassive} manualValues={manualValues} />
           ) : (
             <button
               type="button"

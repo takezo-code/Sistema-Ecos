@@ -33,10 +33,15 @@ import {
   healDamageMarks as healDamageMarksEngine,
   DAMAGE_MARK_VALUES,
 } from '../mechanics/combat/damageMarksEngine'
-import { buildGearItem, getGearItem, GEAR_CATEGORIES } from '../mechanics/equipment/characterGear'
+import { buildGearItem, getGearItem, GEAR_CATEGORIES, normalizeEquippedGear } from '../mechanics/equipment/characterGear'
 import { upsertPassive } from '../mechanics/equipment/gearPassiveEngine'
 
-const load = () => (storage.get(KEYS.npcs) || []).map(normalizeGameEntity)
+const withNormalizedGear = (entity) => ({
+  ...entity,
+  equipped: normalizeEquippedGear(entity.equipped),
+})
+
+const load = () => (storage.get(KEYS.npcs) || []).map(c => withNormalizedGear(normalizeGameEntity(c)))
 
 const persist = (npcs) => storage.set(KEYS.npcs, npcs)
 
@@ -44,7 +49,7 @@ const patchNPC = (get, set, id, patcher) => {
   const npcs = get().npcs.map(n => {
     if (n.id !== id) return n
     const next = typeof patcher === 'function' ? patcher(n) : { ...n, ...patcher }
-    const normalized = normalizeGameEntity({ ...next, updatedAt: new Date().toISOString() })
+    const normalized = withNormalizedGear(normalizeGameEntity({ ...next, updatedAt: new Date().toISOString() }))
     const { patch: caps } = enforceProgressionCaps(normalized)
     return caps ? { ...normalized, ...caps } : normalized
   })
@@ -115,7 +120,7 @@ export const useNPCStore = create((set, get) => ({
   },
 
   addNPC(data) {
-    const npc = normalizeGameEntity({
+    const npc = withNormalizedGear(normalizeGameEntity({
       ...data,
       id: genId(),
       campaignId: data.campaignId || null,
@@ -148,7 +153,7 @@ export const useNPCStore = create((set, get) => ({
       backpackCapacity: data.backpackCapacity ?? null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    })
+    }))
     const npcs = [...get().npcs, npc]
     persist(npcs)
     set({ npcs })
@@ -390,11 +395,11 @@ export const useNPCStore = create((set, get) => ({
       if (n.id !== npcId) return n
       const cap = n.backpackCapacity
       if (cap != null && n.inventory.length >= cap) return n
-      return normalizeGameEntity({
+      return withNormalizedGear(normalizeGameEntity({
         ...n,
         inventory: [...n.inventory, { id: genId(), name, qty }],
         updatedAt: new Date().toISOString(),
-      })
+      }))
     })
     persist(npcs)
     set({ npcs })
@@ -403,11 +408,11 @@ export const useNPCStore = create((set, get) => ({
   updateInventoryItem(npcId, itemId, data) {
     const npcs = get().npcs.map(n => {
       if (n.id !== npcId) return n
-      return normalizeGameEntity({
+      return withNormalizedGear(normalizeGameEntity({
         ...n,
         inventory: n.inventory.map(i => i.id === itemId ? { ...i, ...data } : i),
         updatedAt: new Date().toISOString(),
-      })
+      }))
     })
     persist(npcs)
     set({ npcs })
@@ -416,11 +421,11 @@ export const useNPCStore = create((set, get) => ({
   removeInventoryItem(npcId, itemId) {
     const npcs = get().npcs.map(n => {
       if (n.id !== npcId) return n
-      return normalizeGameEntity({
+      return withNormalizedGear(normalizeGameEntity({
         ...n,
         inventory: n.inventory.filter(i => i.id !== itemId),
         updatedAt: new Date().toISOString(),
-      })
+      }))
     })
     persist(npcs)
     set({ npcs })
@@ -432,7 +437,7 @@ export const useNPCStore = create((set, get) => ({
       : item
     const npcs = get().npcs.map(n => {
       if (n.id !== npcId) return n
-      return normalizeGameEntity({
+      return withNormalizedGear(normalizeGameEntity({
         ...n,
         equipped: [...n.equipped, {
           id: genId(),
@@ -443,7 +448,7 @@ export const useNPCStore = create((set, get) => ({
           equipmentId: payload.equipmentId || null,
         }],
         updatedAt: new Date().toISOString(),
-      })
+      }))
     })
     persist(npcs)
     set({ npcs })
@@ -452,11 +457,11 @@ export const useNPCStore = create((set, get) => ({
   removeEquippedItem(npcId, itemId) {
     const npcs = get().npcs.map(n => {
       if (n.id !== npcId) return n
-      return normalizeGameEntity({
+      return withNormalizedGear(normalizeGameEntity({
         ...n,
         equipped: n.equipped.filter(i => i.id !== itemId),
         updatedAt: new Date().toISOString(),
-      })
+      }))
     })
     persist(npcs)
     set({ npcs })
@@ -505,11 +510,8 @@ export const useNPCStore = create((set, get) => ({
   setGearPassives(npcId, category, rolledList) {
     patchNPC(get, set, npcId, n => {
       const current = getGearItem(n, category)
-      if (!current || !Array.isArray(rolledList) || rolledList.length === 0) return n
-      let passives = [...(current.passives || [])]
-      for (const rolled of rolledList) {
-        if (rolled) passives = upsertPassive(passives, rolled)
-      }
+      if (!current || !Array.isArray(rolledList)) return n
+      const passives = rolledList.filter(Boolean)
       return {
         ...n,
         equipped: n.equipped.map(i => i.id === current.id ? { ...i, passives } : i),

@@ -7,7 +7,7 @@ import { MENTAL_STATES, getPhysicalStateOption, getMentalStateOption } from '../
 import { EntityThumb } from '../ui/EntityThumb'
 import { getEffectiveAttributeValue } from '../../services/stateModifiers'
 import { getArmorDestrezaPenalty, getArmorMarkBonus } from '../../mechanics/equipment/armorEffectsEngine'
-import { sumGearRollBonus, getRupturaUsesRemaining, getRupturaUsesMax } from '../../mechanics/equipment/gearPassiveEngine'
+import { sumGearRollBonus, sumAttrBonus, getRupturaUsesRemaining, getRupturaUsesMax } from '../../mechanics/equipment/gearPassiveEngine'
 import { listActiveBuffs, sumMarkBuffBonus, formatBuff } from '../../mechanics/skills/skillBuffEngine'
 import { getCharacterWeapon, getCharacterArmor } from '../../mechanics/equipment/characterGear'
 import { getArmorTier } from '../../mechanics/equipment/armorProgressionEngine'
@@ -251,9 +251,14 @@ export function CombatEnemyCard({
               borderRadius: '4px',
               color: weapon ? '#f97316' : '#333',
               cursor: weapon ? 'pointer' : 'default',
+              overflow: 'hidden',
             }}
           >
-            <Sword size={12} />
+            {weapon?.image ? (
+              <img src={weapon.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <Sword size={12} />
+            )}
           </button>
           <button
             type="button"
@@ -272,9 +277,14 @@ export function CombatEnemyCard({
               borderRadius: '4px',
               color: armor ? armorTier.color : '#333',
               cursor: armor ? 'pointer' : 'default',
+              overflow: 'hidden',
             }}
           >
-            <Shirt size={12} />
+            {armor?.image ? (
+              <img src={armor.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <Shirt size={12} />
+            )}
           </button>
         </div>
       </header>
@@ -366,8 +376,10 @@ export function CombatEnemyCard({
                   destrezaPenalty: armorDexPenalty,
                   safeLimit,
                 })
-                const gearBonus = sumGearRollBonus(enemy, attr.key)
-                const rollBonus = eff + gearBonus
+                const gearAttrBonus = sumAttrBonus(enemy, attr.key)
+                const gearRollExtra = sumGearRollBonus(enemy, attr.key)
+                const displayVal = eff + gearAttrBonus
+                const rollBonus = eff + gearRollExtra
                 const reduced = eff < base
                 const short = attr.key === 'inteligencia' ? 'INT'
                   : attr.key === 'vitalidade' ? 'VIT'
@@ -379,12 +391,12 @@ export function CombatEnemyCard({
                     type="button"
                     onClick={() => onRollAttribute?.(
                       enemy, attr.key, attr.label, rollBonus, diceSides,
-                      { attrBonus: eff, classBonus: 0, weaponPenalty: 0, gearBonus },
+                      { attrBonus: displayVal, classBonus: 0, weaponPenalty: 0, gearBonus: gearRollExtra },
                     )}
                     title={`d${diceSides} + ${attr.label}`}
                     style={{
                       background: '#111',
-                      border: `1px solid ${gearBonus > 0 ? 'rgba(217,119,6,0.3)' : '#1e1e1e'}`,
+                      border: `1px solid ${gearRollExtra > 0 ? 'rgba(217,119,6,0.3)' : '#1e1e1e'}`,
                       borderRadius: '4px',
                       padding: '0.3rem 0.2rem',
                       cursor: 'pointer',
@@ -398,7 +410,7 @@ export function CombatEnemyCard({
                       color: reduced ? '#ea580c' : '#e5e5e5',
                       lineHeight: 1.1,
                     }}>
-                      {eff + gearBonus}
+                      {displayVal}
                     </div>
                   </button>
                 )
@@ -433,20 +445,22 @@ export function CombatEnemyCard({
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.2rem' }}>
               {SOCIAL_ATTRIBUTES.map(attr => {
                 const val = enemy.socialAttributes?.[attr.key] ?? 0
-                const gearBonus = sumGearRollBonus(enemy, attr.key)
-                const rollBonus = val + gearBonus
+                const gearAttrBonus = sumAttrBonus(enemy, attr.key)
+                const gearRollExtra = sumGearRollBonus(enemy, attr.key)
+                const displayVal = val + gearAttrBonus
+                const rollBonus = val + gearRollExtra
                 return (
                   <button
                     key={attr.key}
                     type="button"
                     onClick={() => onRollAttribute?.(
                       enemy, attr.key, attr.label, rollBonus, diceSides,
-                      { attrBonus: val, classBonus: 0, weaponPenalty: 0, gearBonus },
+                      { attrBonus: displayVal, classBonus: 0, weaponPenalty: 0, gearBonus: gearRollExtra },
                     )}
                     title={`d${diceSides} + ${attr.label}`}
                     style={{
                       background: '#111',
-                      border: `1px solid ${gearBonus > 0 ? 'rgba(217,119,6,0.3)' : '#1e1e1e'}`,
+                      border: `1px solid ${gearRollExtra > 0 ? 'rgba(217,119,6,0.3)' : '#1e1e1e'}`,
                       borderRadius: '4px',
                       padding: '0.3rem 0.2rem',
                       cursor: 'pointer',
@@ -457,7 +471,7 @@ export function CombatEnemyCard({
                       {socialAttrShort(attr)}
                     </div>
                     <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#e5e5e5', lineHeight: 1.1 }}>
-                      {val + gearBonus}
+                      {displayVal}
                     </div>
                   </button>
                 )

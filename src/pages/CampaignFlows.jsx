@@ -527,7 +527,6 @@ export function CampaignFlows({ campaign, onBack }) {
       <PageHeader
         icon={GitBranch}
         title={campaign.name}
-        subtitle="FLUXO DA HISTÓRIA · PRESET PARA NARRAÇÃO"
         action={
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <button
@@ -562,9 +561,6 @@ export function CampaignFlows({ campaign, onBack }) {
           />
         ) : (
           <div style={{ maxWidth: '800px' }}>
-            <div style={{ fontSize: '0.65rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '1rem' }}>
-              {flows.length} FLUXOS · {flows.filter(e => e.type === 'historia').length} HISTÓRIA · {flows.filter(e => e.type === 'escolha').length} ESCOLHAS
-            </div>
             {flows.map((flow, idx) =>
               flow.type === 'escolha' ? (
                 <EscolhaFlowCard

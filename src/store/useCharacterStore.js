@@ -39,10 +39,15 @@ import {
   clearDamageMarks as clearDamageMarksEngine,
   healDamageMarks as healDamageMarksEngine,
 } from '../mechanics/combat/damageMarksEngine'
-import { buildGearItem, getGearItem, GEAR_CATEGORIES } from '../mechanics/equipment/characterGear'
+import { buildGearItem, getGearItem, GEAR_CATEGORIES, normalizeEquippedGear } from '../mechanics/equipment/characterGear'
 import { upsertPassive } from '../mechanics/equipment/gearPassiveEngine'
 
-const load = () => (storage.get(KEYS.characters) || []).map(normalizeGameEntity)
+const withNormalizedGear = (entity) => ({
+  ...entity,
+  equipped: normalizeEquippedGear(entity.equipped),
+})
+
+const load = () => (storage.get(KEYS.characters) || []).map(c => withNormalizedGear(normalizeGameEntity(c)))
 
 const persist = (characters) => storage.set(KEYS.characters, characters)
 
@@ -57,7 +62,7 @@ const patchCharacter = (get, set, id, patcher) => {
   const characters = get().characters.map(c => {
     if (c.id !== id) return c
     const next = typeof patcher === 'function' ? patcher(c) : { ...c, ...patcher }
-    const normalized = normalizeGameEntity({ ...next, updatedAt: new Date().toISOString() })
+    const normalized = withNormalizedGear(normalizeGameEntity({ ...next, updatedAt: new Date().toISOString() }))
     const { patch: caps } = enforceProgressionCaps(normalized)
     return caps ? { ...normalized, ...caps } : normalized
   })
@@ -92,7 +97,7 @@ export const useCharacterStore = create((set, get) => ({
     if (!socialCheck.ok) return null
     const ecoCheck = validateStartingEcoSkillSelected(data)
     if (!ecoCheck.ok) return null
-    const character = normalizeGameEntity({
+    const character = withNormalizedGear(normalizeGameEntity({
       ...data,
       id: genId(),
       campaignId: data.campaignId || null,
@@ -121,7 +126,7 @@ export const useCharacterStore = create((set, get) => ({
       backpackCapacity: data.backpackCapacity ?? null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    })
+    }))
     const characters = [...get().characters, character]
     persist(characters)
     set({ characters })
@@ -185,11 +190,11 @@ export const useCharacterStore = create((set, get) => ({
     const characters = get().characters.map(c => {
       if (!idSet.has(c.id)) return c
       recovered++
-      let next = normalizeGameEntity({
+      let next = withNormalizedGear(normalizeGameEntity({
         ...c,
         ...buildRecoverPatch(c),
         updatedAt: new Date().toISOString(),
-      })
+      }))
       const { patch: caps } = enforceProgressionCaps(next)
       if (caps) next = { ...next, ...caps }
       return next

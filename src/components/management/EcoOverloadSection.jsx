@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Activity, RotateCcw, AlertTriangle } from 'lucide-react'
 import { getEcoOverloadSnapshot } from '../../services/ecoOverloadService'
+import { getMentalAttrPenaltyLines } from '../../services/stateModifiers'
 import { ECO_OVERLOAD_PHASES, ECO_OVERLOAD_OVERAGE_TO_TOTAL } from '../../constants/ecoOverload'
 
 const PHASE_LABELS = {
@@ -50,8 +51,10 @@ export function EcoOverloadSection({
       </div>
 
       {snapshot.mentalAttrPenaltyPercent > 0 && (
-        <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', color: '#dc2626' }}>
-          −{snapshot.mentalAttrPenaltyPercent} INT · PER · SAB · CAR
+        <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', color: '#dc2626', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          {getMentalAttrPenaltyLines(snapshot.mentalAttrPenaltyPercent).map(line => (
+            <span key={line}>{line}</span>
+          ))}
         </div>
       )}
 

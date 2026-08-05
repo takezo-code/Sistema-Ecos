@@ -43,16 +43,20 @@ export function StatePicker({ title, icon: Icon, options, value, onChange, iconC
           )
         })}
       </div>
-      {activeOpt?.note && (
-        <p style={{
+      {(activeOpt?.noteLines || []).length > 0 && (
+        <div style={{
           fontSize: '0.65rem',
           color: '#555',
           marginTop: '0.4rem',
           lineHeight: 1.5,
           fontStyle: 'italic',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
-          {activeOpt.note}
-        </p>
+          {activeOpt.noteLines.map(line => (
+            <span key={line}>{line}</span>
+          ))}
+        </div>
       )}
     </div>
   )

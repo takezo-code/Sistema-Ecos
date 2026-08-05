@@ -273,9 +273,9 @@ export function healDamageMarks(entity, amount) {
 // Narrativa
 // ──────────────────────────────────────────────
 const STATE_TRANSITION_NARRATIVE = {
-  'bem→ferido': 'O personagem começa a sentir o peso dos ferimentos (−1 FOR · DES · VIT).',
-  'ferido→grave': 'Os ferimentos se aprofundam (−2 FOR · DES · VIT).',
-  'grave→incapacitado': 'O corpo cede (−3 FOR · DES · VIT). Continuar está além dos limites físicos.',
+  'bem→ferido': 'O personagem começa a sentir o peso dos ferimentos (−1 nos atributos físicos).',
+  'ferido→grave': 'Os ferimentos se aprofundam (−2 nos atributos físicos).',
+  'grave→incapacitado': 'O corpo cede (−3 nos atributos físicos). Continuar está além dos limites físicos.',
 }
 
 const MARK_NARRATIVE = {

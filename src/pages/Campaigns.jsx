@@ -220,7 +220,6 @@ export function Campaigns({ pageTitle = 'História' }) {
       <PageHeader
         icon={BookOpen}
         title={pageTitle}
-        subtitle={`${campaigns.length} CAMPANHAS REGISTRADAS`}
         action={
           <button className="btn-primary" onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}>
             <Plus size={13} /> Nova Campanha

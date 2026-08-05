@@ -10,6 +10,8 @@ import {
 import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
 import {
   PHYSICAL_AFFECTED_KEYS,
+  MENTAL_PENALTY_LABELS,
+  buildPenaltyLines,
   getMentalStateOption,
   getPhysicalStateOption,
   getMentalStateFromEcoOverload,
@@ -212,9 +214,14 @@ export function formatSkillPowerPenalty() {
   return null
 }
 
+/** Uma linha por atributo: `−2 Inteligência`, `−2 Percepção`… */
+export function getMentalAttrPenaltyLines(mentalAttrFlat) {
+  return buildPenaltyLines(mentalAttrFlat, MENTAL_PENALTY_LABELS)
+}
+
 export function formatMentalAttrPenalty(mentalAttrFlat) {
-  const n = Math.max(0, Number(mentalAttrFlat) || 0)
-  return n > 0 ? `−${n} INT · PER · SAB · CAR` : null
+  const lines = getMentalAttrPenaltyLines(mentalAttrFlat)
+  return lines.length > 0 ? lines.join('\n') : null
 }
 
 export function formatMentalPenaltiesSummary({
@@ -225,8 +232,8 @@ export function formatMentalPenaltiesSummary({
 } = {}) {
   const lim = safeLimit != null ? { safeLimit } : { ruptura }
   const { mentalAttrFlat } = resolveMentalPenalties(ecoOverload, mentalState, lim)
-  const mentalAttrLine = formatMentalAttrPenalty(mentalAttrFlat)
-  const lines = [mentalAttrLine].filter(Boolean)
+  const lines = getMentalAttrPenaltyLines(mentalAttrFlat)
+  const mentalAttrLine = lines.length > 0 ? lines.join('\n') : null
 
   return {
     ecoPowerPercent: 0,
@@ -235,7 +242,7 @@ export function formatMentalPenaltiesSummary({
     skillPowerLine: null,
     mentalAttrLine,
     lines,
-    compactLine: lines.join(' · ') || null,
+    compactLine: mentalAttrLine,
     hasPenalties: lines.length > 0,
   }
 }

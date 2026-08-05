@@ -57,7 +57,7 @@ export function processEcoSkillUse(entity, skill, options = {}) {
   }
 
   if (next === safeLimit + 1 && current <= safeLimit) {
-    warnings.push('Passou do limite: −INT · PER · SAB · CAR sobe com o estado (Abalado −1 … Perdido −4).')
+    warnings.push('Passou do limite: a penalidade nos atributos mentais sobe com o estado (Abalado −1 … Perdido −4).')
   }
 
   if (next >= totalAt && current < totalAt) {

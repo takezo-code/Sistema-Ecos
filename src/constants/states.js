@@ -3,6 +3,21 @@ import { asSafeLimit } from './ecoOverload'
 /** Atributos afetados por estado físico (Força, Destreza, Vitalidade) */
 export const PHYSICAL_AFFECTED_KEYS = ['forca', 'destreza', 'vitalidade']
 
+/** Rótulos usados nas linhas de penalidade — uma linha por atributo. */
+export const PHYSICAL_PENALTY_LABELS = ['Força', 'Destreza', 'Vitalidade']
+export const MENTAL_PENALTY_LABELS = ['Inteligência', 'Percepção', 'Sabedoria', 'Carisma']
+
+/** `−2 Força` / `−2 Destreza` … — nunca `−2 Força · Destreza`. */
+export function buildPenaltyLines(value, labels, extras = []) {
+  const n = Math.max(0, Number(value) || 0)
+  if (n <= 0) return [...extras]
+  return [...labels.map(label => `−${n} ${label}`), ...extras]
+}
+
+function withNote(state, lines) {
+  return { ...state, noteLines: lines, note: lines.length ? lines.join('\n') : null }
+}
+
 /**
  * Estados físicos do personagem (derivados das marcas de dano).
  * Thresholds base — a cada 4 marcas troca de estado (ver damageMarksEngine):
@@ -14,7 +29,7 @@ export const PHYSICAL_AFFECTED_KEYS = ['forca', 'destreza', 'vitalidade']
  * Vitalidade (2 VIT base → +1 limiar) atrasa esses degraus — usa VIT de base.
  */
 export const PHYSICAL_STATES = [
-  {
+  withNote({
     value: 'bem',
     label: 'Saudável',
     multiplier: 1.0,
@@ -22,9 +37,8 @@ export const PHYSICAL_STATES = [
     attrPenalty: 0,
     color: '#16a34a',
     glow: 'rgba(22,163,74,0.2)',
-    note: null,
-  },
-  {
+  }, []),
+  withNote({
     value: 'ferido',
     label: 'Ferido',
     multiplier: 1.0,
@@ -32,9 +46,8 @@ export const PHYSICAL_STATES = [
     attrPenalty: 1,
     color: '#eab308',
     glow: 'rgba(234,179,8,0.15)',
-    note: '−1 Força · Destreza · Vitalidade',
-  },
-  {
+  }, buildPenaltyLines(1, PHYSICAL_PENALTY_LABELS)),
+  withNote({
     value: 'grave',
     label: 'Grave',
     multiplier: 1.0,
@@ -42,9 +55,8 @@ export const PHYSICAL_STATES = [
     attrPenalty: 2,
     color: '#ea580c',
     glow: 'rgba(234,88,12,0.18)',
-    note: '−2 Força · Destreza · Vitalidade',
-  },
-  {
+  }, buildPenaltyLines(2, PHYSICAL_PENALTY_LABELS)),
+  withNote({
     value: 'incapacitado',
     label: 'Incapacitado',
     multiplier: 1.0,
@@ -52,8 +64,7 @@ export const PHYSICAL_STATES = [
     attrPenalty: 3,
     color: '#991b1b',
     glow: 'rgba(153,27,27,0.25)',
-    note: '−3 Força · Destreza · Vitalidade · combate limitado',
-  },
+  }, buildPenaltyLines(3, PHYSICAL_PENALTY_LABELS, ['Combate limitado'])),
 ]
 
 /**
@@ -62,7 +73,7 @@ export const PHYSICAL_STATES = [
  * Penalidade flat em INT · PER · SAB · CAR (não %).
  */
 export const MENTAL_STATES = [
-  {
+  withNote({
     value: 'estavel',
     label: 'Estável',
     multiplier: 1.0,
@@ -72,12 +83,11 @@ export const MENTAL_STATES = [
     mentalAttrPenaltyPercent: 0,
     color: '#06b6d4',
     glow: 'rgba(6,182,212,0.15)',
-    note: null,
     ecoFailureChance: 0,
     overloadRange: 'abaixo do limite',
     narrativeConsequences: [],
-  },
-  {
+  }, []),
+  withNote({
     value: 'abalado',
     label: 'Abalado',
     multiplier: 1.0,
@@ -87,7 +97,6 @@ export const MENTAL_STATES = [
     mentalAttrPenaltyPercent: 0,
     color: '#eab308',
     glow: 'rgba(234,179,8,0.12)',
-    note: '−1 INT · PER · SAB · CAR',
     ecoFailureChance: 0,
     overloadRange: 'no limite',
     narrativeConsequences: [
@@ -98,8 +107,8 @@ export const MENTAL_STATES = [
       'Impulsividade crescente',
       'Fadiga psicológica',
     ],
-  },
-  {
+  }, buildPenaltyLines(1, MENTAL_PENALTY_LABELS)),
+  withNote({
     value: 'fragmentado',
     label: 'Fragmentado',
     multiplier: 1.0,
@@ -109,7 +118,6 @@ export const MENTAL_STATES = [
     mentalAttrPenaltyPercent: 0,
     color: '#f97316',
     glow: 'rgba(249,115,22,0.15)',
-    note: '−2 INT · PER · SAB · CAR',
     ecoFailureChance: 0.05,
     overloadRange: '1 acima',
     narrativeConsequences: [
@@ -119,8 +127,8 @@ export const MENTAL_STATES = [
       'Sensação de perda de controle',
       'Agressividade involuntária',
     ],
-  },
-  {
+  }, buildPenaltyLines(2, MENTAL_PENALTY_LABELS)),
+  withNote({
     value: 'dissociado',
     label: 'Dissociado',
     multiplier: 1.0,
@@ -130,7 +138,6 @@ export const MENTAL_STATES = [
     mentalAttrPenaltyPercent: 0,
     color: '#dc2626',
     glow: 'rgba(220,38,38,0.18)',
-    note: '−3 INT · PER · SAB · CAR',
     ecoFailureChance: 0.15,
     overloadRange: '2–3 acima',
     narrativeConsequences: [
@@ -140,8 +147,8 @@ export const MENTAL_STATES = [
       'Eco se manifesta sem controle intencional',
       'Fala incoerente sob pressão',
     ],
-  },
-  {
+  }, buildPenaltyLines(3, MENTAL_PENALTY_LABELS)),
+  withNote({
     value: 'perdido_no_tempo',
     label: 'Perdido no Tempo',
     multiplier: 1.0,
@@ -151,7 +158,6 @@ export const MENTAL_STATES = [
     mentalAttrPenaltyPercent: 0,
     color: '#a855f7',
     glow: 'rgba(168,85,247,0.22)',
-    note: '−4 INT · PER · SAB · CAR',
     ecoFailureChance: 0.35,
     overloadRange: '4+ acima',
     glitch: true,
@@ -162,7 +168,7 @@ export const MENTAL_STATES = [
       'Respostas físicas desconectadas da mente',
       'A identidade começa a se dissolver',
     ],
-  },
+  }, buildPenaltyLines(4, MENTAL_PENALTY_LABELS)),
 ]
 
 const LEGACY_CONDITION_MAP = {

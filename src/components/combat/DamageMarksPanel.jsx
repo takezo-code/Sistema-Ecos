@@ -33,9 +33,13 @@ function LifeCountBlock({ current, max, stateOpt, compact = false }) {
             {stateOpt?.label ?? 'Saudável'}
           </span>
           {(stateOpt?.attrPenalty ?? 0) > 0 && (
-            <span style={{ fontSize: '0.45rem', color, fontFamily: 'monospace', opacity: 0.85 }}>
-              {stateOpt.note || `−${stateOpt.attrPenalty} FOR · DES · VIT`}
-            </span>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {(stateOpt.noteLines || []).map(line => (
+                <span key={line} style={{ fontSize: '0.45rem', color, fontFamily: 'monospace', opacity: 0.85 }}>
+                  {line}
+                </span>
+              ))}
+            </div>
           )}
         </div>
       </div>

@@ -305,7 +305,6 @@ export function Sessions() {
       <PageHeader
         icon={ScrollText}
         title="Sessões"
-        subtitle={`${filtered.length} SESSÕES NA CAMPANHA`}
         action={
           <button className="btn-primary" onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}>
             <Plus size={13} /> Nova Sessão

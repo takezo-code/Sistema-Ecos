@@ -11,7 +11,7 @@ import { listActiveMentalStatusDetails } from '../../services/mentalStatusServic
 import { getCharacterClass } from '../../constants/classes'
 import { getClassAttributeBonus } from '../../mechanics/classes/classBonusEngine'
 import { getArmorDestrezaPenalty, getArmorMarkBonus } from '../../mechanics/equipment/armorEffectsEngine'
-import { sumGearRollBonus, getRupturaUsesRemaining, getRupturaUsesMax } from '../../mechanics/equipment/gearPassiveEngine'
+import { sumGearRollBonus, sumAttrBonus, getRupturaUsesRemaining, getRupturaUsesMax } from '../../mechanics/equipment/gearPassiveEngine'
 import { listActiveBuffs, sumMarkBuffBonus, formatBuff } from '../../mechanics/skills/skillBuffEngine'
 import { getCharacterWeapon, getCharacterArmor } from '../../mechanics/equipment/characterGear'
 import { getArmorTier } from '../../mechanics/equipment/armorProgressionEngine'
@@ -282,9 +282,14 @@ export function CombatCharacterColumn({
               borderRadius: '4px',
               color: weapon ? '#f97316' : '#333',
               cursor: weapon ? 'pointer' : 'default',
+              overflow: 'hidden',
             }}
           >
-            <Sword size={12} />
+            {weapon?.image ? (
+              <img src={weapon.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <Sword size={12} />
+            )}
           </button>
           <button
             type="button"
@@ -303,9 +308,14 @@ export function CombatCharacterColumn({
               borderRadius: '4px',
               color: armor ? armorTier.color : '#333',
               cursor: armor ? 'pointer' : 'default',
+              overflow: 'hidden',
             }}
           >
-            <Shirt size={12} />
+            {armor?.image ? (
+              <img src={armor.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <Shirt size={12} />
+            )}
           </button>
         </div>
       </header>
@@ -367,8 +377,10 @@ export function CombatCharacterColumn({
                 safeLimit,
               })
                 const classBonus = getClassAttributeBonus(character, attr.key)
-                const gearBonus = sumGearRollBonus(character, attr.key)
-                const rollBonus = eff + classBonus + gearBonus
+                const gearAttrBonus = sumAttrBonus(character, attr.key)
+                const gearRollExtra = sumGearRollBonus(character, attr.key)
+                const displayVal = eff + gearAttrBonus
+                const rollBonus = eff + classBonus + gearRollExtra
                 const reduced = eff < base
                 const shortKey = attr.key === 'inteligencia' ? 'INT'
                   : attr.key === 'vitalidade' ? 'VIT'
@@ -380,12 +392,12 @@ export function CombatCharacterColumn({
                     type="button"
                     onClick={() => onRollAttribute?.(
                       character, attr.key, attr.label, rollBonus, diceSides,
-                      { attrBonus: eff, classBonus, weaponPenalty: 0, gearBonus },
+                      { attrBonus: eff + gearAttrBonus, classBonus, weaponPenalty: 0, gearBonus: gearRollExtra },
                     )}
                     title={`d${diceSides} + ${attr.label}`}
                     style={{
                       background: '#111',
-                      border: `1px solid ${(classBonus > 0 || gearBonus > 0) ? 'rgba(217,119,6,0.3)' : '#1e1e1e'}`,
+                      border: `1px solid ${(classBonus > 0 || gearRollExtra > 0) ? 'rgba(217,119,6,0.3)' : '#1e1e1e'}`,
                       borderRadius: '4px',
                       padding: '0.3rem 0.2rem',
                       cursor: 'pointer',
@@ -396,7 +408,7 @@ export function CombatCharacterColumn({
                       {shortKey}
                     </div>
                     <div style={{ fontSize: '0.95rem', fontWeight: 800, color: reduced ? '#ea580c' : '#e5e5e5', lineHeight: 1.1 }}>
-                      {eff + gearBonus}
+                      {displayVal}
                       {classBonus > 0 && (
                         <span style={{ fontSize: '0.5rem', color: '#d97706', marginLeft: '1px' }}>+{classBonus}</span>
                       )}
@@ -437,8 +449,10 @@ export function CombatCharacterColumn({
                   safeLimit,
                 })
                 const classBonus = getClassAttributeBonus(character, attr.key)
-                const gearBonus = sumGearRollBonus(character, attr.key)
-                const rollBonus = eff + classBonus + gearBonus
+                const gearAttrBonus = sumAttrBonus(character, attr.key)
+                const gearRollExtra = sumGearRollBonus(character, attr.key)
+                const displayVal = eff + gearAttrBonus
+                const rollBonus = eff + classBonus + gearRollExtra
                 const reduced = eff < base
                 return (
                   <button
@@ -446,12 +460,12 @@ export function CombatCharacterColumn({
                     type="button"
                     onClick={() => onRollAttribute?.(
                       character, attr.key, attr.label, rollBonus, diceSides,
-                      { attrBonus: eff, classBonus, weaponPenalty: 0, gearBonus },
+                      { attrBonus: eff + gearAttrBonus, classBonus, weaponPenalty: 0, gearBonus: gearRollExtra },
                     )}
                     title={`d${diceSides} + ${attr.label}`}
                     style={{
                       background: '#111',
-                      border: `1px solid ${(classBonus > 0 || gearBonus > 0) ? 'rgba(217,119,6,0.3)' : '#1e1e1e'}`,
+                      border: `1px solid ${(classBonus > 0 || gearRollExtra > 0) ? 'rgba(217,119,6,0.3)' : '#1e1e1e'}`,
                       borderRadius: '4px',
                       padding: '0.3rem 0.2rem',
                       cursor: 'pointer',
@@ -462,7 +476,7 @@ export function CombatCharacterColumn({
                       {socialAttrShort(attr)}
                     </div>
                     <div style={{ fontSize: '0.95rem', fontWeight: 800, color: reduced ? '#ea580c' : '#e5e5e5', lineHeight: 1.1 }}>
-                      {eff + gearBonus}
+                      {displayVal}
                       {classBonus > 0 && (
                         <span style={{ fontSize: '0.5rem', color: '#d97706', marginLeft: '1px' }}>+{classBonus}</span>
                       )}
