@@ -1,4 +1,5 @@
 import React from 'react'
+import { THEME_ACCENT } from '../../constants/theme'
 
 export function PageHeader({ icon: Icon, title, subtitle, action }) {
   return (
@@ -14,7 +15,7 @@ export function PageHeader({ icon: Icon, title, subtitle, action }) {
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         {Icon && (
-          <div style={{ color: '#dc2626', display: 'flex', alignItems: 'center' }}>
+          <div style={{ color: THEME_ACCENT, display: 'flex', alignItems: 'center' }}>
             <Icon size={18} />
           </div>
         )}

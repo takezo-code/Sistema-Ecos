@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react'
 import { Plus, Upload, Hexagon } from 'lucide-react'
 import { initializeNewCampaign, importCampaign } from '../services/saveService'
 import { useSaveStore } from '../store/useSaveStore'
+import { THEME_ACCENT, THEME_ACCENT_SOFT, THEME_ACCENT_BORDER } from '../constants/theme'
 
 export function WelcomeScreen({ onEnter }) {
   const fileRef = useRef(null)
@@ -50,8 +51,8 @@ export function WelcomeScreen({ onEnter }) {
         position: 'absolute',
         inset: 0,
         backgroundImage: `
-          linear-gradient(rgba(220,38,38,0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(220,38,38,0.03) 1px, transparent 1px)
+          linear-gradient(rgba(37,99,235,0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(37,99,235,0.04) 1px, transparent 1px)
         `,
         backgroundSize: '48px 48px',
         maskImage: 'radial-gradient(ellipse 70% 60% at 50% 50%, black 20%, transparent 100%)',
@@ -61,7 +62,7 @@ export function WelcomeScreen({ onEnter }) {
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'linear-gradient(180deg, transparent 0%, rgba(220,38,38,0.02) 50%, transparent 100%)',
+        background: 'linear-gradient(180deg, transparent 0%, rgba(37,99,235,0.03) 50%, transparent 100%)',
         backgroundSize: '100% 4px',
         pointerEvents: 'none',
         opacity: 0.6,
@@ -80,12 +81,12 @@ export function WelcomeScreen({ onEnter }) {
           justifyContent: 'center',
           width: '56px',
           height: '56px',
-          border: '1px solid rgba(220,38,38,0.3)',
+          border: `1px solid ${THEME_ACCENT_BORDER}`,
           borderRadius: '4px',
           marginBottom: '1.5rem',
-          background: 'rgba(220,38,38,0.05)',
+          background: THEME_ACCENT_SOFT,
         }}>
-          <Hexagon size={28} style={{ color: '#dc2626' }} strokeWidth={1.5} />
+          <Hexagon size={28} style={{ color: THEME_ACCENT }} strokeWidth={1.5} />
         </div>
 
         <h1 style={{
@@ -96,7 +97,7 @@ export function WelcomeScreen({ onEnter }) {
           fontFamily: 'monospace',
           marginBottom: '0.5rem',
         }}>
-          RPG MASTER PANEL
+          ECOS
         </h1>
 
         <p style={{
@@ -127,8 +128,8 @@ export function WelcomeScreen({ onEnter }) {
               justifyContent: 'center',
               gap: '0.625rem',
               padding: '1rem 1.5rem',
-              background: 'linear-gradient(135deg, rgba(220,38,38,0.2) 0%, rgba(220,38,38,0.05) 100%)',
-              border: '1px solid rgba(220,38,38,0.4)',
+              background: `linear-gradient(135deg, ${THEME_ACCENT_BORDER} 0%, ${THEME_ACCENT_SOFT} 100%)`,
+              border: `1px solid ${THEME_ACCENT_BORDER}`,
               borderRadius: '4px',
               color: '#e5e5e5',
               fontSize: '0.8rem',
@@ -140,13 +141,13 @@ export function WelcomeScreen({ onEnter }) {
             }}
             onMouseEnter={e => {
               if (!loading) {
-                e.currentTarget.style.borderColor = 'rgba(220,38,38,0.7)'
-                e.currentTarget.style.background = 'rgba(220,38,38,0.15)'
+                e.currentTarget.style.borderColor = THEME_ACCENT
+                e.currentTarget.style.background = 'rgba(37,99,235,0.2)'
               }
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.borderColor = 'rgba(220,38,38,0.4)'
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(220,38,38,0.2) 0%, rgba(220,38,38,0.05) 100%)'
+              e.currentTarget.style.borderColor = THEME_ACCENT_BORDER
+              e.currentTarget.style.background = `linear-gradient(135deg, ${THEME_ACCENT_BORDER} 0%, ${THEME_ACCENT_SOFT} 100%)`
             }}
           >
             <Plus size={16} />

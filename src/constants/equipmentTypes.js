@@ -28,7 +28,7 @@ export const WEAPON_TYPES = [
     mainAttr: 'ruptura',
     mainAttrLabel: 'RUP',
     tags: ['mágica', 'eco'],
-    mechDesc: 'Foco arcano. Preferido por Mágica e Suporte. Usa Ruptura.',
+    mechDesc: 'Foco arcano. Preferido por Fenda e Suporte. Usa Ruptura.',
   },
   {
     id: 'varinha',
@@ -38,7 +38,7 @@ export const WEAPON_TYPES = [
     mainAttr: 'ruptura',
     mainAttrLabel: 'RUP',
     tags: ['mágica', 'eco'],
-    mechDesc: 'Canal fino de Eco. Preferido por Mágica e Suporte. Usa Ruptura.',
+    mechDesc: 'Canal fino de Eco. Preferido por Fenda e Suporte. Usa Ruptura.',
   },
   {
     id: 'cajado',
@@ -48,7 +48,7 @@ export const WEAPON_TYPES = [
     mainAttr: 'inteligencia',
     mainAttrLabel: 'INT',
     tags: ['mágica', 'eco'],
-    mechDesc: 'Canal de Eco. Preferido por Mágica e Suporte. Usa Inteligência ou Ruptura.',
+    mechDesc: 'Canal de Eco. Preferido por Fenda e Suporte. Usa Inteligência ou Ruptura.',
   },
   {
     id: 'livro',
@@ -58,7 +58,7 @@ export const WEAPON_TYPES = [
     mainAttr: 'inteligencia',
     mainAttrLabel: 'INT',
     tags: ['mágica', 'suporte'],
-    mechDesc: 'Grimório ou tomo. Preferido por Mágica e Suporte. Usa Inteligência.',
+    mechDesc: 'Grimório ou tomo. Preferido por Fenda e Suporte. Usa Inteligência.',
   },
   {
     id: 'escudo_medio',
@@ -68,7 +68,7 @@ export const WEAPON_TYPES = [
     mainAttr: 'vitalidade',
     mainAttrLabel: 'VIT',
     tags: ['defesa'],
-    mechDesc: 'Escudo médio. Preferido por Tank. Usa Vitalidade.',
+    mechDesc: 'Escudo médio. Preferido por Baluarte. Usa Vitalidade.',
   },
   {
     id: 'escudo_grande',
@@ -78,7 +78,7 @@ export const WEAPON_TYPES = [
     mainAttr: 'vitalidade',
     mainAttrLabel: 'VIT',
     tags: ['defesa', 'pesada'],
-    mechDesc: 'Escudo de torre / grande. Preferido por Tank. Usa Vitalidade.',
+    mechDesc: 'Escudo de torre / grande. Preferido por Baluarte. Usa Vitalidade.',
   },
   {
     id: 'arma_duas_maos',
@@ -88,7 +88,7 @@ export const WEAPON_TYPES = [
     mainAttr: 'forca',
     mainAttrLabel: 'FOR',
     tags: ['corpo a corpo', 'pesada'],
-    mechDesc: 'Espadas grandes, porretes, machados. Preferido por Tank e Porradeiro. Usa Força.',
+    mechDesc: 'Espadas grandes, porretes, machados. Preferido por Baluarte e Fratura. Usa Força.',
   },
   {
     id: 'arma_uma_mao',
@@ -98,7 +98,7 @@ export const WEAPON_TYPES = [
     mainAttr: 'forca',
     mainAttrLabel: 'FOR',
     tags: ['corpo a corpo'],
-    mechDesc: 'Espada, maça ou similar. Preferido por Tank. Usa Força.',
+    mechDesc: 'Espada, maça ou similar. Preferido por Baluarte. Usa Força.',
   },
   {
     id: 'manoplas',
@@ -108,7 +108,7 @@ export const WEAPON_TYPES = [
     mainAttr: 'forca',
     mainAttrLabel: 'FOR',
     tags: ['corpo a corpo', 'impacto'],
-    mechDesc: 'Luvas blindadas, soqueira, pedaço de ferro. Preferido por Porradeiro. Usa Força.',
+    mechDesc: 'Luvas blindadas, soqueira, pedaço de ferro. Preferido por Fratura. Usa Força.',
   },
 ]
 

@@ -17,6 +17,7 @@ import {
   UsersRound,
 } from 'lucide-react'
 import { MANAGEMENT_VIEWS } from '../constants/managementViews'
+import { THEME_ACCENT } from '../constants/theme'
 
 const MANAGEMENT_SECTIONS = [
   {
@@ -93,7 +94,7 @@ function NavItemButton({ item, isActive, collapsed, onClick, indent = 0 }) {
         padding: collapsed ? '0.625rem 0' : `0.5rem 1rem 0.5rem ${1 + indent * 0.85}rem`,
         justifyContent: collapsed ? 'center' : 'flex-start',
         background: isActive ? 'rgba(220,38,38,0.08)' : 'transparent',
-        borderLeft: isActive ? '2px solid #dc2626' : '2px solid transparent',
+        borderLeft: isActive ? `2px solid ${THEME_ACCENT}` : '2px solid transparent',
         color: isActive ? '#e5e5e5' : '#555',
         fontWeight: isActive ? 500 : 400,
       }}
@@ -110,7 +111,7 @@ function NavItemButton({ item, isActive, collapsed, onClick, indent = 0 }) {
         }
       }}
     >
-      <Icon size={indent > 0 ? 14 : 15} style={{ minWidth: indent > 0 ? '14px' : '15px', color: isActive ? '#dc2626' : 'inherit' }} />
+      <Icon size={indent > 0 ? 14 : 15} style={{ minWidth: indent > 0 ? '14px' : '15px', color: isActive ? THEME_ACCENT : 'inherit' }} />
       {!collapsed && <span>{item.label}</span>}
     </button>
   )
@@ -188,7 +189,7 @@ function NavGroup({
           e.currentTarget.style.background = isGroupActive ? 'rgba(220,38,38,0.05)' : 'transparent'
         }}
       >
-        <GroupIcon size={15} style={{ minWidth: '15px', color: isGroupActive ? '#dc2626' : 'inherit' }} />
+        <GroupIcon size={15} style={{ minWidth: '15px', color: isGroupActive ? THEME_ACCENT : 'inherit' }} />
         <span style={{ flex: 1, textAlign: 'left' }}>{group.label}</span>
         {expanded
           ? <ChevronUp size={13} style={{ color: '#444', flexShrink: 0 }} />
@@ -303,8 +304,8 @@ export function Sidebar({
       >
         {!collapsed && (
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: '0.7rem', color: '#dc2626', fontFamily: 'monospace', letterSpacing: '0.15em', fontWeight: 700 }}>
-              RPG MASTER
+            <div style={{ fontSize: '0.7rem', color: THEME_ACCENT, fontFamily: 'monospace', letterSpacing: '0.15em', fontWeight: 700 }}>
+              ECOS
             </div>
             <div style={{ fontSize: '0.6rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
               PANEL v1.0
@@ -376,7 +377,7 @@ export function Sidebar({
                 padding: collapsed ? '0.625rem 0' : '0.625rem 1rem',
                 justifyContent: collapsed ? 'center' : 'flex-start',
                 background: isActive ? 'rgba(220,38,38,0.08)' : 'transparent',
-                borderLeft: isActive ? '2px solid #dc2626' : '2px solid transparent',
+                borderLeft: isActive ? `2px solid ${THEME_ACCENT}` : '2px solid transparent',
                 color: isActive ? '#e5e5e5' : '#555',
                 fontWeight: isActive ? 500 : 400,
               }}
@@ -393,7 +394,7 @@ export function Sidebar({
                 }
               }}
             >
-              <Icon size={15} style={{ minWidth: '15px', color: isActive ? '#dc2626' : 'inherit' }} />
+              <Icon size={15} style={{ minWidth: '15px', color: isActive ? THEME_ACCENT : 'inherit' }} />
               {!collapsed && <span>{item.label}</span>}
             </button>
           )

@@ -24,8 +24,9 @@ import {
 import { getWeaponSkill } from '../../mechanics/equipment/weaponProgressionEngine'
 import { getArmorType } from '../../constants/equipmentTypes'
 import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
+import { THEME_ACCENT } from '../../constants/theme'
 
-const ACCENT = '#a855f7'
+const ACCENT = THEME_ACCENT
 
 function SlotFrame({ children, onClick, borderColor = '#1e1e1e', title }) {
   return (

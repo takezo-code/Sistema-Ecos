@@ -9,7 +9,7 @@
  *
  * Equipamento NÃO conta para esse degrau — só soma na rolagem à parte.
  *
- * Exemplo: Atirador com Destreza 6 rola d20 → 12 do dado + 6 de Destreza + 2 de
+ * Exemplo: Traçado com Destreza 6 rola d20 → 12 do dado + 6 de Destreza + 2 de
  * classe = 20. Os +4 de uma arma somam depois, mas não viram degrau de classe.
  *
  * O bônus usa os pontos **base** do atributo. Ficar Ferido reduz o valor

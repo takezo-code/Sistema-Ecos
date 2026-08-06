@@ -3,6 +3,7 @@ import { Save, Upload, HardDrive, RotateCcw } from 'lucide-react'
 import { exportCampaign, importCampaign, resetAllTestData } from '../services/saveService'
 import { useSaveStore } from '../store/useSaveStore'
 import { useSettingsStore } from '../store/useSettingsStore'
+import { THEME_ACCENT, THEME_ACCENT_SOFT, THEME_ACCENT_BORDER } from '../constants/theme'
 
 export function SaveToolbar({ collapsed = false }) {
   const fileRef = useRef(null)
@@ -128,10 +129,10 @@ const btnFullStyle = {
   gap: '0.5rem',
   width: '100%',
   padding: '0.5rem 0.75rem',
-  background: 'rgba(220,38,38,0.08)',
-  border: '1px solid rgba(220,38,38,0.25)',
+  background: THEME_ACCENT_SOFT,
+  border: `1px solid ${THEME_ACCENT_BORDER}`,
   borderRadius: '3px',
-  color: '#dc2626',
+  color: THEME_ACCENT,
   fontSize: '0.7rem',
   fontFamily: 'monospace',
   letterSpacing: '0.08em',

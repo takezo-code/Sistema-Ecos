@@ -9,6 +9,7 @@ import {
   renderCroppedDataUrl,
   resizeCropFromHandle,
 } from '../../utils/imageCrop'
+import { THEME_ACCENT } from '../../constants/theme'
 
 const WORKSPACE = 300
 const CROP_MIN = 56
@@ -56,7 +57,7 @@ function CropHandles({ crop }) {
     top: top - HANDLE_VIS / 2,
     width: HANDLE_VIS,
     height: HANDLE_VIS,
-    background: '#dc2626',
+    background: THEME_ACCENT,
     border: '2px solid #fff',
     borderRadius: '2px',
     pointerEvents: 'none',

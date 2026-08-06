@@ -9,6 +9,7 @@ import {
   Settings,
 } from 'lucide-react'
 import { CHARACTER_PANEL_TABS } from '../../store/useCharacterPanelStore'
+import { THEME_ACCENT, THEME_ACCENT_SOFT } from '../../constants/theme'
 
 const TABS = [
   { id: CHARACTER_PANEL_TABS.PROFILE, label: 'Personagem', icon: User },
@@ -56,9 +57,9 @@ export function CharacterSidebar({ activeTab, onTabChange, characterName }) {
                 gap: '0.6rem',
                 width: '100%',
                 padding: '0.55rem 1rem',
-                background: active ? 'rgba(168,85,247,0.08)' : 'transparent',
+                background: active ? THEME_ACCENT_SOFT : 'transparent',
                 border: 'none',
-                borderLeft: active ? '2px solid #a855f7' : '2px solid transparent',
+                borderLeft: active ? `2px solid ${THEME_ACCENT}` : '2px solid transparent',
                 color: active ? '#e5e5e5' : '#555',
                 cursor: 'pointer',
                 fontSize: '0.78rem',
@@ -66,7 +67,7 @@ export function CharacterSidebar({ activeTab, onTabChange, characterName }) {
                 transition: 'all 0.15s',
               }}
             >
-              <Icon size={14} style={{ color: active ? '#a855f7' : 'inherit', flexShrink: 0 }} />
+              <Icon size={14} style={{ color: active ? THEME_ACCENT : 'inherit', flexShrink: 0 }} />
               {tab.label}
             </button>
           )

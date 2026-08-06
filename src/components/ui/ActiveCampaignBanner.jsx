@@ -1,6 +1,7 @@
 import React from 'react'
 import { BookOpen } from 'lucide-react'
 import { useCampaignStore } from '../../store/useCampaignStore'
+import { THEME_ACCENT, THEME_ACCENT_SOFT, THEME_ACCENT_BORDER } from '../../constants/theme'
 
 export function ActiveCampaignBanner({ onNavigate }) {
   const activeCampaign = useCampaignStore(s =>
@@ -19,7 +20,7 @@ export function ActiveCampaignBanner({ onNavigate }) {
         fontFamily: 'monospace',
         color: '#444',
       }}>
-        <BookOpen size={12} style={{ color: '#dc2626' }} />
+        <BookOpen size={12} style={{ color: THEME_ACCENT }} />
         <span style={{ color: '#666' }}>CAMPANHA ATIVA:</span>
         <span style={{ color: '#e5e5e5' }}>{activeCampaign.name}</span>
       </div>
@@ -29,8 +30,8 @@ export function ActiveCampaignBanner({ onNavigate }) {
   return (
     <div style={{
       padding: '0.625rem 1.5rem',
-      borderBottom: '1px solid rgba(220,38,38,0.2)',
-      background: 'rgba(220,38,38,0.05)',
+      borderBottom: `1px solid ${THEME_ACCENT_BORDER}`,
+      background: THEME_ACCENT_SOFT,
       fontSize: '0.75rem',
       color: '#999',
     }}>
@@ -39,7 +40,7 @@ export function ActiveCampaignBanner({ onNavigate }) {
         <button
           type="button"
           onClick={() => onNavigate('campanha', 'historia')}
-          style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', textDecoration: 'underline', fontSize: 'inherit' }}
+          style={{ background: 'none', border: 'none', color: THEME_ACCENT, cursor: 'pointer', textDecoration: 'underline', fontSize: 'inherit' }}
         >
           Selecione uma em Campanhas
         </button>
