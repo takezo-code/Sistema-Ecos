@@ -345,7 +345,6 @@ function WeaponDetails({ character, weapon, onSetPassive, onSetWeaponSkill, manu
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', flexWrap: 'wrap' }}>
         <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#e5e5e5' }}>{weapon.name}</span>
-        <span style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#888' }}>ARMA · SEM RARIDADE</span>
       </div>
 
       {kindLabel && (
@@ -457,7 +456,7 @@ function ArmorDetails({ character, armor, onSetPassive, manualValues = false }) 
 }
 
 /**
- * Equipamento pessoal: arma (3 atributos de item + skill) e armadura (4 atributos + raridade).
+ * Equipamento pessoal: arma (3 atributos de item + skill) e armadura (4 atributos; raridade por nível).
  */
 export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeaponSkill, manualValues = false }) {
   const [forging, setForging] = useState(null)

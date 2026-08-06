@@ -144,7 +144,8 @@ export function sumRollBonus(entity = {}, attrKey) {
   }, 0)
 }
 
-/** Total que entra na rolagem daquele atributo (attr flat + roll_bonus). */
+/** Total que entra na rolagem daquele atributo vindo do equipamento (attr flat + roll_bonus).
+ *  Não conta para degrau de bônus de classe — só soma. */
 export function sumGearRollBonus(entity = {}, attrKey) {
   return sumAttrBonus(entity, attrKey) + sumRollBonus(entity, attrKey)
 }

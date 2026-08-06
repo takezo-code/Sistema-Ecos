@@ -97,7 +97,6 @@ export function ProgressionSection({
     <div>
       <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>
         NÍVEL E EXPERIÊNCIA
-        {adminMode && <span style={{ marginLeft: '0.5rem', color: '#d97706' }}>· MODO MESTRE</span>}
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>

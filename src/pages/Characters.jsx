@@ -52,8 +52,8 @@ const EMPTY_FORM = {
   unspentSocialPoints: STARTING_SOCIAL_POINTS,
   ecoPoints: 1,
   skills: [],
-  starterWeapon: { name: '', kind: '', description: '', image: '' },
-  starterArmor: { name: '', type: getForgeableArmorTypes()[0].id },
+  starterWeapon: { name: '', kind: '', description: '', image: '', passives: [] },
+  starterArmor: { name: '', type: getForgeableArmorTypes()[0].id, image: '', passives: [] },
 }
 
 const narrativeSectionLabel = {
@@ -327,25 +327,8 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
           {isNew && (
             <>
               <hr className="divide-line" />
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '0.75rem',
-                marginBottom: '0.65rem',
-                flexWrap: 'wrap',
-              }}>
-                <div>
-                  <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-                    SKILL INICIAL · ECO
-                  </div>
-                  <p style={{ fontSize: '0.72rem', color: starterSkillPicked ? '#16a34a' : '#a855f7', margin: '0.35rem 0 0', lineHeight: 1.45 }}>
-                    {starterSkillPicked
-                      ? 'Skill inicial escolhida. Agora você pode criar o personagem.'
-                      : 'Gaste o 1 Eco inicial desbloqueando uma skill da classe para liberar a criação.'}
-                  </p>
-                </div>
-                {starterSkillPicked && (
+              {starterSkillPicked && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
                   <button
                     type="button"
                     className="btn-ghost"
@@ -354,8 +337,8 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
                   >
                     Trocar skill
                   </button>
-                )}
-              </div>
+                </div>
+              )}
               {form.classId ? (
                 <ClassSkillBook
                   entity={form}

@@ -180,24 +180,19 @@ export function getEquipmentType(category, id) {
 }
 
 // ─────────────────────────────────────────────
-// Raridade → slots de atributos de item (legado)
+// Raridade — só armadura (nível do personagem)
 // ─────────────────────────────────────────────
 export const RARITY_META = {
-  comum:    { label: 'Comum',    color: '#6b7280', passiveSlots: 1 },
-  incomum:  { label: 'Incomum',  color: '#16a34a', passiveSlots: 2 },
-  raro:     { label: 'Raro',     color: '#06b6d4', passiveSlots: 3 },
-  lendario: { label: 'Lendário', color: '#a855f7', passiveSlots: 4 },
+  comum:    { label: 'Comum',    color: '#6b7280' },
+  incomum:  { label: 'Incomum',  color: '#16a34a' },
+  raro:     { label: 'Raro',     color: '#06b6d4' },
+  lendario: { label: 'Lendário', color: '#a855f7' },
 }
 
 export const RARITY_OPTIONS = Object.entries(RARITY_META).map(([id, m]) => ({ id, ...m }))
 
 export function getRarityMeta(rarity) {
   return RARITY_META[rarity] ?? RARITY_META.comum
-}
-
-/** Quantidade de slots de atributo pela raridade (legado de armas). */
-export function getPassiveSlotsForRarity(rarity) {
-  return getRarityMeta(rarity).passiveSlots
 }
 
 /**

@@ -259,7 +259,7 @@ export function ClassSkillBook({
                     ? (selected.unlocked
                       ? `Gasta ${ECO_SKILL_POINT_COST} Eco para subir 1 nível`
                       : `Gasta ${ECO_SKILL_POINT_COST} Eco nesta skill`)
-                    : investCheck.reason}
+                    : undefined}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.65rem', opacity: investCheck.ok ? 1 : 0.45 }}
                 >
                   <Plus size={12} />
@@ -303,9 +303,6 @@ export function ClassSkillBook({
           )}
           {needsGrade && !gradeCheck.ok && (
             <div style={{ marginTop: '0.5rem', fontSize: '0.65rem', color: '#a855f7', fontFamily: 'monospace' }}>{gradeCheck.reason}</div>
-          )}
-          {!needsGrade && !investCheck.ok && onInvestPoint && (
-            <div style={{ marginTop: '0.5rem', fontSize: '0.65rem', color: '#555', fontFamily: 'monospace' }}>{investCheck.reason}</div>
           )}
         </div>
       )}

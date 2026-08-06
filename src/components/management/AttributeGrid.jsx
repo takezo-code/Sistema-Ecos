@@ -202,9 +202,6 @@ export function AttributeGrid({
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
         <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
           ATRIBUTOS FÍSICOS
-          {adminMode && (
-            <span style={{ marginLeft: '0.5rem', color: '#d97706', fontSize: '0.6rem' }}>· MODO MESTRE</span>
-          )}
         </div>
         <div style={{
           fontSize: '0.65rem',

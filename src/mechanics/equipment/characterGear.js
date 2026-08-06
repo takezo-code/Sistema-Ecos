@@ -58,13 +58,18 @@ export function normalizeEquippedGear(equipped = []) {
       }
       const name = (item.name || '').trim()
         || (category === GEAR_CATEGORIES.ARMOR ? 'Armadura' : 'Arma')
-      return {
+      const next = {
         ...item,
         id: item.id || genId(),
         category,
         name,
         passives: Array.isArray(item.passives) ? item.passives : [],
       }
+      // Raridade existe só na armadura (derivada do nível); arma/itens não guardam.
+      if (category !== GEAR_CATEGORIES.ARMOR && 'rarity' in next) {
+        delete next.rarity
+      }
+      return next
     })
     .filter(Boolean)
 }

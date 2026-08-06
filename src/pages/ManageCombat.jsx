@@ -203,11 +203,23 @@ export function ManageCombat() {
     setCombatNotice(`${character.name} se recuperou — marcas de dano limpas.`)
   }, [clearDamageMarks])
 
-  const handleEnemyRollAttribute = useCallback((enemy, _attrKey, attrLabel, eff, sides = 20) => {
+  const handleEnemyRollAttribute = useCallback((enemy, _attrKey, attrLabel, eff, sides = 20, breakdown = null) => {
     const dice = Math.floor(Math.random() * sides) + 1
     const total = dice + eff
     const dc = getDcForPreset(dcPreset, sides)
-    setRollResult({ dice, sides, bonus: eff, total, dc, characterName: enemy.name, attrLabel })
+    setRollResult({
+      dice,
+      sides,
+      bonus: eff,
+      attrBonus: breakdown?.attrBonus ?? eff,
+      classBonus: breakdown?.classBonus ?? 0,
+      weaponPenalty: breakdown?.weaponPenalty ?? 0,
+      gearBonus: breakdown?.gearBonus ?? 0,
+      total,
+      dc,
+      characterName: enemy.name,
+      attrLabel,
+    })
   }, [dcPreset])
 
   const handleBossAttackRoll = useCallback((result) => {
@@ -291,13 +303,6 @@ export function ManageCombat() {
         background: '#0d0d0d',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Swords size={14} style={{ color: '#dc2626' }} />
-            <span style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: '#555', letterSpacing: '0.1em' }}>
-              {combatCharacters.length} JOGADOR{combatCharacters.length !== 1 ? 'ES' : ''}
-              {activeGroup ? ` · ${activeGroup.name}` : ' · TODOS'}
-            </span>
-          </div>
           <select
             className="input-base"
             value={combatGroupId || ''}

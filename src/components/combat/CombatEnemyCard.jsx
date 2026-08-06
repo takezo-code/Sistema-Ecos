@@ -391,7 +391,7 @@ export function CombatEnemyCard({
                     type="button"
                     onClick={() => onRollAttribute?.(
                       enemy, attr.key, attr.label, rollBonus, diceSides,
-                      { attrBonus: displayVal, classBonus: 0, weaponPenalty: 0, gearBonus: gearRollExtra },
+                      { attrBonus: eff, classBonus: 0, weaponPenalty: 0, gearBonus: gearRollExtra },
                     )}
                     title={`d${diceSides} + ${attr.label}`}
                     style={{
@@ -455,7 +455,7 @@ export function CombatEnemyCard({
                     type="button"
                     onClick={() => onRollAttribute?.(
                       enemy, attr.key, attr.label, rollBonus, diceSides,
-                      { attrBonus: displayVal, classBonus: 0, weaponPenalty: 0, gearBonus: gearRollExtra },
+                      { attrBonus: val, classBonus: 0, weaponPenalty: 0, gearBonus: gearRollExtra },
                     )}
                     title={`d${diceSides} + ${attr.label}`}
                     style={{

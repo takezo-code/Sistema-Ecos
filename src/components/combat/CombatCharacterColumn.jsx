@@ -380,6 +380,7 @@ export function CombatCharacterColumn({
                 const gearAttrBonus = sumAttrBonus(character, attr.key)
                 const gearRollExtra = sumGearRollBonus(character, attr.key)
                 const displayVal = eff + gearAttrBonus
+                // Classe: só pontos base da ficha. Equipamento: só soma na rolagem.
                 const rollBonus = eff + classBonus + gearRollExtra
                 const reduced = eff < base
                 const shortKey = attr.key === 'inteligencia' ? 'INT'
@@ -392,7 +393,7 @@ export function CombatCharacterColumn({
                     type="button"
                     onClick={() => onRollAttribute?.(
                       character, attr.key, attr.label, rollBonus, diceSides,
-                      { attrBonus: eff + gearAttrBonus, classBonus, weaponPenalty: 0, gearBonus: gearRollExtra },
+                      { attrBonus: eff, classBonus, weaponPenalty: 0, gearBonus: gearRollExtra },
                     )}
                     title={`d${diceSides} + ${attr.label}`}
                     style={{
@@ -452,6 +453,7 @@ export function CombatCharacterColumn({
                 const gearAttrBonus = sumAttrBonus(character, attr.key)
                 const gearRollExtra = sumGearRollBonus(character, attr.key)
                 const displayVal = eff + gearAttrBonus
+                // Classe: só pontos base da ficha. Equipamento: só soma na rolagem.
                 const rollBonus = eff + classBonus + gearRollExtra
                 const reduced = eff < base
                 return (
@@ -460,7 +462,7 @@ export function CombatCharacterColumn({
                     type="button"
                     onClick={() => onRollAttribute?.(
                       character, attr.key, attr.label, rollBonus, diceSides,
-                      { attrBonus: eff + gearAttrBonus, classBonus, weaponPenalty: 0, gearBonus: gearRollExtra },
+                      { attrBonus: eff, classBonus, weaponPenalty: 0, gearBonus: gearRollExtra },
                     )}
                     title={`d${diceSides} + ${attr.label}`}
                     style={{

@@ -1,5 +1,5 @@
 /**
- * Arma pessoal — sem raridade.
+ * Arma pessoal — sem raridade (raridade é só da armadura).
  * Atributos de item (3 slots) + skill custom no 4º slot: ver gearPassiveEngine.
  */
 

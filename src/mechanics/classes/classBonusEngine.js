@@ -2,13 +2,15 @@
  * Bônus de Classe nas rolagens.
  *
  * Os 2 atributos-chave da classe rendem bônus extra conforme os pontos
- * investidos neles:
+ * investidos neles na ficha (distribuição do personagem):
  *   3 pontos  → +1 na rolagem
  *   6 pontos  → +2 na rolagem
  *   9 pontos  → +3 na rolagem
  *
+ * Equipamento NÃO conta para esse degrau — só soma na rolagem à parte.
+ *
  * Exemplo: Atirador com Destreza 6 rola d20 → 12 do dado + 6 de Destreza + 2 de
- * classe = 20.
+ * classe = 20. Os +4 de uma arma somam depois, mas não viram degrau de classe.
  *
  * O bônus usa os pontos **base** do atributo. Ficar Ferido reduz o valor
  * efetivo nas rolagens, mas não tira o bônus de classe já conquistado.
