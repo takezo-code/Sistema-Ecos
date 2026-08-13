@@ -401,7 +401,7 @@ export function ManageCombat() {
             minWidth: 0,
             overflowX: 'auto',
             overflowY: 'auto',
-            padding: '0.875rem',
+            padding: '1.15rem',
             display: 'flex',
             flexWrap: 'wrap',
             gap: '0.75rem',

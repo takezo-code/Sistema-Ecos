@@ -16,6 +16,7 @@ import { listActiveBuffs, sumMarkBuffBonus, sumAttrBuffBonus, formatBuff } from 
 import { getCharacterWeapon, getCharacterArmor } from '../../mechanics/equipment/characterGear'
 import { getArmorTier } from '../../mechanics/equipment/armorProgressionEngine'
 import { GearDetailModal } from '../equipment/GearDetailModal'
+import ElectricBorder from '../react-bits/ElectricBorder'
 
 function socialAttrShort(attr) {
   if (attr.key === 'carisma') return 'CAR'
@@ -23,6 +24,20 @@ function socialAttrShort(attr) {
   if (attr.key === 'vontade') return 'VON'
   if (attr.key === 'sabedoria') return 'SAB'
   return attr.label.slice(0, 3).toUpperCase()
+}
+
+/** Raios do card: vida boa = azul lento; vida baixa = vermelho rápido. */
+function electricForPhysical(physicalState) {
+  if (physicalState === 'incapacitado') {
+    return { color: '#ef4444', speed: 2.8, chaos: 0.26 }
+  }
+  if (physicalState === 'grave') {
+    return { color: '#dc2626', speed: 2.1, chaos: 0.2 }
+  }
+  if (physicalState === 'ferido') {
+    return { color: '#60a5fa', speed: 1.05, chaos: 0.14 }
+  }
+  return { color: '#3b82f6', speed: 0.45, chaos: 0.09 }
 }
 
 export function CombatCharacterColumn({
@@ -73,10 +88,26 @@ export function CombatCharacterColumn({
   const weapon = getCharacterWeapon(character)
   const armor = getCharacterArmor(character)
   const armorTier = getArmorTier(character)
+  const electric = electricForPhysical(physical)
 
   return (
+    <ElectricBorder
+      color={electric.color}
+      speed={electric.speed}
+      chaos={electric.chaos}
+      borderRadius={8}
+      displacement={12}
+      borderOffset={12}
+      style={{
+        width: '220px',
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        zIndex: infoOpen ? 20 : 1,
+      }}
+    >
     <article style={{
-      width: '220px',
+      width: '100%',
       flexShrink: 0,
       display: 'flex',
       flexDirection: 'column',
@@ -85,7 +116,7 @@ export function CombatCharacterColumn({
       borderRadius: '8px',
       overflow: infoOpen ? 'visible' : 'hidden',
       position: 'relative',
-      zIndex: infoOpen ? 20 : 1,
+      zIndex: 1,
       boxShadow: physicalOpt.glow ? `0 0 16px ${physicalOpt.glow}` : 'none',
     }}>
 
@@ -639,5 +670,6 @@ export function CombatCharacterColumn({
         armor={armor}
       />
     </article>
+    </ElectricBorder>
   )
 }
