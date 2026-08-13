@@ -1,6 +1,7 @@
 import React from 'react'
 import { SkipForward, RotateCcw } from 'lucide-react'
 import { formatOverloadDisplay, getEcoSafeLimitFromEntity } from '../../constants/ecoOverload'
+import { Button } from '../ui/Button'
 
 export function TurnControlBar({ currentTurn, ecoOverload, entity, onAdvanceTurn, onRestEco }) {
   const limOpts = entity || { safeLimit: getEcoSafeLimitFromEntity(entity) }
@@ -29,9 +30,9 @@ export function TurnControlBar({ currentTurn, ecoOverload, entity, onAdvanceTurn
           </button>
         )}
         {onAdvanceTurn && (
-          <button type="button" className="btn-secondary" onClick={onAdvanceTurn} style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <Button type="button" variant="secondary" size="xs" onClick={onAdvanceTurn} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <SkipForward size={12} /> Avançar turno
-          </button>
+          </Button>
         )}
       </div>
     </div>

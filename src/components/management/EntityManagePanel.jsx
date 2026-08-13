@@ -10,6 +10,7 @@ import { EntitySkillsPanel } from './EntitySkillsPanel'
 import { CharacterGearPanel } from '../equipment/CharacterGearPanel'
 import { isInCreationPhase } from '../../constants/attributes'
 import { entityHasEcoPowers, isNpcEntity } from '../../constants/entityProgression'
+import { Button } from '../ui/Button'
 
 export function EntityManagePanel({
   entity,
@@ -74,36 +75,39 @@ export function EntityManagePanel({
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <button
+          <Button
             type="button"
-            className="btn-secondary"
+            variant="secondary"
+            size="xs"
             onClick={() => setNarrativeOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
           >
             <BookOpen size={12} style={{ color: '#06b6d4' }} />
             Perfil narrativo
-          </button>
+          </Button>
           {hasEco && (
-            <button
+            <Button
               type="button"
-              className="btn-secondary"
+              variant="secondary"
+              size="xs"
               onClick={() => setSkillsOpen(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
             >
               <Sparkles size={12} style={{ color: '#a855f7' }} />
               Skills
-            </button>
+            </Button>
           )}
           {showGear && (
-            <button
+            <Button
               type="button"
-              className="btn-secondary"
+              variant="secondary"
+              size="xs"
               onClick={() => setGearOpen(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
             >
               <Sword size={12} style={{ color: '#f97316' }} />
               Equipamento
-            </button>
+            </Button>
           )}
         </div>
       </div>

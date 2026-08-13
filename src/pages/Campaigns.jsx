@@ -3,6 +3,7 @@ import { BookOpen, Plus, Pencil, Trash2, CheckCircle, GitBranch } from 'lucide-r
 import { CampaignFlows } from './CampaignFlows'
 import { useCampaignStore } from '../store/useCampaignStore'
 import { PageHeader } from '../components/ui/PageHeader'
+import { Button } from '../components/ui/Button'
 import { Modal } from '../components/ui/Modal'
 import { Field, Input, Textarea, Select } from '../components/ui/Field'
 import { StatusTag } from '../components/ui/StatusTag'
@@ -68,7 +69,7 @@ function CampaignForm({ initial, onSave, onCancel }) {
       </Field>
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
-        <button type="submit" className="btn-primary">Salvar</button>
+        <Button type="submit">Salvar</Button>
       </div>
     </form>
   )
@@ -221,9 +222,9 @@ export function Campaigns({ pageTitle = 'História' }) {
         icon={BookOpen}
         title={pageTitle}
         action={
-          <button className="btn-primary" onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}>
+          <Button onClick={openCreate} size="xs" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Plus size={13} /> Nova Campanha
-          </button>
+          </Button>
         }
       />
 
@@ -233,7 +234,7 @@ export function Campaigns({ pageTitle = 'História' }) {
             icon={BookOpen}
             title="Nenhuma campanha criada"
             description="Crie sua primeira campanha para começar a organizar sua narrativa."
-            action={<button className="btn-primary" onClick={openCreate}>Criar Campanha</button>}
+            action={<Button onClick={openCreate} size="xs">Criar Campanha</Button>}
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -267,7 +268,7 @@ export function Campaigns({ pageTitle = 'História' }) {
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>
-          <button className="btn-primary" onClick={() => handleDelete(deleteConfirm.id)}>Excluir</button>
+          <Button variant="danger" onClick={() => handleDelete(deleteConfirm.id)}>Excluir</Button>
         </div>
       </Modal>
     </div>

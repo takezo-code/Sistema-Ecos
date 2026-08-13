@@ -11,6 +11,7 @@ import { Modal } from '../components/ui/Modal'
 import { Select } from '../components/ui/Field'
 import { EmptyState } from '../components/ui/EmptyState'
 import { NPCForm, buildNpcPayloadForSave } from './NPCs'
+import { Button } from '../components/ui/Button'
 
 export function Bosses({
   embedded = false,
@@ -85,13 +86,13 @@ export function Bosses({
           title="Boss"
           subtitle={`${filtered.length} INIMIGOS DE COMBATE`}
           action={
-            <button
-              className="btn-primary"
+            <Button
               onClick={openCreate}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}
+              size="xs"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
             >
               <Plus size={13} /> Novo Boss
-            </button>
+            </Button>
           }
         />
       )}
@@ -109,13 +110,13 @@ export function Bosses({
           />
         </div>
         {embedded && (
-          <button
-            className="btn-primary"
+          <Button
             onClick={openCreate}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', marginLeft: 'auto' }}
+            size="xs"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginLeft: 'auto' }}
           >
             <Plus size={13} /> Novo Boss
-          </button>
+          </Button>
         )}
       </div>
 
@@ -125,7 +126,7 @@ export function Bosses({
             icon={ShieldAlert}
             title="Nenhum boss encontrado"
             description="Crie inimigos de combate em Criação → Boss."
-            action={<button className="btn-primary" onClick={openCreate}>Criar Boss</button>}
+            action={<Button onClick={openCreate}>Criar Boss</Button>}
           />
         ) : (
           <p style={{ fontSize: '0.8rem', color: '#555' }}>

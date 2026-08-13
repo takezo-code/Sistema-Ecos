@@ -12,6 +12,7 @@ import { getClassAttributeBonus } from '../mechanics/classes/classBonusEngine'
 import { getArmorDestrezaPenalty } from '../mechanics/equipment/armorEffectsEngine'
 import { sumGearRollBonus } from '../mechanics/equipment/gearPassiveEngine'
 import { sumAttrBuffBonus } from '../mechanics/skills/skillBuffEngine'
+import { Button } from '../components/ui/Button'
 
 const SOCIAL_ATTR_KEYS = new Set(SOCIAL_ATTRIBUTES.map(a => a.key))
 
@@ -321,14 +322,14 @@ export function Dice() {
                   })()}
                 </div>
               )}
-              <button
+              <Button
                 onClick={handleContextRoll}
-                className="btn-primary"
                 disabled={rolling}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                block
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
               >
                 <Zap size={13} /> Rolar d{contextDice} + {ATTRIBUTE_LABELS[contextAttr]}
-              </button>
+              </Button>
             </div>
           </div>
 

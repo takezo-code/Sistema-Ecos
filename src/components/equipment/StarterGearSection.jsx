@@ -12,6 +12,7 @@ import {
   getPassiveSlotsForCategory,
   rollPassive,
 } from '../../mechanics/equipment/gearPassiveEngine'
+import { Button } from '../ui/Button'
 
 function StarterPassivesRoller({ category, item, color, onChange }) {
   const slots = getPassiveSlotsForCategory(category)
@@ -41,25 +42,26 @@ function StarterPassivesRoller({ category, item, color, onChange }) {
         ATRIBUTOS DE ITEM
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-        <button
+        <Button
           type="button"
-          className="btn-secondary"
+          variant="secondary"
+          size="xs"
           onClick={handleRollAll}
           title="Rola todos os slots de uma vez"
-          style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.65rem', padding: '4px 10px' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '4px 10px' }}
         >
           <Dices size={12} />
           Rolagem
-        </button>
+        </Button>
         {hasDrafts && (
-          <button
+          <Button
             type="button"
-            className="btn-primary"
+            size="xs"
             onClick={handleKeepAll}
-            style={{ fontSize: '0.65rem', padding: '4px 10px' }}
+            style={{ padding: '4px 10px' }}
           >
             Manter tudo
-          </button>
+          </Button>
         )}
       </div>
 

@@ -10,6 +10,7 @@ import { useTrashStore } from '../store/useTrashStore'
 import { useCampaignStore } from '../store/useCampaignStore'
 import { TRASH_TYPE_LABELS } from '../services/trashService'
 import { formatDate } from '../utils/id'
+import { Button } from '../components/ui/Button'
 
 const TYPE_ICONS = {
   character: Sword,
@@ -174,14 +175,15 @@ export function Trash() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
-                    <button
+                    <Button
                       type="button"
-                      className="btn-secondary"
+                      variant="secondary"
+                      size="xs"
                       onClick={() => handleRestore(entry)}
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
                     >
                       <RotateCcw size={12} /> Restaurar
-                    </button>
+                    </Button>
                     <button
                       type="button"
                       className="btn-ghost"
@@ -206,7 +208,7 @@ export function Trash() {
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button type="button" className="btn-ghost" onClick={() => setPermanentConfirm(null)}>Cancelar</button>
-          <button type="button" className="btn-primary" onClick={() => handlePermanentDelete(permanentConfirm)}>Excluir para sempre</button>
+          <Button type="button" variant="danger" onClick={() => handlePermanentDelete(permanentConfirm)}>Excluir para sempre</Button>
         </div>
       </Modal>
     </div>

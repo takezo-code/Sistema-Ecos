@@ -14,6 +14,7 @@ import { getAttributesForEntity, entityHasEcoPowers } from '../constants/entityP
 import { applyInitialAttributeChange, applyAttributePointSpend } from '../services/progressionService'
 import { useTrashStore } from '../store/useTrashStore'
 import { getEntityEffectiveAttributes } from '../services/stateModifiers'
+import { Button } from '../components/ui/Button'
 
 function NPCManageCard({ npc, onManage, onDelete }) {
   const { effective: attrs, base } = getEntityEffectiveAttributes(npc)
@@ -270,7 +271,7 @@ export function ManageNPCs({ embedded = false }) {
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button type="button" className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>
-          <button type="button" className="btn-primary" onClick={() => handleDelete(deleteConfirm)}>Excluir</button>
+          <Button type="button" variant="danger" onClick={() => handleDelete(deleteConfirm)}>Excluir</Button>
         </div>
       </Modal>
     </div>

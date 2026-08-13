@@ -7,6 +7,7 @@ import { SkillForm } from '../components/skills/SkillForm'
 import { useSkillsCatalogStore } from '../store/useSkillsCatalogStore'
 import { createEmptySkillDraft } from '../services/skillsCatalogService'
 import { SKILL_AUDIENCE_META, skillMatchesAudience } from '../constants/skillAudience'
+import { Button } from '../components/ui/Button'
 
 export function SkillsCatalogView({ audience }) {
   const skills = useSkillsCatalogStore(s => s.skills)
@@ -79,14 +80,14 @@ export function SkillsCatalogView({ audience }) {
         <p style={{ fontSize: '0.72rem', color: '#555', lineHeight: 1.5, margin: 0, maxWidth: '520px', flex: 1 }}>
           {audienceMeta.description}
         </p>
-        <button
+        <Button
           type="button"
-          className="btn-primary"
+          size="xs"
           onClick={() => setCreating(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', flexShrink: 0 }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}
         >
           <Plus size={14} /> Nova skill
-        </button>
+        </Button>
       </div>
 
       <div style={{ padding: '0.75rem 1.5rem 0' }}>

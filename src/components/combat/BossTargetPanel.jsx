@@ -6,6 +6,7 @@ import { getRollOutcome, getBossAttackDamage, getDefaultDc } from '../../mechani
 import { getEffectiveAttributeValue } from '../../services/stateModifiers'
 import { getArmorDestrezaPenalty } from '../../mechanics/equipment/armorEffectsEngine'
 import { sumGearRollBonus } from '../../mechanics/equipment/gearPassiveEngine'
+import { Button } from '../ui/Button'
 
 function attrShort(attr) {
   if (attr.key === 'inteligencia') return 'INT'
@@ -206,14 +207,13 @@ export function BossTargetPanel({
         })}
       </select>
 
-      <button
+      <Button
         type="button"
-        className="btn-primary"
+        size="xs"
         disabled={!canAttack}
         onClick={handleRoll}
+        block
         style={{
-          width: '100%',
-          fontSize: '0.6rem',
           padding: '0.35rem',
           display: 'flex',
           alignItems: 'center',
@@ -224,7 +224,7 @@ export function BossTargetPanel({
       >
         <Dices size={11} />
         Atacar · {selectedAttr ? attrShort(selectedAttr) : '—'} {rollBonus}
-      </button>
+      </Button>
 
       {lastResult && lastResult.targetId === targetId && (
         <div style={{

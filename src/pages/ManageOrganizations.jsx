@@ -9,6 +9,7 @@ import { Modal } from '../components/ui/Modal'
 import { Field, Input, Textarea } from '../components/ui/Field'
 import { ImageUpload } from '../components/ui/ImageUpload'
 import { EmptyState } from '../components/ui/EmptyState'
+import { Button } from '../components/ui/Button'
 
 const EMPTY_FORM = {
   name: '', image: '', symbol: '', description: '', ideology: '', allies: '', enemies: ''
@@ -50,7 +51,7 @@ function OrgForm({ initial, onSave, onCancel }) {
       </div>
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
-        <button type="submit" className="btn-primary">Salvar</button>
+        <Button type="submit">Salvar</Button>
       </div>
     </form>
   )
@@ -191,7 +192,7 @@ export function ManageOrganizations() {
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>
-          <button className="btn-primary" onClick={() => { deleteOrganization(deleteConfirm.id); refreshTrash(); setDeleteConfirm(null) }}>Excluir</button>
+          <Button variant="danger" onClick={() => { deleteOrganization(deleteConfirm.id); refreshTrash(); setDeleteConfirm(null) }}>Excluir</Button>
         </div>
       </Modal>
     </div>

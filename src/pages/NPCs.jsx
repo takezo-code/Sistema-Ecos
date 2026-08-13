@@ -28,6 +28,7 @@ import { finalizeCreationAttributes, buildMasterProgressionPatch } from '../serv
 import { normalizeGameEntity } from '../constants/attributes'
 import { entityHasEcoPowers, getAttributesForEntity } from '../constants/entityProgression'
 import { isNarrativeNpc } from '../utils/npcScope'
+import { Button } from '../components/ui/Button'
 
 export const BOSS_DEFAULTS = {
   podeCombater: true,
@@ -383,14 +384,15 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
             <div style={{ fontSize: '0.65rem', color: '#a855f7', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
               SKILLS · {(form.skills || []).length}
             </div>
-            <button
+            <Button
               type="button"
-              className="btn-secondary"
+              variant="secondary"
+              size="xs"
               onClick={openCreateSkill}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
             >
               <Plus size={13} /> Criar skill
-            </button>
+            </Button>
           </div>
 
           {(form.skills || []).length === 0 ? (
@@ -467,7 +469,7 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
 
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
-        <button type="submit" className="btn-primary">Salvar</button>
+        <Button type="submit">Salvar</Button>
       </div>
     </form>
   )
@@ -520,10 +522,10 @@ function NPCDetailModal({ npc, onClose, onEdit }) {
       )}
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         <button className="btn-ghost" onClick={onClose}>Fechar</button>
-        <button className="btn-secondary" onClick={onEdit}>
+        <Button variant="secondary" onClick={onEdit}>
           <Pencil size={12} style={{ display: 'inline', marginRight: '4px' }} />
           Editar
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -689,9 +691,9 @@ export function NPCs({
           title="NPCs"
           subtitle={`${filtered.length} NPCs NA CAMPANHA`}
           action={
-            <button className="btn-primary" onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}>
+            <Button onClick={openCreate} size="xs" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <Plus size={13} /> Novo NPC
-            </button>
+            </Button>
           }
         />
       )}
@@ -715,9 +717,9 @@ export function NPCs({
           <option value="desaparecido">Desaparecidos</option>
         </Select>
         {embedded && (
-          <button className="btn-primary" onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', marginLeft: 'auto' }}>
+          <Button onClick={openCreate} size="xs" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginLeft: 'auto' }}>
             <Plus size={13} /> Novo NPC
-          </button>
+          </Button>
         )}
       </div>
 
@@ -727,7 +729,7 @@ export function NPCs({
             icon={Skull}
             title="Nenhum NPC encontrado"
             description={npcs.length === 0 ? "Crie o primeiro NPC da sua campanha." : "Tente ajustar os filtros de busca."}
-            action={npcs.length === 0 && <button className="btn-primary" onClick={openCreate}>Criar NPC</button>}
+            action={npcs.length === 0 && <Button onClick={openCreate}>Criar NPC</Button>}
           />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
@@ -766,7 +768,7 @@ export function NPCs({
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>
-          <button className="btn-primary" onClick={() => { deleteNPC(deleteConfirm.id); setDeleteConfirm(null) }}>Excluir</button>
+          <Button variant="danger" onClick={() => { deleteNPC(deleteConfirm.id); setDeleteConfirm(null) }}>Excluir</Button>
         </div>
       </Modal>
     </div>

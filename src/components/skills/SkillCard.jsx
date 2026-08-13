@@ -1,6 +1,7 @@
 import React from 'react'
 import { Play, Clock, Zap } from 'lucide-react'
 import { getSkillTypeMeta } from '../../constants/skillTypes'
+import { Button } from '../ui/Button'
 
 export function SkillCard({ runtime, onActivate }) {
   const { catalog, visualMeta, cooldownRemaining, cooldownTotal, canActivate, blockReason, isPassive, overloadCost } = runtime
@@ -86,9 +87,10 @@ export function SkillCard({ runtime, onActivate }) {
             : `Usos +${overloadCost}`}
         </span>
         {!isPassive && onActivate && (
-          <button
+          <Button
             type="button"
-            className={canActivate ? 'btn-secondary' : 'btn-ghost'}
+            variant={canActivate ? 'secondary' : 'ghost'}
+            size="xs"
             disabled={!canActivate}
             onClick={() => onActivate(runtime.instance.id)}
             title={blockReason || ''}
@@ -96,12 +98,11 @@ export function SkillCard({ runtime, onActivate }) {
               display: 'flex',
               alignItems: 'center',
               gap: '0.35rem',
-              fontSize: '0.65rem',
               opacity: canActivate ? 1 : 0.45,
             }}
           >
             <Play size={11} /> Ativar
-          </button>
+          </Button>
         )}
       </footer>
     </article>

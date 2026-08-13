@@ -19,6 +19,7 @@ import { formatOverloadDisplay } from '../constants/ecoOverload'
 import { filterByActiveCampaign } from '../utils/campaignScope'
 import { useSaveStore } from '../store/useSaveStore'
 import { getEntityEffectiveAttributes } from '../services/stateModifiers'
+import { Button } from '../components/ui/Button'
 
 function GroupForm({ initial, onSave, onCancel }) {
   const [form, setForm] = useState(initial || { name: '', description: '' })
@@ -37,7 +38,7 @@ function GroupForm({ initial, onSave, onCancel }) {
       </Field>
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
-        <button type="submit" className="btn-primary">Salvar</button>
+        <Button type="submit">Salvar</Button>
       </div>
     </form>
   )
@@ -196,14 +197,13 @@ export function ManageGroups() {
             title="Nenhum grupo criado"
             description="Crie um grupo para organizar os personagens e gerenciar a sessão."
             action={
-              <button
-                className="btn-primary"
+              <Button
                 onClick={() => setGroupModal({ mode: 'create' })}
                 disabled={!activeCampaignId}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
               >
                 <Plus size={14} /> Criar Grupo
-              </button>
+              </Button>
             }
           />
         </div>
@@ -281,29 +281,30 @@ export function ManageGroups() {
       {/* Ações do grupo */}
       <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid #1a1a1a', flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button
-            className="btn-primary"
+          <Button
             onClick={() => setAddMemberOpen(true)}
             disabled={availableToAdd.length === 0}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}
+            size="xs"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
             title={availableToAdd.length === 0 ? 'Nenhum personagem em espera nesta campanha' : 'Adicionar personagem ao grupo'}
           >
             <UserPlus size={13} /> Adicionar membro
-          </button>
+          </Button>
           <div style={{ position: 'relative' }}>
-            <button
+            <Button
               type="button"
-              className="btn-secondary"
+              variant="secondary"
+              size="xs"
               disabled={members.length === 0}
               onClick={() => setUltraXpOpen(o => !o)}
               style={{
-                display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem',
+                display: 'flex', alignItems: 'center', gap: '0.4rem',
                 borderColor: ultraXpOpen ? 'rgba(168,85,247,0.4)' : undefined,
                 color: ultraXpOpen ? '#a855f7' : undefined,
               }}
             >
               <Sparkles size={13} /> Ultra XP
-            </button>
+            </Button>
             {ultraXpOpen && (
               <div style={{
                 position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 20,
@@ -364,9 +365,9 @@ export function ManageGroups() {
               title="Grupo sem membros"
               description="Adicione personagens jogáveis a este grupo."
               action={
-                <button className="btn-primary" onClick={() => setAddMemberOpen(true)}>
+                <Button onClick={() => setAddMemberOpen(true)}>
                   Adicionar membro
-                </button>
+                </Button>
               }
             />
           ) : (
@@ -450,10 +451,10 @@ export function ManageGroups() {
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>
-          <button className="btn-primary" onClick={() => {
+          <Button variant="danger" onClick={() => {
             deleteGroup(deleteConfirm.id)
             setDeleteConfirm(null)
-          }}>Excluir</button>
+          }}>Excluir</Button>
         </div>
       </Modal>
     </div>

@@ -14,6 +14,7 @@ import {
   canUpgradeSkillGrade,
 } from '../../mechanics/skills/classSkillProgressionEngine'
 import { countGradeCatalysts } from '../../constants/merchantItems'
+import { Button } from '../ui/Button'
 
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
@@ -245,14 +246,14 @@ export function ClassSkillBook({
             </div>
             <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
               {selected.unlocked && onActivate && selected.instance && (
-                <button type="button" className="btn-secondary" onClick={() => onActivate(selected.instance.id)} style={{ fontSize: '0.65rem' }}>
+                <Button type="button" variant="secondary" size="xs" onClick={() => onActivate(selected.instance.id)}>
                   Ativar
-                </button>
+                </Button>
               )}
               {!needsGrade && (
-                <button
+                <Button
                   type="button"
-                  className="btn-primary"
+                  size="xs"
                   disabled={!investCheck.ok || !onInvestPoint}
                   onClick={() => investCheck.ok && onInvestPoint?.(selected.def.templateId)}
                   title={investCheck.ok
@@ -260,16 +261,16 @@ export function ClassSkillBook({
                       ? `Gasta ${ECO_SKILL_POINT_COST} Eco para subir 1 nível`
                       : `Gasta ${ECO_SKILL_POINT_COST} Eco nesta skill`)
                     : undefined}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.65rem', opacity: investCheck.ok ? 1 : 0.45 }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', opacity: investCheck.ok ? 1 : 0.45 }}
                 >
                   <Plus size={12} />
                   {selected.unlocked ? 'Aumentar nível' : 'Desbloquear'}
-                </button>
+                </Button>
               )}
               {needsGrade && (
-                <button
+                <Button
                   type="button"
-                  className="btn-primary"
+                  size="xs"
                   disabled={!gradeCheck.ok || !onUpgradeGrade}
                   onClick={() => gradeCheck.ok && onUpgradeGrade?.(selected.def.templateId)}
                   title={gradeCheck.ok ? 'Consome 1 Catalisador de Grau' : gradeCheck.reason}
@@ -277,7 +278,6 @@ export function ClassSkillBook({
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.3rem',
-                    fontSize: '0.65rem',
                     background: gradeCheck.ok ? '#7c3aed' : undefined,
                     borderColor: gradeCheck.ok ? '#a855f7' : undefined,
                     opacity: gradeCheck.ok ? 1 : 0.45,
@@ -285,7 +285,7 @@ export function ClassSkillBook({
                 >
                   <Gem size={12} />
                   Subir grau (catalisador)
-                </button>
+                </Button>
               )}
             </div>
           </div>

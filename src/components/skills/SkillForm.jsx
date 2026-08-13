@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Field, Input, Textarea } from '../ui/Field'
+import { Button } from '../ui/Button'
 import { ECO_SKILL_TYPES } from '../../constants/skillTypes'
 import { createEmptySkillDraft } from '../../services/skillsCatalogService'
 import {
@@ -146,7 +147,7 @@ export function SkillForm({
         {onCancel && (
           <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
         )}
-        <button type="submit" className="btn-primary">{submitLabel}</button>
+        <Button type="submit">{submitLabel}</Button>
       </div>
     </form>
   )

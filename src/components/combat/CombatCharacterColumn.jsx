@@ -17,6 +17,7 @@ import { getCharacterWeapon, getCharacterArmor } from '../../mechanics/equipment
 import { getArmorTier } from '../../mechanics/equipment/armorProgressionEngine'
 import { GearDetailModal } from '../equipment/GearDetailModal'
 import ElectricBorder from '../react-bits/ElectricBorder'
+import { Button } from '../ui/Button'
 
 function socialAttrShort(attr) {
   if (attr.key === 'carisma') return 'CAR'
@@ -605,19 +606,20 @@ export function CombatCharacterColumn({
                     )}
                   </div>
                   {!rt.isPassive && onActivateSkill && (
-                    <button
+                    <Button
                       type="button"
-                      className="btn-secondary"
+                      variant="secondary"
+                      size="xs"
                       disabled={!rt.canActivate}
                       onClick={e => {
                         e.stopPropagation()
                         onActivateSkill(character.id, rt.instance.id)
                       }}
                       title={rt.blockReason || 'Ativar'}
-                      style={{ padding: '2px 5px', fontSize: '0.5rem', opacity: rt.canActivate ? 1 : 0.35, flexShrink: 0 }}
+                      style={{ padding: '2px 5px', opacity: rt.canActivate ? 1 : 0.35, flexShrink: 0 }}
                     >
                       <Play size={8} />
-                    </button>
+                    </Button>
                   )}
                 </div>
               ))

@@ -4,6 +4,7 @@ import { Field, Input } from './Field'
 import { Modal } from './Modal'
 import { compressImageToDataUrl } from '../../utils/imageFile'
 import { genId } from '../../utils/id'
+import { Button } from './Button'
 
 export const MAX_SCENE_IMAGES = 8
 
@@ -91,16 +92,17 @@ export function SceneImageGalleryEditor({
           {label.toUpperCase()} · {list.length}/{max}
         </div>
         <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-          <button
+          <Button
             type="button"
-            className="btn-secondary"
+            variant="secondary"
+            size="xs"
             disabled={loading || atMax}
             onClick={() => inputRef.current?.click()}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem', opacity: atMax ? 0.45 : 1 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', opacity: atMax ? 0.45 : 1 }}
           >
             <ImagePlus size={13} />
             {loading ? 'Carregando…' : 'Adicionar imagem'}
-          </button>
+          </Button>
           <button
             type="button"
             className="btn-ghost"
@@ -129,9 +131,9 @@ export function SceneImageGalleryEditor({
             placeholder="https://…"
             style={{ flex: 1, minWidth: '160px' }}
           />
-          <button type="button" className="btn-secondary" onClick={addUrl} style={{ fontSize: '0.7rem' }}>
+          <Button type="button" variant="secondary" size="xs" onClick={addUrl}>
             Incluir URL
-          </button>
+          </Button>
         </div>
       )}
 

@@ -13,6 +13,7 @@ import { StatusTag } from '../components/ui/StatusTag'
 import { getAttributesForEntity } from '../constants/entityProgression'
 import { useTrashStore } from '../store/useTrashStore'
 import { getEntityEffectiveAttributes } from '../services/stateModifiers'
+import { Button } from '../components/ui/Button'
 
 const PAPEL_META = {
   capanga: { label: 'Capanga', color: '#6b7280' },
@@ -274,7 +275,7 @@ export function ManageBoss({ embedded = false }) {
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button type="button" className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>
-          <button type="button" className="btn-primary" onClick={() => handleDelete(deleteConfirm)}>Excluir</button>
+          <Button type="button" variant="danger" onClick={() => handleDelete(deleteConfirm)}>Excluir</Button>
         </div>
       </Modal>
     </div>

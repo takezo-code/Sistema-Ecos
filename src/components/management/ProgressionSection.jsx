@@ -5,6 +5,7 @@ import { MAX_LEVEL } from '../../constants/progression'
 import { getProgressionSnapshot, validateProgression } from '../../services/progressionBudget'
 import { entityHasEcoPowers, isNpcEntity } from '../../constants/entityProgression'
 import { isInCreationPhase, STARTING_ATTRIBUTE_POINTS } from '../../constants/attributes'
+import { Button } from '../ui/Button'
 
 function clampLevel(value) {
   return Math.min(MAX_LEVEL, Math.max(1, value))
@@ -263,15 +264,15 @@ export function ProgressionSection({
           )}
 
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            <button
+            <Button
               type="button"
-              className="btn-primary"
+              size="xs"
               onClick={confirmChanges}
               disabled={!isDirty}
-              style={{ fontSize: '0.75rem', opacity: isDirty ? 1 : 0.45, cursor: isDirty ? 'pointer' : 'not-allowed' }}
+              style={{ opacity: isDirty ? 1 : 0.45, cursor: isDirty ? 'pointer' : 'not-allowed' }}
             >
               Confirmar alterações
-            </button>
+            </Button>
             {isDirty && (
               <button
                 type="button"
@@ -290,9 +291,9 @@ export function ProgressionSection({
                 Corrigir XP / Ecos
               </button>
               {snapshot.spent > snapshot.budget && (
-                <button type="button" className="btn-secondary" onClick={onScaleAttributes} style={{ fontSize: '0.7rem' }}>
+                <Button type="button" variant="secondary" size="xs" onClick={onScaleAttributes}>
                   Ajustar atributos ({snapshot.budget} pts)
-                </button>
+                </Button>
               )}
             </div>
           )}

@@ -8,6 +8,7 @@ import { EcoOverloadSection } from './EcoOverloadSection'
 import { EcoSkillsSection } from './EcoSkillsSection'
 import { SkillGrimoirePicker } from './SkillGrimoirePicker'
 import { getCatalogAudienceForEntity } from '../../services/skillsCatalogService'
+import { Button } from '../ui/Button'
 
 /** Conteúdo de habilidades + sobrecarga de Eco (uso de skills) */
 export function EntitySkillsPanel({
@@ -100,28 +101,32 @@ export function EntitySkillsPanel({
       )}
 
       {adminMode && inlineMode && (
-        <button
+        <Button
           type="button"
-          className="btn-secondary"
+          variant="secondary"
+          size="xs"
           onClick={openCreate}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', fontSize: '0.75rem' }}
+          block
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
         >
           <Plus size={14} style={{ color: '#a855f7' }} />
           Criar skill
-        </button>
+        </Button>
       )}
 
       {adminMode && !inlineMode && onLearnCatalogSkill && (
         <>
-          <button
+          <Button
             type="button"
-            className="btn-secondary"
+            variant="secondary"
+            size="xs"
             onClick={() => setGrimoireOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', fontSize: '0.75rem' }}
+            block
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
           >
             <Plus size={14} style={{ color: '#a855f7' }} />
             Adicionar skill
-          </button>
+          </Button>
           <Modal open={grimoireOpen} onClose={() => setGrimoireOpen(false)} title="Grimório de skills" maxWidth="560px">
             <SkillGrimoirePicker
               selectedSkills={skills}

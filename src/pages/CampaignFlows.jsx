@@ -11,6 +11,7 @@ import { StatusTag } from '../components/ui/StatusTag'
 import { EmptyState } from '../components/ui/EmptyState'
 import { SceneImageGalleryEditor, SceneImageGalleryView, normalizeSceneImages } from '../components/ui/SceneImageGallery'
 import { genId } from '../utils/id'
+import { Button } from '../components/ui/Button'
 
 const STATUS_ICONS = {
   'não iniciado': Circle,
@@ -93,7 +94,7 @@ function HistoriaForm({ initial, onSave, onCancel }) {
       </Field>
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
-        <button type="submit" className="btn-primary">Salvar</button>
+        <Button type="submit">Salvar</Button>
       </div>
     </form>
   )
@@ -189,7 +190,7 @@ function EscolhaForm({ initial, onSave, onCancel }) {
 
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
-        <button type="submit" className="btn-primary">Salvar</button>
+        <Button type="submit">Salvar</Button>
       </div>
     </form>
   )
@@ -536,13 +537,13 @@ export function CampaignFlows({ campaign, onBack }) {
             >
               <ArrowLeft size={13} /> Voltar
             </button>
-            <button
-              className="btn-primary"
+            <Button
               onClick={() => setAddModalOpen(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}
+              size="xs"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
             >
               <Plus size={13} /> Adicionar Fluxo
-            </button>
+            </Button>
           </div>
         }
       />
@@ -554,9 +555,9 @@ export function CampaignFlows({ campaign, onBack }) {
             title="Nenhum fluxo definido"
             description="Monte o roteiro da campanha com cenas de história e pontos de escolha para narrar suas sessões."
             action={
-              <button className="btn-primary" onClick={() => setAddModalOpen(true)}>
+              <Button onClick={() => setAddModalOpen(true)}>
                 Adicionar Fluxo
-              </button>
+              </Button>
             }
           />
         ) : (

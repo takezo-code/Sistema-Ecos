@@ -9,6 +9,7 @@ import { Modal } from '../components/ui/Modal'
 import { Field, Input, Textarea, Select } from '../components/ui/Field'
 import { ImageUpload } from '../components/ui/ImageUpload'
 import { EmptyState } from '../components/ui/EmptyState'
+import { Button } from '../components/ui/Button'
 
 const EMPTY_FORM = {
   name: '', image: '', symbol: '', description: '', ideology: '', allies: '', enemies: ''
@@ -50,7 +51,7 @@ function OrgForm({ initial, onSave, onCancel }) {
       </div>
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
-        <button type="submit" className="btn-primary">Salvar</button>
+        <Button type="submit">Salvar</Button>
       </div>
     </form>
   )
@@ -206,9 +207,9 @@ export function Organizations({
           title="Organizações"
           subtitle={`${filtered.length} ORGANIZAÇÕES NA CAMPANHA`}
           action={
-            <button className="btn-primary" onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}>
+            <Button onClick={openCreate} size="xs" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <Plus size={13} /> Nova Organização
-            </button>
+            </Button>
           }
         />
       )}
@@ -216,9 +217,9 @@ export function Organizations({
       <ActiveCampaignBanner onNavigate={onNavigate} />
       {embedded && (
         <div style={{ padding: '0.75rem 1.5rem', borderBottom: '1px solid #1a1a1a', display: 'flex', justifyContent: 'flex-end' }}>
-          <button className="btn-primary" onClick={openCreate} disabled={!activeCampaignId} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}>
+          <Button onClick={openCreate} disabled={!activeCampaignId} size="xs" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Plus size={13} /> Nova Organização
-          </button>
+          </Button>
         </div>
       )}
 
@@ -228,7 +229,7 @@ export function Organizations({
             icon={Building2}
             title="Nenhuma organização encontrada"
             description="Crie fações, corporações, cultos ou qualquer grupo organizado da sua narrativa."
-            action={<button className="btn-primary" onClick={openCreate}>Criar Organização</button>}
+            action={<Button onClick={openCreate}>Criar Organização</Button>}
           />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.75rem' }}>
@@ -250,7 +251,7 @@ export function Organizations({
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>
-          <button className="btn-primary" onClick={() => { deleteOrganization(deleteConfirm.id); setDeleteConfirm(null) }}>Excluir</button>
+          <Button variant="danger" onClick={() => { deleteOrganization(deleteConfirm.id); setDeleteConfirm(null) }}>Excluir</Button>
         </div>
       </Modal>
     </div>

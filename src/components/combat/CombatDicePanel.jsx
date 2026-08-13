@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react'
 import { Dices } from 'lucide-react'
+import { Button } from '../ui/Button'
 
 const DICE = [
   { sides: 4, color: '#a855f7' },
@@ -46,14 +47,14 @@ export function CombatDicePanel({ lastRoll, onRoll }) {
         ))}
       </div>
 
-      <button
+      <Button
         type="button"
-        className="btn-primary"
         onClick={() => onRoll?.(diceType)}
-        style={{ width: '100%', padding: '0.875rem', fontSize: '0.85rem' }}
+        block
+        style={{ padding: '0.875rem', fontSize: '0.85rem' }}
       >
         ROLAR d{diceType}
-      </button>
+      </Button>
 
       {lastRoll && (
         <div style={{

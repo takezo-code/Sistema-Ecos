@@ -19,6 +19,7 @@ import {
   MANUAL_MESTRE_URL,
 } from '../constants/welcomeIntro'
 import Carousel from '../components/react-bits/Carousel'
+import { Button } from '../components/ui/Button'
 
 function IntroLink({ href, icon: Icon, children, download }) {
   return (
@@ -218,104 +219,57 @@ export function WelcomeScreen({ onEnter, canContinue = false }) {
           width: '100%',
           maxWidth: '440px',
         }}>
-          <button
+          <Button
             type="button"
+            size="lg"
+            block
+            autoAnimate
             disabled={loading}
             onClick={handleNew}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.625rem',
-              padding: '1rem 1.5rem',
-              background: `linear-gradient(135deg, ${THEME_ACCENT_BORDER} 0%, ${THEME_ACCENT_SOFT} 100%)`,
-              border: `1px solid ${THEME_ACCENT_BORDER}`,
-              borderRadius: '4px',
-              color: '#e5e5e5',
-              fontSize: '0.8rem',
               fontFamily: 'monospace',
               letterSpacing: '0.15em',
               fontWeight: 600,
-              cursor: loading ? 'wait' : 'pointer',
-              transition: 'border-color 0.2s, background 0.2s',
-            }}
-            onMouseEnter={e => {
-              if (!loading) {
-                e.currentTarget.style.borderColor = THEME_ACCENT
-                e.currentTarget.style.background = 'rgba(37,99,235,0.2)'
-              }
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.borderColor = THEME_ACCENT_BORDER
-              e.currentTarget.style.background = `linear-gradient(135deg, ${THEME_ACCENT_BORDER} 0%, ${THEME_ACCENT_SOFT} 100%)`
             }}
           >
             <Plus size={16} />
             NOVA CAMPANHA
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="lg"
+            block
             disabled={loading}
             onClick={handleImportClick}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.625rem',
-              padding: '1rem 1.5rem',
-              background: 'transparent',
-              border: '1px solid #2a2a2a',
-              borderRadius: '4px',
-              color: '#888',
-              fontSize: '0.8rem',
               fontFamily: 'monospace',
               letterSpacing: '0.15em',
               fontWeight: 600,
-              cursor: loading ? 'wait' : 'pointer',
-              transition: 'border-color 0.2s, color 0.2s',
-            }}
-            onMouseEnter={e => {
-              if (!loading) {
-                e.currentTarget.style.borderColor = '#444'
-                e.currentTarget.style.color = '#e5e5e5'
-              }
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.borderColor = '#2a2a2a'
-              e.currentTarget.style.color = '#888'
             }}
           >
             <Upload size={16} />
             IMPORTAR CAMPANHA
-          </button>
+          </Button>
 
           {canContinue && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="md"
+              block
               disabled={loading}
               onClick={() => onEnter?.()}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.625rem',
-                padding: '1rem 1.5rem',
-                background: 'transparent',
-                border: 'none',
-                color: '#555',
-                fontSize: '0.75rem',
                 fontFamily: 'monospace',
                 letterSpacing: '0.12em',
                 fontWeight: 600,
-                cursor: loading ? 'wait' : 'pointer',
-                transition: 'color 0.2s',
+                color: '#555',
               }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#e5e5e5' }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#555' }}
             >
               CONTINUAR CAMPANHA
-            </button>
+            </Button>
           )}
         </div>
       </div>

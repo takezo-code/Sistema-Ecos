@@ -23,6 +23,7 @@ import {
 import { getWeaponSkill } from '../../mechanics/equipment/weaponProgressionEngine'
 import { getArmorType } from '../../constants/equipmentTypes'
 import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
+import { Button } from '../ui/Button'
 import { THEME_ACCENT } from '../../constants/theme'
 
 const ACCENT = THEME_ACCENT
@@ -118,25 +119,26 @@ function ItemAttributesRow({ category, item, color, onKeepAll }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-        <button
+        <Button
           type="button"
-          className="btn-secondary"
+          variant="secondary"
+          size="xs"
           onClick={handleRollAll}
           title="Rola todos os slots de uma vez"
-          style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.65rem', padding: '4px 10px' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '4px 10px' }}
         >
           <Dices size={12} />
           Rolagem
-        </button>
+        </Button>
         {hasDrafts && (
-          <button
+          <Button
             type="button"
-            className="btn-primary"
+            size="xs"
             onClick={handleKeepAll}
-            style={{ fontSize: '0.65rem', padding: '4px 10px' }}
+            style={{ padding: '4px 10px' }}
           >
             Manter tudo
-          </button>
+          </Button>
         )}
       </div>
 
@@ -222,14 +224,15 @@ function ManualItemAttributesRow({ category, item, color, onSave }) {
             </div>
           )
         })}
-        <button
+        <Button
           type="button"
-          className="btn-secondary"
+          variant="secondary"
+          size="xs"
           onClick={openEditor}
-          style={{ alignSelf: 'flex-end', fontSize: '0.65rem', padding: '4px 10px' }}
+          style={{ alignSelf: 'flex-end', padding: '4px 10px' }}
         >
           Editar valores
-        </button>
+        </Button>
       </div>
     )
   }
@@ -281,9 +284,9 @@ function ManualItemAttributesRow({ category, item, color, onSave }) {
         <button type="button" className="btn-ghost" onClick={() => setDrafts(null)} style={{ fontSize: '0.7rem' }}>
           Cancelar
         </button>
-        <button type="button" className="btn-primary" onClick={handleSave} style={{ fontSize: '0.7rem' }}>
+        <Button type="button" size="xs" onClick={handleSave}>
           Salvar valores
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -329,9 +332,9 @@ function WeaponSkillEditor({ skill, onSave }) {
           <Input type="number" min={0} value={form.overloadCost} onChange={e => set('overloadCost', e.target.value)} />
         </Field>
       </div>
-      <button type="submit" className="btn-primary" disabled={!form.name.trim()} style={{ alignSelf: 'flex-end', fontSize: '0.7rem' }}>
+      <Button type="submit" size="xs" disabled={!form.name.trim()} style={{ alignSelf: 'flex-end' }}>
         Salvar skill
-      </button>
+      </Button>
     </form>
   )
 }
@@ -560,14 +563,14 @@ export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeap
               manualValues={manualValues}
             />
           ) : (
-            <button
+            <Button
               type="button"
-              className="btn-secondary"
+              variant="secondary"
+              size="xs"
               onClick={() => setForging({ category: GEAR_CATEGORIES.WEAPON, item: null })}
-              style={{ fontSize: '0.7rem' }}
             >
               Forjar arma
-            </button>
+            </Button>
           )}
         </div>
 
@@ -580,14 +583,14 @@ export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeap
           {armor ? (
             <ArmorDetails character={character} armor={armor} onSetPassive={onSetPassive} manualValues={manualValues} />
           ) : (
-            <button
+            <Button
               type="button"
-              className="btn-secondary"
+              variant="secondary"
+              size="xs"
               onClick={() => setForging({ category: GEAR_CATEGORIES.ARMOR, item: null })}
-              style={{ fontSize: '0.7rem' }}
             >
               Forjar armadura
-            </button>
+            </Button>
           )}
         </div>
       </div>

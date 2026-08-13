@@ -4,6 +4,7 @@ import { Modal } from '../ui/Modal'
 import { getSkillTypeMeta } from '../../constants/skillTypes'
 import { ECO_SKILL_TYPES } from '../../constants/skillTypes'
 import { formatOverloadDisplay } from '../../constants/ecoOverload'
+import { Button } from '../ui/Button'
 
 function InfoRow({ label, color, children }) {
   return (
@@ -197,9 +198,9 @@ export function CombatSkillDetailModal({
             Fechar
           </button>
           {!isPassiva && onActivate && (
-            <button
+            <Button
               type="button"
-              className="btn-primary"
+              size="xs"
               disabled={!runtime.canActivate}
               onClick={() => {
                 onActivate(character?.id, runtime.instance.id)
@@ -209,12 +210,11 @@ export function CombatSkillDetailModal({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.35rem',
-                fontSize: '0.75rem',
                 opacity: runtime.canActivate ? 1 : 0.45,
               }}
             >
               <Play size={12} /> Ativar habilidade
-            </button>
+            </Button>
           )}
         </div>
       </div>

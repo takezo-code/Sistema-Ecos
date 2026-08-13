@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Activity, RotateCcw, AlertTriangle } from 'lucide-react'
 import { getEcoOverloadSnapshot } from '../../services/ecoOverloadService'
 import { ECO_OVERLOAD_PHASES, ECO_OVERLOAD_OVERAGE_TO_TOTAL } from '../../constants/ecoOverload'
+import { Button } from '../ui/Button'
 
 const PHASE_LABELS = {
   [ECO_OVERLOAD_PHASES.STABLE]: { label: 'Estável', color: '#16a34a' },
@@ -74,10 +75,10 @@ export function EcoOverloadSection({
 
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
         {onRestOverload && (
-          <button type="button" className="btn-secondary" onClick={onRestOverload}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}>
+          <Button type="button" variant="secondary" size="xs" onClick={onRestOverload}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <RotateCcw size={12} /> Descansar Eco (0/{lim})
-          </button>
+          </Button>
         )}
         {onSetOverload && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>

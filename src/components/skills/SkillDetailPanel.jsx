@@ -3,6 +3,7 @@ import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
 import { getSkillTypeMeta } from '../../constants/skillTypes'
 import { SKILL_AUDIENCE_META, getSkillAudience } from '../../constants/skillAudience'
 import { getCharacterClass } from '../../constants/classes'
+import { Button } from '../ui/Button'
 
 function DetailBlock({ label, color, children }) {
   return (
@@ -61,10 +62,10 @@ export function SkillDetailPanel({ skill, onBack, onEdit, onDelete }) {
         </button>
         <div style={{ flex: 1, minWidth: 0 }} />
         {onEdit && (
-          <button type="button" className="btn-secondary" onClick={() => onEdit(skill)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem' }}>
+          <Button type="button" variant="secondary" size="xs" onClick={() => onEdit(skill)}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <Pencil size={12} /> Editar
-          </button>
+          </Button>
         )}
         {onDelete && (
           <button type="button" className="btn-ghost" onClick={() => onDelete(skill)}

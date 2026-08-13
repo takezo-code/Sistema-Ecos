@@ -5,6 +5,7 @@ import {
   GEAR_CATEGORIES,
   getForgeableArmorTypes,
 } from '../../mechanics/equipment/characterGear'
+import { Button } from '../ui/Button'
 
 /**
  * Forja da peça pessoal.
@@ -97,9 +98,9 @@ export function GearForgeForm({ category, initial, onSave, onCancel }) {
         {onCancel && (
           <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
         )}
-        <button type="submit" className="btn-primary" disabled={!form.name.trim()}>
+        <Button type="submit" disabled={!form.name.trim()}>
           {initial ? 'Salvar' : 'Forjar'}
-        </button>
+        </Button>
       </div>
     </form>
   )

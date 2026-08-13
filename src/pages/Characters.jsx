@@ -31,6 +31,7 @@ import {
 import { resolveCharacterNarrative } from '../utils/entityNarrative'
 import { getEntityEffectiveAttributes } from '../services/stateModifiers'
 import { ClassPicker } from '../components/creation/ClassPicker'
+import { Button } from '../components/ui/Button'
 import { ClassSkillBook } from '../components/skills/ClassSkillBook'
 import { getCharacterClass, normalizeClassId } from '../constants/classes'
 import { getClassAttributeBonus } from '../mechanics/classes/classBonusEngine'
@@ -378,9 +379,8 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
 
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
-        <button
+        <Button
           type="submit"
-          className="btn-primary"
           disabled={!profileOnly && isNew && !creationReady}
           title={!profileOnly && isNew && !creationReady
             ? (!ecoCheck.ok
@@ -389,7 +389,7 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
             : undefined}
         >
           Salvar
-        </button>
+        </Button>
       </div>
     </form>
   )
@@ -417,9 +417,9 @@ function InventoryPanel({ character, onAddItem, onRemoveItem, onClose }) {
           placeholder="Nome do item..."
           onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAdd())}
         />
-        <button className="btn-primary" onClick={handleAdd} style={{ fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
+        <Button onClick={handleAdd} size="xs" style={{ whiteSpace: 'nowrap' }}>
           Adicionar
-        </button>
+        </Button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', maxHeight: '300px', overflowY: 'auto' }}>
@@ -627,9 +627,9 @@ export function Characters({
         title="Personagens"
         subtitle={`${filtered.length} PERSONAGENS NA CAMPANHA`}
         action={
-          <button className="btn-primary" onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}>
+          <Button onClick={openCreate} size="xs" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Plus size={13} /> Novo Personagem
-          </button>
+          </Button>
         }
       />
       )}
@@ -637,9 +637,9 @@ export function Characters({
       <ActiveCampaignBanner onNavigate={onNavigate} />
       {embedded && (
         <div style={{ padding: '0.75rem 1.5rem', borderBottom: '1px solid #1a1a1a', display: 'flex', justifyContent: 'flex-end' }}>
-          <button className="btn-primary" onClick={openCreate} disabled={!activeCampaignId} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}>
+          <Button onClick={openCreate} disabled={!activeCampaignId} size="xs" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Plus size={13} /> Novo Personagem
-          </button>
+          </Button>
         </div>
       )}
 
@@ -649,7 +649,7 @@ export function Characters({
             icon={Sword}
             title="Nenhum personagem criado"
             description="Adicione os personagens jogáveis da sua campanha."
-            action={<button className="btn-primary" onClick={openCreate}>Criar Personagem</button>}
+            action={<Button onClick={openCreate} size="xs">Criar Personagem</Button>}
           />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '0.75rem' }}>
@@ -688,7 +688,7 @@ export function Characters({
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>
-          <button className="btn-primary" onClick={() => { deleteCharacter(deleteConfirm.id); setDeleteConfirm(null) }}>Excluir</button>
+          <Button variant="danger" onClick={() => { deleteCharacter(deleteConfirm.id); setDeleteConfirm(null) }}>Excluir</Button>
         </div>
       </Modal>
     </div>

@@ -3,6 +3,7 @@ import { Upload, X, Link2, User, Crop } from 'lucide-react'
 import { Field, Input } from './Field'
 import { readImageFileAsDataUrl } from '../../utils/imageCrop'
 import { ImageCropModal } from './ImageCropModal'
+import { Button } from './Button'
 
 export function ImageUpload({
   value,
@@ -69,26 +70,28 @@ export function ImageUpload({
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <button
+              <Button
                 type="button"
-                className="btn-secondary"
+                variant="secondary"
+                size="xs"
                 disabled={loading}
                 onClick={() => inputRef.current?.click()}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
               >
                 <Upload size={13} />
                 {loading ? 'Carregando...' : 'Enviar do computador'}
-              </button>
+              </Button>
               {value && (
                 <>
-                  <button
+                  <Button
                     type="button"
-                    className="btn-secondary"
+                    variant="secondary"
+                    size="xs"
                     onClick={() => openCrop(value)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
                   >
                     <Crop size={13} /> Ajustar
-                  </button>
+                  </Button>
                   <button
                     type="button"
                     className="btn-ghost"
@@ -134,14 +137,15 @@ export function ImageUpload({
                   style={{ flex: 1, minWidth: '160px' }}
                 />
                 {value && !value.startsWith('data:') && (value.startsWith('http://') || value.startsWith('https://')) && (
-                  <button
+                  <Button
                     type="button"
-                    className="btn-secondary"
+                    variant="secondary"
+                    size="xs"
                     onClick={() => openCrop(value)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', flexShrink: 0 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}
                   >
                     <Crop size={13} /> Ajustar URL
-                  </button>
+                  </Button>
                 )}
               </div>
             )}

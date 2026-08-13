@@ -3,6 +3,7 @@ import { Search, Sparkles, X, Plus, ChevronUp } from 'lucide-react'
 import { getMergedCatalog } from '../../services/skillsCatalogService'
 import { SKILL_AUDIENCE, SKILL_AUDIENCE_META } from '../../constants/skillAudience'
 import { buildSkillInstanceFromCatalog } from '../../services/ecoSkillRuntimeService'
+import { Button } from '../ui/Button'
 
 /**
  * Escolha manual de habilidades do grimório (catálogo builtin + custom).
@@ -112,24 +113,24 @@ export function SkillGrimoirePicker({
       )}
 
       {!listOpen ? (
-        <button
+        <Button
           type="button"
-          className="btn-secondary"
+          variant="secondary"
           disabled={!canAddMore}
           onClick={openList}
+          block
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '0.5rem',
-            width: '100%',
             fontSize: '0.8rem',
             opacity: canAddMore ? 1 : 0.5,
           }}
         >
           <Plus size={14} style={{ color: '#a855f7' }} />
           Adicionar skill
-        </button>
+        </Button>
       ) : (
         <div style={{
           padding: '0.75rem',

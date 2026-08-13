@@ -9,6 +9,7 @@ import { Modal } from '../components/ui/Modal'
 import { Field, Input, Textarea } from '../components/ui/Field'
 import { EmptyState } from '../components/ui/EmptyState'
 import { formatDateTime } from '../utils/id'
+import { Button } from '../components/ui/Button'
 
 const EMPTY_FORM = {
   title: '',
@@ -40,7 +41,7 @@ function SessionForm({ initial, nextNumber, onSave, onCancel }) {
       </Field>
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
-        <button type="submit" className="btn-primary">Salvar</button>
+        <Button type="submit">Salvar</Button>
       </div>
     </form>
   )
@@ -218,9 +219,9 @@ function SessionReportCard({ session, onEdit, onDelete, onClose }) {
           Fechar
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <button
+          <Button
             type="button"
-            className="btn-secondary"
+            variant="secondary"
             onClick={onDelete}
             style={{
               display: 'inline-flex',
@@ -236,16 +237,15 @@ function SessionReportCard({ session, onEdit, onDelete, onClose }) {
           >
             <Trash2 size={14} />
             Excluir
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="btn-primary"
             onClick={onEdit}
             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', padding: '0.4rem 1rem' }}
           >
             <Pencil size={14} />
             Editar relatório
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -306,9 +306,9 @@ export function Sessions() {
         icon={ScrollText}
         title="Sessões"
         action={
-          <button className="btn-primary" onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}>
+          <Button onClick={openCreate} size="xs" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Plus size={13} /> Nova Sessão
-          </button>
+          </Button>
         }
       />
 
@@ -320,7 +320,7 @@ export function Sessions() {
             icon={ScrollText}
             title="Nenhuma sessão registrada"
             description="Documente o histórico das suas sessões de RPG."
-            action={<button className="btn-primary" onClick={openCreate}>Registrar Sessão</button>}
+            action={<Button onClick={openCreate}>Registrar Sessão</Button>}
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: '800px' }}>
@@ -364,7 +364,7 @@ export function Sessions() {
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
           <button className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>
-          <button className="btn-primary" onClick={() => { deleteSession(deleteConfirm.id); setDeleteConfirm(null) }}>Excluir</button>
+          <Button variant="danger" onClick={() => { deleteSession(deleteConfirm.id); setDeleteConfirm(null) }}>Excluir</Button>
         </div>
       </Modal>
     </div>

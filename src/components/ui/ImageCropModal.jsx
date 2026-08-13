@@ -10,6 +10,7 @@ import {
   resizeCropFromHandle,
 } from '../../utils/imageCrop'
 import { THEME_ACCENT } from '../../constants/theme'
+import { Button } from './Button'
 
 const WORKSPACE = 300
 const CROP_MIN = 56
@@ -377,14 +378,13 @@ export function ImageCropModal({
           </button>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button type="button" className="btn-ghost" onClick={onClose}>Cancelar</button>
-            <button
+            <Button
               type="button"
-              className="btn-primary"
               disabled={!img || loading || !!error}
               onClick={handleApply}
             >
               Aplicar
-            </button>
+            </Button>
           </div>
         </div>
       </div>

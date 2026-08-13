@@ -1,6 +1,7 @@
 import React from 'react'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { clearAllCooldowns } from '../../mechanics/skills/cooldownEngine'
+import { Button } from '../../components/ui/Button'
 
 export function CharacterSettings({ character, onUpdate, onAdvanceTurn, onRestEco, onRemoveSkill }) {
   return (
@@ -9,9 +10,9 @@ export function CharacterSettings({ character, onUpdate, onAdvanceTurn, onRestEc
       <section style={{ marginBottom: '1.5rem' }}>
         <h3 style={{ fontSize: '0.7rem', color: '#444', fontFamily: 'monospace', marginBottom: '0.75rem' }}>TURNO E SOBRECARGA</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <button type="button" className="btn-secondary" style={{ fontSize: '0.75rem' }} onClick={onAdvanceTurn}>
+          <Button type="button" variant="secondary" size="xs" onClick={onAdvanceTurn}>
             Avançar turno (reduz cooldowns)
-          </button>
+          </Button>
           <button type="button" className="btn-ghost" style={{ fontSize: '0.75rem' }} onClick={onRestEco}>
             Descansar Eco (zerar sobrecarga)
           </button>
