@@ -20,35 +20,21 @@ function LifeCountBlock({ current, max, stateOpt, compact = false }) {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '0.5rem',
-        padding: compact ? '0.45rem 0.6rem' : '0.55rem 0.7rem',
-        background: `linear-gradient(145deg, ${color}22, ${color}08)`,
-        border: `1px solid ${color}44`,
-        borderRadius: compact ? 10 : 8,
-        boxShadow: `0 0 16px ${color}14, inset 0 1px 0 rgba(255,255,255,0.05)`,
+        padding: compact ? '0.4rem 0.55rem' : '0.55rem 0.7rem',
+        background: compact ? `${color}10` : `linear-gradient(145deg, ${color}22, ${color}08)`,
+        border: `1px solid ${compact ? `${color}33` : `${color}44`}`,
+        borderRadius: compact ? 8 : 8,
+        boxShadow: compact ? 'none' : `0 0 16px ${color}14, inset 0 1px 0 rgba(255,255,255,0.05)`,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', minWidth: 0 }}>
-        <div style={{
-          width: compact ? 24 : 26,
-          height: compact ? 24 : 26,
-          borderRadius: 8,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: `${color}18`,
-          border: `1px solid ${color}44`,
-          boxShadow: `0 0 10px ${color}28`,
-          flexShrink: 0,
-        }}>
-          <HeartPulse size={compact ? 12 : 13} strokeWidth={2.3} style={{ color }} />
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '0.35rem' : '0.45rem', minWidth: 0 }}>
+        <HeartPulse size={compact ? 13 : 13} strokeWidth={2.3} style={{ color, flexShrink: 0 }} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', minWidth: 0 }}>
           <span style={{
-            fontSize: compact ? '0.68rem' : '0.72rem',
-            fontWeight: 750,
+            fontSize: compact ? '0.64rem' : '0.72rem',
+            fontWeight: 650,
             color,
             letterSpacing: '-0.01em',
-            textShadow: `0 0 10px ${color}44`,
           }}>
             {stateOpt?.label ?? 'Saudável'}
           </span>
@@ -66,22 +52,21 @@ function LifeCountBlock({ current, max, stateOpt, compact = false }) {
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div
           style={{
-            fontSize: compact ? '1.1rem' : '1.25rem',
-            fontWeight: 800,
+            fontSize: compact ? '1rem' : '1.25rem',
+            fontWeight: 750,
             color,
             fontFamily: 'monospace',
             lineHeight: 1,
-            textShadow: `0 0 12px ${color}55`,
           }}
         >
           {current}{max > 0 ? `/${max}` : ''}
         </div>
         <div style={{
-          fontSize: '0.42rem',
+          fontSize: '0.4rem',
           color: '#777',
           fontFamily: 'monospace',
-          marginTop: 3,
-          letterSpacing: '0.1em',
+          marginTop: 2,
+          letterSpacing: '0.08em',
           textTransform: 'uppercase',
         }}>
           vida

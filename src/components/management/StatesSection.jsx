@@ -23,8 +23,8 @@ export function StatesSection({ entity, physicalState, mentalState, onPhysicalCh
       {physicalPenaltyLines.length > 0 && (
         <div style={{
           padding: '0.45rem 0.625rem',
-          background: '#0a0a0a',
-          border: '1px solid #1a1a1a',
+          background: '#141418',
+          border: '1px solid rgba(255,255,255,0.1)',
           borderRadius: '3px',
           fontSize: '0.6rem',
           fontFamily: 'monospace',

@@ -7,7 +7,7 @@ export function StatePicker({ title, icon: Icon, options, value, onChange, iconC
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
         {Icon && <Icon size={14} style={{ color: iconColor }} />}
-        <span style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+        <span style={{ fontSize: '0.65rem', color: '#888', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
           {title}
         </span>
       </div>
@@ -26,11 +26,11 @@ export function StatePicker({ title, icon: Icon, options, value, onChange, iconC
                 fontSize: '0.68rem',
                 fontWeight: active ? 600 : 400,
                 background: active
-                  ? `linear-gradient(135deg, ${opt.glow || opt.color + '22'}, transparent)`
-                  : 'transparent',
-                border: `1px solid ${active ? opt.color : '#1a1a1a'}`,
+                  ? `linear-gradient(135deg, ${opt.glow || opt.color + '22'}, #141418)`
+                  : '#141418',
+                border: `1px solid ${active ? opt.color : 'rgba(255,255,255,0.1)'}`,
                 borderRadius: '3px',
-                color: active ? opt.color : '#555',
+                color: active ? opt.color : '#999',
                 cursor: 'pointer',
                 transition: 'all 0.15s',
                 boxShadow: active ? `0 0 12px ${opt.glow || 'transparent'}` : 'none',

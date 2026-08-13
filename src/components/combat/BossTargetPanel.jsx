@@ -108,12 +108,12 @@ export function BossTargetPanel({
   if (!targets.length) {
     return (
       <div style={{
-        padding: '0.4rem 0.5rem',
-        background: '#111',
-        border: '1px solid #1a1a1a',
-        borderRadius: '4px',
+        padding: '0.4rem 0.55rem',
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 8,
         fontSize: '0.55rem',
-        color: '#444',
+        color: '#666',
         fontFamily: 'monospace',
       }}>
         Sem players no combate para mirar.
@@ -140,7 +140,7 @@ export function BossTargetPanel({
             ATAQUE
           </span>
         </div>
-        <div style={{ display: 'flex', gap: '2px' }} role="group" aria-label="Dado do ataque">
+        <div style={{ display: 'flex', gap: 3 }} role="group" aria-label="Dado do ataque">
           {[8, 20].map(sides => {
             const active = diceSides === sides
             return (
@@ -149,15 +149,15 @@ export function BossTargetPanel({
                 type="button"
                 onClick={() => onDiceSidesChange?.(sides)}
                 style={{
-                  padding: '1px 5px',
+                  padding: '2px 7px',
                   fontSize: '0.5rem',
                   fontFamily: 'monospace',
                   fontWeight: 700,
-                  borderRadius: '3px',
+                  borderRadius: 6,
                   cursor: 'pointer',
-                  border: `1px solid ${active ? (sides === 8 ? '#06b6d4' : '#888') : '#222'}`,
-                  background: active ? (sides === 8 ? 'rgba(6,182,212,0.12)' : 'rgba(255,255,255,0.06)') : 'transparent',
-                  color: active ? (sides === 8 ? '#06b6d4' : '#ccc') : '#444',
+                  border: `1px solid ${active ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.08)'}`,
+                  background: active ? 'rgba(255,255,255,0.08)' : 'transparent',
+                  color: active ? '#e5e5e5' : '#666',
                 }}
               >
                 d{sides}

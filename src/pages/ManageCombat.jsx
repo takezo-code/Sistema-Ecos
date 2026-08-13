@@ -31,7 +31,6 @@ function RollResultBanner({ result, onDismiss }) {
       gap: '1rem',
       padding: '0.625rem 1.25rem',
       background: outcome.bg,
-      borderBottom: `1px solid ${outcome.border}`,
     }}>
       <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>{outcome.icon}</span>
 
@@ -102,7 +101,6 @@ export function ManageCombat() {
     combatGroupId,
     activeEnemyId,
     setCampaign,
-    setCombatGroup,
     setActiveEnemy,
   } = useCombatStore()
 
@@ -111,16 +109,9 @@ export function ManageCombat() {
   const [skillDetailRef, setSkillDetailRef] = useState(null)
   const [dcPreset, setDcPreset] = useState('medium')
 
-  const activeDcPreset = DIFFICULTY_PRESETS.find(p => p.id === dcPreset) || DIFFICULTY_PRESETS[2]
-
   useEffect(() => {
     setCampaign(activeCampaignId)
   }, [activeCampaignId, setCampaign])
-
-  const campaignGroups = useMemo(
-    () => filterByActiveCampaign(groups, activeCampaignId),
-    [groups, activeCampaignId]
-  )
 
   const roster = useMemo(
     () => resolveCombatRoster(characters, groups, activeCampaignId, combatGroupId),
@@ -295,71 +286,46 @@ export function ManageCombat() {
       background: 'transparent',
     }}>
 
-      {/* Barra de topo */}
       <div style={{
         flexShrink: 0,
         display: 'flex',
         alignItems: 'center',
-        padding: '0.45rem 1rem',
-        borderBottom: '1px solid #1a1a1a',
-        background: 'rgba(13,13,13,0.72)',
+        gap: '0.65rem',
+        flexWrap: 'wrap',
+        padding: '0.55rem 1rem',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', minWidth: 0 }}>
+        <label style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.45rem',
+          fontSize: '0.62rem',
+          fontFamily: 'monospace',
+          color: '#888',
+          letterSpacing: '0.04em',
+        }}>
+          DIFICULDADE
           <select
             className="input-base"
-            value={combatGroupId || ''}
-            onChange={e => setCombatGroup(e.target.value || null)}
-            style={{ fontSize: '0.65rem', padding: '3px 6px', maxWidth: '180px' }}
-            title="Escolha o grupo em Em jogo → Ficha ou aqui"
+            value={dcPreset}
+            onChange={e => setDcPreset(e.target.value)}
+            style={{
+              fontSize: '0.75rem',
+              padding: '5px 10px',
+              minWidth: '160px',
+              fontWeight: 600,
+              color: '#e5e5e5',
+              borderColor: 'rgba(217,119,6,0.35)',
+              background: 'rgba(12,12,16,0.88)',
+            }}
+            title="CD das rolagens neste combate"
           >
-            <option value="">Todos os personagens</option>
-            {campaignGroups.map(g => (
-              <option key={g.id} value={g.id}>
-                {g.name} ({g.memberIds.length})
+            {DIFFICULTY_PRESETS.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.label} · d20 {p.dc20} / d8 {p.dc8}
               </option>
             ))}
           </select>
-        </div>
-      </div>
-
-      {/* CD — linha abaixo do seletor de grupo */}
-      <div style={{
-        flexShrink: 0,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.35rem',
-        flexWrap: 'wrap',
-        padding: '0.35rem 1rem',
-        borderBottom: '1px solid #1a1a1a',
-        background: 'rgba(11,11,11,0.55)',
-      }}>
-        {DIFFICULTY_PRESETS.map(p => {
-          const active = p.id === dcPreset
-          return (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => setDcPreset(p.id)}
-              title={`d20: ${p.dc20} · d8: ${p.dc8}`}
-              style={{
-                padding: '2px 6px',
-                fontSize: '0.55rem',
-                fontFamily: 'monospace',
-                fontWeight: 700,
-                borderRadius: '3px',
-                cursor: 'pointer',
-                border: `1px solid ${active ? '#d97706' : '#2a2a2a'}`,
-                background: active ? 'rgba(217,119,6,0.15)' : 'transparent',
-                color: active ? '#d97706' : '#666',
-              }}
-            >
-              {p.label}
-            </button>
-          )
-        })}
-        <span style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#888' }}>
-          d20:{activeDcPreset.dc20} · d8:{activeDcPreset.dc8}
-        </span>
+        </label>
       </div>
 
       {/* Banner de resultado da rolagem */}
@@ -370,7 +336,6 @@ export function ManageCombat() {
           flexShrink: 0,
           padding: '0.4rem 1rem',
           background: 'rgba(234,179,8,0.08)',
-          borderBottom: '1px solid rgba(234,179,8,0.2)',
           fontSize: '0.65rem',
           color: '#eab308',
           fontFamily: 'monospace',
@@ -385,8 +350,8 @@ export function ManageCombat() {
           icon={Swords}
           title={activeGroup ? 'Grupo sem membros' : 'Nenhum personagem'}
           description={activeGroup
-            ? 'Adicione personagens ao grupo em Em jogo → Ficha, ou escolha outro grupo no seletor acima.'
-            : 'Cadastre personagens na campanha ativa ou selecione um grupo com membros.'}
+            ? 'Adicione personagens ao grupo em Em jogo → Ficha.'
+            : 'Cadastre personagens na campanha ativa ou monte um grupo em Em jogo → Ficha.'}
         />
       ) : (
         <div style={{

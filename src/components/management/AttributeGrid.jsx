@@ -29,8 +29,8 @@ function AttributeInput({ attr, value, effectiveValue, max, showMax, onChange, c
 
   return (
     <div style={{
-      background: '#0d0d0d',
-      border: `1px solid ${modified ? 'rgba(234,88,12,0.25)' : '#1a1a1a'}`,
+      background: '#16161c',
+      border: `1px solid ${modified ? 'rgba(234,88,12,0.35)' : 'rgba(255,255,255,0.1)'}`,
       borderRadius: '3px',
       padding: '0.625rem 0.75rem',
       display: 'flex',
@@ -41,16 +41,16 @@ function AttributeInput({ attr, value, effectiveValue, max, showMax, onChange, c
         <div style={{ fontSize: '0.6rem', color: attr.color, fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '2px' }}>
           {attr.label.toUpperCase()}
         </div>
-        <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#e5e5e5', lineHeight: 1 }}>
+        <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f0f0f0', lineHeight: 1 }}>
           {modified ? (
             <>
               <span style={{ color: '#ea580c' }}>{effectiveValue}</span>
-              <span style={{ fontSize: '0.65rem', color: '#444', fontWeight: 400, marginLeft: '4px' }}>({value})</span>
+              <span style={{ fontSize: '0.65rem', color: '#777', fontWeight: 400, marginLeft: '4px' }}>({value})</span>
             </>
           ) : (
             value
           )}
-          {showMax && <span style={{ fontSize: '0.6rem', color: '#333', fontWeight: 400 }}>/{max}</span>}
+          {showMax && <span style={{ fontSize: '0.6rem', color: '#555', fontWeight: 400 }}>/{max}</span>}
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -58,8 +58,8 @@ function AttributeInput({ attr, value, effectiveValue, max, showMax, onChange, c
           disabled={!canIncrease}
           onClick={() => onChange(value + 1)}
           style={{
-            background: '#1a1a1a', border: 'none',
-            color: canIncrease ? '#666' : '#222',
+            background: '#222228', border: 'none',
+            color: canIncrease ? '#aaa' : '#3a3a40',
             cursor: canIncrease ? 'pointer' : 'not-allowed',
             padding: '3px 6px', borderRadius: '2px', display: 'flex',
           }}
@@ -70,8 +70,8 @@ function AttributeInput({ attr, value, effectiveValue, max, showMax, onChange, c
           onClick={() => canDecrease && onChange(value - 1)}
           disabled={!canDecrease}
           style={{
-            background: '#1a1a1a', border: 'none',
-            color: canDecrease ? '#666' : '#222',
+            background: '#222228', border: 'none',
+            color: canDecrease ? '#aaa' : '#3a3a40',
             cursor: canDecrease ? 'pointer' : 'not-allowed',
             padding: '3px 6px', borderRadius: '2px', display: 'flex',
           }}

@@ -1,11 +1,10 @@
 import React, { useState } from 'react'
-import { Dices, Plus, Shirt, Sword, User } from 'lucide-react'
+import { Dices } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import { Field, Input, Select, Textarea } from '../ui/Field'
 import { GearForgeForm } from './GearForgeForm'
 import {
   GEAR_CATEGORIES,
-  GEAR_SLOTS,
   getGearItem,
   getWeaponKindLabel,
 } from '../../mechanics/equipment/characterGear'
@@ -23,71 +22,6 @@ import { getWeaponSkill } from '../../mechanics/equipment/weaponProgressionEngin
 import { getArmorType } from '../../constants/equipmentTypes'
 import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
 import { Button } from '../ui/Button'
-
-function SlotFrame({ children, onClick, borderColor = '#1e1e1e', title }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      style={{
-        aspectRatio: '1',
-        width: '100%',
-        background: '#0d0d0d',
-        border: `1px solid ${borderColor}`,
-        borderRadius: '4px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '2px',
-        padding: '4px',
-        cursor: 'pointer',
-        overflow: 'hidden',
-      }}
-    >
-      {children}
-    </button>
-  )
-}
-
-function GearSlot({ item, label, icon: Icon, color, onClick }) {
-  return (
-    <SlotFrame onClick={onClick} borderColor={item ? `${color}55` : '#1e1e1e'} title={item ? `Editar ${label.toLowerCase()}` : `Forjar ${label.toLowerCase()}`}>
-      {item?.image ? (
-        <img
-          src={item.image}
-          alt={item.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '3px' }}
-        />
-      ) : item ? (
-        <>
-          <Icon size={16} style={{ color }} />
-          <span style={{
-            fontSize: '0.42rem',
-            color: '#888',
-            fontFamily: 'monospace',
-            textAlign: 'center',
-            lineHeight: 1.2,
-            maxWidth: '100%',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}>
-            {item.name}
-          </span>
-        </>
-      ) : (
-        <>
-          <Plus size={12} style={{ color: '#333' }} />
-          <span style={{ fontSize: '0.4rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
-            {label.toUpperCase()}
-          </span>
-        </>
-      )}
-    </SlotFrame>
-  )
-}
 
 function ItemAttributesRow({ category, item, color, onKeepAll }) {
   const slots = getPassiveSlotsForCategory(category)
@@ -464,7 +398,6 @@ export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeap
 
   const weapon = getGearItem(character, GEAR_CATEGORIES.WEAPON)
   const armor = getGearItem(character, GEAR_CATEGORIES.ARMOR)
-  const armorTier = getArmorTier(character)
 
   const handleSave = (data) => {
     onForge?.(forging.category, data)
@@ -473,60 +406,6 @@ export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeap
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '72px 1fr',
-        gap: '0.5rem',
-        maxWidth: '320px',
-        alignItems: 'stretch',
-      }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {GEAR_SLOTS.map(slot => {
-            const isWeapon = slot.category === GEAR_CATEGORIES.WEAPON
-            const item = isWeapon ? weapon : armor
-            return (
-              <GearSlot
-                key={slot.id}
-                item={item}
-                label={slot.label}
-                icon={isWeapon ? Sword : Shirt}
-                color={isWeapon ? '#f97316' : armorTier.color}
-                onClick={() => setForging({ category: slot.category, item })}
-              />
-            )
-          })}
-        </div>
-
-        <div style={{
-          background: '#0b0b0b',
-          border: '1px solid #1a1a1a',
-          borderRadius: '6px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '0.4rem',
-          padding: '0.75rem',
-          minHeight: '148px',
-        }}>
-          {character.image ? (
-            <img
-              src={character.image}
-              alt={character.name}
-              style={{ width: '100%', maxHeight: '140px', objectFit: 'cover', borderRadius: '4px', opacity: 0.9 }}
-            />
-          ) : (
-            <User size={56} style={{ color: '#1e1e1e' }} />
-          )}
-          <div style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: '#555', textAlign: 'center' }}>
-            {character.name}
-          </div>
-          <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#333' }}>
-            NV {character.level ?? 1}
-          </div>
-        </div>
-      </div>
-
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <div style={{
           background: '#0d0d0d',

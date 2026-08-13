@@ -60,7 +60,7 @@ function AttributeInput({ attr, value, onChange, canIncrease, canDecrease = true
 }
 
 /** Editor de 10 pts de atributo (criação / ficha nova) */
-export function AttributePointsEditor({ form, onFormChange, showRuptureHint = false }) {
+export function AttributePointsEditor({ form, onFormChange }) {
   const pool = form.unspentAttributePoints ?? 0
   const attrs = form.attributes || {}
   const attrList = getAttributesForEntity(form)
@@ -86,11 +86,6 @@ export function AttributePointsEditor({ form, onFormChange, showRuptureHint = fa
         <Counter value={pool} fontSize={14} textColor={pool > 0 ? '#eab308' : '#16a34a'} fontWeight={700} gradientHeight={0} />
         disponíveis
       </div>
-      {showRuptureHint && (
-        <p style={{ fontSize: '0.7rem', color: '#555', marginBottom: '0.75rem', lineHeight: 1.5 }}>
-          Inclua pontos em <strong style={{ color: '#d97706' }}>Ruptura</strong> se o NPC tiver poderes de Eco.
-        </p>
-      )}
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${colCount}, 1fr)`, gap: '0.5rem' }}>
         {attrList.map(attr => {
           const v = attrs[attr.key] || 0

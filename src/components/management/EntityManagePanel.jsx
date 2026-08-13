@@ -53,7 +53,18 @@ export function EntityManagePanel({
   const mentalState = entity.mentalState ?? 'estavel'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1.25rem',
+      background: 'rgba(10, 10, 14, 0.94)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 12,
+      padding: '1.1rem 1.15rem',
+      backdropFilter: 'blur(18px)',
+      WebkitBackdropFilter: 'blur(18px)',
+      boxShadow: '0 12px 40px rgba(0,0,0,0.45)',
+    }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <EntityThumb src={entity.image} alt={entity.name} size={48} borderRadius="4px" />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -70,7 +81,7 @@ export function EntityManagePanel({
               </button>
             )}
           </div>
-          <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', marginTop: '2px' }}>
+          <div style={{ fontSize: '0.65rem', color: '#666', fontFamily: 'monospace', marginTop: '2px' }}>
             NVL {entity.level || 1}
           </div>
         </div>
@@ -121,21 +132,16 @@ export function EntityManagePanel({
       />
 
       {showProgression && (
-        <>
-          <hr className="divide-line" />
-          <ProgressionSection
-            entity={entity}
-            adminMode={adminMode}
-            onMasterProgression={onMasterProgression}
-            onSyncProgression={onSyncProgression}
-            onClampAuxiliary={onClampAuxiliary}
-            onScaleAttributes={onScaleAttributes}
-            masterError={masterError}
-          />
-        </>
+        <ProgressionSection
+          entity={entity}
+          adminMode={adminMode}
+          onMasterProgression={onMasterProgression}
+          onSyncProgression={onSyncProgression}
+          onClampAuxiliary={onClampAuxiliary}
+          onScaleAttributes={onScaleAttributes}
+          masterError={masterError}
+        />
       )}
-
-      <hr className="divide-line" />
 
       <AttributeGrid
         entity={entity}

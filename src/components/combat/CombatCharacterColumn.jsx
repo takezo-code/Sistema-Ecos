@@ -6,7 +6,7 @@ import {
 import { COMBAT_HIGHLIGHT_XP } from '../../constants/progression'
 import { DamageMarksPanel, PLAYER_MARK_TYPES } from './DamageMarksPanel'
 import { EntityThumb } from '../ui/EntityThumb'
-import { PHYSICAL_STATES, mergeMentalStateWithOverload, getMentalStateOption } from '../../constants/states'
+import { mergeMentalStateWithOverload, getMentalStateOption } from '../../constants/states'
 import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
 import { getRupturaPool, getOverloadPhase, ECO_OVERLOAD_PHASES } from '../../constants/ecoOverload'
 import { getEffectiveAttributeValue, getEffectiveSocialAttributeValue } from '../../services/stateModifiers'
@@ -14,7 +14,7 @@ import { listActiveMentalStatusDetails } from '../../services/mentalStatusServic
 import { getCharacterClass } from '../../constants/classes'
 import { getClassAttributeBonus } from '../../mechanics/classes/classBonusEngine'
 import { getArmorDestrezaPenalty, getArmorMarkBonus } from '../../mechanics/equipment/armorEffectsEngine'
-import { sumGearRollBonus, sumAttrBonus } from '../../mechanics/equipment/gearPassiveEngine'
+import { sumGearRollBonus, sumAttrBonus, getRupturaUsesBreakdown } from '../../mechanics/equipment/gearPassiveEngine'
 import { listActiveBuffs, sumMarkBuffBonus, sumAttrBuffBonus, formatBuff } from '../../mechanics/skills/skillBuffEngine'
 import { getCharacterWeapon, getCharacterArmor } from '../../mechanics/equipment/characterGear'
 import { getArmorTier } from '../../mechanics/equipment/armorProgressionEngine'
@@ -74,28 +74,17 @@ function IconChip({ active, color, disabled, title, onClick, children }) {
   )
 }
 
-function SectionLabel({ children, accent = '#666' }) {
+function SectionLabel({ children, accent = '#777' }) {
   return (
     <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 6,
-      marginBottom: '0.3rem',
+      fontSize: '0.5rem',
+      color: accent,
+      fontFamily: 'monospace',
+      letterSpacing: '0.1em',
+      fontWeight: 600,
+      marginBottom: '0.28rem',
     }}>
-      <span style={{
-        fontSize: '0.42rem',
-        color: accent,
-        fontFamily: 'monospace',
-        letterSpacing: '0.12em',
-        fontWeight: 700,
-      }}>
-        {children}
-      </span>
-      <div style={{
-        flex: 1,
-        height: 1,
-        background: `linear-gradient(90deg, ${accent}44, transparent)`,
-      }} />
+      {children}
     </div>
   )
 }
@@ -116,51 +105,34 @@ function AttrRollButton({
       onClick={onClick}
       title={title}
       style={{
-        position: 'relative',
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.015) 100%)',
-        border: `1px solid ${highlighted ? 'rgba(217,119,6,0.45)' : 'rgba(255,255,255,0.08)'}`,
+        background: highlighted ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${highlighted ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.08)'}`,
         borderRadius: 8,
-        padding: '0.38rem 0.15rem 0.32rem',
+        padding: '0.32rem 0.12rem 0.28rem',
         cursor: 'pointer',
         textAlign: 'center',
-        overflow: 'hidden',
-        boxShadow: highlighted
-          ? '0 0 12px rgba(217,119,6,0.15), inset 0 1px 0 rgba(255,255,255,0.06)'
-          : 'inset 0 1px 0 rgba(255,255,255,0.04)',
       }}
     >
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: '15%',
-        right: '15%',
-        height: 2,
-        borderRadius: '0 0 2px 2px',
-        background: color,
-        boxShadow: `0 0 8px ${color}`,
-        opacity: 0.9,
-      }} />
       <div style={{
         fontSize: '0.42rem',
         color,
         fontFamily: 'monospace',
         fontWeight: 700,
         letterSpacing: '0.06em',
-        textShadow: `0 0 10px ${color}66`,
+        opacity: 0.9,
       }}>
         {shortKey}
       </div>
       <div style={{
-        fontSize: '0.98rem',
-        fontWeight: 800,
-        color: reduced ? '#ea580c' : '#f3f3f3',
-        lineHeight: 1.1,
+        fontSize: '0.92rem',
+        fontWeight: 700,
+        color: reduced ? '#ea580c' : '#ececec',
+        lineHeight: 1.15,
         marginTop: 2,
-        textShadow: reduced ? '0 0 10px rgba(234,88,12,0.35)' : 'none',
       }}>
         {displayVal}
         {classBonus > 0 && (
-          <span style={{ fontSize: '0.48rem', color: '#fbbf24', marginLeft: 1 }}>+{classBonus}</span>
+          <span style={{ fontSize: '0.45rem', color: '#c4b5fd', marginLeft: 1 }}>+{classBonus}</span>
         )}
       </div>
     </button>
@@ -218,20 +190,28 @@ export function CombatCharacterColumn({
   onClearMarks,
   onNotice,
   attributeList = null,
+  maxMarks = 0,
+  defeated = false,
+  badge = null,
+  extraBeforeMarks = null,
+  diceSides: controlledDiceSides,
+  onDiceSidesChange,
 }) {
   const [skillsOpen, setSkillsOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
   const [xpFlash, setXpFlash] = useState(false)
-  const [diceSides, setDiceSides] = useState(20)
+  const [internalDiceSides, setInternalDiceSides] = useState(20)
   const [infoOpen, setInfoOpen] = useState(false)
   const [gearView, setGearView] = useState(null)
+
+  const diceSides = controlledDiceSides ?? internalDiceSides
+  const setDiceSides = onDiceSidesChange ?? setInternalDiceSides
 
   const physical = character.physicalState ?? 'bem'
   const rupturaPool = getRupturaPool(character)
   const safeLimit = rupturaPool.max
   const overload = rupturaPool.spent
   const mental = mergeMentalStateWithOverload(character.mentalState, overload, safeLimit)
-  const physicalOpt = PHYSICAL_STATES.find(s => s.value === physical) || PHYSICAL_STATES[0]
   const mentalOpt = getMentalStateOption(mental)
   const mentalStatuses = listActiveMentalStatusDetails(character.activeMentalStatuses)
   const skills = character._skillRuntimes || []
@@ -249,13 +229,15 @@ export function CombatCharacterColumn({
   const armorMarks = getArmorMarkBonus(character)
   const buffMarks = sumMarkBuffBonus(character)
   const activeBuffs = listActiveBuffs(character)
+  const rupturaGear = getRupturaUsesBreakdown(character)
   const hasInfoRows = vitBuffer > 0 || armorMarks > 0 || buffMarks > 0
-    || activeBuffs.length > 0 || armorDexPenalty > 0
+    || activeBuffs.length > 0 || armorDexPenalty > 0 || rupturaGear.total > 0
   const weapon = getCharacterWeapon(character)
   const armor = getCharacterArmor(character)
   const armorTier = getArmorTier(character)
   const electric = electricForPhysical(physical)
-  const classColor = characterClass?.color || '#a855f7'
+  const badgeLabel = badge?.label || characterClass?.label
+  const badgeColor = badge?.color || characterClass?.color || '#a855f7'
 
   return (
     <ElectricBorder
@@ -271,6 +253,7 @@ export function CombatCharacterColumn({
         display: 'flex',
         flexDirection: 'column',
         zIndex: infoOpen ? 20 : 1,
+        opacity: defeated ? 0.65 : 1,
       }}
     >
     <article style={{
@@ -278,20 +261,16 @@ export function CombatCharacterColumn({
       flexShrink: 0,
       display: 'flex',
       flexDirection: 'column',
-      background: 'linear-gradient(165deg, #121218 0%, #0a0a0e 55%, #0d0d12 100%)',
-      border: `1px solid ${physicalOpt.color}33`,
+      background: 'rgba(12, 12, 16, 0.96)',
+      border: `1px solid ${defeated ? 'rgba(220,38,38,0.35)' : 'rgba(255,255,255,0.08)'}`,
       borderRadius: 12,
       overflow: infoOpen ? 'visible' : 'hidden',
       position: 'relative',
       zIndex: 1,
-      boxShadow: physicalOpt.glow
-        ? `0 0 20px ${physicalOpt.glow}, inset 0 1px 0 rgba(255,255,255,0.04)`
-        : 'inset 0 1px 0 rgba(255,255,255,0.04)',
     }}>
 
       <header style={{
-        padding: '0.6rem 0.7rem 0.55rem',
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)',
+        padding: '0.55rem 0.65rem 0.5rem',
         position: 'relative',
       }}>
         <button
@@ -300,26 +279,23 @@ export function CombatCharacterColumn({
           title="Bônus e detalhes"
           style={{
             position: 'absolute',
-            top: '0.45rem',
-            right: '0.45rem',
+            top: '0.4rem',
+            right: '0.4rem',
             zIndex: 2,
             display: 'flex',
             alignItems: 'center',
             gap: 3,
-            padding: '3px 7px',
-            background: infoOpen
-              ? 'linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04))'
-              : 'rgba(255,255,255,0.04)',
-            border: `1px solid ${infoOpen ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.1)'}`,
+            padding: '3px 6px',
+            background: infoOpen ? 'rgba(255,255,255,0.08)' : 'transparent',
+            border: `1px solid ${infoOpen ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.08)'}`,
             borderRadius: 999,
-            color: infoOpen ? '#e5e5e5' : '#777',
+            color: infoOpen ? '#ddd' : '#666',
             cursor: 'pointer',
-            fontSize: '0.48rem',
+            fontSize: '0.45rem',
             fontFamily: 'monospace',
             fontWeight: 700,
             letterSpacing: '0.06em',
             textTransform: 'uppercase',
-            boxShadow: infoOpen ? '0 0 12px rgba(255,255,255,0.08)' : 'none',
           }}
         >
           <Info size={9} strokeWidth={2.4} />
@@ -330,22 +306,21 @@ export function CombatCharacterColumn({
           <div
             style={{
               position: 'absolute',
-              top: '1.75rem',
-              right: '0.45rem',
-              left: '0.45rem',
+              top: '1.7rem',
+              right: '0.4rem',
+              left: '0.4rem',
               zIndex: 30,
-              background: 'rgba(14,14,20,0.96)',
-              border: '1px solid rgba(255,255,255,0.12)',
+              background: 'rgba(14,14,20,0.98)',
+              border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: 10,
-              padding: '0.55rem 0.6rem',
+              padding: '0.5rem 0.55rem',
               boxShadow: '0 12px 28px rgba(0,0,0,0.55)',
-              backdropFilter: 'blur(10px)',
               display: 'flex',
               flexDirection: 'column',
-              gap: '0.3rem',
+              gap: '0.28rem',
             }}
           >
-            <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#999', fontWeight: 700, letterSpacing: '0.08em' }}>
+            <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#888', fontWeight: 700, letterSpacing: '0.08em' }}>
               BÔNUS
             </div>
             {!hasInfoRows && (
@@ -373,6 +348,16 @@ export function CombatCharacterColumn({
                 −{armorDexPenalty} DES · armadura
               </div>
             )}
+            {rupturaGear.weapon > 0 && (
+              <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#d97706' }}>
+                +{rupturaGear.weapon} usos · arma
+              </div>
+            )}
+            {rupturaGear.armor > 0 && (
+              <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#d97706' }}>
+                +{rupturaGear.armor} usos · armadura
+              </div>
+            )}
             {activeBuffs.length > 0 && (
               <div style={{
                 display: 'flex',
@@ -395,21 +380,14 @@ export function CombatCharacterColumn({
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '0.55rem', alignItems: 'center', paddingRight: '3rem' }}>
-          <div style={{
-            borderRadius: 10,
-            padding: 1,
-            background: `linear-gradient(145deg, ${classColor}66, transparent)`,
-            boxShadow: `0 0 14px ${classColor}22`,
-          }}>
-            <EntityThumb src={character.image} alt={character.name} size={36} borderRadius="9px" />
-          </div>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', paddingRight: '2.8rem' }}>
+          <EntityThumb src={character.image} alt={character.name} size={34} borderRadius="8px" />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', minWidth: 0 }}>
               <span style={{
-                fontSize: '0.88rem',
-                fontWeight: 800,
-                color: '#f8f8f8',
+                fontSize: '0.84rem',
+                fontWeight: 700,
+                color: '#f0f0f0',
                 letterSpacing: '-0.02em',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -431,15 +409,12 @@ export function CombatCharacterColumn({
                   style={{
                     flexShrink: 0,
                     display: 'flex',
-                    padding: 4,
-                    background: xpFlash
-                      ? 'linear-gradient(145deg, rgba(217,119,6,0.35), rgba(217,119,6,0.12))'
-                      : 'rgba(217,119,6,0.1)',
-                    border: `1px solid ${xpFlash ? 'rgba(251,191,36,0.65)' : 'rgba(217,119,6,0.35)'}`,
-                    borderRadius: 8,
-                    color: '#fbbf24',
+                    padding: 3,
+                    background: xpFlash ? 'rgba(217,119,6,0.2)' : 'transparent',
+                    border: `1px solid ${xpFlash ? 'rgba(251,191,36,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                    borderRadius: 7,
+                    color: '#c4b5fd',
                     cursor: 'pointer',
-                    boxShadow: xpFlash ? '0 0 14px rgba(217,119,6,0.4)' : 'none',
                   }}
                 >
                   <Star size={10} fill={xpFlash ? '#fbbf24' : 'none'} strokeWidth={2.2} />
@@ -447,120 +422,82 @@ export function CombatCharacterColumn({
               )}
             </div>
             <div style={{
-              fontSize: '0.52rem',
+              fontSize: '0.5rem',
               fontFamily: 'monospace',
-              color: '#6b6b6b',
-              marginTop: 3,
+              color: '#777',
+              marginTop: 2,
               display: 'flex',
               alignItems: 'center',
-              gap: 5,
-              flexWrap: 'wrap',
+              gap: 6,
             }}>
               <span>Nv.{character.level ?? 1}</span>
-              {characterClass && (
-                <span style={{
-                  color: classColor,
-                  background: `${classColor}18`,
-                  border: `1px solid ${classColor}40`,
-                  borderRadius: 999,
-                  padding: '1px 6px',
-                  fontWeight: 700,
-                  letterSpacing: '0.02em',
-                  boxShadow: `0 0 10px ${classColor}22`,
-                }}>
-                  {characterClass.label}
+              {badgeLabel && (
+                <span style={{ color: badgeColor, opacity: 0.9 }}>
+                  {badgeLabel}
                 </span>
               )}
             </div>
           </div>
         </div>
 
-        <div style={{ marginTop: '0.55rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+        <div style={{ marginTop: '0.45rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Zap size={11} style={{ color: barColor, flexShrink: 0 }} strokeWidth={2.2} />
+          <div style={{
+            flex: 1,
+            height: 4,
+            background: 'rgba(255,255,255,0.06)',
+            borderRadius: 999,
+            overflow: 'hidden',
+          }}>
             <div style={{
-              width: 18,
-              height: 18,
-              borderRadius: 6,
+              height: '100%',
+              width: `${overloadPct * 100}%`,
+              background: barColor,
+              borderRadius: 999,
+              transition: 'width 0.3s',
+              opacity: 0.85,
+            }} />
+          </div>
+          <span style={{
+            fontSize: '0.5rem',
+            color: '#999',
+            fontFamily: 'monospace',
+            flexShrink: 0,
+            fontWeight: 600,
+          }}>
+            {rupturaPool.spent}/{rupturaPool.max}
+          </span>
+        </div>
+
+        <div style={{
+          marginTop: '0.4rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.35rem',
+        }}>
+          <div
+            title="Estado mental (definido pelos usos de Ruptura)"
+            style={{
+              flex: 1,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: `${barColor}18`,
-              border: `1px solid ${barColor}44`,
-              boxShadow: `0 0 10px ${barColor}33`,
-              flexShrink: 0,
-            }}>
-              <Zap size={10} fill={barColor} style={{ color: barColor }} strokeWidth={2} />
-            </div>
-            <div style={{
-              flex: 1,
-              height: 5,
-              background: 'rgba(255,255,255,0.06)',
-              borderRadius: 999,
-              overflow: 'hidden',
-              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.45)',
-            }}>
-              <div style={{
-                height: '100%',
-                width: `${overloadPct * 100}%`,
-                background: `linear-gradient(90deg, ${barColor}aa, ${barColor})`,
-                borderRadius: 999,
-                boxShadow: `0 0 10px ${barColor}`,
-                transition: 'width 0.3s',
-              }} />
-            </div>
-            <span style={{
-              fontSize: '0.52rem',
-              color: barColor,
+              gap: 5,
+              fontSize: '0.58rem',
+              padding: '4px 6px',
+              border: `1px solid ${mentalOpt.color}40`,
+              borderRadius: 8,
+              color: mentalOpt.color,
               fontFamily: 'monospace',
-              flexShrink: 0,
-              fontWeight: 800,
-              textShadow: `0 0 8px ${barColor}55`,
-            }}>
-              {rupturaPool.spent}/{rupturaPool.max}
-            </span>
+              fontWeight: 600,
+              background: `${mentalOpt.color}12`,
+              pointerEvents: 'none',
+              userSelect: 'none',
+            }}
+          >
+            <Brain size={11} strokeWidth={2.2} />
+            {mentalOpt.label}
           </div>
-        </div>
-
-        <div
-          title="Estado mental (definido pelos usos de Ruptura)"
-          style={{
-            marginTop: '0.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 6,
-            fontSize: '0.68rem',
-            padding: '6px 8px',
-            border: `1px solid ${mentalOpt.color}55`,
-            borderRadius: 10,
-            color: mentalOpt.color,
-            fontFamily: 'monospace',
-            fontWeight: 700,
-            background: `linear-gradient(145deg, ${mentalOpt.color}22, ${mentalOpt.color}08)`,
-            boxShadow: `0 0 16px ${mentalOpt.color}18, inset 0 1px 0 rgba(255,255,255,0.05)`,
-            pointerEvents: 'none',
-            userSelect: 'none',
-            letterSpacing: '0.02em',
-          }}
-        >
-          <Brain size={12} strokeWidth={2.2} />
-          {mentalOpt.label}
-        </div>
-
-        {mentalStatuses.length > 0 && (
-          <div style={{
-            marginTop: '0.35rem',
-            fontSize: '0.5rem',
-            color: '#fbbf24',
-            fontFamily: 'monospace',
-            textAlign: 'center',
-            opacity: 0.9,
-          }}>
-            {mentalStatuses.map(s => s.definition?.label).join(' · ')}
-          </div>
-        )}
-
-        <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.45rem' }}>
           <IconChip
             active={!!weapon}
             color="#f97316"
@@ -571,7 +508,7 @@ export function CombatCharacterColumn({
             {weapon?.image ? (
               <img src={weapon.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <Sword size={13} strokeWidth={2.2} />
+              <Sword size={12} strokeWidth={2.2} />
             )}
           </IconChip>
           <IconChip
@@ -584,15 +521,29 @@ export function CombatCharacterColumn({
             {armor?.image ? (
               <img src={armor.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <ShieldIcon size={13} strokeWidth={2.2} />
+              <ShieldIcon size={12} strokeWidth={2.2} />
             )}
           </IconChip>
         </div>
+
+        {mentalStatuses.length > 0 && (
+          <div style={{
+            marginTop: '0.3rem',
+            fontSize: '0.48rem',
+            color: '#c4b5fd',
+            fontFamily: 'monospace',
+            textAlign: 'center',
+          }}>
+            {mentalStatuses.map(s => s.definition?.label).join(' · ')}
+          </div>
+        )}
       </header>
 
-      <section style={{ padding: '0.5rem 0.7rem' }}>
+      <section style={{ padding: '0.45rem 0.65rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+        {extraBeforeMarks}
         <DamageMarksPanel
           character={character}
+          maxMarks={maxMarks}
           markTypes={PLAYER_MARK_TYPES}
           compact
           onApplyMarks={onApplyMarks}
@@ -600,39 +551,43 @@ export function CombatCharacterColumn({
           onClearMarks={onClearMarks}
           onNotice={onNotice}
         />
+        {defeated && (
+          <div style={{
+            fontSize: '0.55rem',
+            color: '#dc2626',
+            fontFamily: 'monospace',
+            textAlign: 'center',
+            fontWeight: 700,
+            letterSpacing: '0.06em',
+          }}>
+            DERROTADO
+          </div>
+        )}
       </section>
 
-      <section style={{ padding: '0.15rem 0.7rem 0.55rem' }}>
+      <section style={{ padding: '0.1rem 0.65rem 0.5rem' }}>
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '0.4rem',
+          marginBottom: '0.35rem',
         }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 5,
-            color: '#666',
-            fontSize: '0.45rem',
+            gap: 4,
+            color: '#777',
+            fontSize: '0.48rem',
             fontFamily: 'monospace',
-            fontWeight: 700,
+            fontWeight: 600,
             letterSpacing: '0.08em',
           }}>
-            <Dices size={11} strokeWidth={2.2} />
+            <Dices size={10} strokeWidth={2.2} />
             DADO
           </div>
-          <div style={{
-            display: 'inline-flex',
-            padding: 2,
-            borderRadius: 9,
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            gap: 2,
-          }}>
+          <div style={{ display: 'inline-flex', gap: 3 }}>
             {[8, 20].map(sides => {
               const active = diceSides === sides
-              const accent = sides === 8 ? '#22d3ee' : '#e5e5e5'
               return (
                 <button
                   key={sides}
@@ -640,18 +595,15 @@ export function CombatCharacterColumn({
                   onClick={() => setDiceSides(sides)}
                   title={`d${sides}`}
                   style={{
-                    padding: '3px 8px',
-                    fontSize: '0.52rem',
+                    padding: '2px 7px',
+                    fontSize: '0.5rem',
                     fontFamily: 'monospace',
-                    fontWeight: 800,
-                    borderRadius: 7,
+                    fontWeight: 700,
+                    borderRadius: 6,
                     cursor: 'pointer',
-                    border: 'none',
-                    background: active
-                      ? `linear-gradient(145deg, ${accent}33, ${accent}12)`
-                      : 'transparent',
-                    color: active ? accent : '#555',
-                    boxShadow: active ? `0 0 10px ${accent}33` : 'none',
+                    border: `1px solid ${active ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.08)'}`,
+                    background: active ? 'rgba(255,255,255,0.08)' : 'transparent',
+                    color: active ? '#e5e5e5' : '#666',
                   }}
                 >
                   d{sides}
@@ -708,11 +660,11 @@ export function CombatCharacterColumn({
             }
 
             return (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.22rem' }}>
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: `repeat(${top.length}, 1fr)`,
-                  gap: '0.25rem',
+                  gap: '0.22rem',
                 }}>
                   {top.map(renderBtn)}
                 </div>
@@ -720,7 +672,7 @@ export function CombatCharacterColumn({
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: `repeat(${bottom.length}, 1fr)`,
-                    gap: '0.25rem',
+                    gap: '0.22rem',
                   }}>
                     {bottom.map(renderBtn)}
                   </div>
@@ -730,7 +682,7 @@ export function CombatCharacterColumn({
           }
 
           const renderSocial = () => (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.22rem' }}>
               {SOCIAL_ATTRIBUTES.map(attr => {
                 const base = character.socialAttributes?.[attr.key] ?? 0
                 const eff = getEffectiveSocialAttributeValue(character.socialAttributes || {}, attr.key, {
@@ -766,13 +718,13 @@ export function CombatCharacterColumn({
           )
 
           return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               <div>
                 <SectionLabel accent="#888">ATRIBUTOS</SectionLabel>
                 {renderPhysical()}
               </div>
               <div>
-                <SectionLabel accent="#64748b">CENA</SectionLabel>
+                <SectionLabel accent="#6b7280">CENA</SectionLabel>
                 {renderSocial()}
               </div>
             </div>

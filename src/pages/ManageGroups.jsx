@@ -254,104 +254,52 @@ export function ManageGroups() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <div style={{
-        padding: '1.1rem 1.5rem 0.85rem',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-        gap: '1rem',
-        flexWrap: 'wrap',
-        flexShrink: 0,
-      }}>
-        <div style={{ minWidth: 0 }}>
+      <div style={{ padding: '1.1rem 1.5rem 0.55rem', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
           <div style={{
             fontSize: '1.05rem',
             fontWeight: 700,
             color: '#f5f5f5',
             letterSpacing: '-0.02em',
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
           }}>
             {activeGroup.name}
           </div>
-          {activeGroup.description && (
-            <div style={{ fontSize: '0.75rem', color: '#777', marginTop: 4, lineHeight: 1.4 }}>
-              {activeGroup.description}
+          <FloatingTooltip.Provider>
+            <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', flexShrink: 0 }}>
+              <FloatingTooltip.Trigger content="Editar grupo">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="xs"
+                  onClick={() => setGroupModal({ mode: 'edit', group: activeGroup })}
+                  style={{ display: 'flex', padding: '6px' }}
+                >
+                  <Pencil size={13} />
+                </Button>
+              </FloatingTooltip.Trigger>
+              <FloatingTooltip.Trigger content="Excluir grupo">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="xs"
+                  onClick={() => setDeleteConfirm(activeGroup)}
+                  style={{ display: 'flex', padding: '6px' }}
+                >
+                  <Trash2 size={13} />
+                </Button>
+              </FloatingTooltip.Trigger>
             </div>
-          )}
+          </FloatingTooltip.Provider>
         </div>
-
-        <FloatingTooltip.Provider>
-          <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <FloatingTooltip.Trigger content="Editar grupo">
-              <button
-                type="button"
-                onClick={() => setGroupModal({ mode: 'edit', group: activeGroup })}
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 8,
-                  color: '#888',
-                  cursor: 'pointer',
-                  padding: '6px',
-                  display: 'flex',
-                }}
-              >
-                <Pencil size={13} />
-              </button>
-            </FloatingTooltip.Trigger>
-            <FloatingTooltip.Trigger content="Excluir grupo">
-              <button
-                type="button"
-                onClick={() => setDeleteConfirm(activeGroup)}
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 8,
-                  color: '#666',
-                  cursor: 'pointer',
-                  padding: '6px',
-                  display: 'flex',
-                }}
-              >
-                <Trash2 size={13} />
-              </button>
-            </FloatingTooltip.Trigger>
-            <FloatingTooltip.Trigger content="Zera sobrecarga, marcas e estados">
-              <button
-                type="button"
-                disabled={members.length === 0}
-                onClick={() => {
-                  const ids = members.map(m => m.id)
-                  const { recovered, missing } = recoverGroupMembers(ids)
-                  if (recovered > 0) {
-                    showToast(
-                      `Descanso aplicado a ${recovered} personagem${recovered > 1 ? 's' : ''} — marcas e sobrecarga zeradas.`,
-                      'success',
-                    )
-                  } else if (missing > 0) {
-                    showToast('Alguns membros do grupo não foram encontrados na campanha.', 'error')
-                  } else {
-                    showToast('Adicione membros ao grupo para descansar.', 'info')
-                  }
-                }}
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 8,
-                  color: members.length === 0 ? '#444' : '#888',
-                  cursor: members.length === 0 ? 'not-allowed' : 'pointer',
-                  padding: '6px 10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontSize: '0.72rem',
-                  fontWeight: 600,
-                }}
-              >
-                <RotateCcw size={12} /> Descansar
-              </button>
-            </FloatingTooltip.Trigger>
+        {activeGroup.description && (
+          <div style={{ fontSize: '0.75rem', color: '#777', marginTop: 4, lineHeight: 1.4 }}>
+            {activeGroup.description}
           </div>
-        </FloatingTooltip.Provider>
+        )}
       </div>
 
       <div style={{
@@ -433,6 +381,34 @@ export function ManageGroups() {
             Último: {lastUltraXp.label} · +{lastUltraXp.xp}
           </span>
         )}
+
+        <FloatingTooltip.Provider>
+          <FloatingTooltip.Trigger content="Zera sobrecarga, marcas e estados">
+            <Button
+              type="button"
+              variant="secondary"
+              size="xs"
+              disabled={members.length === 0}
+              onClick={() => {
+                const ids = members.map(m => m.id)
+                const { recovered, missing } = recoverGroupMembers(ids)
+                if (recovered > 0) {
+                  showToast(
+                    `Descanso aplicado a ${recovered} personagem${recovered > 1 ? 's' : ''} — marcas e sobrecarga zeradas.`,
+                    'success',
+                  )
+                } else if (missing > 0) {
+                  showToast('Alguns membros do grupo não foram encontrados na campanha.', 'error')
+                } else {
+                  showToast('Adicione membros ao grupo para descansar.', 'info')
+                }
+              }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <RotateCcw size={12} /> Descansar
+            </Button>
+          </FloatingTooltip.Trigger>
+        </FloatingTooltip.Provider>
       </div>
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>

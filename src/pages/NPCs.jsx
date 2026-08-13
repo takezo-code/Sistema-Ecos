@@ -315,7 +315,6 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
       <AttributePointsEditor
         form={form}
         onFormChange={setForm}
-        showRuptureHint={isBoss || form.hasEcoPowers}
       />
 
       {isBoss && (
