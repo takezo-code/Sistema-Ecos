@@ -1,12 +1,19 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Sidebar } from '../components/Sidebar'
+import { SaveToolbar } from '../components/SaveToolbar'
 
-export function MainLayout({ children }) {
-  const [collapsed, setCollapsed] = useState(false)
-
+export function MainLayout({ children, onNavigate, onGoHome, activePage, managementView, emjogoView, campanhaView }) {
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: 'transparent' }}>
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
+      <Sidebar
+        activePage={activePage}
+        managementView={managementView}
+        emjogoView={emjogoView}
+        campanhaView={campanhaView}
+        onNavigate={onNavigate}
+        onGoHome={onGoHome}
+        footer={<SaveToolbar />}
+      />
       <main
         style={{
           flex: 1,
@@ -14,7 +21,7 @@ export function MainLayout({ children }) {
           display: 'flex',
           flexDirection: 'column',
           background: 'transparent',
-          transition: 'all 0.2s',
+          minWidth: 0,
         }}
       >
         {children}

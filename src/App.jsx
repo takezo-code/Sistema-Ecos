@@ -178,15 +178,13 @@ export default function App() {
       background: 'transparent',
     }}>
       <Sidebar
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(c => !c)}
         activePage={activePage}
         managementView={managementView}
         emjogoView={emjogoView}
         campanhaView={campanhaView}
         onNavigate={handleNavigate}
         onGoHome={() => setInApp(false)}
-        footer={<SaveToolbar collapsed={sidebarCollapsed} />}
+        footer={<SaveToolbar />}
       />
       <main style={{
         flex: 1,
