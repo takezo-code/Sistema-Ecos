@@ -283,7 +283,7 @@ export function Sidebar({
       style={{
         width: collapsed ? '56px' : '220px',
         minWidth: collapsed ? '56px' : '220px',
-        background: '#0d0d0d',
+        background: 'rgba(8,8,10,0.62)',
         borderRight: '1px solid #1a1a1a',
         display: 'flex',
         flexDirection: 'column',

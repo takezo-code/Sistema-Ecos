@@ -27,7 +27,7 @@ export function CharacterSidebar({ activeTab, onTabChange, characterName }) {
       style={{
         width: '200px',
         minWidth: '200px',
-        background: '#0c0c0c',
+        background: 'rgba(8,8,10,0.55)',
         borderRight: '1px solid #1a1a1a',
         display: 'flex',
         flexDirection: 'column',

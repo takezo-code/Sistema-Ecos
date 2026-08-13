@@ -5,7 +5,7 @@ export function MainLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: '#0a0a0a' }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: 'transparent' }}>
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
       <main
         style={{
@@ -13,7 +13,7 @@ export function MainLayout({ children }) {
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          background: '#0a0a0a',
+          background: 'transparent',
           transition: 'all 0.2s',
         }}
       >

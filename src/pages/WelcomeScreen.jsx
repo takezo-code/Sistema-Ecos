@@ -137,7 +137,7 @@ export function WelcomeScreen({ onEnter, canContinue = false }) {
     <div style={{
       position: 'fixed',
       inset: 0,
-      background: '#050505',
+      background: 'transparent',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -145,25 +145,6 @@ export function WelcomeScreen({ onEnter, canContinue = false }) {
       overflow: 'auto',
       zIndex: 100,
     }}>
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        backgroundImage: `
-          linear-gradient(rgba(37,99,235,0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(37,99,235,0.04) 1px, transparent 1px)
-        `,
-        backgroundSize: '48px 48px',
-        maskImage: 'radial-gradient(ellipse 70% 60% at 50% 50%, black 20%, transparent 100%)',
-      }} />
-
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'linear-gradient(180deg, transparent 0%, rgba(37,99,235,0.03) 50%, transparent 100%)',
-        backgroundSize: '100% 4px',
-        pointerEvents: 'none',
-        opacity: 0.6,
-      }} />
 
       <div style={{
         position: 'relative',

@@ -292,7 +292,7 @@ export function ManageCombat() {
       height: '100%',
       minHeight: 0,
       overflow: 'hidden',
-      background: '#0a0a0a',
+      background: 'transparent',
     }}>
 
       {/* Barra de topo */}
@@ -302,7 +302,7 @@ export function ManageCombat() {
         alignItems: 'center',
         padding: '0.45rem 1rem',
         borderBottom: '1px solid #1a1a1a',
-        background: '#0d0d0d',
+        background: 'rgba(13,13,13,0.72)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', minWidth: 0 }}>
           <select
@@ -331,7 +331,7 @@ export function ManageCombat() {
         flexWrap: 'wrap',
         padding: '0.35rem 1rem',
         borderBottom: '1px solid #1a1a1a',
-        background: '#0b0b0b',
+        background: 'rgba(11,11,11,0.55)',
       }}>
         {DIFFICULTY_PRESETS.map(p => {
           const active = p.id === dcPreset

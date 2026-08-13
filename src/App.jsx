@@ -12,6 +12,7 @@ import { Trash } from './pages/Trash'
 import { Creation } from './pages/Creation'
 import { isAppBootstrapped, persistUiState, autoSave } from './services/saveService'
 import { storage, KEYS } from './services/storage'
+import { DarkVeilLayer } from './components/react-bits/DarkVeilLayer'
 
 const PAGES = {
   campanha: Campanha,
@@ -138,18 +139,6 @@ export default function App() {
     if (page === 'campanha' && subView) setCampanhaView(subView)
   }
 
-  if (!inApp) {
-    return (
-      <>
-        <WelcomeScreen
-          onEnter={() => setInApp(true)}
-          canContinue={isAppBootstrapped()}
-        />
-        <SaveToast />
-      </>
-    )
-  }
-
   const PageComponent = PAGES[activePage] || Campanha
   const pageProps = activePage === 'management'
     ? {
@@ -169,13 +158,23 @@ export default function App() {
           ? { initialView: campanhaView, onViewChange: setCampanhaView, onNavigate: handleNavigate }
           : { onNavigate: handleNavigate }
 
-  return (
+  const shell = !inApp ? (
+    <>
+      <WelcomeScreen
+        onEnter={() => setInApp(true)}
+        canContinue={isAppBootstrapped()}
+      />
+      <SaveToast />
+    </>
+  ) : (
     <div style={{
+      position: 'relative',
+      zIndex: 1,
       display: 'flex',
       height: '100vh',
       width: '100vw',
       overflow: 'hidden',
-      background: '#0a0a0a',
+      background: 'transparent',
     }}>
       <Sidebar
         collapsed={sidebarCollapsed}
@@ -193,12 +192,19 @@ export default function App() {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        background: '#0a0a0a',
+        background: 'transparent',
         minWidth: 0,
       }}>
         <PageComponent {...pageProps} />
       </main>
       <SaveToast />
     </div>
+  )
+
+  return (
+    <>
+      <DarkVeilLayer />
+      {shell}
+    </>
   )
 }
