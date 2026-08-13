@@ -141,7 +141,10 @@ export default function App() {
   if (!inApp) {
     return (
       <>
-        <WelcomeScreen onEnter={() => setInApp(true)} />
+        <WelcomeScreen
+          onEnter={() => setInApp(true)}
+          canContinue={isAppBootstrapped()}
+        />
         <SaveToast />
       </>
     )
@@ -182,6 +185,7 @@ export default function App() {
         emjogoView={emjogoView}
         campanhaView={campanhaView}
         onNavigate={handleNavigate}
+        onGoHome={() => setInApp(false)}
         footer={<SaveToolbar collapsed={sidebarCollapsed} />}
       />
       <main style={{

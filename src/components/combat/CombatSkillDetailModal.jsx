@@ -133,7 +133,7 @@ export function CombatSkillDetailModal({
           }}>
             <Zap size={14} style={{ color: '#a855f7', flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: '0.45rem', color: '#555', fontFamily: 'monospace' }}>SOBRECARGA</div>
+              <div style={{ fontSize: '0.45rem', color: '#555', fontFamily: 'monospace' }}>USOS DE RUPTURA</div>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#a855f7' }}>
                 {isPassiva
                   ? (catalog.passiveOverloadRisk ? 'Risco passivo' : '+0')
@@ -153,7 +153,7 @@ export function CombatSkillDetailModal({
 
         {character && (
           <div style={{ fontSize: '0.65rem', color: '#666', fontFamily: 'monospace' }}>
-            Sobrecarga atual: {formatOverloadDisplay(character.ecoOverload ?? 0, character)}
+            Usos atuais: {formatOverloadDisplay(character.ecoOverload ?? 0, character)}
           </div>
         )}
 

@@ -38,16 +38,13 @@ export function getEcoPowerPenaltyPercent() {
 
 /**
  * −flat em INT · PER · SAB · CAR conforme sobrecarga (relativo ao limite).
- * No limiar: −1 (Abalado). Acima: −2 / −3 / −4.
+ * No limite (inclusive): 0. Primeiro acima: −1 (Abalado). Depois −2 / −3 / −4.
  */
 export function getMentalAttributeFlatPenalty(ecoOverload = 0, safeLimitOrOpts = ECO_OVERLOAD_BASE_LIMIT) {
   const lim = resolveLimit(safeLimitOrOpts)
   const n = Math.max(0, Number(ecoOverload) || 0)
+  if (n <= lim) return 0
   const overage = getOverloadOverage(n, lim)
-
-  if (n < lim) return 0
-  if (overage <= 0) return 1 // no limite = Abalado
-
   const key = clampOverageKey(overage)
   return RUPTURE_BREAK_PENALTIES[key]?.mentalAttrFlat ?? 4
 }

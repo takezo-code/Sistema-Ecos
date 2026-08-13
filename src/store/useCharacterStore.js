@@ -41,6 +41,7 @@ import {
 } from '../mechanics/combat/damageMarksEngine'
 import { buildGearItem, getGearItem, GEAR_CATEGORIES, normalizeEquippedGear } from '../mechanics/equipment/characterGear'
 import { upsertPassive } from '../mechanics/equipment/gearPassiveEngine'
+import { applyBuffsToEntity } from '../mechanics/skills/skillBuffEngine'
 
 const withNormalizedGear = (entity) => ({
   ...entity,
@@ -384,7 +385,7 @@ export const useCharacterStore = create((set, get) => ({
     return true
   },
 
-  activateSkill(characterId, skillId) {
+  activateSkill(characterId, skillId, { allyIds } = {}) {
     const c = get().characters.find(ch => ch.id === characterId)
     if (!c) return { ok: false, message: 'Personagem não encontrado' }
     const result = activateCharacterSkill(c, skillId)
@@ -393,9 +394,41 @@ export const useCharacterStore = create((set, get) => ({
       return { ok: false, message: result.error?.message }
     }
     patchCharacter(get, set, characterId, ch => ({ ...ch, ...result.patch }))
+    if (result.partyBuffs?.length) {
+      const targets = (allyIds?.length ? allyIds : [characterId]).filter(Boolean)
+      for (const id of targets) {
+        const buffs = result.partyBuffs.map(b => ({ ...b, id: genId() }))
+        patchCharacter(get, set, id, ch => {
+          const applied = applyBuffsToEntity(ch, buffs)
+          return applied.applied ? { ...ch, ...applied.patch } : ch
+        })
+      }
+    }
+    if (result.partyHeal?.amount) {
+      const targets = (allyIds?.length ? allyIds : [characterId]).filter(Boolean)
+      for (const id of targets) {
+        patchCharacter(get, set, id, ch => {
+          const healed = healDamageMarksEngine(ch, result.partyHeal.amount)
+          return { ...ch, ...healed.patch }
+        })
+      }
+    }
     if (result.events?.length) set({ lastOverloadEvents: result.events })
     set({ lastSkillError: null })
-    return { ok: true, warnings: result.warnings, historyEntry: result.historyEntry }
+    const partyNote = result.partyBuffs?.length
+      ? (allyIds?.length > 1
+        ? `Aura aplicada em ${allyIds.length} personagens.`
+        : 'Aura aplicada em você.')
+      : result.partyHeal?.amount
+        ? (allyIds?.length > 1
+          ? `Refluxo curou ${allyIds.length} personagens (−${result.partyHeal.amount} marca(s) cada).`
+          : `Cura: −${result.partyHeal.amount} marca(s).`)
+        : null
+    return {
+      ok: true,
+      warnings: [ ...(result.warnings || []), partyNote ].filter(Boolean),
+      historyEntry: result.historyEntry,
+    }
   },
 
   advanceTurn(characterId) {

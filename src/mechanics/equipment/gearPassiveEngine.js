@@ -159,12 +159,33 @@ export function sumLifeMarksBonus(entity = {}) {
   }, 0)
 }
 
-/** Usos extras de Ruptura (arma P2 + armadura P3). */
-export function sumRupturaUses(entity = {}) {
-  return collectPassives(entity).reduce((sum, p) => {
-    if (p.kind !== PASSIVE_KINDS.RUPTURA_USES) return sum
+function isRupturaUsesPassive(passive, item) {
+  if (!passive) return false
+  if (passive.kind === PASSIVE_KINDS.RUPTURA_USES) return true
+  if (passive.kind) return false
+  const slot = Number(passive.slot)
+  if (item?.category === 'armadura' && slot === 3) return true
+  if (item?.category === 'arma' && slot === 2) return true
+  return false
+}
+
+export function sumRupturaUsesFromItem(item) {
+  return listPassivesFromItem(item).reduce((sum, p) => {
+    if (!isRupturaUsesPassive(p, item)) return sum
     return sum + Math.max(0, Number(p.value) || 0)
   }, 0)
+}
+
+/** Usos extras de Ruptura (arma slot 2 + armadura slot 3). */
+export function sumRupturaUses(entity = {}) {
+  return sumRupturaUsesFromItem(getCharacterWeapon(entity))
+    + sumRupturaUsesFromItem(getCharacterArmor(entity))
+}
+
+export function getRupturaUsesBreakdown(entity = {}) {
+  const weapon = sumRupturaUsesFromItem(getCharacterWeapon(entity))
+  const armor = sumRupturaUsesFromItem(getCharacterArmor(entity))
+  return { weapon, armor, total: weapon + armor }
 }
 
 export function getRupturaUsesMax(entity = {}) {

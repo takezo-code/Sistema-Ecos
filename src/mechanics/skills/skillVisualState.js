@@ -30,12 +30,12 @@ export function resolveSkillVisualState({
     return SKILL_VISUAL_STATES.EM_COOLDOWN
   }
 
-  if (ecoOverload >= lim) {
+  if (ecoOverload > lim) {
     return SKILL_VISUAL_STATES.SOBRECARGA_ALTA
   }
 
-  const unstableMental = ['fragmentado', 'dissociado', 'perdido_no_tempo'].includes(mentalState)
-  if (unstableMental || ecoOverload >= Math.max(0, lim - 1)) {
+  const unstableMental = ['abalado', 'fragmentado', 'dissociado', 'perdido_no_tempo'].includes(mentalState)
+  if (unstableMental || ecoOverload >= lim) {
     return SKILL_VISUAL_STATES.INSTAVEL
   }
 

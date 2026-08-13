@@ -28,7 +28,7 @@ export const WEAPON_TYPES = [
     mainAttr: 'ruptura',
     mainAttrLabel: 'RUP',
     tags: ['mágica', 'eco'],
-    mechDesc: 'Foco arcano. Preferido por Fenda e Suporte. Usa Ruptura.',
+    mechDesc: 'Foco arcano. Preferido por Fenda e Sutura. Usa Ruptura.',
   },
   {
     id: 'varinha',
@@ -38,7 +38,7 @@ export const WEAPON_TYPES = [
     mainAttr: 'ruptura',
     mainAttrLabel: 'RUP',
     tags: ['mágica', 'eco'],
-    mechDesc: 'Canal fino de Eco. Preferido por Fenda e Suporte. Usa Ruptura.',
+    mechDesc: 'Canal fino de Eco. Preferido por Fenda e Sutura. Usa Ruptura.',
   },
   {
     id: 'cajado',
@@ -48,7 +48,7 @@ export const WEAPON_TYPES = [
     mainAttr: 'inteligencia',
     mainAttrLabel: 'INT',
     tags: ['mágica', 'eco'],
-    mechDesc: 'Canal de Eco. Preferido por Fenda e Suporte. Usa Inteligência ou Ruptura.',
+    mechDesc: 'Canal de Eco. Preferido por Fenda e Sutura. Usa Inteligência ou Ruptura.',
   },
   {
     id: 'livro',
@@ -58,7 +58,7 @@ export const WEAPON_TYPES = [
     mainAttr: 'inteligencia',
     mainAttrLabel: 'INT',
     tags: ['mágica', 'suporte'],
-    mechDesc: 'Grimório ou tomo. Preferido por Fenda e Suporte. Usa Inteligência.',
+    mechDesc: 'Grimório ou tomo. Preferido por Fenda e Sutura. Usa Inteligência.',
   },
   {
     id: 'escudo_medio',
@@ -183,10 +183,10 @@ export function getEquipmentType(category, id) {
 // Raridade — só armadura (nível do personagem)
 // ─────────────────────────────────────────────
 export const RARITY_META = {
-  comum:    { label: 'Comum',    color: '#6b7280' },
-  incomum:  { label: 'Incomum',  color: '#16a34a' },
-  raro:     { label: 'Raro',     color: '#06b6d4' },
-  lendario: { label: 'Lendário', color: '#a855f7' },
+  comum:    { label: 'Latente',     color: '#6b7280' },
+  incomum:  { label: 'Ressonante',  color: '#16a34a' },
+  raro:     { label: 'Fendida',     color: '#06b6d4' },
+  lendario: { label: 'Atemporal',   color: '#a855f7' },
 }
 
 export const RARITY_OPTIONS = Object.entries(RARITY_META).map(([id, m]) => ({ id, ...m }))

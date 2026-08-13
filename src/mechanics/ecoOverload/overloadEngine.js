@@ -29,8 +29,9 @@ export function processEcoSkillUse(entity, skill, options = {}) {
 
   const safeLimit = getEcoSafeLimitFromEntity(entity)
   const totalAt = getEcoTotalRuptureThreshold(safeLimit)
+  const amount = Math.max(1, Math.floor(Number(options.amount) || 1))
   const current = Math.max(0, Number(entity.ecoOverload) || 0)
-  const next = current + 1
+  const next = current + amount
   let activeMentalStatuses = [...(entity.activeMentalStatuses || [])]
 
   activeMentalStatuses = syncOverloadMentalStatus(activeMentalStatuses, next, safeLimit)
@@ -46,9 +47,9 @@ export function processEcoSkillUse(entity, skill, options = {}) {
     lastEcoSkillUsedId: skill?.id ?? null,
   }
 
-  if (next >= safeLimit && current < safeLimit) {
+  if (next === safeLimit && current < safeLimit) {
     warnings.push(
-      `Limite de Eco atingido (${formatOverloadDisplay(next, { safeLimit })}): Mentalmente Abalado.`,
+      `Limite de Eco atingido (${formatOverloadDisplay(next, { safeLimit })}): ainda Estável. O próximo uso acima do limite causa Abalado.`,
     )
   }
 
@@ -56,7 +57,7 @@ export function processEcoSkillUse(entity, skill, options = {}) {
     warnings.push(`Estado mental degradado para: ${mentalLabel}.`)
   }
 
-  if (next === safeLimit + 1 && current <= safeLimit) {
+  if (next > safeLimit && current <= safeLimit) {
     warnings.push('Passou do limite: a penalidade nos atributos mentais sobe com o estado (Abalado −1 … Perdido −4).')
   }
 

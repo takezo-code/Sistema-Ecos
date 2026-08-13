@@ -11,6 +11,7 @@ import {
 import { processEcoSkillUse, resetEcoOverload, setEcoOverloadLevel } from '../mechanics/ecoOverload/overloadEngine'
 import { buildRuptureTotalEvent, RUPTURE_TOTAL_OUTCOMES } from '../mechanics/ecoOverload/ruptureEvents'
 import { listActiveMentalStatusDetails } from './mentalStatusService'
+import { getCatalogSkill } from './skillsCatalogService'
 import { skillTypeIncrementsOverload } from '../constants/skillTypes'
 
 export {
@@ -76,7 +77,12 @@ export function useEcoSkill(entity, skillId, options = {}) {
     }
   }
 
-  const result = processEcoSkillUse(entity, skill, options)
+  const catalog = skill.templateId ? getCatalogSkill(skill.templateId) : null
+  const amount = Math.max(
+    1,
+    Math.floor(Number(options.amount ?? catalog?.overloadCost ?? skill.overloadCost ?? 1) || 1),
+  )
+  const result = processEcoSkillUse(entity, skill, { ...options, amount })
   return {
     ok: true,
     patch: result.patch,

@@ -15,6 +15,7 @@
  */
 
 import { getArmorMarkBonus } from '../equipment/armorEffectsEngine'
+import { sumMarkBuffBonus } from '../skills/skillBuffEngine'
 
 // ──────────────────────────────────────────────
 // Tipos de marca e seus valores
@@ -49,7 +50,7 @@ export const MARK_STATE_THRESHOLDS = [
 
 /**
  * Buffer de marcas a partir da VIT **base** da ficha (2 VIT → +1 limiar)
- * + bônus de armadura equipada (+1/+2/+3).
+ * + bônus de armadura equipada e skills ativas (Aura, Couraça, etc.).
  *
  * Assim o personagem pode tomar mais marcas antes de piorar de estado.
  * Nunca use VIT efetiva (após −1/−2/−3 de Ferido/Incapacitado):
@@ -63,7 +64,8 @@ export function getVitalityMarkBuffer(entityOrAttributes = {}) {
   const baseVit = Math.max(0, Number(attrs?.vitalidade) || 0)
   const vitBuffer = Math.floor(baseVit / 2)
   const armorBonus = isEntity ? getArmorMarkBonus(entityOrAttributes) : 0
-  return vitBuffer + armorBonus
+  const skillBonus = isEntity ? sumMarkBuffBonus(entityOrAttributes) : 0
+  return vitBuffer + armorBonus + skillBonus
 }
 
 /**

@@ -4,6 +4,8 @@ import { ATTRIBUTES } from '../../constants/attributes'
 import { DAMAGE_MARK_META } from '../../mechanics/combat/damageMarksEngine'
 import { getRollOutcome, getBossAttackDamage, getDefaultDc } from '../../mechanics/combat/rollOutcome'
 import { getEffectiveAttributeValue } from '../../services/stateModifiers'
+import { getArmorDestrezaPenalty } from '../../mechanics/equipment/armorEffectsEngine'
+import { sumGearRollBonus } from '../../mechanics/equipment/gearPassiveEngine'
 
 function attrShort(attr) {
   if (attr.key === 'inteligencia') return 'INT'
@@ -47,15 +49,18 @@ export function BossTargetPanel({
       physicalState: physical,
       ecoOverload: overload,
       mentalState: mental,
+      destrezaPenalty: getArmorDestrezaPenalty(enemy),
     })
     : 0
+  const gearBonus = selectedAttr ? sumGearRollBonus(enemy, selectedAttr.key) : 0
+  const rollBonus = attrBonus + gearBonus
 
   const canAttack = Boolean(target && selectedAttr)
 
   const handleRoll = () => {
     if (!canAttack) return
     const dice = Math.floor(Math.random() * diceSides) + 1
-    const bonus = attrBonus
+    const bonus = rollBonus
     const total = dice + bonus
     const dc = typeof getRollDc === 'function' ? getRollDc(diceSides) : getDefaultDc(diceSides)
     const outcome = getRollOutcome(dice, bonus, diceSides, dc)
@@ -88,6 +93,8 @@ export function BossTargetPanel({
       dc,
       characterName: enemy.name,
       attrLabel: `${selectedAttr.label} vs ${target.name}`,
+      attrBonus,
+      gearBonus,
       targetId: target.id,
       targetName: target.name,
       hit,
@@ -216,7 +223,7 @@ export function BossTargetPanel({
         }}
       >
         <Dices size={11} />
-        Atacar · {selectedAttr ? attrShort(selectedAttr) : '—'} {attrBonus}
+        Atacar · {selectedAttr ? attrShort(selectedAttr) : '—'} {rollBonus}
       </button>
 
       {lastResult && lastResult.targetId === targetId && (

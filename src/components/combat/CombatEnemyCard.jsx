@@ -3,11 +3,11 @@ import { Info, Sword, Shirt } from 'lucide-react'
 import { DamageMarksPanel, PLAYER_MARK_TYPES } from './DamageMarksPanel'
 import { BossTargetPanel } from './BossTargetPanel'
 import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
-import { MENTAL_STATES, getPhysicalStateOption, getMentalStateOption } from '../../constants/states'
+import { getPhysicalStateOption, getMentalStateOption, mergeMentalStateWithOverload } from '../../constants/states'
 import { EntityThumb } from '../ui/EntityThumb'
 import { getEffectiveAttributeValue } from '../../services/stateModifiers'
 import { getArmorDestrezaPenalty, getArmorMarkBonus } from '../../mechanics/equipment/armorEffectsEngine'
-import { sumGearRollBonus, sumAttrBonus, getRupturaUsesRemaining, getRupturaUsesMax } from '../../mechanics/equipment/gearPassiveEngine'
+import { sumGearRollBonus, sumAttrBonus, getRupturaUsesBreakdown } from '../../mechanics/equipment/gearPassiveEngine'
 import { listActiveBuffs, sumMarkBuffBonus, formatBuff } from '../../mechanics/skills/skillBuffEngine'
 import { getCharacterWeapon, getCharacterArmor } from '../../mechanics/equipment/characterGear'
 import { getArmorTier } from '../../mechanics/equipment/armorProgressionEngine'
@@ -49,12 +49,12 @@ export function CombatEnemyCard({
   const marks = enemy.damageMarks ?? 0
   const maxMarks = enemy.marcasMaximas ?? 0
   const physical = enemy.physicalState ?? 'bem'
-  const mental = enemy.mentalState ?? 'estavel'
+  const overload = enemy.ecoOverload ?? 0
+  const safeLimit = getEcoSafeLimitFromEntity(enemy)
+  const mental = mergeMentalStateWithOverload(enemy.mentalState, overload, safeLimit)
   const physOpt = getPhysicalStateOption(physical)
   const mentalOpt = getMentalStateOption(mental)
   const papel = PAPEL_META[enemy.papelCombate ?? 'nenhum'] ?? PAPEL_META.nenhum
-  const overload = enemy.ecoOverload ?? 0
-  const safeLimit = getEcoSafeLimitFromEntity(enemy)
   const isDefeated = maxMarks > 0 && marks >= maxMarks
   const borderOpt = physOpt
   const armorDexPenalty = getArmorDestrezaPenalty(enemy)
@@ -62,10 +62,9 @@ export function CombatEnemyCard({
   const armorMarks = getArmorMarkBonus(enemy)
   const buffMarks = sumMarkBuffBonus(enemy)
   const activeBuffs = listActiveBuffs(enemy)
-  const rupturaMax = getRupturaUsesMax(enemy)
-  const rupturaLeft = getRupturaUsesRemaining(enemy)
+  const rupturaGear = getRupturaUsesBreakdown(enemy)
   const hasInfoRows = vitBuffer > 0 || armorMarks > 0 || buffMarks > 0
-    || activeBuffs.length > 0 || rupturaMax > 0 || armorDexPenalty > 0
+    || activeBuffs.length > 0 || rupturaGear.total > 0 || armorDexPenalty > 0
   const weapon = getCharacterWeapon(enemy)
   const armor = getCharacterArmor(enemy)
   const armorTier = getArmorTier(enemy)
@@ -163,9 +162,14 @@ export function CombatEnemyCard({
                 −{armorDexPenalty} DES · armadura
               </div>
             )}
-            {rupturaMax > 0 && (
+            {rupturaGear.weapon > 0 && (
               <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#d97706' }}>
-                Usos Ruptura {rupturaLeft}/{rupturaMax}
+                +{rupturaGear.weapon} usos · arma
+              </div>
+            )}
+            {rupturaGear.armor > 0 && (
+              <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#d97706' }}>
+                +{rupturaGear.armor} usos · armadura
               </div>
             )}
             {activeBuffs.length > 0 && (
@@ -220,17 +224,23 @@ export function CombatEnemyCard({
           </div>
         </div>
 
-        <div style={{ marginTop: '0.45rem' }}>
-          <select
-            className="input-base"
-            value={mental}
-            onChange={e => onUpdate?.({ mentalState: e.target.value })}
-            style={{ fontSize: '0.65rem', padding: '3px 4px', borderColor: `${mentalOpt.color}55`, width: '100%' }}
-          >
-            {MENTAL_STATES.map(s => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
+        <div
+          title="Estado mental (definido pelos usos de Ruptura)"
+          style={{
+            marginTop: '0.45rem',
+            fontSize: '0.65rem',
+            padding: '4px 6px',
+            border: `1px solid ${mentalOpt.color}55`,
+            borderRadius: '4px',
+            color: mentalOpt.color,
+            textAlign: 'center',
+            fontFamily: 'monospace',
+            background: `${mentalOpt.color}12`,
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          {mentalOpt.label}
         </div>
 
         <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.4rem' }}>

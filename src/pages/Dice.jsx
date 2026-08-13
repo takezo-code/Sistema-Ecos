@@ -10,6 +10,8 @@ import { getEffectiveAttributeValue, getEffectiveSocialAttributeValue } from '..
 import { getCharacterClass } from '../constants/classes'
 import { getClassAttributeBonus } from '../mechanics/classes/classBonusEngine'
 import { getArmorDestrezaPenalty } from '../mechanics/equipment/armorEffectsEngine'
+import { sumGearRollBonus } from '../mechanics/equipment/gearPassiveEngine'
+import { sumAttrBuffBonus } from '../mechanics/skills/skillBuffEngine'
 
 const SOCIAL_ATTR_KEYS = new Set(SOCIAL_ATTRIBUTES.map(a => a.key))
 
@@ -126,6 +128,15 @@ function ResultDisplay({ result, rolling }) {
               {result.classBonus > 0 && (
                 <span style={{ color: '#d97706' }}> + {result.classBonus} (classe)</span>
               )}
+              {result.gearBonus > 0 && (
+                <span style={{ color: '#94a3b8' }}> + {result.gearBonus} (equipamento)</span>
+              )}
+              {result.skillBonus > 0 && (
+                <span style={{ color: '#2563eb' }}> + {result.skillBonus} (skill)</span>
+              )}
+              {result.skillBonus < 0 && (
+                <span style={{ color: '#dc2626' }}> {result.skillBonus} (skill)</span>
+              )}
             </div>
           )}
           {result.result === result.sides && result.total === undefined && (
@@ -178,6 +189,8 @@ export function Dice() {
     const char = campChars.find(c => c.id === contextChar)
     const attrVal = char ? resolveAttrValue(char, contextAttr) : 0
     const classBonus = char ? getClassAttributeBonus(char, contextAttr) : 0
+    const gearBonus = char ? sumGearRollBonus(char, contextAttr) : 0
+    const skillBonus = char ? sumAttrBuffBonus(char, contextAttr) : 0
     const charName = char ? char.name : ''
     const label = charName
       ? `d${sides} + ${ATTRIBUTE_LABELS[contextAttr]} (${charName})`
@@ -185,13 +198,15 @@ export function Dice() {
     if (rolling) return
     setRolling(true)
     setTimeout(() => {
-      const { diceResult, total } = rollWithAttribute(sides, attrVal, label, classBonus)
+      const { diceResult, total } = rollWithAttribute(sides, attrVal, label, classBonus, gearBonus, skillBonus)
       setLastResult({
         result: diceResult,
         sides,
-        bonus: attrVal + classBonus,
+        bonus: attrVal + classBonus + gearBonus + skillBonus,
         attrBonus: attrVal,
         classBonus,
+        gearBonus,
+        skillBonus,
         total,
         label,
       })
@@ -281,6 +296,8 @@ export function Dice() {
                     const eff = resolveAttrValue(c, contextAttr)
                     const base = isSoc ? (c.socialAttributes?.[contextAttr] || 0) : (c.attributes?.[contextAttr] || 0)
                     const clsBonus = getClassAttributeBonus(c, contextAttr)
+                    const gearBonus = sumGearRollBonus(c, contextAttr)
+                    const skillBonus = sumAttrBuffBonus(c, contextAttr)
                     const cls = getCharacterClass(c)
                     const attrText = eff !== base
                       ? `${c.name} · ${ATTRIBUTE_LABELS[contextAttr]}: ${eff} (${base})`
@@ -290,6 +307,14 @@ export function Dice() {
                         {attrText}
                         {clsBonus > 0 && (
                           <span style={{ color: '#d97706' }}> · +{clsBonus} {cls?.label}</span>
+                        )}
+                        {gearBonus > 0 && (
+                          <span style={{ color: '#94a3b8' }}> · +{gearBonus} equipamento</span>
+                        )}
+                        {skillBonus !== 0 && (
+                          <span style={{ color: skillBonus > 0 ? '#2563eb' : '#dc2626' }}>
+                            {' '}· {skillBonus > 0 ? '+' : ''}{skillBonus} skill
+                          </span>
                         )}
                       </>
                     )
@@ -368,6 +393,15 @@ export function Dice() {
                               {entry.result} + {entry.attrBonus ?? entry.bonus}
                               {entry.classBonus > 0 && (
                                 <span style={{ color: '#8a5a10' }}> + {entry.classBonus}</span>
+                              )}
+                              {entry.gearBonus > 0 && (
+                                <span style={{ color: '#64748b' }}> + {entry.gearBonus}</span>
+                              )}
+                              {entry.skillBonus > 0 && (
+                                <span style={{ color: '#2563eb' }}> + {entry.skillBonus}</span>
+                              )}
+                              {entry.skillBonus < 0 && (
+                                <span style={{ color: '#dc2626' }}> {entry.skillBonus}</span>
                               )}
                             </div>
                           )}

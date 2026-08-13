@@ -83,7 +83,7 @@ export function SkillCard({ runtime, onActivate }) {
           <Zap size={10} style={{ color: '#a855f7' }} />
           {isPassive
             ? (catalog.passiveOverloadRisk ? 'Risco passivo de sobrecarga' : 'Sem custo de ativação')
-            : `Sobrecarga +${overloadCost}`}
+            : `Usos +${overloadCost}`}
         </span>
         {!isPassive && onActivate && (
           <button

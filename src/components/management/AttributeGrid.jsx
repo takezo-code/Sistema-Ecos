@@ -18,7 +18,6 @@ import {
   calculateEffectiveAttributes,
   calculateEffectiveSocialAttributes,
   getPhysicalPenaltyLines,
-  formatMentalPenaltiesSummary,
 } from '../../services/stateModifiers'
 import { getArmorDestrezaPenalty } from '../../mechanics/equipment/armorEffectsEngine'
 import { sumAttrBonus } from '../../mechanics/equipment/gearPassiveEngine'
@@ -126,11 +125,6 @@ export function AttributeGrid({
     effectiveSocial[key] = (Number(effectiveSocial[key]) || 0) + sumAttrBonus(entity, key)
   }
   const physicalPenaltyLines = getPhysicalPenaltyLines(physicalState)
-  const mentalPenalties = formatMentalPenaltiesSummary({
-    ecoOverload,
-    mentalState,
-    ruptura: entity.attributes?.ruptura,
-  })
 
   const handleChange = (key, newVal) => {
     if (adminMode) {
@@ -227,9 +221,6 @@ export function AttributeGrid({
             <>
               {physicalPenaltyLines.map(line => (
                 <span key={line} style={{ color: '#ea580c' }}>{line}</span>
-              ))}
-              {mentalPenalties.lines.map(line => (
-                <span key={line} style={{ color: '#06b6d4' }}>{line}</span>
               ))}
             </>
           )}

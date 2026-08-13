@@ -107,7 +107,7 @@ export function SkillForm({
           <Input type="number" min={0} max={20} value={form.cooldownTurns}
             onChange={e => set('cooldownTurns', Number(e.target.value))} />
         </Field>
-        <Field label="Custo de sobrecarga">
+        <Field label="Custo (usos de Ruptura)">
           <Input type="number" min={0} max={5} value={form.overloadCost}
             onChange={e => set('overloadCost', Number(e.target.value))} />
         </Field>

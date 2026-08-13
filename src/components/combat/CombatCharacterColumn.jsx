@@ -3,16 +3,16 @@ import { Zap, Play, ChevronDown, ChevronUp, Star, Info, Sword, Shirt } from 'luc
 import { COMBAT_HIGHLIGHT_XP } from '../../constants/progression'
 import { DamageMarksPanel, PLAYER_MARK_TYPES } from './DamageMarksPanel'
 import { EntityThumb } from '../ui/EntityThumb'
-import { PHYSICAL_STATES, MENTAL_STATES } from '../../constants/states'
+import { PHYSICAL_STATES, mergeMentalStateWithOverload, getMentalStateOption } from '../../constants/states'
 import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
-import { formatOverloadDisplay, getEcoSafeLimitFromEntity } from '../../constants/ecoOverload'
+import { getRupturaPool, getOverloadPhase, ECO_OVERLOAD_PHASES } from '../../constants/ecoOverload'
 import { getEffectiveAttributeValue, getEffectiveSocialAttributeValue } from '../../services/stateModifiers'
 import { listActiveMentalStatusDetails } from '../../services/mentalStatusService'
 import { getCharacterClass } from '../../constants/classes'
 import { getClassAttributeBonus } from '../../mechanics/classes/classBonusEngine'
 import { getArmorDestrezaPenalty, getArmorMarkBonus } from '../../mechanics/equipment/armorEffectsEngine'
-import { sumGearRollBonus, sumAttrBonus, getRupturaUsesRemaining, getRupturaUsesMax } from '../../mechanics/equipment/gearPassiveEngine'
-import { listActiveBuffs, sumMarkBuffBonus, formatBuff } from '../../mechanics/skills/skillBuffEngine'
+import { sumGearRollBonus, sumAttrBonus } from '../../mechanics/equipment/gearPassiveEngine'
+import { listActiveBuffs, sumMarkBuffBonus, sumAttrBuffBonus, formatBuff } from '../../mechanics/skills/skillBuffEngine'
 import { getCharacterWeapon, getCharacterArmor } from '../../mechanics/equipment/characterGear'
 import { getArmorTier } from '../../mechanics/equipment/armorProgressionEngine'
 import { GearDetailModal } from '../equipment/GearDetailModal'
@@ -46,25 +46,30 @@ export function CombatCharacterColumn({
   const [gearView, setGearView] = useState(null)
 
   const physical = character.physicalState ?? 'bem'
-  const mental = character.mentalState ?? 'estavel'
+  const rupturaPool = getRupturaPool(character)
+  const safeLimit = rupturaPool.max
+  const overload = rupturaPool.spent
+  const mental = mergeMentalStateWithOverload(character.mentalState, overload, safeLimit)
   const physicalOpt = PHYSICAL_STATES.find(s => s.value === physical) || PHYSICAL_STATES[0]
-  const mentalOpt = MENTAL_STATES.find(s => s.value === mental) || MENTAL_STATES[0]
+  const mentalOpt = getMentalStateOption(mental)
   const mentalStatuses = listActiveMentalStatusDetails(character.activeMentalStatuses)
   const skills = character._skillRuntimes || []
   const characterClass = getCharacterClass(character)
   const armorDexPenalty = getArmorDestrezaPenalty(character)
-  const overload = character.ecoOverload ?? 0
-  const safeLimit = getEcoSafeLimitFromEntity(character)
   const overloadPct = Math.min(overload / Math.max(safeLimit, 1), 1)
+  const overloadPhase = getOverloadPhase(overload, safeLimit)
+  const barColor = overloadPhase === ECO_OVERLOAD_PHASES.TOTAL || overloadPhase === ECO_OVERLOAD_PHASES.RUPTURE
+    ? '#dc2626'
+    : overloadPhase === ECO_OVERLOAD_PHASES.SHAKEN
+      ? '#f97316'
+      : '#a855f7'
   const hasNotes = Boolean((character.combatNotes || '').trim())
   const vitBuffer = Math.floor(Math.max(0, Number(character.attributes?.vitalidade) || 0) / 2)
   const armorMarks = getArmorMarkBonus(character)
   const buffMarks = sumMarkBuffBonus(character)
   const activeBuffs = listActiveBuffs(character)
-  const rupturaMax = getRupturaUsesMax(character)
-  const rupturaLeft = getRupturaUsesRemaining(character)
   const hasInfoRows = vitBuffer > 0 || armorMarks > 0 || buffMarks > 0
-    || activeBuffs.length > 0 || rupturaMax > 0 || armorDexPenalty > 0
+    || activeBuffs.length > 0 || armorDexPenalty > 0
   const weapon = getCharacterWeapon(character)
   const armor = getCharacterArmor(character)
   const armorTier = getArmorTier(character)
@@ -160,11 +165,6 @@ export function CombatCharacterColumn({
                 −{armorDexPenalty} DES · armadura
               </div>
             )}
-            {rupturaMax > 0 && (
-              <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#d97706' }}>
-                Usos Ruptura {rupturaLeft}/{rupturaMax}
-              </div>
-            )}
             {activeBuffs.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '0.1rem', paddingTop: '0.3rem', borderTop: '1px solid #222' }}>
                 {activeBuffs.map(b => (
@@ -229,33 +229,41 @@ export function CombatCharacterColumn({
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.45rem' }}>
-          <Zap size={9} style={{ color: '#a855f7', flexShrink: 0 }} />
-          <div style={{ flex: 1, height: '3px', background: '#1a1a1a', borderRadius: '2px', overflow: 'hidden' }}>
-            <div style={{
-              height: '100%',
-              width: `${overloadPct * 100}%`,
-              background: overloadPct >= 0.8 ? '#dc2626' : overloadPct >= 0.5 ? '#f97316' : '#a855f7',
-              borderRadius: '2px',
-              transition: 'width 0.3s',
-            }} />
+        <div style={{ marginTop: '0.45rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Zap size={9} style={{ color: '#a855f7', flexShrink: 0 }} />
+            <div style={{ flex: 1, height: '3px', background: '#1a1a1a', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{
+                height: '100%',
+                width: `${overloadPct * 100}%`,
+                background: barColor,
+                borderRadius: '2px',
+                transition: 'width 0.3s',
+              }} />
+            </div>
+            <span style={{ fontSize: '0.5rem', color: '#a855f7', fontFamily: 'monospace', flexShrink: 0, fontWeight: 700 }}>
+              {rupturaPool.spent}/{rupturaPool.max}
+            </span>
           </div>
-          <span style={{ fontSize: '0.5rem', color: '#777', fontFamily: 'monospace', flexShrink: 0 }}>
-            {formatOverloadDisplay(overload, { safeLimit })}
-          </span>
         </div>
 
-        <div style={{ marginTop: '0.45rem' }}>
-          <select
-            className="input-base"
-            value={mental}
-            onChange={e => onUpdate?.({ mentalState: e.target.value })}
-            style={{ fontSize: '0.65rem', padding: '3px 4px', borderColor: `${mentalOpt.color}55`, width: '100%' }}
-          >
-            {MENTAL_STATES.map(s => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
+        <div
+          title="Estado mental (definido pelos usos de Ruptura)"
+          style={{
+            marginTop: '0.45rem',
+            fontSize: '0.65rem',
+            padding: '4px 6px',
+            border: `1px solid ${mentalOpt.color}55`,
+            borderRadius: '4px',
+            color: mentalOpt.color,
+            textAlign: 'center',
+            fontFamily: 'monospace',
+            background: `${mentalOpt.color}12`,
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          {mentalOpt.label}
         </div>
 
         {mentalStatuses.length > 0 && (
@@ -379,9 +387,9 @@ export function CombatCharacterColumn({
                 const classBonus = getClassAttributeBonus(character, attr.key)
                 const gearAttrBonus = sumAttrBonus(character, attr.key)
                 const gearRollExtra = sumGearRollBonus(character, attr.key)
-                const displayVal = eff + gearAttrBonus
-                // Classe: só pontos base da ficha. Equipamento: só soma na rolagem.
-                const rollBonus = eff + classBonus + gearRollExtra
+                const skillAttrBonus = sumAttrBuffBonus(character, attr.key)
+                const displayVal = eff + gearAttrBonus + skillAttrBonus
+                const rollBonus = eff + classBonus + gearRollExtra + skillAttrBonus
                 const reduced = eff < base
                 const shortKey = attr.key === 'inteligencia' ? 'INT'
                   : attr.key === 'vitalidade' ? 'VIT'
@@ -393,7 +401,7 @@ export function CombatCharacterColumn({
                     type="button"
                     onClick={() => onRollAttribute?.(
                       character, attr.key, attr.label, rollBonus, diceSides,
-                      { attrBonus: eff, classBonus, weaponPenalty: 0, gearBonus: gearRollExtra },
+                      { attrBonus: eff + skillAttrBonus, classBonus, weaponPenalty: 0, gearBonus: gearRollExtra },
                     )}
                     title={`d${diceSides} + ${attr.label}`}
                     style={{
@@ -452,9 +460,9 @@ export function CombatCharacterColumn({
                 const classBonus = getClassAttributeBonus(character, attr.key)
                 const gearAttrBonus = sumAttrBonus(character, attr.key)
                 const gearRollExtra = sumGearRollBonus(character, attr.key)
-                const displayVal = eff + gearAttrBonus
-                // Classe: só pontos base da ficha. Equipamento: só soma na rolagem.
-                const rollBonus = eff + classBonus + gearRollExtra
+                const skillAttrBonus = sumAttrBuffBonus(character, attr.key)
+                const displayVal = eff + gearAttrBonus + skillAttrBonus
+                const rollBonus = eff + classBonus + gearRollExtra + skillAttrBonus
                 const reduced = eff < base
                 return (
                   <button
@@ -462,7 +470,7 @@ export function CombatCharacterColumn({
                     type="button"
                     onClick={() => onRollAttribute?.(
                       character, attr.key, attr.label, rollBonus, diceSides,
-                      { attrBonus: eff, classBonus, weaponPenalty: 0, gearBonus: gearRollExtra },
+                      { attrBonus: eff + skillAttrBonus, classBonus, weaponPenalty: 0, gearBonus: gearRollExtra },
                     )}
                     title={`d${diceSides} + ${attr.label}`}
                     style={{

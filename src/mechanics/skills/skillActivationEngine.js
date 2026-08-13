@@ -3,21 +3,24 @@ import { processEcoSkillUse } from '../ecoOverload/overloadEngine'
 import { setCooldown, tickCooldowns } from './cooldownEngine'
 import { ECO_SKILL_TYPES } from '../../constants/skillTypes'
 import { applyOverloadSideEffects } from '../ecoOverload/overloadEngine'
+import { healDamageMarks } from '../combat/damageMarksEngine'
 import {
-  getRupturaUsesRemaining,
-  getRupturaUsesSpent,
-} from '../equipment/gearPassiveEngine'
+  applyBuffsToEntity,
+  buildSkillBuffs,
+  BUFF_TARGETS,
+  resolveBuffValue,
+  tickActiveBuffs,
+} from './skillBuffEngine'
 
 /**
- * Ativa habilidade ativa: sobrecarga + cooldown + histórico.
- * Se houver usos de Ruptura restantes (passivas de equipamento),
- * consome 1 e pula a sobrecarga deste uso.
+ * Ativa habilidade ativa: sobe o contador de usos de Ruptura pelo custo da skill
+ * (1, 2, …) e aplica cooldown, buffs e cura de marcas.
  */
 export function activateActiveSkill(entity, skillInstance, catalogDef) {
   const templateId = skillInstance.templateId || catalogDef.templateId
-  const overloadCost = catalogDef.overloadCost ?? 1
-  const rupturaRemaining = getRupturaUsesRemaining(entity)
-  const useFreeRuptura = rupturaRemaining > 0
+  const rupturaCost = Math.max(0, Math.floor(Number(
+    catalogDef.overloadCost ?? skillInstance.overloadCost ?? 1
+  ) || 0))
 
   const syntheticSkill = {
     id: skillInstance.id,
@@ -30,19 +33,11 @@ export function activateActiveSkill(entity, skillInstance, catalogDef) {
   const events = []
   const warnings = []
 
-  if (useFreeRuptura) {
-    patch.rupturaUsesSpent = getRupturaUsesSpent(entity) + 1
-    events.push({
-      type: 'ruptura_use',
-      message: `Uso de Ruptura da arma/armadura (${rupturaRemaining - 1} restantes).`,
-    })
-  } else {
-    for (let i = 0; i < overloadCost; i++) {
-      const step = processEcoSkillUse({ ...entity, ...patch }, syntheticSkill)
-      patch = { ...patch, ...step.patch }
-      events.push(...step.events)
-      warnings.push(...step.warnings)
-    }
+  if (rupturaCost > 0) {
+    const step = processEcoSkillUse({ ...entity, ...patch }, syntheticSkill, { amount: rupturaCost })
+    patch = { ...patch, ...step.patch }
+    events.push(...step.events)
+    warnings.push(...step.warnings)
   }
 
   const skillCooldowns = setCooldown(
@@ -51,6 +46,34 @@ export function activateActiveSkill(entity, skillInstance, catalogDef) {
     catalogDef.cooldownTurns ?? 0
   )
 
+  const skillTier = Math.max(1, Number(skillInstance.tier) || 1)
+  const allBuffs = buildSkillBuffs(catalogDef, skillTier)
+  const selfBuffs = allBuffs.filter(b => b.target !== BUFF_TARGETS.PARTY)
+  const partyBuffs = allBuffs.filter(b => b.target === BUFF_TARGETS.PARTY)
+
+  const buffResult = applyBuffsToEntity({ ...entity, ...patch }, selfBuffs)
+  if (buffResult.applied) {
+    patch = { ...patch, ...buffResult.patch }
+    events.push({
+      type: 'skill_buff',
+      message: selfBuffs.map(b => `${b.sourceName}: ${b.kind === 'mark_bonus' ? `+${b.value} marcas` : `${b.value > 0 ? '+' : ''}${b.value}`}`).join(' · '),
+    })
+  }
+
+  const healAmount = catalogDef.heal ? resolveBuffValue(catalogDef.heal, skillTier) : 0
+  const healTarget = catalogDef.heal?.target || BUFF_TARGETS.SELF
+  let partyHeal = null
+  if (healAmount > 0 && healTarget === BUFF_TARGETS.PARTY) {
+    partyHeal = { amount: healAmount, sourceName: catalogDef.name }
+  } else if (healAmount > 0) {
+    const healed = healDamageMarks({ ...entity, ...patch }, healAmount)
+    patch = { ...patch, ...healed.patch }
+    events.push({
+      type: 'skill_heal',
+      message: `${catalogDef.name}: −${healed.marksRemoved} marca(s).`,
+    })
+  }
+
   const historyEntry = {
     id: genId(),
     templateId,
@@ -58,7 +81,7 @@ export function activateActiveSkill(entity, skillInstance, catalogDef) {
     type: 'activation',
     turn: entity.currentTurn ?? 0,
     overloadAfter: patch.ecoOverload ?? entity.ecoOverload ?? 0,
-    usedRupturaCharge: useFreeRuptura,
+    rupturaCost,
     narrativeConsequence: catalogDef.narrativeConsequence,
     timestamp: new Date().toISOString(),
   }
@@ -74,6 +97,8 @@ export function activateActiveSkill(entity, skillInstance, catalogDef) {
     events,
     warnings,
     historyEntry,
+    partyBuffs,
+    partyHeal,
   }
 }
 
@@ -94,6 +119,7 @@ export function advanceTurnForEntity(entity, catalogSkillsById = {}) {
   }
 
   const overloadFx = applyOverloadSideEffects({ ...entity, ecoOverload }, ecoOverload)
+  const buffTick = tickActiveBuffs(entity)
 
   const currentTurn = (entity.currentTurn ?? 0) + 1
 
@@ -104,6 +130,7 @@ export function advanceTurnForEntity(entity, catalogSkillsById = {}) {
       activeMentalStatuses: overloadFx.activeMentalStatuses,
       mentalState: overloadFx.mentalState,
       currentTurn,
+      ...buffTick.patch,
     },
     passiveWarnings,
   }

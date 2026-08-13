@@ -44,11 +44,11 @@ export function removeMentalStatusById(activeStatuses, statusId) {
   return normalizeActiveMentalStatuses(activeStatuses).filter(s => s.id !== statusId)
 }
 
-/** Sincroniza Mentalmente Abalado ao atingir o limite seguro (5 + Ruptura). */
+/** Sincroniza Mentalmente Abalado ao ultrapassar o limite seguro (ex.: 10/9). */
 export function syncOverloadMentalStatus(activeStatuses, ecoOverload, safeLimit = ECO_OVERLOAD_BASE_LIMIT) {
   let list = normalizeActiveMentalStatuses(activeStatuses)
   const lim = asSafeLimit(safeLimit)
-  const shouldHave = (Number(ecoOverload) || 0) >= lim
+  const shouldHave = (Number(ecoOverload) || 0) > lim
 
   if (shouldHave) {
     list = applyMentalStatus(list, 'mentalmente_abalado', {

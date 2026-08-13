@@ -84,7 +84,7 @@ export const MENTAL_STATES = [
     color: '#06b6d4',
     glow: 'rgba(6,182,212,0.15)',
     ecoFailureChance: 0,
-    overloadRange: 'abaixo do limite',
+    overloadRange: 'até o limite (inclusive)',
     narrativeConsequences: [],
   }, []),
   withNote({
@@ -98,7 +98,7 @@ export const MENTAL_STATES = [
     color: '#eab308',
     glow: 'rgba(234,179,8,0.12)',
     ecoFailureChance: 0,
-    overloadRange: 'no limite',
+    overloadRange: '1 acima',
     narrativeConsequences: [
       'Dificuldade de foco',
       'Lapsos mentais leves',
@@ -107,7 +107,7 @@ export const MENTAL_STATES = [
       'Impulsividade crescente',
       'Fadiga psicológica',
     ],
-  }, buildPenaltyLines(1, MENTAL_PENALTY_LABELS)),
+  }, []),
   withNote({
     value: 'fragmentado',
     label: 'Fragmentado',
@@ -119,7 +119,7 @@ export const MENTAL_STATES = [
     color: '#f97316',
     glow: 'rgba(249,115,22,0.15)',
     ecoFailureChance: 0.05,
-    overloadRange: '1 acima',
+    overloadRange: '2 acima',
     narrativeConsequences: [
       'Pensamentos fragmentados',
       'Dificuldade de raciocínio complexo',
@@ -127,7 +127,7 @@ export const MENTAL_STATES = [
       'Sensação de perda de controle',
       'Agressividade involuntária',
     ],
-  }, buildPenaltyLines(2, MENTAL_PENALTY_LABELS)),
+  }, []),
   withNote({
     value: 'dissociado',
     label: 'Dissociado',
@@ -139,7 +139,7 @@ export const MENTAL_STATES = [
     color: '#dc2626',
     glow: 'rgba(220,38,38,0.18)',
     ecoFailureChance: 0.15,
-    overloadRange: '2–3 acima',
+    overloadRange: '3–4 acima',
     narrativeConsequences: [
       'Desconexão com a realidade',
       'Incapacidade de distinguir memória e presente',
@@ -147,7 +147,7 @@ export const MENTAL_STATES = [
       'Eco se manifesta sem controle intencional',
       'Fala incoerente sob pressão',
     ],
-  }, buildPenaltyLines(3, MENTAL_PENALTY_LABELS)),
+  }, []),
   withNote({
     value: 'perdido_no_tempo',
     label: 'Perdido no Tempo',
@@ -159,7 +159,7 @@ export const MENTAL_STATES = [
     color: '#a855f7',
     glow: 'rgba(168,85,247,0.22)',
     ecoFailureChance: 0.35,
-    overloadRange: '4+ acima',
+    overloadRange: '5+ acima',
     glitch: true,
     narrativeConsequences: [
       'Consciência fragmentada no tempo',
@@ -168,7 +168,7 @@ export const MENTAL_STATES = [
       'Respostas físicas desconectadas da mente',
       'A identidade começa a se dissolver',
     ],
-  }, buildPenaltyLines(4, MENTAL_PENALTY_LABELS)),
+  }, []),
 ]
 
 const LEGACY_CONDITION_MAP = {
@@ -208,16 +208,17 @@ export function compareMentalSeverity(a, b) {
   return MENTAL_STATE_ORDER.indexOf(normalizeMentalState(a)) - MENTAL_STATE_ORDER.indexOf(normalizeMentalState(b))
 }
 
-/** Estado mental mínimo exigido pela sobrecarga (relativo ao limite 5+RUP). */
+/** Estado mental mínimo exigido pela sobrecarga (relativo ao limite 5+RUP).
+ * No limite (ex.: 9/9) ainda é Estável. Só sai de Estável ao ultrapassar (10/9 → Abalado). */
 export function getMentalStateFromEcoOverload(ecoOverload, safeLimit = 5) {
   const n = Math.max(0, Number(ecoOverload) || 0)
   const lim = asSafeLimit(safeLimit)
   const overage = n - lim
-  if (overage >= 4) return 'perdido_no_tempo'
-  if (overage >= 2) return 'dissociado'
-  if (overage >= 1) return 'fragmentado'
-  if (n >= lim) return 'abalado'
-  return null
+  if (overage <= 0) return null
+  if (overage >= 5) return 'perdido_no_tempo'
+  if (overage >= 3) return 'dissociado'
+  if (overage >= 2) return 'fragmentado'
+  return 'abalado'
 }
 
 /** Mantém o estado mais grave entre o atual e o exigido pela sobrecarga */

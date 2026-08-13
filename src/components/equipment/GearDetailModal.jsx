@@ -80,7 +80,7 @@ function WeaponDetailBody({ weapon }) {
               <div style={{ marginTop: '0.35rem', fontSize: '0.55rem', fontFamily: 'monospace', color: '#555' }}>
                 {skill.cooldownTurns != null && `CD ${skill.cooldownTurns}`}
                 {skill.cooldownTurns != null && skill.overloadCost != null && ' · '}
-                {skill.overloadCost != null && `Sobrecarga ${skill.overloadCost}`}
+                {skill.overloadCost != null && `${skill.overloadCost} uso(s)`}
               </div>
             )}
           </div>

@@ -144,7 +144,7 @@ export function SkillDetailPanel({ skill, onBack, onEdit, onDelete }) {
                 padding: '4px 10px',
                 borderRadius: '3px',
               }}>
-                SOBRECARGA +{skill.overloadCost ?? 1}
+                USOS +{skill.overloadCost ?? 1}
               </span>
             </div>
           </div>

@@ -2,18 +2,11 @@ import React from 'react'
 import { Heart, Brain } from 'lucide-react'
 import { PHYSICAL_STATES, MENTAL_STATES } from '../../constants/states'
 import { StatePicker } from './StatePicker'
-import { getPhysicalPenaltyLines, formatMentalPenaltiesSummary } from '../../services/stateModifiers'
+import { getPhysicalPenaltyLines } from '../../services/stateModifiers'
 import { listActiveMentalStatusDetails } from '../../services/mentalStatusService'
 
 export function StatesSection({ entity, physicalState, mentalState, onPhysicalChange, onMentalChange }) {
-  const ecoOverload = entity?.ecoOverload ?? 0
-
   const physicalPenaltyLines = getPhysicalPenaltyLines(physicalState)
-  const mentalSummary = formatMentalPenaltiesSummary({
-    ecoOverload,
-    mentalState,
-    ruptura: entity?.attributes?.ruptura,
-  })
   const activeStatuses = listActiveMentalStatusDetails(entity?.activeMentalStatuses)
 
   return (
@@ -54,25 +47,6 @@ export function StatesSection({ entity, physicalState, mentalState, onPhysicalCh
         value={mentalState}
         onChange={onMentalChange}
       />
-
-      {mentalSummary.hasPenalties && (
-        <div style={{
-          padding: '0.45rem 0.625rem',
-          background: '#0a0a0a',
-          border: '1px solid rgba(6,182,212,0.15)',
-          borderRadius: '3px',
-          fontSize: '0.6rem',
-          fontFamily: 'monospace',
-          color: '#06b6d4',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.2rem',
-        }}>
-          {mentalSummary.lines.map(line => (
-            <span key={line}>{line}</span>
-          ))}
-        </div>
-      )}
 
       {activeStatuses.length > 0 && (
         <div style={{ fontSize: '0.65rem', color: '#888' }}>

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Manual do Jogador — Sistema Eco</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 16mm 20mm 16mm;
+    }
+
+    :root {
+      --ink: #1a1510;
+      --muted: #5c5348;
+      --rule: #c4b8a5;
+      --accent: #8b1e1e;
+      --accent-soft: #a63d3d;
+      --paper: #f7f1e6;
+      --box: #efe6d6;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+      font-size: 11pt;
+      line-height: 1.45;
+    }
+
+    .page-break { page-break-before: always; break-before: page; }
+
+    h1, h2, h3 {
+      font-family: "Cinzel", "Palatino Linotype", Georgia, serif;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--ink);
+      page-break-after: avoid;
+    }
+
+    h1 {
+      font-size: 28pt;
+      text-align: center;
+      margin: 0 0 0.35em;
+      color: var(--accent);
+    }
+
+    h2 {
+      font-size: 15pt;
+      margin: 1.4em 0 0.55em;
+      padding-bottom: 0.25em;
+      border-bottom: 1.5px solid var(--accent);
+      color: var(--accent);
+    }
+
+    h3 {
+      font-size: 12pt;
+      margin: 1em 0 0.4em;
+      color: var(--ink);
+    }
+
+    p { margin: 0 0 0.7em; }
+
+    .subtitle {
+      text-align: center;
+      font-size: 12pt;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 1.5em;
+    }
+
+    .cover {
+      min-height: 240mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 2em 1em;
+    }
+
+    .cover .ornament {
+      width: 60%;
+      height: 1px;
+      background: var(--accent);
+      margin: 1.2em auto;
+    }
+
+    .cover .tag {
+      font-size: 9pt;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--accent-soft);
+      margin-bottom: 1em;
+    }
+
+    .cover .blurb {
+      max-width: 28em;
+      color: var(--muted);
+      font-size: 11pt;
+      font-style: italic;
+    }
+
+    .cover .footer-meta {
+      margin-top: 3em;
+      font-size: 9pt;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    ul, ol { margin: 0 0 0.8em 1.2em; padding: 0; }
+    li { margin-bottom: 0.25em; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.6em 0 1em;
+      font-size: 10pt;
+      page-break-inside: avoid;
+    }
+
+    th, td {
+      border: 1px solid var(--rule);
+      padding: 0.35em 0.5em;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--box);
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .callout {
+      background: var(--box);
+      border-left: 3px solid var(--accent);
+      padding: 0.65em 0.85em;
+      margin: 0.8em 0 1em;
+      page-break-inside: avoid;
+    }
+
+    .callout strong { color: var(--accent); }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1em;
+    }
+
+    .small { font-size: 9.5pt; color: var(--muted); }
+
+    .toc ol { list-style: none; margin-left: 0; }
+    .toc li {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px dotted var(--rule);
+      margin-bottom: 0.45em;
+      padding-bottom: 0.2em;
+    }
+    .toc .num { color: var(--accent); font-weight: 700; margin-right: 0.5em; }
+
+    .formula {
+      font-family: Consolas, "Courier New", monospace;
+      background: var(--box);
+      padding: 0.15em 0.4em;
+      border-radius: 2px;
+      font-size: 10pt;
+    }
+
+    footer.page-foot {
+      position: running(pageFoot);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CAPA -->
+  <section class="cover">
+    <div class="tag">Manual do Jogador</div>
+    <h1>SISTEMA ECO</h1>
+    <div class="ornament"></div>
+    <p class="subtitle" style="margin:0">Poder temporal · Marcas · Sobrecarga · Ruptura</p>
+    <p class="blurb">
+      Este manual explica tudo que você precisa para jogar: atributos, testes,
+      combate sem HP tradicional, habilidades de Eco e o preço de usá-las.
+      Leia com calma — o Eco não perdoa pressa.
+    </p>
+    <div class="footer-meta">One-shot &amp; campanhas · Versão do painel do mestre</div>
+  </section>
+
+  <!-- SUMÁRIO -->
+  <section class="page-break">
+    <h2>Sumário</h2>
+    <div class="toc">
+      <ol>
+        <li><span><span class="num">01</span> O que é este sistema</span></li>
+        <li><span><span class="num">02</span> Sua ficha</span></li>
+        <li><span><span class="num">03</span> Criação de personagem</span></li>
+        <li><span><span class="num">04</span> Testes e dados</span></li>
+        <li><span><span class="num">05</span> Combate e marcas</span></li>
+        <li><span><span class="num">06</span> Vitalidade</span></li>
+        <li><span><span class="num">07</span> O Eco e as skills</span></li>
+        <li><span><span class="num">08</span> Sobrecarga e ruptura</span></li>
+        <li><span><span class="num">09</span> Cena e atributos sociais</span></li>
+        <li><span><span class="num">10</span> Progressão (nível e XP)</span></li>
+        <li><span><span class="num">11</span> Folha rápida</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 1 -->
+  <section class="page-break">
+    <h2>01 · O que é este sistema</h2>
+    <p>
+      Vocês são pessoas marcadas pelo <strong>Eco</strong> — uma força que dobra o tempo,
+      a percepção e o corpo. Não é magia limpa: cada uso deixa resíduo. Esse resíduo se chama
+      <strong>Sobrecarga</strong>. Se ela cresce demais, a mente <strong>fragmenta</strong>
+      e o Eco pode romper você por completo.
+    </p>
+    <p>
+      Em combate, não existe barra de vida clássica. Você acumula <strong>marcas de dano</strong>.
+      Conforme as marcas sobem, seu corpo piora: Ferido, Grave, Incapacitado.
+      A <strong>Vitalidade</strong> atrasa essa queda — mas não a impede para sempre.
+    </p>
+    <div class="callout">
+      <strong>Para jogar bem:</strong> descreva intenção → role o dado + atributo →
+      o mestre narra o resultado → marcas, Eco e consequências entram em jogo.
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <h2>02 · Sua ficha</h2>
+    <h3>Atributos físicos</h3>
+    <table>
+      <thead>
+        <tr><th>Atributo</th><th>Máx.</th><th>Para quê</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Força (FOR)</strong></td><td>10</td><td>Impacto, carga, luta corpo a corpo.</td></tr>
+        <tr><td><strong>Destreza (DES)</strong></td><td>10</td><td>Agilidade, precisão, esquiva, tiros.</td></tr>
+        <tr><td><strong>Inteligência (INT)</strong></td><td>10</td><td>Raciocínio, análise, controle fino do Eco.</td></tr>
+        <tr><td><strong>Vitalidade (VIT)</strong></td><td>10</td><td>Resistência física; atrasa piora por marcas.</td></tr>
+        <tr><td><strong>Ruptura (RUP)</strong></td><td>5</td><td>Afinidade com Eco; potencializa skills.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Atributos de cena (sociais)</h3>
+    <table>
+      <thead>
+        <tr><th>Atributo</th><th>Máx.</th><th>Para quê</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Carisma (CAR)</strong></td><td>8</td><td>Persuasão, presença, liderança.</td></tr>
+        <tr><td><strong>Percepção (PER)</strong></td><td>8</td><td>Notar detalhes, armadilhas, mentiras.</td></tr>
+        <tr><td><strong>Vontade (VON)</strong></td><td>8</td><td>Resistir medo, pressão, influência.</td></tr>
+        <tr><td><strong>Sabedoria (SAB)</strong></td><td>8</td><td>Julgamento, leitura de situações, instinto.</td></tr>
+      </tbody>
+    </table>
+
+    <p class="small">
+      Em combate, o mestre costuma pedir atributos físicos. Em cena (investigação, diálogo, exploração),
+      atributos sociais. Skills de Eco podem aparecer nos dois.
+    </p>
+  </section>
+
+  <!-- 3 -->
+  <section class="page-break">
+    <h2>03 · Criação de personagem</h2>
+    <ol>
+      <li>Nome, história e motivações.</li>
+      <li>Distribua <strong>10 pontos</strong> nos atributos físicos.
+        Nenhum atributo pode passar de <strong>4</strong> na criação.
+        Gaste todos os 10.</li>
+      <li>Distribua <strong>6 pontos</strong> nos atributos de cena.
+        Nenhum passa de <strong>4</strong> na criação. Gaste todos os 6.</li>
+      <li>Você começa no <strong>nível 1</strong>, sem Eco ainda (Eco vem em níveis ímpares a partir do 3).</li>
+      <li>Skills: você <strong>descobre aleatoriamente</strong> gastando Eco — não escolhe do catálogo
+        (o mestre escolhe as do boss; as suas vêm do destino).</li>
+    </ol>
+    <div class="callout">
+      <strong>Dica:</strong> VIT ajuda a sobreviver. RUP ajuda skills. FOR/DES decidem luta.
+      INT segura a mente sob sobrecarga. Não zere nada sem pensar.
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <h2>04 · Testes e dados</h2>
+    <p>
+      Quando o resultado é incerto, o mestre pede um dado (<strong>d20</strong> padrão ou <strong>d8</strong>)
+      + atributo <em>efetivo</em>, e define uma <strong>CD</strong> (ex.: “precisa 15”).
+    </p>
+    <p><span class="formula">Resultado = dado + atributo · sucesso se total ≥ CD</span></p>
+
+    <h3>Graus de sucesso (mesa tradicional)</h3>
+    <table>
+      <thead>
+        <tr><th>Condição</th><th>Resultado</th><th>Significado</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Face <strong>1</strong></td><td>Falha Crítica</td><td>Dá muito errado.</td></tr>
+        <tr><td>Total &lt; CD − 3</td><td>Falha</td><td>Não alcançou a CD.</td></tr>
+        <tr><td>Total CD − 3 … CD − 1</td><td>Sucesso Parcial</td><td>Quase — com custo.</td></tr>
+        <tr><td>Total ≥ CD</td><td>Sucesso</td><td>Passou.</td></tr>
+        <tr><td>Face máx. (20 / 8) e ≥ CD</td><td>Sucesso Crítico</td><td>Excepcional.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Tabela de CD — o que o mestre pede</h3>
+    <table>
+      <thead>
+        <tr><th>Nível</th><th>Fala na mesa</th><th>d20</th><th>d8</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Trivial</td><td>“precisa 5”</td><td>5</td><td>3</td></tr>
+        <tr><td>Fácil</td><td>“precisa 10”</td><td>10</td><td>4</td></tr>
+        <tr><td><strong>Médio</strong></td><td><strong>“precisa 15”</strong></td><td><strong>15</strong></td><td><strong>6</strong></td></tr>
+        <tr><td>Difícil</td><td>“precisa 20”</td><td>20</td><td>8</td></tr>
+        <tr><td>Muito difícil</td><td>“precisa 25”</td><td>25</td><td>10</td></tr>
+        <tr><td>Extremo</td><td>“precisa 30”</td><td>30</td><td>12</td></tr>
+      </tbody>
+    </table>
+    <p class="small">
+      Ex.: SAB 7 vs CD 15 no d20 → precisa tirar 8 ou mais no dado (8+7=15).
+    </p>
+  </section>
+
+  <!-- 5 -->
+  <section class="page-break">
+    <h2>05 · Combate e marcas</h2>
+    <p>
+      Não há pontos de vida. Golpes deixam <strong>marcas</strong> no corpo.
+      Marcas acumulam. O total define seu <strong>estado físico</strong>.
+    </p>
+
+    <h3>Tipos de marca</h3>
+    <table>
+      <thead>
+        <tr><th>Marca</th><th>Valor</th><th>Exemplos</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Leve</td><td>+1</td><td>Arranhão, contusão.</td></tr>
+        <tr><td>Média</td><td>+2</td><td>Corte, fratura menor.</td></tr>
+        <tr><td>Grave</td><td>+3</td><td>Trauma severo, hemorragia.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Estados físicos (base, sem buffer de VIT)</h3>
+    <table>
+      <thead>
+        <tr><th>Marcas</th><th>Estado</th><th>Penalidade</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>0–2</td><td>Estável</td><td>nenhuma</td></tr>
+        <tr><td>3–5</td><td>Ferido</td><td><strong>−1</strong> FOR · DES · VIT</td></tr>
+        <tr><td>6–8</td><td>Grave</td><td><strong>−2</strong> FOR · DES · VIT</td></tr>
+        <tr><td>9+</td><td>Incapacitado</td><td><strong>−3</strong> FOR · DES · VIT</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <strong>Importante:</strong> a penalidade é fixa (não é porcentagem).
+      Só afeta Força, Destreza e Vitalidade — não INT/RUP por marcas.
+    </div>
+
+    <p>
+      Descansar com o grupo (quando o mestre permitir) pode limpar marcas e sobrecarga.
+      Fora isso, cura é narrativa ou por efeito específico.
+    </p>
+  </section>
+
+  <!-- 6 -->
+  <section>
+    <h2>06 · Vitalidade</h2>
+    <p>
+      Vitalidade faz duas coisas:
+    </p>
+    <ol>
+      <li>É um atributo de teste (ex.: resistir, usar escudo).</li>
+      <li>Cria um <strong>buffer</strong> que atrasa a piora dos estados físicos.</li>
+    </ol>
+    <p>
+      Buffer = <span class="formula">metade da Vitalidade, arredondada para baixo</span>
+      (<span class="formula">floor(VIT ÷ 2)</span>).
+    </p>
+    <p>
+      Esse valor empurra para frente as faixas de Ferido / Grave / Incapacitado.
+      Exemplo: VIT 4 → buffer 2 → você só fica Ferido a partir de <strong>5</strong> marcas
+      (em vez de 3).
+    </p>
+    <table>
+      <thead>
+        <tr><th>VIT</th><th>Buffer</th><th>Ferido a partir de</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>0–1</td><td>0</td><td>3 marcas</td></tr>
+        <tr><td>2–3</td><td>1</td><td>4 marcas</td></tr>
+        <tr><td>4–5</td><td>2</td><td>5 marcas</td></tr>
+        <tr><td>6–7</td><td>3</td><td>6 marcas</td></tr>
+        <tr><td>8–9</td><td>4</td><td>7 marcas</td></tr>
+        <tr><td>10</td><td>5</td><td>8 marcas</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 7 -->
+  <section class="page-break">
+    <h2>07 · O Eco e as skills</h2>
+    <p>
+      <strong>Eco</strong> é o recurso que alimenta suas habilidades especiais.
+      Você ganha pontos de Eco em <strong>níveis ímpares</strong> (3, 5, 7…).
+      Gastar <strong>1 Eco</strong> descobre uma skill <strong>aleatória</strong>
+      do catálogo de personagem (que você ainda não tenha).
+    </p>
+
+    <h3>Tipos de skill</h3>
+    <table>
+      <thead>
+        <tr><th>Tipo</th><th>Como funciona</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Ativa</strong></td><td>Você ativa no turno. Custa sobrecarga (geralmente +1). Entra em cooldown.</td></tr>
+        <tr><td><strong>Passiva</strong></td><td>Sempre ligada. Não gasta sobrecarga ao “usar” (salvo risco passivo especial).</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Cooldown (CD)</h3>
+    <p>
+      Cada skill ativa tem um CD em <strong>turnos</strong>.
+      Ao usar, o CD sobe para o valor da skill. A cada avanço de turno do personagem, todos os CDs caem 1.
+      Em 0, pode usar de novo.
+    </p>
+    <p class="small">Ex.: CD 2 → use no turno 1 → avance turno duas vezes → liberou.</p>
+
+    <h3>Ruptura e poder</h3>
+    <p>
+      Cada ponto de Ruptura aumenta a eficácia das skills de Eco em cerca de <strong>+1%</strong>.
+      Ferimentos e sobrecarga podem reduzir o que você realmente entrega na hora.
+    </p>
+
+    <div class="callout">
+      <strong>One-shot:</strong> o mestre pode liberar 2–3 skills cedo para todo mundo jogar no ritmo.
+      Em campanha longa, a descoberta aleatória é o caminho padrão do jogador.
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section>
+    <h2>08 · Sobrecarga e ruptura</h2>
+    <p>
+      Usar skills ativas aumenta a <strong>Sobrecarga de Eco</strong>.
+      A barra é lida como <span class="formula">n/5</span>. Passou de 5, você entra em território perigoso.
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>Sobrecarga</th><th>Fase</th><th>O que acontece</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>0–4</td><td>Estável</td><td>Uso controlado. Pequena perda de eficácia (−1% por ponto).</td></tr>
+        <tr><td>5</td><td>Abalado</td><td>Mente sob pressão. Eco ainda responde, mas dói.</td></tr>
+        <tr><td>6–9</td><td>Ruptura de Eco</td><td>Penalidades fortes em poder Eco, INT e Ruptura. Chance de falha ao usar Eco.</td></tr>
+        <tr><td>10</td><td>Ruptura Total</td><td>Colapso. O mestre rola/escolhe consequência crítica (desmaio, perda, mutação… ou pior).</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Estados mentais (resumo)</h3>
+    <ul>
+      <li><strong>Estável</strong> — cabeça no lugar.</li>
+      <li><strong>Abalado</strong> — Eco pesa.</li>
+      <li><strong>Fragmentado</strong> — falhas começam a aparecer.</li>
+      <li><strong>Dissociado</strong> — identidade escorrega; risco alto.</li>
+      <li><strong>Perdido no Tempo</strong> — consciência espalhada; Eco escapa sem intenção.</li>
+    </ul>
+
+    <div class="callout">
+      <strong>Regra de ouro:</strong> skills resolvem cenas — e cobram depois.
+      Se estiver em 4/5, pense duas vezes antes do quinto uso.
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section class="page-break">
+    <h2>09 · Cena e atributos sociais</h2>
+    <p>
+      Fora do combate aberto, o mestre usa a aba/modo <strong>Cena</strong>:
+      diálogo, investigação, fuga, tensão. Testes usam CAR, PER, VON, SAB
+      com as mesmas faixas de sucesso do combate.
+    </p>
+    <p>
+      Skills de percepção, suporte e emocional brilham aqui.
+      Marcas e sobrecarga ainda existem — uma discussão pode virar violência,
+      e o Eco não distingue “hora de conversar”.
+    </p>
+  </section>
+
+  <!-- 10 -->
+  <section>
+    <h2>10 · Progressão (nível e XP)</h2>
+    <ul>
+      <li>Nível máximo: <strong>20</strong>.</li>
+      <li>XP para o próximo nível: <span class="formula">nível atual × 150</span>
+        (ex.: do 1 para o 2 precisa de 150 XP).</li>
+      <li><strong>Níveis pares</strong> (2, 4, 6…): +1 ponto de atributo para distribuir.</li>
+      <li><strong>Níveis ímpares</strong> a partir do 3 (3, 5, 7…): +1 Eco.</li>
+      <li>Até o nível 15, cada level-up também dá +1 <strong>ponto de cena</strong> (social).</li>
+    </ul>
+    <p>
+      O mestre concede XP por sessão, destaque ou marcos da história.
+      Você decide onde gastar os pontos pendentes na ficha.
+    </p>
+  </section>
+
+  <!-- 11 -->
+  <section class="page-break">
+    <h2>11 · Folha rápida (cole na mesa)</h2>
+
+    <h3>Fluxo de turno</h3>
+    <ol>
+      <li>Descreva a ação.</li>
+      <li>Role dado + atributo (ou ative skill).</li>
+      <li>Aplique marcas / efeitos / sobrecarga.</li>
+      <li>Avance turno (CDs −1).</li>
+    </ol>
+
+    <h3>Marcas → estado (base)</h3>
+    <p>0–2 Estável · 3–5 Ferido (−1) · 6–8 Grave (−2) · 9+ Incap. (−3) em FOR/DES/VIT</p>
+    <p>Buffer VIT = metade da Vitalidade (↓).</p>
+
+    <h3>Teste</h3>
+    <p>1 = falha crítica · face máx. + ≥ CD = crítico · ≥ CD sucesso · CD−3…CD−1 parcial · senão falha</p>
+
+    <h3>Eco</h3>
+    <p>1 Eco = descobrir skill aleatória · Ativa = +sobrecarga · 5/5 abala · 10 = ruptura total</p>
+
+    <h3>Progressão</h3>
+    <p>XP próximo = nível×150 · Par = atributo · Ímpar (≥3) = Eco · Social até Nv.15</p>
+
+    <div class="callout" style="margin-top:1.5em">
+      <strong>Lembrete final:</strong> o mestre narra consequências.
+      Números guiam — a história decide o tom.
+      Respirem, conversem, e não deixem o Eco falar mais alto que o grupo.
+    </div>
+
+    <p class="small" style="text-align:center; margin-top:2.5em">
+      Sistema Eco · Manual do Jogador · Gerado para a mesa
+    </p>
+  </section>
+
+</body>
+</html>

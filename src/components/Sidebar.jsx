@@ -15,6 +15,7 @@ import {
   ShieldAlert,
   Sword,
   UsersRound,
+  Home,
 } from 'lucide-react'
 import { MANAGEMENT_VIEWS } from '../constants/managementViews'
 import { THEME_ACCENT } from '../constants/theme'
@@ -233,6 +234,7 @@ export function Sidebar({
   emjogoView = 'ficha',
   campanhaView = 'historia',
   onNavigate,
+  onGoHome,
   footer,
 }) {
   const [managementExpanded, setManagementExpanded] = useState(activePage === 'management')
@@ -346,6 +348,34 @@ export function Sidebar({
       </div>
 
       <nav style={{ flex: 1, padding: '0.5rem 0', overflowY: 'auto', overflowX: 'hidden' }}>
+        {onGoHome && (
+          <button
+            type="button"
+            onClick={onGoHome}
+            title={collapsed ? 'Início' : ''}
+            style={{
+              ...navBtnBase,
+              padding: collapsed ? '0.625rem 0' : '0.625rem 1rem',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              background: 'transparent',
+              borderLeft: '2px solid transparent',
+              color: '#555',
+              fontWeight: 400,
+              marginBottom: '0.25rem',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.color = '#999'
+              e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.color = '#555'
+              e.currentTarget.style.background = 'transparent'
+            }}
+          >
+            <Home size={15} style={{ minWidth: '15px' }} />
+            {!collapsed && <span>Início</span>}
+          </button>
+        )}
         {NAV_ITEMS.map(item => {
           if (item.children || item.sections) {
             const pageId = item.id

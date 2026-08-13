@@ -268,7 +268,9 @@ export function ManageCombat() {
   }, [activeEnemyId, activeEnemy, applyNPCDamageMarks])
 
   const handleActivateSkill = useCallback((characterId, skillId) => {
-    const res = activateSkill(characterId, skillId)
+    const res = activateSkill(characterId, skillId, {
+      allyIds: combatCharacters.map(c => c.id),
+    })
     if (res?.warnings?.length) {
       setCombatNotice(res.warnings.join(' · '))
     } else if (res?.ok) {
@@ -277,7 +279,7 @@ export function ManageCombat() {
       setCombatNotice(res.message)
     }
     return res
-  }, [activateSkill])
+  }, [activateSkill, combatCharacters])
 
   if (!activeCampaignId) {
     return <ActiveCampaignBanner />

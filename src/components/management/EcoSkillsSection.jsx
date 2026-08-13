@@ -80,7 +80,7 @@ export function EcoSkillsSection({
                     <div style={{ fontSize: '0.6rem', color: '#a855f7', fontFamily: 'monospace', marginTop: '2px' }}>
                       <span style={{ color: display.typeMeta?.color }}>{display.typeMeta?.label?.toUpperCase()} · </span>
                       {inlineOwned
-                        ? `CD ${skill.cooldownTurns ?? 0} · Sobrecarga ${skill.overloadCost ?? 1}`
+                        ? `CD ${skill.cooldownTurns ?? 0} · Usos ${skill.overloadCost ?? 1}`
                         : `NÍVEL ${skill.tier}${atMaxTier ? ' (máx)' : ''} · PODER ${display.effectivePower}`}
                       {!inlineOwned && display.overloadAttrPenalty > 0 && (
                         <span style={{ color: '#dc2626' }}> (−{display.overloadAttrPenalty} INT/PER/SAB/CAR)</span>

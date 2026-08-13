@@ -13,11 +13,10 @@ import {
   formatPassive,
   getItemPassivesAligned,
   getPassiveSlotsForCategory,
-  getRupturaUsesMax,
-  getRupturaUsesRemaining,
   PASSIVE_KINDS,
   rollPassive,
 } from '../../mechanics/equipment/gearPassiveEngine'
+import { getRupturaPool, formatRupturaPoolSources } from '../../constants/ecoOverload'
 import {
   getArmorTier,
 } from '../../mechanics/equipment/armorProgressionEngine'
@@ -326,7 +325,7 @@ function WeaponSkillEditor({ skill, onSave }) {
         <Field label="Cooldown (turnos)">
           <Input type="number" min={0} value={form.cooldownTurns} onChange={e => set('cooldownTurns', e.target.value)} />
         </Field>
-        <Field label="Custo sobrecarga">
+        <Field label="Custo (usos de Ruptura)">
           <Input type="number" min={0} value={form.overloadCost} onChange={e => set('overloadCost', e.target.value)} />
         </Field>
       </div>
@@ -467,8 +466,7 @@ export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeap
   const weapon = getGearItem(character, GEAR_CATEGORIES.WEAPON)
   const armor = getGearItem(character, GEAR_CATEGORIES.ARMOR)
   const armorTier = getArmorTier(character)
-  const rupturaMax = getRupturaUsesMax(character)
-  const rupturaLeft = getRupturaUsesRemaining(character)
+  const rupturaPool = getRupturaPool(character)
 
   const handleSave = (data) => {
     onForge?.(forging.category, data)
@@ -484,11 +482,12 @@ export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeap
             EQUIPAMENTO
           </span>
         </div>
-        {rupturaMax > 0 && (
-          <span style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#d97706' }}>
-            RUPTURA {rupturaLeft}/{rupturaMax}
-          </span>
-        )}
+        <span style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#d97706' }}>
+          {rupturaPool.spent}/{rupturaPool.max}
+          {formatRupturaPoolSources(rupturaPool) && (
+            <span style={{ color: '#666' }}> · {formatRupturaPoolSources(rupturaPool)}</span>
+          )}
+        </span>
       </div>
 
       <div style={{

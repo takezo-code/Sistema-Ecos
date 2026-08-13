@@ -225,6 +225,8 @@ export function activateCharacterSkill(entity, skillId) {
     events: result.events,
     warnings: result.warnings,
     historyEntry: result.historyEntry,
+    partyBuffs: result.partyBuffs || [],
+    partyHeal: result.partyHeal || null,
   }
 }
 

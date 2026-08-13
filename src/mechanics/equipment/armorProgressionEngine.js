@@ -1,9 +1,9 @@
 /**
  * Progressão da armadura pessoal.
  *
- * Raridade espelha o nível do personagem. Cada degrau acima de comum
+ * Raridade espelha o nível do personagem. Cada degrau acima de Latente
  * concede +1 marca de vida (cumulativo):
- *   comum 0 · incomum +1 · raro +2 · lendário +3
+ *   Latente 0 · Ressonante +1 · Fendida +2 · Atemporal +3
  *
  * Atributos de item da armadura são sempre 4 slots — ver gearPassiveEngine.
  */

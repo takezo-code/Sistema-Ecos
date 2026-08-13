@@ -41,10 +41,10 @@ export const CHARACTER_CLASSES = [
   },
   {
     id: 'suporte',
-    label: 'Suporte',
-    description: 'Sustenta o grupo com leitura de campo e informação.',
+    label: 'Sutura',
+    description: 'Cose o Eco no corpo — lê a ferida no tempo e puxa o instante de volta.',
     color: '#fbbf24',
-    attributes: ['inteligencia', 'percepcao'],
+    attributes: ['inteligencia', 'sabedoria'],
     weapons: ['orbe', 'varinha', 'cajado', 'livro'],
   },
 ]
