@@ -1,0 +1,156 @@
+.outer-container {
+  display: flex;
+  width: 100%;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0;
+  min-height: 0;
+}
+
+.step-circle-container {
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 12px;
+  border: 1px solid #222;
+  box-shadow:
+    0 12px 24px -8px rgba(0, 0, 0, 0.35),
+    0 4px 8px -4px rgba(0, 0, 0, 0.2);
+  background: transparent;
+}
+
+.step-indicator-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  padding: 0.875rem 1rem 0.5rem;
+}
+
+.step-content-default {
+  position: relative;
+  overflow: hidden;
+}
+
+.step-default {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 0.25rem;
+}
+
+.footer-container {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 1rem;
+}
+
+.footer-nav {
+  margin-top: 1rem;
+  display: flex;
+}
+
+.footer-nav.spread {
+  justify-content: space-between;
+}
+
+.footer-nav.end {
+  justify-content: flex-end;
+}
+
+.back-button {
+  transition: all 350ms;
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  color: #a3a3a3;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  font-size: 0.875rem;
+}
+
+.back-button:hover {
+  color: #e5e5e5;
+}
+
+.back-button.inactive {
+  pointer-events: none;
+  opacity: 0.5;
+  color: #a3a3a3;
+}
+
+.next-button {
+  transition: all 350ms;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: #2563eb;
+  color: #fff;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  border: none;
+  font-size: 0.875rem;
+}
+
+.next-button:hover {
+  background-color: #3b82f6;
+}
+
+.next-button:active {
+  background-color: #1d4ed8;
+}
+
+.step-indicator {
+  position: relative;
+  cursor: pointer;
+  outline: none;
+}
+
+.step-indicator-inner {
+  display: flex;
+  height: 1.75rem;
+  width: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+.active-dot {
+  height: 0.65rem;
+  width: 0.65rem;
+  border-radius: 9999px;
+  background-color: #fff;
+}
+
+.step-number {
+  font-size: 0.8rem;
+}
+
+.step-connector {
+  position: relative;
+  margin-left: 0.4rem;
+  margin-right: 0.4rem;
+  height: 0.125rem;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 0.25rem;
+  background-color: #3a3a3a;
+}
+
+.step-connector-inner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+}
+
+.check-icon {
+  height: 0.9rem;
+  width: 0.9rem;
+  color: #fff;
+}

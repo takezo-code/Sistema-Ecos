@@ -10,6 +10,7 @@ import { Field, Input, Textarea } from '../components/ui/Field'
 import { EmptyState } from '../components/ui/EmptyState'
 import { formatDateTime } from '../utils/id'
 import { Button } from '../components/ui/Button'
+import SpotlightCard from '../components/react-bits/SpotlightCard'
 
 const EMPTY_FORM = {
   title: '',
@@ -54,27 +55,10 @@ function SessionListCard({ session, onOpen, onEdit, onDelete }) {
     : 'Sem relatório — clique para ver detalhes'
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <SpotlightCard
+      spotlightColor="rgba(220, 38, 38, 0.12)"
       onClick={onOpen}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen() } }}
-      style={{
-        background: '#111',
-        border: '1px solid #1a1a1a',
-        borderRadius: '4px',
-        overflow: 'hidden',
-        transition: 'border-color 0.15s, background 0.15s',
-        cursor: 'pointer',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = '#2a2a2a'
-        e.currentTarget.style.background = '#141414'
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = '#1a1a1a'
-        e.currentTarget.style.background = '#111'
-      }}
+      style={{ padding: 0, cursor: 'pointer' }}
     >
       <div style={{ padding: '0.875rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
@@ -128,7 +112,7 @@ function SessionListCard({ session, onOpen, onEdit, onDelete }) {
           </button>
         </div>
       </div>
-    </div>
+    </SpotlightCard>
   )
 }
 

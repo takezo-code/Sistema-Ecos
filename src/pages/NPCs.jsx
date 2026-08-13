@@ -29,6 +29,8 @@ import { normalizeGameEntity } from '../constants/attributes'
 import { entityHasEcoPowers, getAttributesForEntity } from '../constants/entityProgression'
 import { isNarrativeNpc } from '../utils/npcScope'
 import { Button } from '../components/ui/Button'
+import SpotlightCard from '../components/react-bits/SpotlightCard'
+import { FloatingTooltip } from '../components/ui/FloatingTooltip'
 
 export const BOSS_DEFAULTS = {
   podeCombater: true,
@@ -534,17 +536,8 @@ function NPCDetailModal({ npc, onClose, onEdit }) {
 function NPCCard({ npc, onEdit, onDelete, onView }) {
   const statusColor = npc.status === 'vivo' ? '#16a34a' : npc.status === 'morto' ? '#dc2626' : '#d97706'
   return (
-    <div
-      style={{
-        background: '#111',
-        border: '1px solid #1a1a1a',
-        borderRadius: '4px',
-        overflow: 'hidden',
-        transition: 'border-color 0.15s',
-        cursor: 'pointer',
-      }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = '#2a2a2a'}
-      onMouseLeave={e => e.currentTarget.style.borderColor = '#1a1a1a'}
+    <SpotlightCard
+      style={{ padding: 0, cursor: 'pointer' }}
       onClick={onView}
     >
       <div style={{ position: 'relative' }}>
@@ -560,21 +553,29 @@ function NPCCard({ npc, onEdit, onDelete, onView }) {
             <Skull size={24} style={{ color: '#1a1a1a' }} />
           </div>
         )}
-        <div style={{ position: 'absolute', top: '6px', right: '6px', display: 'flex', gap: '4px' }}
-          onClick={e => e.stopPropagation()}>
-          <button onClick={onView} title="Ver detalhes"
-            style={{ background: 'rgba(0,0,0,0.6)', border: 'none', color: '#999', cursor: 'pointer', padding: '4px', borderRadius: '3px', display: 'flex' }}>
-            <Eye size={12} />
-          </button>
-          <button onClick={onEdit} title="Editar"
-            style={{ background: 'rgba(0,0,0,0.6)', border: 'none', color: '#999', cursor: 'pointer', padding: '4px', borderRadius: '3px', display: 'flex' }}>
-            <Pencil size={12} />
-          </button>
-          <button onClick={onDelete} title="Excluir"
-            style={{ background: 'rgba(0,0,0,0.6)', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '4px', borderRadius: '3px', display: 'flex' }}>
-            <Trash2 size={12} />
-          </button>
-        </div>
+        <FloatingTooltip.Provider>
+          <div style={{ position: 'absolute', top: '6px', right: '6px', display: 'flex', gap: '4px' }}
+            onClick={e => e.stopPropagation()}>
+            <FloatingTooltip.Trigger content="Ver detalhes">
+              <button onClick={onView}
+                style={{ background: 'rgba(0,0,0,0.6)', border: 'none', color: '#999', cursor: 'pointer', padding: '4px', borderRadius: '3px', display: 'flex' }}>
+                <Eye size={12} />
+              </button>
+            </FloatingTooltip.Trigger>
+            <FloatingTooltip.Trigger content="Editar">
+              <button onClick={onEdit}
+                style={{ background: 'rgba(0,0,0,0.6)', border: 'none', color: '#999', cursor: 'pointer', padding: '4px', borderRadius: '3px', display: 'flex' }}>
+                <Pencil size={12} />
+              </button>
+            </FloatingTooltip.Trigger>
+            <FloatingTooltip.Trigger content="Excluir">
+              <button onClick={onDelete}
+                style={{ background: 'rgba(0,0,0,0.6)', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '4px', borderRadius: '3px', display: 'flex' }}>
+                <Trash2 size={12} />
+              </button>
+            </FloatingTooltip.Trigger>
+          </div>
+        </FloatingTooltip.Provider>
       </div>
       <div style={{ padding: '0.75rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '4px' }}>
@@ -595,7 +596,7 @@ function NPCCard({ npc, onEdit, onDelete, onView }) {
           </div>
         )}
       </div>
-    </div>
+    </SpotlightCard>
   )
 }
 

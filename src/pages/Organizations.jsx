@@ -10,6 +10,7 @@ import { Field, Input, Textarea, Select } from '../components/ui/Field'
 import { ImageUpload } from '../components/ui/ImageUpload'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Button } from '../components/ui/Button'
+import SpotlightCard from '../components/react-bits/SpotlightCard'
 
 const EMPTY_FORM = {
   name: '', image: '', symbol: '', description: '', ideology: '', allies: '', enemies: ''
@@ -59,17 +60,7 @@ function OrgForm({ initial, onSave, onCancel }) {
 
 function OrgCard({ org, onEdit, onDelete }) {
   return (
-    <div
-      style={{
-        background: '#111',
-        border: '1px solid #1a1a1a',
-        borderRadius: '4px',
-        overflow: 'hidden',
-        transition: 'border-color 0.15s',
-      }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = '#2a2a2a'}
-      onMouseLeave={e => e.currentTarget.style.borderColor = '#1a1a1a'}
-    >
+    <SpotlightCard style={{ padding: 0 }}>
       {/* Header */}
       <div style={{
         padding: '1rem 1.25rem',
@@ -145,7 +136,7 @@ function OrgCard({ org, onEdit, onDelete }) {
           </div>
         )}
       </div>
-    </div>
+    </SpotlightCard>
   )
 }
 

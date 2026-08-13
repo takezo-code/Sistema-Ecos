@@ -38,6 +38,10 @@ import { getClassAttributeBonus } from '../mechanics/classes/classBonusEngine'
 import { investSkillPoint } from '../mechanics/skills/classSkillProgressionEngine'
 import { buildInitialGear, getForgeableArmorTypes } from '../mechanics/equipment/characterGear'
 import { StarterGearSection } from '../components/equipment/StarterGearSection'
+import Stepper, { Step } from '../components/react-bits/Stepper'
+import Counter from '../components/react-bits/Counter'
+import SpotlightCard from '../components/react-bits/SpotlightCard'
+import { FloatingTooltip } from '../components/ui/FloatingTooltip'
 
 const EMPTY_FORM = {
   name: '',
@@ -80,10 +84,10 @@ function AttributeInput({ attr, value, onChange, canIncrease, classBonus = 0, is
         <div style={{ fontSize: '0.6rem', color: attr.color, fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '2px' }}>
           {attr.label.toUpperCase()}
         </div>
-        <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#e5e5e5', lineHeight: 1 }}>
-          {value}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', lineHeight: 1 }}>
+          <Counter value={value} fontSize={20} textColor="#e5e5e5" fontWeight={700} gradientHeight={0} />
           {classBonus > 0 && (
-            <span style={{ fontSize: '0.6rem', color: '#d97706', fontWeight: 700, marginLeft: '4px' }}>
+            <span style={{ fontSize: '0.6rem', color: '#d97706', fontWeight: 700 }}>
               +{classBonus}
             </span>
           )}
@@ -131,6 +135,9 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
     }
   })
   const [attrError, setAttrError] = useState(null)
+  const useWizard = isNew && !profileOnly
+  const [step, setStep] = useState(1)
+  const totalSteps = 4
 
   const set = (f, v) => setForm(p => ({ ...p, [f]: v }))
   const setAttr = (key, val) => {
@@ -230,167 +237,286 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
     onSave(payload)
   }
 
+  const stepTitle = {
+    fontSize: '0.65rem',
+    color: '#666',
+    fontFamily: 'monospace',
+    letterSpacing: '0.12em',
+    marginBottom: '0.75rem',
+  }
+
+  const profileBlock = (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+      <Field label="Nome" required>
+        <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Nome do personagem" autoFocus={step === 1 || !useWizard} />
+      </Field>
+      <ImageUpload
+        value={form.image}
+        onChange={v => set('image', v)}
+        label="Foto do personagem"
+      />
+      <div>
+        <div style={narrativeSectionLabel}>PERFIL NARRATIVO</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <Field label="História">
+            <Textarea
+              value={form.history}
+              onChange={e => set('history', e.target.value)}
+              placeholder="Passado, origem, eventos relevantes..."
+              rows={3}
+            />
+          </Field>
+          <Field label="Motivações">
+            <Textarea
+              value={form.motivation}
+              onChange={e => set('motivation', e.target.value)}
+              placeholder="Objetivos, medos, o que move este personagem..."
+              rows={2}
+            />
+          </Field>
+        </div>
+      </div>
+    </div>
+  )
+
+  const classBlock = (
+    <ClassPicker value={form.classId ?? null} onChange={setClassId} />
+  )
+
+  const attributesBlock = (
+    <>
+      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        <Counter value={pool} fontSize={14} textColor={pool > 0 ? '#eab308' : '#16a34a'} fontWeight={700} gradientHeight={0} />
+        disponíveis
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem' }}>
+        {ATTRIBUTES.map(attr => {
+          const v = form.attributes[attr.key] || 0
+          return (
+            <AttributeInput
+              key={attr.key}
+              attr={attr}
+              value={v}
+              isClassAttr={classAttrKeys.includes(attr.key)}
+              classBonus={getClassAttributeBonus(form, attr.key)}
+              canIncrease={pool > 0 && v < INITIAL_ATTRIBUTE_MAX}
+              onChange={val => setAttr(attr.key, val)}
+            />
+          )
+        })}
+      </div>
+
+      <hr className="divide-line" />
+      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        <Counter value={socialPool} fontSize={14} textColor={socialPool > 0 ? '#e879f9' : '#16a34a'} fontWeight={700} gradientHeight={0} />
+        disponíveis
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+        {SOCIAL_ATTRIBUTES.map(attr => {
+          const v = form.socialAttributes?.[attr.key] || 0
+          return (
+            <AttributeInput
+              key={attr.key}
+              attr={attr}
+              value={v}
+              isClassAttr={classAttrKeys.includes(attr.key)}
+              classBonus={getClassAttributeBonus(form, attr.key)}
+              canIncrease={socialPool > 0 && v < INITIAL_SOCIAL_MAX}
+              onChange={val => setSocialAttr(attr.key, val)}
+            />
+          )
+        })}
+      </div>
+    </>
+  )
+
+  const equipmentBlock = (
+    <>
+      {form.classId && (
+        <StarterGearSection
+          weapon={form.starterWeapon}
+          armor={form.starterArmor}
+          onChangeWeapon={v => set('starterWeapon', v)}
+          onChangeArmor={v => set('starterArmor', v)}
+          subtitle="Esta arma e esta armadura acompanham o personagem pela campanha toda."
+        />
+      )}
+
+      {starterSkillPicked && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem', marginTop: form.classId ? '0.75rem' : 0 }}>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={resetStarterSkill}
+            style={{ fontSize: '0.65rem' }}
+          >
+            Trocar skill
+          </button>
+        </div>
+      )}
+      {form.classId ? (
+        <ClassSkillBook
+          entity={form}
+          onInvestPoint={handleInvestStarterSkill}
+          compact
+        />
+      ) : (
+        <div style={{
+          padding: '1rem',
+          border: '1px dashed #1a1a1a',
+          borderRadius: '4px',
+          color: '#555',
+          fontSize: '0.75rem',
+          textAlign: 'center',
+          marginTop: form.classId ? 0 : '0.5rem',
+        }}>
+          Escolha a classe acima para ver o livro de skills.
+        </div>
+      )}
+    </>
+  )
+
+  const errorBlock = attrError && (
+    <p style={{
+      fontSize: '0.72rem',
+      color: '#f87171',
+      margin: 0,
+      padding: '0.5rem 0.65rem',
+      background: 'rgba(220,38,38,0.08)',
+      border: '1px solid rgba(220,38,38,0.2)',
+      borderRadius: '3px',
+    }}>
+      {attrError}
+    </p>
+  )
+
+  const saveButton = (
+    <Button
+      type="submit"
+      disabled={!profileOnly && isNew && !creationReady}
+      title={!profileOnly && isNew && !creationReady
+        ? (!ecoCheck.ok
+          ? ecoCheck.message
+          : `Distribua todos os pontos iniciais (${STARTING_ATTRIBUTE_POINTS} físicos e ${STARTING_SOCIAL_POINTS} de cena)`)
+        : undefined}
+    >
+      Salvar
+    </Button>
+  )
+
   return (
     <form onSubmit={handleSubmit}
       style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-        <Field label="Nome" required>
-          <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Nome do personagem" autoFocus />
-        </Field>
-        <ImageUpload
-          value={form.image}
-          onChange={v => set('image', v)}
-          label="Foto do personagem"
-        />
-        <div>
-          <div style={narrativeSectionLabel}>PERFIL NARRATIVO</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <Field label="História">
-              <Textarea
-                value={form.history}
-                onChange={e => set('history', e.target.value)}
-                placeholder="Passado, origem, eventos relevantes..."
-                rows={3}
-              />
-            </Field>
-            <Field label="Motivações">
-              <Textarea
-                value={form.motivation}
-                onChange={e => set('motivation', e.target.value)}
-                placeholder="Objetivos, medos, o que move este personagem..."
-                rows={2}
-              />
-            </Field>
-          </div>
-        </div>
-      </div>
-
-      {!profileOnly && (
+      {useWizard ? (
         <>
-          <hr className="divide-line" />
-          <ClassPicker value={form.classId ?? null} onChange={setClassId} />
+          <Stepper step={step} onStepChange={setStep} hideDefaultNav>
+            <Step>
+              <div style={stepTitle}>1 · PERFIL</div>
+              {profileBlock}
+            </Step>
+            <Step>
+              <div style={stepTitle}>2 · CLASSE</div>
+              {classBlock}
+            </Step>
+            <Step>
+              <div style={stepTitle}>3 · ATRIBUTOS</div>
+              {attributesBlock}
+            </Step>
+            <Step>
+              <div style={stepTitle}>4 · EQUIPAMENTO & ECO</div>
+              {equipmentBlock}
+              {errorBlock}
+            </Step>
+          </Stepper>
+          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
+            {step > 1 && (
+              <button type="button" className="btn-ghost" onClick={() => setStep(s => Math.max(1, s - 1))}>
+                Voltar
+              </button>
+            )}
+            {step < totalSteps ? (
+              <Button type="button" onClick={() => setStep(s => Math.min(totalSteps, s + 1))}>
+                Continuar
+              </Button>
+            ) : (
+              <>
+                <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
+                {saveButton}
+              </>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          {profileBlock}
 
-          <hr className="divide-line" />
-          <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-            <span style={{ color: pool > 0 ? '#eab308' : '#16a34a' }}>{pool}</span> disponíveis
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem' }}>
-            {ATTRIBUTES.map(attr => {
-              const v = form.attributes[attr.key] || 0
-              return (
-                <AttributeInput
-                  key={attr.key}
-                  attr={attr}
-                  value={v}
-                  isClassAttr={classAttrKeys.includes(attr.key)}
-                  classBonus={getClassAttributeBonus(form, attr.key)}
-                  canIncrease={pool > 0 && v < INITIAL_ATTRIBUTE_MAX}
-                  onChange={val => setAttr(attr.key, val)}
-                />
-              )
-            })}
-          </div>
-
-          <hr className="divide-line" />
-          <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-            <span style={{ color: socialPool > 0 ? '#e879f9' : '#16a34a' }}>{socialPool}</span> disponíveis
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
-            {SOCIAL_ATTRIBUTES.map(attr => {
-              const v = form.socialAttributes?.[attr.key] || 0
-              return (
-                <AttributeInput
-                  key={attr.key}
-                  attr={attr}
-                  value={v}
-                  isClassAttr={classAttrKeys.includes(attr.key)}
-                  classBonus={getClassAttributeBonus(form, attr.key)}
-                  canIncrease={socialPool > 0 && v < INITIAL_SOCIAL_MAX}
-                  onChange={val => setSocialAttr(attr.key, val)}
-                />
-              )
-            })}
-          </div>
-
-          {isNew && form.classId && (
+          {!profileOnly && (
             <>
               <hr className="divide-line" />
-              <StarterGearSection
-                weapon={form.starterWeapon}
-                armor={form.starterArmor}
-                onChangeWeapon={v => set('starterWeapon', v)}
-                onChangeArmor={v => set('starterArmor', v)}
-                subtitle="Esta arma e esta armadura acompanham o personagem pela campanha toda."
-              />
+              {classBlock}
+
+              <hr className="divide-line" />
+              {attributesBlock}
+
+              {isNew && form.classId && (
+                <>
+                  <hr className="divide-line" />
+                  <StarterGearSection
+                    weapon={form.starterWeapon}
+                    armor={form.starterArmor}
+                    onChangeWeapon={v => set('starterWeapon', v)}
+                    onChangeArmor={v => set('starterArmor', v)}
+                    subtitle="Esta arma e esta armadura acompanham o personagem pela campanha toda."
+                  />
+                </>
+              )}
+
+              {isNew && (
+                <>
+                  <hr className="divide-line" />
+                  {starterSkillPicked && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        onClick={resetStarterSkill}
+                        style={{ fontSize: '0.65rem' }}
+                      >
+                        Trocar skill
+                      </button>
+                    </div>
+                  )}
+                  {form.classId ? (
+                    <ClassSkillBook
+                      entity={form}
+                      onInvestPoint={handleInvestStarterSkill}
+                      compact
+                    />
+                  ) : (
+                    <div style={{
+                      padding: '1rem',
+                      border: '1px dashed #1a1a1a',
+                      borderRadius: '4px',
+                      color: '#555',
+                      fontSize: '0.75rem',
+                      textAlign: 'center',
+                    }}>
+                      Escolha a classe acima para ver o livro de skills.
+                    </div>
+                  )}
+                </>
+              )}
             </>
           )}
 
-          {isNew && (
-            <>
-              <hr className="divide-line" />
-              {starterSkillPicked && (
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    onClick={resetStarterSkill}
-                    style={{ fontSize: '0.65rem' }}
-                  >
-                    Trocar skill
-                  </button>
-                </div>
-              )}
-              {form.classId ? (
-                <ClassSkillBook
-                  entity={form}
-                  onInvestPoint={handleInvestStarterSkill}
-                  compact
-                />
-              ) : (
-                <div style={{
-                  padding: '1rem',
-                  border: '1px dashed #1a1a1a',
-                  borderRadius: '4px',
-                  color: '#555',
-                  fontSize: '0.75rem',
-                  textAlign: 'center',
-                }}>
-                  Escolha a classe acima para ver o livro de skills.
-                </div>
-              )}
-            </>
-          )}
+          {errorBlock}
+
+          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+            <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
+            {saveButton}
+          </div>
         </>
       )}
-
-      {attrError && (
-        <p style={{
-          fontSize: '0.72rem',
-          color: '#f87171',
-          margin: 0,
-          padding: '0.5rem 0.65rem',
-          background: 'rgba(220,38,38,0.08)',
-          border: '1px solid rgba(220,38,38,0.2)',
-          borderRadius: '3px',
-        }}>
-          {attrError}
-        </p>
-      )}
-
-      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-        <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
-        <Button
-          type="submit"
-          disabled={!profileOnly && isNew && !creationReady}
-          title={!profileOnly && isNew && !creationReady
-            ? (!ecoCheck.ok
-              ? ecoCheck.message
-              : `Distribua todos os pontos iniciais (${STARTING_ATTRIBUTE_POINTS} físicos e ${STARTING_SOCIAL_POINTS} de cena)`)
-            : undefined}
-        >
-          Salvar
-        </Button>
-      </div>
     </form>
   )
 }
@@ -468,17 +594,7 @@ function CharCard({ character, onEdit, onDelete, onInventory }) {
   const charClass = getCharacterClass(character)
 
   return (
-    <div
-      style={{
-        background: '#111',
-        border: '1px solid #1a1a1a',
-        borderRadius: '4px',
-        overflow: 'hidden',
-        transition: 'border-color 0.15s',
-      }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = '#2a2a2a'}
-      onMouseLeave={e => e.currentTarget.style.borderColor = '#1a1a1a'}
-    >
+    <SpotlightCard style={{ padding: 0 }}>
       <div style={{ display: 'flex', gap: '0', padding: '1rem 1.25rem', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', gap: '0.875rem', flex: 1, minWidth: 0 }}>
           <EntityThumb src={character.image} alt={character.name} size={52} />
@@ -498,29 +614,37 @@ function CharCard({ character, onEdit, onDelete, onInventory }) {
             )}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0, marginLeft: '0.75rem' }}>
-          <button onClick={onInventory} title="Inventário"
-            style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', padding: '4px', transition: 'color 0.15s', display: 'flex' }}
-            onMouseEnter={e => e.currentTarget.style.color = '#06b6d4'}
-            onMouseLeave={e => e.currentTarget.style.color = '#333'}
-          >
-            <Package size={13} />
-          </button>
-          <button onClick={onEdit} title="Editar"
-            style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', padding: '4px', transition: 'color 0.15s', display: 'flex' }}
-            onMouseEnter={e => e.currentTarget.style.color = '#999'}
-            onMouseLeave={e => e.currentTarget.style.color = '#333'}
-          >
-            <Pencil size={13} />
-          </button>
-          <button onClick={onDelete} title="Excluir"
-            style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', padding: '4px', transition: 'color 0.15s', display: 'flex' }}
-            onMouseEnter={e => e.currentTarget.style.color = '#dc2626'}
-            onMouseLeave={e => e.currentTarget.style.color = '#333'}
-          >
-            <Trash2 size={13} />
-          </button>
-        </div>
+        <FloatingTooltip.Provider>
+          <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0, marginLeft: '0.75rem' }}>
+            <FloatingTooltip.Trigger content="Inventário">
+              <button onClick={onInventory}
+                style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', padding: '4px', transition: 'color 0.15s', display: 'flex' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#06b6d4'}
+                onMouseLeave={e => e.currentTarget.style.color = '#333'}
+              >
+                <Package size={13} />
+              </button>
+            </FloatingTooltip.Trigger>
+            <FloatingTooltip.Trigger content="Editar">
+              <button onClick={onEdit}
+                style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', padding: '4px', transition: 'color 0.15s', display: 'flex' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#999'}
+                onMouseLeave={e => e.currentTarget.style.color = '#333'}
+              >
+                <Pencil size={13} />
+              </button>
+            </FloatingTooltip.Trigger>
+            <FloatingTooltip.Trigger content="Excluir">
+              <button onClick={onDelete}
+                style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', padding: '4px', transition: 'color 0.15s', display: 'flex' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#dc2626'}
+                onMouseLeave={e => e.currentTarget.style.color = '#333'}
+              >
+                <Trash2 size={13} />
+              </button>
+            </FloatingTooltip.Trigger>
+          </div>
+        </FloatingTooltip.Provider>
       </div>
 
       {/* Attributes bar */}
@@ -550,7 +674,7 @@ function CharCard({ character, onEdit, onDelete, onInventory }) {
           </span>
         </div>
       )}
-    </div>
+    </SpotlightCard>
   )
 }
 

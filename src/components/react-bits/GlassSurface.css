@@ -1,0 +1,40 @@
+.glass-surface {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: rgba(18, 15, 23, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    0 12px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+}
+
+.glass-surface-content {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.modal-glass-shell {
+  overflow: hidden;
+}
+
+.modal-glass-shell .glass-surface-content {
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.modal-glass-shell .modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}

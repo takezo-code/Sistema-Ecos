@@ -8,6 +8,7 @@ import {
 } from '../../constants/attributes'
 import { getAttributesForEntity } from '../../constants/entityProgression'
 import { applyInitialAttributeChange, applyInitialSocialChange } from '../../services/progressionService'
+import Counter from '../react-bits/Counter'
 
 function AttributeInput({ attr, value, onChange, canIncrease, canDecrease = true }) {
   return (
@@ -24,7 +25,7 @@ function AttributeInput({ attr, value, onChange, canIncrease, canDecrease = true
         <div style={{ fontSize: '0.6rem', color: attr.color, fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '2px' }}>
           {attr.label.toUpperCase()}
         </div>
-        <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#e5e5e5', lineHeight: 1 }}>{value}</div>
+        <Counter value={value} fontSize={20} textColor="#e5e5e5" fontWeight={700} gradientHeight={0} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
         <button
@@ -81,8 +82,9 @@ export function AttributePointsEditor({ form, onFormChange, showRuptureHint = fa
   return (
     <>
       <hr className="divide-line" />
-      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-        <span style={{ color: pool > 0 ? '#eab308' : '#16a34a' }}>{pool}</span> disponíveis
+      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        <Counter value={pool} fontSize={14} textColor={pool > 0 ? '#eab308' : '#16a34a'} fontWeight={700} gradientHeight={0} />
+        disponíveis
       </div>
       {showRuptureHint && (
         <p style={{ fontSize: '0.7rem', color: '#555', marginBottom: '0.75rem', lineHeight: 1.5 }}>
@@ -105,8 +107,9 @@ export function AttributePointsEditor({ form, onFormChange, showRuptureHint = fa
       </div>
 
       <hr className="divide-line" />
-      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-        <span style={{ color: socialPool > 0 ? '#e879f9' : '#16a34a' }}>{socialPool}</span> disponíveis
+      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        <Counter value={socialPool} fontSize={14} textColor={socialPool > 0 ? '#e879f9' : '#16a34a'} fontWeight={700} gradientHeight={0} />
+        disponíveis
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
         {SOCIAL_ATTRIBUTES.map(attr => {

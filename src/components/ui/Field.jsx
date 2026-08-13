@@ -3,7 +3,7 @@ import React from 'react'
 export function Field({ label, required, children }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-      <label style={{ fontSize: '0.7rem', color: '#555', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>
+      <label style={{ fontSize: '0.7rem', color: '#666', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600 }}>
         {label}{required && <span style={{ color: '#dc2626', marginLeft: '2px' }}>*</span>}
       </label>
       {children}

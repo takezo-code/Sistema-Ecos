@@ -10,6 +10,7 @@ import { StatusTag } from '../components/ui/StatusTag'
 import { EmptyState } from '../components/ui/EmptyState'
 import { SceneImageGalleryEditor, SceneImageGalleryView, normalizeSceneImages } from '../components/ui/SceneImageGallery'
 import { formatDate } from '../utils/id'
+import SpotlightCard from '../components/react-bits/SpotlightCard'
 
 const EMPTY_FORM = {
   name: '', description: '',
@@ -77,20 +78,16 @@ function CampaignForm({ initial, onSave, onCancel }) {
 
 function CampaignCard({ campaign, isActive, onOpen, onEdit, onDelete, onActivate }) {
   return (
-    <div
+    <SpotlightCard
       onClick={onOpen}
       style={{
-        background: '#111',
-        border: `1px solid ${isActive ? 'rgba(220,38,38,0.3)' : '#1a1a1a'}`,
-        borderLeft: `3px solid ${isActive ? '#dc2626' : '#1a1a1a'}`,
-        borderRadius: '4px',
-        padding: '1rem 1.25rem',
-        transition: 'border-color 0.15s, background 0.15s',
+        padding: 0,
         cursor: 'pointer',
+        borderLeft: `3px solid ${isActive ? '#dc2626' : '#1a1a1a'}`,
+        borderColor: isActive ? 'rgba(220,38,38,0.3)' : '#1a1a1a',
       }}
-      onMouseEnter={e => { e.currentTarget.style.background = '#141414' }}
-      onMouseLeave={e => { e.currentTarget.style.background = '#111' }}
     >
+      <div style={{ padding: '1rem 1.25rem' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
@@ -169,7 +166,8 @@ function CampaignCard({ campaign, isActive, onOpen, onEdit, onDelete, onActivate
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </SpotlightCard>
   )
 }
 

@@ -1,21 +1,23 @@
 import React from 'react'
+import GlowingBadge from './GlowingBadge'
 
 const STATUS_MAP = {
-  // Campanha
-  'ativa': { cls: 'tag-green', label: 'Ativa' },
-  'pausada': { cls: 'tag-yellow', label: 'Pausada' },
-  'concluída': { cls: 'tag-cyan', label: 'Concluída' },
-  // NPC
-  'vivo': { cls: 'tag-green', label: 'Vivo' },
-  'morto': { cls: 'tag-red', label: 'Morto' },
-  'desaparecido': { cls: 'tag-yellow', label: 'Desaparecido' },
-  // Evento narrativo
-  'não iniciado': { cls: 'tag-gray', label: 'Não Iniciado' },
-  'em andamento': { cls: 'tag-cyan', label: 'Em Andamento' },
-  'ignorado': { cls: 'tag-yellow', label: 'Ignorado' },
+  'ativa': { variant: 'success', label: 'Ativa' },
+  'pausada': { variant: 'warning', label: 'Pausada' },
+  'concluída': { variant: 'cyan', label: 'Concluída' },
+  'vivo': { variant: 'success', label: 'Vivo' },
+  'morto': { variant: 'error', label: 'Morto' },
+  'desaparecido': { variant: 'warning', label: 'Desaparecido' },
+  'não iniciado': { variant: 'gray', label: 'Não Iniciado' },
+  'em andamento': { variant: 'cyan', label: 'Em Andamento' },
+  'ignorado': { variant: 'warning', label: 'Ignorado' },
 }
 
 export function StatusTag({ status }) {
-  const cfg = STATUS_MAP[status] || { cls: 'tag-gray', label: status }
-  return <span className={`tag ${cfg.cls}`}>{cfg.label}</span>
+  const cfg = STATUS_MAP[status] || { variant: 'gray', label: status }
+  return (
+    <GlowingBadge variant={cfg.variant} pulse={cfg.variant !== 'gray'} dot>
+      {cfg.label}
+    </GlowingBadge>
+  )
 }
