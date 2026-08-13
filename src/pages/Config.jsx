@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { Settings, Save, Upload, RotateCcw, HardDrive } from 'lucide-react'
+import { Settings, Save, Upload, RotateCcw, HardDrive, Home } from 'lucide-react'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Button } from '../components/ui/Button'
 import SpotlightCard from '../components/react-bits/SpotlightCard'
@@ -25,7 +25,7 @@ const ACTION_BTN = {
   },
 }
 
-export function Config() {
+export function Config({ onBackToWelcome }) {
   const fileRef = useRef(null)
   const { showToast, setSaving } = useSaveStore()
   const { settings } = useSettingsStore()
@@ -89,6 +89,42 @@ export function Config() {
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
         <div style={{ maxWidth: 560, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <SpotlightCard spotlightColor="rgba(168, 85, 247, 0.14)" style={{ padding: '1.25rem' }}>
+            <div style={{
+              fontSize: '0.65rem',
+              color: '#c084fc',
+              fontFamily: 'monospace',
+              letterSpacing: '0.12em',
+              marginBottom: '0.5rem',
+            }}>
+              SISTEMA
+            </div>
+            <div style={{ fontSize: '0.85rem', color: '#e5e5e5', fontWeight: 600, marginBottom: '0.35rem' }}>
+              Tela inicial
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#888', lineHeight: 1.5, marginBottom: '1rem' }}>
+              Volta para a tela de boas-vindas sem apagar a campanha — útil para testar a entrada.
+            </div>
+            <Button
+              type="button"
+              variant="primary"
+              block
+              onClick={() => onBackToWelcome?.()}
+              style={{
+                ...ACTION_BTN.style,
+                minWidth: undefined,
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <Home size={15} />
+              Ir para o início
+            </Button>
+          </SpotlightCard>
+
           <SpotlightCard spotlightColor="rgba(37, 99, 235, 0.14)" style={{ padding: '1.25rem' }}>
             <div style={{
               fontSize: '0.65rem',

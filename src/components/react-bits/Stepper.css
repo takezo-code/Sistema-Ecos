@@ -154,3 +154,9 @@
   width: 0.9rem;
   color: #fff;
 }
+
+.step-circle-container.welcome-stepper-flat {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}

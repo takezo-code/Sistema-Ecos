@@ -166,7 +166,9 @@ export default function App() {
         ? { initialView: emjogoView, onViewChange: setEmjogoView, onNavigate: handleNavigate }
         : activePage === 'campanha'
           ? { initialView: campanhaView, onViewChange: setCampanhaView, onNavigate: handleNavigate }
-          : { onNavigate: handleNavigate }
+          : activePage === 'config'
+            ? { onNavigate: handleNavigate, onBackToWelcome: () => setInApp(false) }
+            : { onNavigate: handleNavigate }
 
   const shell = !inApp ? (
     <>
