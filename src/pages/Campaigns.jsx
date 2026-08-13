@@ -2,18 +2,18 @@ import React, { useState } from 'react'
 import { BookOpen, Plus, Pencil, Trash2, CheckCircle, GitBranch } from 'lucide-react'
 import { CampaignFlows } from './CampaignFlows'
 import { useCampaignStore } from '../store/useCampaignStore'
-import { PageHeader } from '../components/ui/PageHeader'
 import { Button } from '../components/ui/Button'
 import { Modal } from '../components/ui/Modal'
-import { Field, Input, Textarea, Select } from '../components/ui/Field'
-import { StatusTag } from '../components/ui/StatusTag'
+import { Field, Input, Textarea } from '../components/ui/Field'
 import { EmptyState } from '../components/ui/EmptyState'
-import { SceneImageGalleryEditor, SceneImageGalleryView, normalizeSceneImages } from '../components/ui/SceneImageGallery'
+import { SceneImageGalleryView, normalizeSceneImages } from '../components/ui/SceneImageGallery'
 import { formatDate } from '../utils/id'
 import SpotlightCard from '../components/react-bits/SpotlightCard'
+import { FloatingTooltip } from '../components/ui/FloatingTooltip'
 
 const EMPTY_FORM = {
-  name: '', description: '',
+  name: '',
+  description: '',
   timeline: { past: '', present: '', future: '' },
   status: 'ativa',
   images: [],
@@ -21,19 +21,24 @@ const EMPTY_FORM = {
 
 function CampaignForm({ initial, onSave, onCancel }) {
   const [form, setForm] = useState(() => ({
-    ...EMPTY_FORM,
-    ...(initial || {}),
-    timeline: { ...EMPTY_FORM.timeline, ...(initial?.timeline || {}) },
-    images: normalizeSceneImages(initial?.images),
+    name: initial?.name || '',
+    description: initial?.description || '',
   }))
 
   const set = (field, val) => setForm(f => ({ ...f, [field]: val }))
-  const setTimeline = (field, val) => setForm(f => ({ ...f, timeline: { ...f.timeline, [field]: val } }))
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!form.name.trim()) return
-    onSave({ ...form, images: normalizeSceneImages(form.images) })
+    onSave({
+      ...EMPTY_FORM,
+      ...(initial || {}),
+      name: form.name,
+      description: form.description,
+      timeline: initial?.timeline || EMPTY_FORM.timeline,
+      status: initial?.status || EMPTY_FORM.status,
+      images: normalizeSceneImages(initial?.images),
+    })
   }
 
   return (
@@ -43,30 +48,6 @@ function CampaignForm({ initial, onSave, onCancel }) {
       </Field>
       <Field label="Descrição">
         <Textarea value={form.description} onChange={e => set('description', e.target.value)} placeholder="Sinopse ou premissa da campanha..." rows={3} />
-      </Field>
-      <Field label="Status">
-        <Select value={form.status} onChange={e => set('status', e.target.value)}>
-          <option value="ativa">Ativa</option>
-          <option value="pausada">Pausada</option>
-          <option value="concluída">Concluída</option>
-        </Select>
-      </Field>
-      <hr className="divide-line" />
-      <SceneImageGalleryEditor
-        images={form.images}
-        onChange={imgs => set('images', imgs)}
-        label="Referências do mundo"
-      />
-      <hr className="divide-line" />
-      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>TIMELINE NARRATIVA</div>
-      <Field label="Passado">
-        <Textarea value={form.timeline.past} onChange={e => setTimeline('past', e.target.value)} placeholder="Eventos do passado que moldaram o presente..." rows={2} />
-      </Field>
-      <Field label="Presente">
-        <Textarea value={form.timeline.present} onChange={e => setTimeline('present', e.target.value)} placeholder="Situação atual da campanha..." rows={2} />
-      </Field>
-      <Field label="Futuro">
-        <Textarea value={form.timeline.future} onChange={e => setTimeline('future', e.target.value)} placeholder="Possíveis caminhos e destinos..." rows={2} />
       </Field>
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
@@ -80,25 +61,20 @@ function CampaignCard({ campaign, isActive, onOpen, onEdit, onDelete, onActivate
   return (
     <SpotlightCard
       onClick={onOpen}
+      spotlightColor={isActive ? 'rgba(220, 38, 38, 0.18)' : 'rgba(37, 99, 235, 0.16)'}
       style={{
-        padding: 0,
+        padding: '1.15rem 1.35rem',
         cursor: 'pointer',
-        borderLeft: `3px solid ${isActive ? '#dc2626' : '#1a1a1a'}`,
-        borderColor: isActive ? 'rgba(220,38,38,0.3)' : '#1a1a1a',
+        borderLeft: `3px solid ${isActive ? '#dc2626' : 'rgba(255,255,255,0.08)'}`,
       }}
     >
-      <div style={{ padding: '1rem 1.25rem' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
-            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#e5e5e5' }}>{campaign.name}</span>
-            <StatusTag status={campaign.status} />
-            {isActive && (
-              <span className="tag tag-red" style={{ fontSize: '0.6rem' }}>● ATIVA</span>
-            )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexWrap: 'wrap', marginBottom: '0.45rem' }}>
+            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#f5f5f5' }}>{campaign.name}</span>
           </div>
           {campaign.description && (
-            <p style={{ fontSize: '0.775rem', color: '#555', lineHeight: 1.6, marginBottom: '0.75rem' }}>
+            <p style={{ fontSize: '0.8rem', color: '#777', lineHeight: 1.6, marginBottom: '0.75rem' }}>
               {campaign.description}
             </p>
           )}
@@ -109,11 +85,16 @@ function CampaignCard({ campaign, isActive, onOpen, onEdit, onDelete, onActivate
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
               {['past', 'present', 'future'].map((key, i) => (
                 campaign.timeline[key] ? (
-                  <div key={key} style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '3px', padding: '0.5rem 0.625rem' }}>
-                    <div style={{ fontSize: '0.6rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '3px' }}>
+                  <div key={key} style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '8px',
+                    padding: '0.55rem 0.65rem',
+                  }}>
+                    <div style={{ fontSize: '0.6rem', color: '#555', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '3px' }}>
                       {['PASSADO', 'PRESENTE', 'FUTURO'][i]}
                     </div>
-                    <div style={{ fontSize: '0.7rem', color: '#666', lineHeight: 1.5 }}>
+                    <div style={{ fontSize: '0.7rem', color: '#888', lineHeight: 1.5 }}>
                       {campaign.timeline[key].length > 80 ? campaign.timeline[key].slice(0, 80) + '…' : campaign.timeline[key]}
                     </div>
                   </div>
@@ -121,57 +102,66 @@ function CampaignCard({ campaign, isActive, onOpen, onEdit, onDelete, onActivate
               ))}
             </div>
           )}
-          <div style={{ fontSize: '0.65rem', color: '#2a2a2a', fontFamily: 'monospace', marginTop: '0.625rem' }}>
+          <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', marginTop: '0.7rem' }}>
             CRIADA {formatDate(campaign.createdAt)}
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', minWidth: '32px' }} onClick={e => e.stopPropagation()}>
-          <button
-            onClick={onOpen}
-            title="Ver fluxos da campanha"
-            style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', padding: '4px', transition: 'color 0.15s', display: 'flex' }}
-            onMouseEnter={e => e.currentTarget.style.color = '#06b6d4'}
-            onMouseLeave={e => e.currentTarget.style.color = '#333'}
-          >
-            <GitBranch size={14} />
-          </button>
-          {!isActive && (
-            <button
-              onClick={onActivate}
-              title="Definir como ativa"
-              style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', padding: '4px', transition: 'color 0.15s', display: 'flex' }}
-              onMouseEnter={e => e.currentTarget.style.color = '#16a34a'}
-              onMouseLeave={e => e.currentTarget.style.color = '#333'}
-            >
-              <CheckCircle size={14} />
-            </button>
-          )}
-          <button
-            onClick={onEdit}
-            title="Editar"
-            style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', padding: '4px', transition: 'color 0.15s', display: 'flex' }}
-            onMouseEnter={e => e.currentTarget.style.color = '#999'}
-            onMouseLeave={e => e.currentTarget.style.color = '#333'}
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            onClick={onDelete}
-            title="Excluir"
-            style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', padding: '4px', transition: 'color 0.15s', display: 'flex' }}
-            onMouseEnter={e => e.currentTarget.style.color = '#dc2626'}
-            onMouseLeave={e => e.currentTarget.style.color = '#333'}
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
-      </div>
+        <FloatingTooltip.Provider>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', minWidth: '32px' }} onClick={e => e.stopPropagation()}>
+            <FloatingTooltip.Trigger content="Ver fluxos">
+              <button
+                type="button"
+                onClick={onOpen}
+                style={{ background: 'transparent', border: 'none', color: '#555', cursor: 'pointer', padding: '4px', display: 'flex' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#06b6d4' }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#555' }}
+              >
+                <GitBranch size={14} />
+              </button>
+            </FloatingTooltip.Trigger>
+            {!isActive && (
+              <FloatingTooltip.Trigger content="Definir como ativa">
+                <button
+                  type="button"
+                  onClick={onActivate}
+                  style={{ background: 'transparent', border: 'none', color: '#555', cursor: 'pointer', padding: '4px', display: 'flex' }}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#16a34a' }}
+                  onMouseLeave={e => { e.currentTarget.style.color = '#555' }}
+                >
+                  <CheckCircle size={14} />
+                </button>
+              </FloatingTooltip.Trigger>
+            )}
+            <FloatingTooltip.Trigger content="Editar">
+              <button
+                type="button"
+                onClick={onEdit}
+                style={{ background: 'transparent', border: 'none', color: '#555', cursor: 'pointer', padding: '4px', display: 'flex' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#999' }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#555' }}
+              >
+                <Pencil size={14} />
+              </button>
+            </FloatingTooltip.Trigger>
+            <FloatingTooltip.Trigger content="Excluir">
+              <button
+                type="button"
+                onClick={onDelete}
+                style={{ background: 'transparent', border: 'none', color: '#555', cursor: 'pointer', padding: '4px', display: 'flex' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#dc2626' }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#555' }}
+              >
+                <Trash2 size={14} />
+              </button>
+            </FloatingTooltip.Trigger>
+          </div>
+        </FloatingTooltip.Provider>
       </div>
     </SpotlightCard>
   )
 }
 
-export function Campaigns({ pageTitle = 'História' }) {
+export function Campaigns() {
   const { campaigns, activeCampaignId, addCampaign, updateCampaign, deleteCampaign, setActiveCampaign } = useCampaignStore()
   const [viewingCampaign, setViewingCampaign] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
@@ -215,18 +205,8 @@ export function Campaigns({ pageTitle = 'História' }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <PageHeader
-        icon={BookOpen}
-        title={pageTitle}
-        action={
-          <Button onClick={openCreate} size="xs" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Plus size={13} /> Nova Campanha
-          </Button>
-        }
-      />
-
-      <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem' }}>
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 1.5rem 5.5rem' }}>
         {sorted.length === 0 ? (
           <EmptyState
             icon={BookOpen}
@@ -250,6 +230,23 @@ export function Campaigns({ pageTitle = 'História' }) {
           </div>
         )}
       </div>
+
+      <Button
+        onClick={openCreate}
+        size="sm"
+        style={{
+          position: 'absolute',
+          right: '1.5rem',
+          bottom: '2.25rem',
+          zIndex: 20,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.4rem',
+          boxShadow: '0 8px 28px rgba(0,0,0,0.45)',
+        }}
+      >
+        <Plus size={14} /> Nova Campanha
+      </Button>
 
       <Modal open={modalOpen} onClose={closeModal} title={editing ? 'Editar Campanha' : 'Nova Campanha'} maxWidth="640px">
         <CampaignForm

@@ -5,7 +5,6 @@ import {
   ECO_SKILL_POINT_COST,
   ECO_SKILL_MAX_LEVEL,
   MAX_CLASS_SKILL_LEVEL,
-  SKILL_GRADE_START_LEVEL,
   isSkillGradeLevel,
 } from '../../constants/progression'
 import {
@@ -15,6 +14,9 @@ import {
 } from '../../mechanics/skills/classSkillProgressionEngine'
 import { countGradeCatalysts } from '../../constants/merchantItems'
 import { Button } from '../ui/Button'
+import SpotlightCard from '../react-bits/SpotlightCard'
+import GlassSurface from '../react-bits/GlassSurface'
+import GlowingBadge from '../ui/GlowingBadge'
 
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
@@ -37,8 +39,8 @@ function SkillIconCell({ entry, selected, classColor, onSelect }) {
     : isGrade
       ? '#a855f7'
       : unlocked
-        ? `rgba(${rgb}, 0.35)`
-        : '#1a1a1a'
+        ? `rgba(${rgb}, 0.4)`
+        : 'rgba(255,255,255,0.08)'
 
   return (
     <button
@@ -49,62 +51,67 @@ function SkillIconCell({ entry, selected, classColor, onSelect }) {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '0.35rem',
-        padding: '0.5rem 0.35rem',
-        background: selected ? `rgba(${rgb}, 0.12)` : '#0a0a0a',
+        gap: '0.4rem',
+        padding: '0.65rem 0.4rem',
+        background: selected
+          ? `rgba(${rgb}, 0.16)`
+          : 'rgba(255,255,255,0.03)',
         border: `1px solid ${borderColor}`,
-        borderRadius: '4px',
+        borderRadius: 12,
         cursor: 'pointer',
         opacity: unlocked ? 1 : 0.55,
         minWidth: 0,
+        boxShadow: selected ? `0 0 20px rgba(${rgb}, 0.2)` : 'none',
+        transition: 'border-color 0.15s, background 0.15s, box-shadow 0.15s',
       }}
     >
       <div style={{
-        width: '52px',
-        height: '52px',
+        width: 54,
+        height: 54,
         clipPath: 'polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)',
         background: unlocked
-          ? `linear-gradient(145deg, rgba(${rgb},${intensity + 0.15}), rgba(${rgb},${intensity * 0.4}))`
-          : '#111',
+          ? `linear-gradient(145deg, rgba(${rgb},${intensity + 0.2}), rgba(${rgb},${intensity * 0.35}))`
+          : 'rgba(255,255,255,0.04)',
         border: `2px solid ${isGrade ? '#a855f7' : unlocked ? classColor : '#2a2a2a'}`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
         filter: unlocked ? 'none' : 'grayscale(1)',
-        boxShadow: unlocked ? `inset 0 0 12px rgba(${rgb}, 0.25)` : 'none',
+        boxShadow: unlocked ? `inset 0 0 14px rgba(${rgb}, 0.3), 0 0 12px rgba(${rgb}, 0.15)` : 'none',
       }}>
         <span style={{
           fontSize: '0.85rem',
           fontWeight: 800,
           fontFamily: 'monospace',
-          color: unlocked ? '#f5f5f5' : '#444',
+          color: unlocked ? '#f5f5f5' : '#555',
           letterSpacing: '0.02em',
         }}>
           {def.icon}
         </span>
         <span style={{
           position: 'absolute',
-          right: '2px',
-          bottom: '1px',
+          right: 2,
+          bottom: 1,
           fontSize: '0.55rem',
           fontFamily: 'monospace',
           fontWeight: 700,
-          color: isGrade ? '#c084fc' : unlocked ? classColor : '#333',
+          color: isGrade ? '#c084fc' : unlocked ? classColor : '#444',
           textShadow: '0 1px 2px #000',
         }}>
           {levelLabel(level)}
         </span>
       </div>
       <div style={{
-        fontSize: '0.58rem',
-        color: selected ? '#e5e5e5' : '#666',
+        fontSize: '0.62rem',
+        color: selected ? '#f0f0f0' : '#888',
         textAlign: 'center',
         lineHeight: 1.25,
-        maxWidth: '72px',
+        maxWidth: 76,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
+        fontWeight: selected ? 600 : 500,
       }}>
         {def.name}
       </div>
@@ -129,16 +136,11 @@ export function ClassSkillBook({
 
   if (!classMeta) {
     return (
-      <div style={{
-        padding: '1.25rem',
-        border: '1px dashed #1a1a1a',
-        borderRadius: '4px',
-        textAlign: 'center',
-        color: '#555',
-        fontSize: '0.8rem',
-      }}>
-        Defina a <strong style={{ color: '#aaa' }}>classe</strong> do personagem para ver o livro de skills.
-      </div>
+      <SpotlightCard style={{ padding: '1.25rem', textAlign: 'center' }}>
+        <div style={{ color: '#888', fontSize: '0.8rem' }}>
+          Defina a <strong style={{ color: '#ccc' }}>classe</strong> do personagem para ver o livro de skills.
+        </div>
+      </SpotlightCard>
     )
   }
 
@@ -150,98 +152,91 @@ export function ClassSkillBook({
     : { ok: false }
 
   const needsGrade = selected && selected.level >= ECO_SKILL_MAX_LEVEL && selected.level < MAX_CLASS_SKILL_LEVEL
-
   const classColor = classMeta.color
+  const rgb = hexToRgb(classColor)
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '0.75rem',
-        marginBottom: '0.85rem',
         flexWrap: 'wrap',
       }}>
-        <div>
-          <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-            LIVRO DE SKILLS · {classMeta.label.toUpperCase()}
-          </div>
+        <div style={{ fontSize: '0.65rem', color: '#888', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+          LIVRO DE SKILLS · <span style={{ color: classColor }}>{classMeta.label.toUpperCase()}</span>
         </div>
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            padding: '0.35rem 0.65rem',
-            background: eco > 0 ? `rgba(${hexToRgb(classColor)}, 0.12)` : '#0d0d0d',
-            border: `1px solid ${eco > 0 ? classColor : '#1a1a1a'}`,
-            borderRadius: '3px',
-          }}>
-            <Zap size={13} style={{ color: eco > 0 ? classColor : '#444' }} />
-            <span style={{ fontSize: '0.65rem', color: '#666', fontFamily: 'monospace' }}>eco</span>
-            <span style={{ fontSize: '1rem', fontWeight: 800, fontFamily: 'monospace', color: eco > 0 ? classColor : '#555' }}>
-              [ {eco} ]
+          <GlowingBadge variant={eco > 0 ? 'cyan' : 'gray'} pulse={eco > 0} dot>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <Zap size={11} /> eco [{eco}]
             </span>
-          </div>
+          </GlowingBadge>
           {!compact && MAX_CLASS_SKILL_LEVEL > ECO_SKILL_MAX_LEVEL && (
-            <div
-              title="Catalisador de Grau — sobe a skill além do Eco"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                padding: '0.35rem 0.65rem',
-                background: catalysts > 0 ? 'rgba(168,85,247,0.12)' : '#0d0d0d',
-                border: `1px solid ${catalysts > 0 ? '#a855f7' : '#1a1a1a'}`,
-                borderRadius: '3px',
-              }}
-            >
-              <Gem size={13} style={{ color: catalysts > 0 ? '#a855f7' : '#444' }} />
-              <span style={{ fontSize: '0.65rem', color: '#666', fontFamily: 'monospace' }}>catalisador</span>
-              <span style={{ fontSize: '1rem', fontWeight: 800, fontFamily: 'monospace', color: catalysts > 0 ? '#a855f7' : '#555' }}>
-                [ {catalysts} ]
+            <GlowingBadge variant={catalysts > 0 ? 'default' : 'gray'} pulse={catalysts > 0} dot>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <Gem size={11} /> catalisador [{catalysts}]
               </span>
-            </div>
+            </GlowingBadge>
           )}
         </div>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${Math.max(book.length, 1)}, minmax(0, 1fr))`,
-        gap: '0.4rem',
-        marginBottom: '1rem',
-        padding: '0.75rem',
-        background: '#080808',
-        border: '1px solid #1a1a1a',
-        borderRadius: '6px',
-      }}>
-        {book.map(entry => (
-          <SkillIconCell
-            key={entry.def.templateId}
-            entry={entry}
-            selected={selected?.def.templateId === entry.def.templateId}
-            classColor={classColor}
-            onSelect={setSelectedId}
-          />
-        ))}
-      </div>
+      <SpotlightCard
+        spotlightColor={`rgba(${rgb}, 0.22)`}
+        style={{
+          padding: '0.85rem',
+          borderColor: `rgba(${rgb}, 0.22)`,
+        }}
+      >
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${Math.max(book.length, 1)}, minmax(0, 1fr))`,
+          gap: '0.5rem',
+        }}>
+          {book.map(entry => (
+            <SkillIconCell
+              key={entry.def.templateId}
+              entry={entry}
+              selected={selected?.def.templateId === entry.def.templateId}
+              classColor={classColor}
+              onSelect={setSelectedId}
+            />
+          ))}
+        </div>
+      </SpotlightCard>
 
       {selected && (
-        <div style={{
-          background: '#0d0d0d',
-          border: `1px solid ${selected.isGrade ? '#a855f744' : selected.unlocked ? `${classColor}33` : '#1a1a1a'}`,
-          borderRadius: '4px',
-          padding: '0.875rem 1rem',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+        <SpotlightCard
+          spotlightColor={selected.isGrade ? 'rgba(168,85,247,0.2)' : `rgba(${rgb}, 0.2)`}
+          style={{
+            padding: '1rem 1.1rem',
+            borderColor: selected.isGrade
+              ? 'rgba(168,85,247,0.35)'
+              : selected.unlocked
+                ? `rgba(${rgb}, 0.35)`
+                : undefined,
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '0.65rem' }}>
             <div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#e5e5e5' }}>{selected.def.name}</div>
-              <div style={{ fontSize: '0.6rem', color: selected.isGrade ? '#c084fc' : classColor, fontFamily: 'monospace', marginTop: '2px' }}>
-                ATIVA · {selected.isGrade ? 'GRAU' : 'NÍVEL'} {selected.level}/{MAX_CLASS_SKILL_LEVEL}
-                {selected.atMax ? ' · MÁX' : ''}
-                {selected.def.cooldownTurns > 0 ? ` · CD ${selected.def.cooldownTurns}` : ''}
+              <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#f5f5f5', letterSpacing: '-0.02em' }}>
+                {selected.def.name}
+              </div>
+              <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                <GlowingBadge variant="default" pulse={false} dot>
+                  Ativa
+                </GlowingBadge>
+                <GlowingBadge variant={selected.isGrade ? 'default' : 'cyan'} pulse={false} dot>
+                  {selected.isGrade ? 'Grau' : 'Nível'} {selected.level}/{MAX_CLASS_SKILL_LEVEL}
+                  {selected.atMax ? ' · Máx' : ''}
+                </GlowingBadge>
+                {selected.def.cooldownTurns > 0 && (
+                  <GlowingBadge variant="gray" pulse={false} dot={false}>
+                    CD {selected.def.cooldownTurns}
+                  </GlowingBadge>
+                )}
               </div>
             </div>
             <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
@@ -278,33 +273,47 @@ export function ClassSkillBook({
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.3rem',
-                    background: gradeCheck.ok ? '#7c3aed' : undefined,
-                    borderColor: gradeCheck.ok ? '#a855f7' : undefined,
                     opacity: gradeCheck.ok ? 1 : 0.45,
                   }}
                 >
                   <Gem size={12} />
-                  Subir grau (catalisador)
+                  Subir grau
                 </Button>
               )}
             </div>
           </div>
 
-          <p style={{ fontSize: '0.75rem', color: '#777', lineHeight: 1.55, margin: '0 0 0.5rem' }}>{selected.def.description}</p>
-          <div style={{ background: '#111', border: '1px solid #1a1a1a', borderRadius: '3px', padding: '0.5rem 0.625rem', marginBottom: '0.35rem' }}>
-            <div style={{ fontSize: '0.5rem', color: '#06b6d4', fontFamily: 'monospace', marginBottom: '2px' }}>EFEITO</div>
-            <div style={{ fontSize: '0.7rem', color: '#888', lineHeight: 1.5 }}>{selected.def.mechanicalEffect}</div>
+          <p style={{ fontSize: '0.8rem', color: '#999', lineHeight: 1.55, margin: '0 0 0.75rem', fontStyle: 'italic' }}>
+            {selected.def.description}
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <GlassSurface borderRadius={10} padding="0.65rem 0.75rem">
+              <div style={{ fontSize: '0.55rem', color: '#22d3ee', fontFamily: 'monospace', marginBottom: 4, letterSpacing: '0.1em' }}>
+                EFEITO
+              </div>
+              <div style={{ fontSize: '0.78rem', color: '#c4c4c4', lineHeight: 1.5 }}>
+                {selected.def.mechanicalEffect}
+              </div>
+            </GlassSurface>
+            {selected.def.narrativeConsequence && (
+              <GlassSurface borderRadius={10} padding="0.65rem 0.75rem" style={{ borderColor: 'rgba(248,113,113,0.25)' }}>
+                <div style={{ fontSize: '0.55rem', color: '#f87171', fontFamily: 'monospace', marginBottom: 4, letterSpacing: '0.1em' }}>
+                  CONSEQUÊNCIA
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#aaa', lineHeight: 1.5 }}>
+                  {selected.def.narrativeConsequence}
+                </div>
+              </GlassSurface>
+            )}
           </div>
-          {selected.def.narrativeConsequence && (
-            <div style={{ background: 'rgba(220,38,38,0.04)', border: '1px solid rgba(220,38,38,0.12)', borderRadius: '3px', padding: '0.5rem 0.625rem' }}>
-              <div style={{ fontSize: '0.5rem', color: '#dc2626', fontFamily: 'monospace', marginBottom: '2px' }}>CONSEQUÊNCIA</div>
-              <div style={{ fontSize: '0.7rem', color: '#666', lineHeight: 1.5 }}>{selected.def.narrativeConsequence}</div>
+
+          {needsGrade && !gradeCheck.ok && (
+            <div style={{ marginTop: '0.65rem', fontSize: '0.65rem', color: '#c084fc', fontFamily: 'monospace' }}>
+              {gradeCheck.reason}
             </div>
           )}
-          {needsGrade && !gradeCheck.ok && (
-            <div style={{ marginTop: '0.5rem', fontSize: '0.65rem', color: '#a855f7', fontFamily: 'monospace' }}>{gradeCheck.reason}</div>
-          )}
-        </div>
+        </SpotlightCard>
       )}
     </div>
   )

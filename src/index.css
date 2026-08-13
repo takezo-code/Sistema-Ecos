@@ -208,6 +208,39 @@ html, body {
 
 .btn-secondary:active { transform: scale(0.97); }
 
+.btn-danger {
+  background: color-mix(in srgb, #dc2626 22%, transparent);
+  color: #fef2f2;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow:
+    inset 0 1px 0 rgba(254, 242, 242, 0.08),
+    0 0 0 1px rgba(220, 38, 38, 0.4),
+    0 6px 18px rgba(0, 0, 0, 0.28);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, #ef4444 30%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(254, 242, 242, 0.12),
+    0 0 0 1px rgba(239, 68, 68, 0.55),
+    0 8px 22px rgba(220, 38, 38, 0.2);
+}
+
+.btn-danger:active { transform: scale(0.97); }
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-ghost {
   background: transparent;
   color: #666666;

@@ -15,7 +15,7 @@ export function Campanha({ initialView = 'historia', onViewChange }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      {activeView === 'historia' && <Campaigns pageTitle="História" />}
+      {activeView === 'historia' && <Campaigns />}
       {activeView === 'sessoes' && <Sessions />}
     </div>
   )

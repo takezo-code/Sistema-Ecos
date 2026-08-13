@@ -13,6 +13,8 @@
   position: relative;
   display: flex;
   justify-content: flex-start;
+  width: 100%;
+  height: 100%;
 }
 
 .line-sidebar--markers {
@@ -22,15 +24,23 @@
 .line-sidebar__list {
   list-style: none;
   margin: 0;
-  padding: 1rem 0;
+  padding: 0.75rem 0 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: var(--item-gap);
+  justify-content: space-between;
+  gap: 0;
+  width: 100%;
+  height: 100%;
+  flex: 1;
 }
 
-/* --effect (0..1) is driven per item by a rAF lerp in JS, so every derived
-   property below reads the same continuously-animating value and stays in
-   step, with no CSS transitions to stagger. */
+.line-sidebar--fill .line-sidebar__item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+/* Com space-between/fill, os ticks intermediários não alinham — só as linhas principais. */
 .line-sidebar__item {
   position: relative;
   cursor: pointer;
@@ -41,7 +51,7 @@
 .line-sidebar__item::before {
   content: '';
   position: absolute;
-  inset: -6px -48px;
+  inset: -8px -56px;
 }
 
 .line-sidebar__label {
@@ -51,12 +61,14 @@
   font-size: var(--font-size);
   line-height: 1.2;
   color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--text-color));
+  transform: translateX(calc(var(--effect, 0) * var(--max-shift)));
   white-space: nowrap;
+  will-change: transform, color;
 }
 
 .line-sidebar__index {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  margin-right: 0.6rem;
+  margin-right: 0.65rem;
   font-size: 0.85em;
   opacity: calc(0.55 + var(--effect, 0) * 0.45);
 }
@@ -70,10 +82,11 @@
   background-color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--marker-color));
   transform-origin: left center;
   transform: translateY(-50%) scaleX(calc(0.7 + var(--effect, 0) * 0.5));
+  will-change: transform, background-color;
 }
 
-/* Short static tick centered in the gap between two menu items */
-.line-sidebar--markers .line-sidebar__item:not(:last-child)::after {
+/* Short ticks between items — only fixed-gap layouts */
+.line-sidebar--fixed-gap:not(.line-sidebar--fill).line-sidebar--markers .line-sidebar__item:not(:last-child)::after {
   content: '';
   position: absolute;
   top: calc(100% + var(--item-gap) / 2);
@@ -81,12 +94,11 @@
   height: 1px;
   width: calc(var(--marker-length) * var(--tick-scale));
   background-color: var(--marker-color);
-  opacity: 0.5;
+  opacity: 0.45;
   transform: translateY(-50%);
 }
 
-/* When enabled, the in-between ticks grow with cursor proximity too */
-.line-sidebar--scale-tick .line-sidebar__item:not(:last-child)::after {
+.line-sidebar--fixed-gap:not(.line-sidebar--fill).line-sidebar--scale-tick .line-sidebar__item:not(:last-child)::after {
   transform-origin: left center;
   transform: translateY(-50%) scaleX(calc(0.7 + var(--effect, 0) * 0.6));
 }

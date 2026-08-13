@@ -9,7 +9,6 @@ export function PageHeader({ icon: Icon, title, subtitle, action }) {
         alignItems: 'flex-start',
         justifyContent: 'space-between',
         padding: '1.25rem 1.5rem',
-        borderBottom: '1px solid #1a1a1a',
         minHeight: '64px',
       }}
     >

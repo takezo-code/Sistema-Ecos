@@ -1,30 +1,31 @@
 import React, { useState } from 'react'
 import {
   ArrowLeft, GitBranch, Plus, Pencil, Trash2, ChevronUp, ChevronDown,
-  BookOpen, Split, Circle, Loader, CheckCheck, MinusCircle, RotateCcw,
+  BookOpen, Split, Circle, Loader, CheckCheck, RotateCcw,
 } from 'lucide-react'
 import { useNarrativeStore } from '../store/useNarrativeStore'
-import { PageHeader } from '../components/ui/PageHeader'
 import { Modal } from '../components/ui/Modal'
-import { Field, Input, Textarea, Select } from '../components/ui/Field'
+import { Field, Input, Textarea } from '../components/ui/Field'
 import { StatusTag } from '../components/ui/StatusTag'
 import { EmptyState } from '../components/ui/EmptyState'
 import { SceneImageGalleryEditor, SceneImageGalleryView, normalizeSceneImages } from '../components/ui/SceneImageGallery'
 import { genId } from '../utils/id'
 import { Button } from '../components/ui/Button'
+import SpotlightCard from '../components/react-bits/SpotlightCard'
+import GlassSurface from '../components/react-bits/GlassSurface'
+import { FloatingTooltip } from '../components/ui/FloatingTooltip'
+import { StatusPicker } from '../components/ui/StatusPicker'
 
 const STATUS_ICONS = {
   'não iniciado': Circle,
   'em andamento': Loader,
   'concluído': CheckCheck,
-  'ignorado': MinusCircle,
 }
 
 const STATUS_COLORS = {
   'não iniciado': '#333',
   'em andamento': '#06b6d4',
   'concluído': '#16a34a',
-  'ignorado': '#555',
 }
 
 const EMPTY_HISTORIA = {
@@ -85,12 +86,7 @@ function HistoriaForm({ initial, onSave, onCancel }) {
         label="Imagens de ambiente"
       />
       <Field label="Status">
-        <Select value={form.status} onChange={e => set('status', e.target.value)}>
-          <option value="não iniciado">Não Iniciado</option>
-          <option value="em andamento">Em Andamento</option>
-          <option value="concluído">Concluído</option>
-          <option value="ignorado">Ignorado</option>
-        </Select>
+        <StatusPicker value={form.status} onChange={v => set('status', v)} />
       </Field>
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
@@ -213,44 +209,52 @@ function FlowConnector({ index, total, color }) {
 
 function HistoriaFlowCard({ event, index, total, onEdit, onDelete, onMoveUp, onMoveDown, onStatusChange }) {
   const Icon = STATUS_ICONS[event.status] || Circle
-  const color = STATUS_COLORS[event.status] || '#333'
-  const isIgnored = event.status === 'ignorado'
+  const color = STATUS_COLORS[event.status] || '#555'
 
   return (
-    <div style={{ display: 'flex', gap: 0, opacity: isIgnored ? 0.5 : 1 }}>
+    <div style={{ display: 'flex', gap: 0 }}>
       <FlowConnector index={index} total={total} color={color} />
-      <div style={{
-        flex: 1,
-        background: '#111',
-        border: `1px solid ${event.status === 'em andamento' ? 'rgba(6,182,212,0.2)' : '#1a1a1a'}`,
-        borderRadius: '4px',
-        margin: '4px 0',
-        padding: '0.875rem 1rem',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
+      <SpotlightCard
+        onClick={onEdit}
+        spotlightColor={event.status === 'em andamento' ? 'rgba(6,182,212,0.18)' : 'rgba(37,99,235,0.14)'}
+        style={{
+          flex: 1,
+          margin: '6px 0',
+          padding: '1rem 1.15rem',
+          cursor: 'pointer',
+          borderColor: event.status === 'em andamento' ? 'rgba(6,182,212,0.28)' : undefined,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.55rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
             <BookOpen size={13} style={{ color: '#06b6d4' }} />
             <span style={{ fontSize: '0.6rem', color: '#06b6d4', fontFamily: 'monospace', letterSpacing: '0.08em' }}>HISTÓRIA</span>
             <Icon size={13} style={{ color }} />
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e5e5e5' }}>{event.title}</span>
+            <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f0f0f0' }}>{event.title}</span>
             <StatusTag status={event.status} />
           </div>
-          <FlowActions index={index} total={total} onEdit={onEdit} onDelete={onDelete} onMoveUp={onMoveUp} onMoveDown={onMoveDown} />
+          <div onClick={e => e.stopPropagation()}>
+            <FlowActions index={index} total={total} onEdit={onEdit} onDelete={onDelete} onMoveUp={onMoveUp} onMoveDown={onMoveDown} />
+          </div>
         </div>
         {event.description && (
-          <p style={{ fontSize: '0.775rem', color: '#666', lineHeight: 1.6, marginBottom: '0.5rem', whiteSpace: 'pre-wrap' }}>
+          <p style={{ fontSize: '0.8rem', color: '#888', lineHeight: 1.6, marginBottom: '0.55rem', whiteSpace: 'pre-wrap' }}>
             {event.description}
           </p>
         )}
         {event.objective && (
-          <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '3px', padding: '0.5rem 0.625rem', marginBottom: '0.5rem' }}>
+          <GlassSurface borderRadius={10} padding="0.55rem 0.7rem" style={{ marginBottom: '0.55rem' }}>
             <div style={{ fontSize: '0.6rem', color: '#06b6d4', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '3px' }}>OBJETIVO</div>
-            <div style={{ fontSize: '0.7rem', color: '#555', lineHeight: 1.5 }}>{event.objective}</div>
-          </div>
+            <div style={{ fontSize: '0.75rem', color: '#aaa', lineHeight: 1.5 }}>{event.objective}</div>
+          </GlassSurface>
         )}
-        <SceneImageGalleryView images={event.images} title="Ambiente" />
-        <StatusButtons status={event.status} onStatusChange={onStatusChange} />
-      </div>
+        <div onClick={e => e.stopPropagation()}>
+          <SceneImageGalleryView images={event.images} title="Ambiente" />
+        </div>
+        <div onClick={e => e.stopPropagation()}>
+          <StatusButtons status={event.status} onStatusChange={onStatusChange} />
+        </div>
+      </SpotlightCard>
     </div>
   )
 }
@@ -262,31 +266,32 @@ function EscolhaFlowCard({ event, index, total, onEdit, onDelete, onMoveUp, onMo
   return (
     <div style={{ display: 'flex', gap: 0 }}>
       <FlowConnector index={index} total={total} color={color} />
-      <div style={{
-        flex: 1,
-        background: '#111',
-        border: `1px solid ${selected ? 'rgba(22,163,74,0.25)' : 'rgba(217,119,6,0.15)'}`,
-        borderRadius: '4px',
-        margin: '4px 0',
-        padding: '0.875rem 1rem',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.5rem' }}>
+      <SpotlightCard
+        spotlightColor={selected ? 'rgba(22,163,74,0.16)' : 'rgba(217,119,6,0.14)'}
+        style={{
+          flex: 1,
+          margin: '6px 0',
+          padding: '1rem 1.15rem',
+          borderColor: selected ? 'rgba(22,163,74,0.3)' : 'rgba(217,119,6,0.22)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.55rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
             <Split size={13} style={{ color: '#d97706' }} />
             <span style={{ fontSize: '0.6rem', color: '#d97706', fontFamily: 'monospace', letterSpacing: '0.08em' }}>ESCOLHA</span>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e5e5e5' }}>{event.title}</span>
+            <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f0f0f0' }}>{event.title}</span>
             {selected && <StatusTag status="concluído" />}
           </div>
           <FlowActions index={index} total={total} onEdit={onEdit} onDelete={onDelete} onMoveUp={onMoveUp} onMoveDown={onMoveDown} />
         </div>
 
         {(event.prompt || event.description) && (
-          <p style={{ fontSize: '0.775rem', color: '#888', lineHeight: 1.6, marginBottom: '0.75rem', whiteSpace: 'pre-wrap' }}>
+          <p style={{ fontSize: '0.8rem', color: '#888', lineHeight: 1.6, marginBottom: '0.75rem', whiteSpace: 'pre-wrap' }}>
             {event.prompt || event.description}
           </p>
         )}
 
-        <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+        <div style={{ fontSize: '0.6rem', color: '#666', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
           {selected ? 'ESCOLHA DOS JOGADORES' : 'CLIQUE NA OPÇÃO ESCOLHIDA PELOS JOGADORES'}
         </div>
 
@@ -294,33 +299,17 @@ function EscolhaFlowCard({ event, index, total, onEdit, onDelete, onMoveUp, onMo
           {event.choices.map(choice => {
             const isSelected = event.selectedChoiceId === choice.id
             return (
-              <button
+              <SpotlightCard
                 key={choice.id}
-                type="button"
                 onClick={() => onSelectChoice(isSelected ? null : choice.id)}
+                spotlightColor={isSelected ? 'rgba(22,163,74,0.2)' : 'rgba(255,255,255,0.06)'}
                 style={{
-                  textAlign: 'left',
-                  background: isSelected ? 'rgba(22,163,74,0.08)' : '#0d0d0d',
-                  border: `1px solid ${isSelected ? 'rgba(22,163,74,0.35)' : '#1a1a1a'}`,
-                  borderRadius: '4px',
-                  padding: '0.625rem 0.75rem',
+                  padding: '0.7rem 0.85rem',
                   cursor: 'pointer',
-                  transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => {
-                  if (!isSelected) {
-                    e.currentTarget.style.borderColor = '#2a2a2a'
-                    e.currentTarget.style.background = '#111'
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!isSelected) {
-                    e.currentTarget.style.borderColor = '#1a1a1a'
-                    e.currentTarget.style.background = '#0d0d0d'
-                  }
+                  borderColor: isSelected ? 'rgba(22,163,74,0.4)' : undefined,
                 }}
               >
-                <div style={{ fontSize: '0.8rem', fontWeight: 600, color: isSelected ? '#16a34a' : '#ccc', marginBottom: choice.outcome ? '4px' : 0 }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 600, color: isSelected ? '#4ade80' : '#ddd', marginBottom: choice.outcome && isSelected ? '4px' : 0 }}>
                   {isSelected && '✓ '}{choice.label}
                 </div>
                 {isSelected && choice.outcome && (
@@ -328,13 +317,13 @@ function EscolhaFlowCard({ event, index, total, onEdit, onDelete, onMoveUp, onMo
                     {choice.outcome}
                   </div>
                 )}
-              </button>
+              </SpotlightCard>
             )
           })}
         </div>
 
         {selected && (
-          <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.2)', borderRadius: '4px' }}>
+          <GlassSurface borderRadius={10} padding="0.75rem" style={{ marginTop: '0.75rem' }}>
             <div style={{ fontSize: '0.6rem', color: '#16a34a', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '4px' }}>NARRATIVA DESTA ESCOLHA</div>
             <p style={{ fontSize: '0.8rem', color: '#aaa', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{selected.outcome || 'Sem consequência definida.'}</p>
             <button
@@ -347,66 +336,90 @@ function EscolhaFlowCard({ event, index, total, onEdit, onDelete, onMoveUp, onMo
                 gap: '0.35rem',
                 background: 'transparent',
                 border: 'none',
-                color: '#444',
+                color: '#666',
                 cursor: 'pointer',
                 fontSize: '0.65rem',
                 fontFamily: 'monospace',
               }}
-              onMouseEnter={e => e.currentTarget.style.color = '#888'}
-              onMouseLeave={e => e.currentTarget.style.color = '#444'}
+              onMouseEnter={e => { e.currentTarget.style.color = '#aaa' }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#666' }}
             >
               <RotateCcw size={11} /> Redefinir escolha
             </button>
-          </div>
+          </GlassSurface>
         )}
-      </div>
+      </SpotlightCard>
     </div>
   )
 }
 
 function FlowActions({ index, total, onEdit, onDelete, onMoveUp, onMoveDown }) {
   return (
-    <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
-      <button onClick={onMoveUp} disabled={index === 0} title="Mover acima"
-        style={{ background: 'transparent', border: 'none', color: index === 0 ? '#1a1a1a' : '#333', cursor: index === 0 ? 'default' : 'pointer', padding: '3px', display: 'flex' }}>
-        <ChevronUp size={13} />
-      </button>
-      <button onClick={onMoveDown} disabled={index === total - 1} title="Mover abaixo"
-        style={{ background: 'transparent', border: 'none', color: index === total - 1 ? '#1a1a1a' : '#333', cursor: index === total - 1 ? 'default' : 'pointer', padding: '3px', display: 'flex' }}>
-        <ChevronDown size={13} />
-      </button>
-      <button onClick={onEdit} title="Editar" style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', padding: '3px', display: 'flex' }}>
-        <Pencil size={13} />
-      </button>
-      <button onClick={onDelete} title="Excluir" style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', padding: '3px', display: 'flex' }}>
-        <Trash2 size={13} />
-      </button>
-    </div>
+    <FloatingTooltip.Provider>
+      <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
+        <FloatingTooltip.Trigger content="Mover acima">
+          <button type="button" onClick={onMoveUp} disabled={index === 0}
+            style={{ background: 'transparent', border: 'none', color: index === 0 ? '#2a2a2a' : '#666', cursor: index === 0 ? 'default' : 'pointer', padding: '3px', display: 'flex' }}>
+            <ChevronUp size={13} />
+          </button>
+        </FloatingTooltip.Trigger>
+        <FloatingTooltip.Trigger content="Mover abaixo">
+          <button type="button" onClick={onMoveDown} disabled={index === total - 1}
+            style={{ background: 'transparent', border: 'none', color: index === total - 1 ? '#2a2a2a' : '#666', cursor: index === total - 1 ? 'default' : 'pointer', padding: '3px', display: 'flex' }}>
+            <ChevronDown size={13} />
+          </button>
+        </FloatingTooltip.Trigger>
+        <FloatingTooltip.Trigger content="Editar">
+          <button type="button" onClick={onEdit} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', padding: '3px', display: 'flex' }}>
+            <Pencil size={13} />
+          </button>
+        </FloatingTooltip.Trigger>
+        <FloatingTooltip.Trigger content="Excluir">
+          <button type="button" onClick={onDelete} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', padding: '3px', display: 'flex' }}>
+            <Trash2 size={13} />
+          </button>
+        </FloatingTooltip.Trigger>
+      </div>
+    </FloatingTooltip.Provider>
   )
 }
 
 function StatusButtons({ status, onStatusChange }) {
+  const variantFor = (s) => {
+    if (s === 'em andamento') return 'secondary'
+    if (s === 'concluído') return 'primary'
+    return 'secondary'
+  }
+
   return (
-    <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.625rem', flexWrap: 'wrap' }}>
-      {['não iniciado', 'em andamento', 'concluído', 'ignorado'].map(s => (
-        <button
-          key={s}
-          type="button"
-          onClick={() => onStatusChange(s)}
-          style={{
-            background: status === s ? 'rgba(255,255,255,0.05)' : 'transparent',
-            border: `1px solid ${status === s ? '#2a2a2a' : '#1a1a1a'}`,
-            borderRadius: '2px',
-            color: status === s ? STATUS_COLORS[s] : '#2a2a2a',
-            fontSize: '0.6rem',
-            cursor: 'pointer',
-            padding: '2px 6px',
-            fontFamily: 'monospace',
-          }}
-        >
-          {s.toUpperCase()}
-        </button>
-      ))}
+    <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+      {['não iniciado', 'em andamento', 'concluído'].map(s => {
+        const selected = status === s
+        return (
+          <Button
+            key={s}
+            type="button"
+            size="xs"
+            variant={variantFor(s)}
+            autoAnimate={selected}
+            tintOpacity={selected ? 0.12 : 0}
+            blur={0}
+            radius={10}
+            onClick={() => onStatusChange(s)}
+            style={{
+              fontSize: '0.58rem',
+              fontFamily: 'monospace',
+              letterSpacing: '0.06em',
+              padding: '0.35rem 0.55rem',
+              boxShadow: 'none',
+              opacity: selected ? 1 : 0.55,
+              color: selected ? STATUS_COLORS[s] === '#333' ? '#aaa' : STATUS_COLORS[s] : '#777',
+            }}
+          >
+            {s.toUpperCase()}
+          </Button>
+        )
+      })}
     </div>
   )
 }
@@ -425,48 +438,28 @@ function AddFlowModal({ open, onClose, onAdd }) {
           Escolha o tipo de fluxo que deseja adicionar à campanha.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-          <button
-            type="button"
+          <SpotlightCard
             onClick={() => setPickType('historia')}
-            style={{
-              background: '#0d0d0d',
-              border: '1px solid #1a1a1a',
-              borderRadius: '4px',
-              padding: '1.25rem',
-              cursor: 'pointer',
-              textAlign: 'left',
-              transition: 'border-color 0.15s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(6,182,212,0.4)'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = '#1a1a1a'}
+            spotlightColor="rgba(6,182,212,0.18)"
+            style={{ padding: '1.25rem', cursor: 'pointer' }}
           >
             <BookOpen size={20} style={{ color: '#06b6d4', marginBottom: '0.5rem' }} />
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#e5e5e5', marginBottom: '4px' }}>Fluxo de História</div>
-            <p style={{ fontSize: '0.7rem', color: '#555', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '0.7rem', color: '#777', lineHeight: 1.5, margin: 0 }}>
               Descreva como as cenas vão acontecer para você narrar a sessão.
             </p>
-          </button>
-          <button
-            type="button"
+          </SpotlightCard>
+          <SpotlightCard
             onClick={() => setPickType('escolha')}
-            style={{
-              background: '#0d0d0d',
-              border: '1px solid #1a1a1a',
-              borderRadius: '4px',
-              padding: '1.25rem',
-              cursor: 'pointer',
-              textAlign: 'left',
-              transition: 'border-color 0.15s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(217,119,6,0.4)'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = '#1a1a1a'}
+            spotlightColor="rgba(217,119,6,0.16)"
+            style={{ padding: '1.25rem', cursor: 'pointer' }}
           >
             <Split size={20} style={{ color: '#d97706', marginBottom: '0.5rem' }} />
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#e5e5e5', marginBottom: '4px' }}>Fluxo de Escolhas</div>
-            <p style={{ fontSize: '0.7rem', color: '#555', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '0.7rem', color: '#777', lineHeight: 1.5, margin: 0 }}>
               Defina opções e consequências. Durante a sessão, clique na escolha dos jogadores.
             </p>
-          </button>
+          </SpotlightCard>
         </div>
       </Modal>
     )
@@ -525,30 +518,31 @@ export function CampaignFlows({ campaign, onBack }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <PageHeader
-        icon={GitBranch}
-        title={campaign.name}
-        action={
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <button
-              className="btn-ghost"
-              onClick={onBack}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem' }}
-            >
-              <ArrowLeft size={13} /> Voltar
-            </button>
-            <Button
-              onClick={() => setAddModalOpen(true)}
-              size="xs"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-            >
-              <Plus size={13} /> Adicionar Fluxo
-            </Button>
-          </div>
-        }
-      />
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        gap: '0.5rem',
+        padding: '0.85rem 1.5rem',
+      }}>
+        <button
+          type="button"
+          className="btn-ghost"
+          onClick={onBack}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem' }}
+        >
+          <ArrowLeft size={13} /> Voltar
+        </button>
+        <Button
+          onClick={() => setAddModalOpen(true)}
+          size="xs"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+        >
+          <Plus size={13} /> Adicionar Fluxo
+        </Button>
+      </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 1.5rem 1.25rem' }}>
         {flows.length === 0 ? (
           <EmptyState
             icon={GitBranch}

@@ -3,12 +3,15 @@ import { Activity, RotateCcw, AlertTriangle } from 'lucide-react'
 import { getEcoOverloadSnapshot } from '../../services/ecoOverloadService'
 import { ECO_OVERLOAD_PHASES, ECO_OVERLOAD_OVERAGE_TO_TOTAL } from '../../constants/ecoOverload'
 import { Button } from '../ui/Button'
+import SpotlightCard from '../react-bits/SpotlightCard'
+import GlowingBadge from '../ui/GlowingBadge'
+import GlassSurface from '../react-bits/GlassSurface'
 
 const PHASE_LABELS = {
-  [ECO_OVERLOAD_PHASES.STABLE]: { label: 'Estável', color: '#16a34a' },
-  [ECO_OVERLOAD_PHASES.SHAKEN]: { label: 'Sobrecarga', color: '#eab308' },
-  [ECO_OVERLOAD_PHASES.RUPTURE]: { label: 'Ruptura de Eco', color: '#ea580c' },
-  [ECO_OVERLOAD_PHASES.TOTAL]: { label: 'Ruptura Total', color: '#dc2626' },
+  [ECO_OVERLOAD_PHASES.STABLE]: { label: 'Estável', color: '#4ade80', variant: 'success' },
+  [ECO_OVERLOAD_PHASES.SHAKEN]: { label: 'Sobrecarga', color: '#fbbf24', variant: 'warning' },
+  [ECO_OVERLOAD_PHASES.RUPTURE]: { label: 'Ruptura de Eco', color: '#fb923c', variant: 'warning' },
+  [ECO_OVERLOAD_PHASES.TOTAL]: { label: 'Ruptura Total', color: '#f87171', variant: 'error' },
 }
 
 export function EcoOverloadSection({
@@ -27,37 +30,41 @@ export function EcoOverloadSection({
   const barColor = snapshot.inRupturePhase ? '#dc2626' : snapshot.atCap ? '#eab308' : '#a855f7'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+    <SpotlightCard
+      spotlightColor={`${phaseMeta.color}22`}
+      style={{ padding: '0.95rem 1.05rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Activity size={14} style={{ color: '#a855f7' }} />
-          <span style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+          <span style={{ fontSize: '0.65rem', color: '#888', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
             SOBRECARGA DE ECO
           </span>
         </div>
-        <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: phaseMeta.color, fontWeight: 700 }}>
-          {snapshot.display} · {phaseMeta.label.toUpperCase()}
-        </span>
+        <GlowingBadge variant={phaseMeta.variant} pulse dot>
+          {snapshot.display} · {phaseMeta.label}
+        </GlowingBadge>
       </div>
 
-      <div style={{ height: '8px', background: '#111', borderRadius: '4px', overflow: 'hidden', border: '1px solid #1a1a1a' }}>
+      <div style={{
+        height: 10,
+        background: 'rgba(255,255,255,0.04)',
+        borderRadius: 999,
+        overflow: 'hidden',
+        border: '1px solid rgba(255,255,255,0.08)',
+      }}>
         <div style={{
           width: `${barPercent}%`,
           height: '100%',
-          background: barColor,
+          background: `linear-gradient(90deg, ${barColor}aa, ${barColor})`,
           transition: 'width 0.25s ease',
-          boxShadow: snapshot.inRupturePhase ? `0 0 12px ${barColor}66` : 'none',
+          boxShadow: `0 0 14px ${barColor}66`,
         }} />
       </div>
 
       {snapshot.activeMentalStatuses.length > 0 && (
-        <div style={{
-          background: 'rgba(234,179,8,0.06)',
-          border: '1px solid rgba(234,179,8,0.2)',
-          borderRadius: '4px',
-          padding: '0.625rem 0.75rem',
-        }}>
-          <div style={{ fontSize: '0.55rem', color: '#eab308', fontFamily: 'monospace', marginBottom: '0.35rem' }}>
+        <GlassSurface borderRadius={10} padding="0.65rem 0.75rem">
+          <div style={{ fontSize: '0.55rem', color: '#eab308', fontFamily: 'monospace', marginBottom: '0.35rem', letterSpacing: '0.08em' }}>
             ESTADOS MENTAIS ATIVOS
           </div>
           {snapshot.activeMentalStatuses.map(status => (
@@ -66,14 +73,14 @@ export function EcoOverloadSection({
                 {status.definition?.label || status.effectId}
               </div>
               {(status.definition?.narrativeConsequences || []).map((line, i) => (
-                <div key={i} style={{ fontSize: '0.65rem', color: '#666', marginLeft: '0.5rem' }}>· {line}</div>
+                <div key={i} style={{ fontSize: '0.65rem', color: '#888', marginLeft: '0.5rem' }}>· {line}</div>
               ))}
             </div>
           ))}
-        </div>
+        </GlassSurface>
       )}
 
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
         {onRestOverload && (
           <Button type="button" variant="secondary" size="xs" onClick={onRestOverload}
             style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
@@ -90,12 +97,12 @@ export function EcoOverloadSection({
               onChange={e => setMasterLevel(e.target.value)}
               style={{
                 width: '48px',
-                background: '#111',
-                border: '1px solid #2a2a2a',
-                borderRadius: '3px',
+                background: 'rgba(0,0,0,0.35)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '8px',
                 color: '#ccc',
                 fontSize: '0.7rem',
-                padding: '4px 6px',
+                padding: '6px 8px',
                 fontFamily: 'monospace',
               }}
             />
@@ -108,15 +115,10 @@ export function EcoOverloadSection({
       </div>
 
       {lastOverloadEvents?.length > 0 && (
-        <div style={{
-          background: 'rgba(220,38,38,0.08)',
-          border: '1px solid rgba(220,38,38,0.25)',
-          borderRadius: '4px',
-          padding: '0.75rem',
-        }}>
+        <GlassSurface borderRadius={10} padding="0.75rem" style={{ borderColor: 'rgba(220,38,38,0.25)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}>
-            <AlertTriangle size={14} style={{ color: '#dc2626' }} />
-            <span style={{ fontSize: '0.6rem', color: '#dc2626', fontFamily: 'monospace' }}>EVENTOS CRÍTICOS</span>
+            <AlertTriangle size={14} style={{ color: '#f87171' }} />
+            <span style={{ fontSize: '0.6rem', color: '#f87171', fontFamily: 'monospace', letterSpacing: '0.08em' }}>EVENTOS CRÍTICOS</span>
             {onClearEvents && (
               <button type="button" className="btn-ghost" onClick={onClearEvents}
                 style={{ marginLeft: 'auto', fontSize: '0.6rem' }}>Limpar</button>
@@ -124,13 +126,12 @@ export function EcoOverloadSection({
           </div>
           {lastOverloadEvents.map((ev, i) => (
             <div key={i} style={{ fontSize: '0.75rem', color: '#ccc', marginBottom: '0.35rem' }}>
-              <strong style={{ color: '#dc2626' }}>{ev.outcome?.label || 'Ruptura'}</strong>
+              <strong style={{ color: '#f87171' }}>{ev.outcome?.label || 'Ruptura'}</strong>
               <div style={{ fontSize: '0.7rem', color: '#888' }}>{ev.outcome?.description}</div>
             </div>
           ))}
-        </div>
+        </GlassSurface>
       )}
-
-    </div>
+    </SpotlightCard>
   )
 }

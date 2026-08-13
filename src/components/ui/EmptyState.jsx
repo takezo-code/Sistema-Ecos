@@ -4,27 +4,28 @@ import SpotlightCard from '../react-bits/SpotlightCard'
 export function EmptyState({ icon: Icon, title, description, action }) {
   return (
     <SpotlightCard
-      spotlightColor="rgba(37, 99, 235, 0.12)"
+      spotlightColor="rgba(37, 99, 235, 0.16)"
       style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '3rem 1.5rem',
-        gap: '0.75rem',
+        padding: '3.5rem 2rem',
+        gap: '0.85rem',
         textAlign: 'center',
-        maxWidth: 420,
-        margin: '2rem auto',
+        maxWidth: 480,
+        margin: '2.5rem auto',
+        minHeight: 220,
       }}
     >
-      {Icon && <Icon size={32} style={{ color: '#3a3a3a' }} />}
-      <div style={{ fontSize: '0.875rem', color: '#777', fontWeight: 500 }}>{title}</div>
+      {Icon && <Icon size={36} style={{ color: '#555' }} />}
+      <div style={{ fontSize: '0.95rem', color: '#c4c4c4', fontWeight: 600 }}>{title}</div>
       {description && (
-        <div style={{ fontSize: '0.75rem', color: '#444', maxWidth: '300px', lineHeight: 1.5 }}>
+        <div style={{ fontSize: '0.8rem', color: '#666', maxWidth: '340px', lineHeight: 1.55 }}>
           {description}
         </div>
       )}
-      {action && <div style={{ marginTop: '0.5rem' }}>{action}</div>}
+      {action && <div style={{ marginTop: '0.65rem' }}>{action}</div>}
     </SpotlightCard>
   )
 }

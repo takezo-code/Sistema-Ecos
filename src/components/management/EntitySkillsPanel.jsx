@@ -9,6 +9,8 @@ import { EcoSkillsSection } from './EcoSkillsSection'
 import { SkillGrimoirePicker } from './SkillGrimoirePicker'
 import { getCatalogAudienceForEntity } from '../../services/skillsCatalogService'
 import { Button } from '../ui/Button'
+import SpotlightCard from '../react-bits/SpotlightCard'
+import GlowingBadge from '../ui/GlowingBadge'
 
 /** Conteúdo de habilidades + sobrecarga de Eco (uso de skills) */
 export function EntitySkillsPanel({
@@ -57,37 +59,50 @@ export function EntitySkillsPanel({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {!isBoss && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '0.75rem',
-          padding: '0.625rem 0.75rem',
-          background: hasEcoToSpend ? 'rgba(168,85,247,0.1)' : '#0d0d0d',
-          border: `1px solid ${hasEcoToSpend ? 'rgba(168,85,247,0.35)' : '#1a1a1a'}`,
-          borderRadius: '4px',
-          boxShadow: hasEcoToSpend ? '0 0 16px rgba(168,85,247,0.15)' : 'none',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Zap size={18} style={{ color: hasEcoToSpend ? '#a855f7' : '#444' }} />
-            <div>
-              <div style={{ fontSize: '0.55rem', color: '#666', fontFamily: 'monospace', letterSpacing: '0.08em' }}>
-                PONTOS DE ECO DISPONÍVEIS
-              </div>
+        <SpotlightCard
+          spotlightColor={hasEcoToSpend ? 'rgba(168,85,247,0.28)' : 'rgba(255,255,255,0.06)'}
+          style={{
+            padding: '1rem 1.15rem',
+            borderColor: hasEcoToSpend ? 'rgba(168,85,247,0.35)' : undefined,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div style={{
-                fontSize: '1.75rem',
-                fontWeight: 800,
-                color: hasEcoToSpend ? '#a855f7' : '#555',
-                lineHeight: 1,
-                fontFamily: 'monospace',
+                width: 42,
+                height: 42,
+                borderRadius: 12,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: hasEcoToSpend ? 'rgba(168,85,247,0.18)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${hasEcoToSpend ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                boxShadow: hasEcoToSpend ? '0 0 20px rgba(168,85,247,0.25)' : 'none',
               }}>
-                {eco}
+                <Zap size={18} style={{ color: hasEcoToSpend ? '#c084fc' : '#555' }} />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.58rem', color: '#777', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: 4 }}>
+                  PONTOS DE ECO
+                </div>
+                <div style={{
+                  fontSize: '1.85rem',
+                  fontWeight: 800,
+                  color: hasEcoToSpend ? '#e9d5ff' : '#666',
+                  lineHeight: 1,
+                  letterSpacing: '-0.03em',
+                }}>
+                  {eco}
+                </div>
               </div>
             </div>
+            <GlowingBadge variant={hasEcoToSpend ? 'cyan' : 'gray'} pulse={hasEcoToSpend} dot>
+              {hasEcoToSpend ? 'Disponível' : 'Sem Eco'}
+            </GlowingBadge>
           </div>
-        </div>
+        </SpotlightCard>
       )}
 
       {!isBoss && (
@@ -96,7 +111,7 @@ export function EntitySkillsPanel({
           onRestOverload={onRestOverload}
           onSetOverload={adminMode ? onSetOverload : undefined}
           lastOverloadEvents={lastOverloadEvents}
-          onClearOverloadEvents={onClearOverloadEvents}
+          onClearEvents={onClearOverloadEvents}
         />
       )}
 
@@ -158,8 +173,6 @@ export function EntitySkillsPanel({
           />
         </Modal>
       )}
-
-      <hr className="divide-line" />
 
       <EcoSkillsSection
         entity={entity}

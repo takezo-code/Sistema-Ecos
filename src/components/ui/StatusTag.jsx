@@ -10,7 +10,7 @@ const STATUS_MAP = {
   'desaparecido': { variant: 'warning', label: 'Desaparecido' },
   'não iniciado': { variant: 'gray', label: 'Não Iniciado' },
   'em andamento': { variant: 'cyan', label: 'Em Andamento' },
-  'ignorado': { variant: 'warning', label: 'Ignorado' },
+  'concluído': { variant: 'success', label: 'Concluído' },
 }
 
 export function StatusTag({ status }) {

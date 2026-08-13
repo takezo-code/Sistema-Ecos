@@ -145,9 +145,22 @@ export default function SpecularButton({
 
       mesh = new Mesh(gl, { geometry, program })
       fx.appendChild(gl.canvas)
+      fx.classList.remove('specular-button__fx--lost')
+
+      const onContextLost = (e) => {
+        e.preventDefault()
+        cancelAnimationFrame(raf)
+        fx.classList.add('specular-button__fx--lost')
+      }
+      const onContextRestored = () => {
+        fx.classList.remove('specular-button__fx--lost')
+      }
+      gl.canvas.addEventListener('webglcontextlost', onContextLost)
+      gl.canvas.addEventListener('webglcontextrestored', onContextRestored)
 
       const sizeRef = { w: 1, h: 1 }
       const resize = () => {
+        if (gl.isContextLost?.()) return
         const rect = btn.getBoundingClientRect()
         const w = rect.width
         const h = rect.height
@@ -191,6 +204,7 @@ export default function SpecularButton({
 
       const update = now => {
         raf = requestAnimationFrame(update)
+        if (gl.isContextLost?.()) return
         const dt = Math.min((now - last) / 1000, 0.05)
         last = now
         const p = propsRef.current
@@ -222,6 +236,8 @@ export default function SpecularButton({
         cancelAnimationFrame(raf)
         ro?.disconnect()
         window.removeEventListener('pointermove', onPointerMove)
+        gl.canvas.removeEventListener('webglcontextlost', onContextLost)
+        gl.canvas.removeEventListener('webglcontextrestored', onContextRestored)
         if (gl.canvas.parentNode === fx) fx.removeChild(gl.canvas)
         gl.getExtension('WEBGL_lose_context')?.loseContext()
       }
@@ -246,6 +262,7 @@ export default function SpecularButton({
         '--sb-tint-opacity': tintOpacity,
         '--sb-blur': `${blur}px`,
         '--sb-text-color': textColor,
+        '--sb-fallback-bg': baseColor,
         ...style,
       }}
       disabled={disabled}

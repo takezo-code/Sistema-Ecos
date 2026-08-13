@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { Sidebar } from './components/Sidebar'
-import { SaveToolbar } from './components/SaveToolbar'
 import { SaveToast } from './components/ui/SaveToast'
 import { WelcomeScreen } from './pages/WelcomeScreen'
 import { Campanha } from './pages/Campanha'
@@ -10,10 +9,12 @@ import { EmJogo } from './pages/EmJogo'
 import { Dice } from './pages/Dice'
 import { Trash } from './pages/Trash'
 import { Creation } from './pages/Creation'
+import { Config } from './pages/Config'
 import { isAppBootstrapped, persistUiState, autoSave } from './services/saveService'
 import { storage, KEYS } from './services/storage'
-import { DarkVeilLayer } from './components/react-bits/DarkVeilLayer'
+import { EvilEyeLayer } from './components/react-bits/EvilEyeLayer'
 import ClickSpark from './components/react-bits/ClickSpark'
+import { ConfigNavButton } from './components/ConfigNavButton'
 
 const PAGES = {
   campanha: Campanha,
@@ -22,6 +23,7 @@ const PAGES = {
   creation: Creation,
   dice: Dice,
   trash: Trash,
+  config: Config,
 }
 
 function loadUiState() {
@@ -45,7 +47,14 @@ function migrateUiState(savedUi) {
     campanhaView = 'historia'
   } else if (page === 'sessions') {
     page = 'campanha'
-    campanhaView = 'sessoes'
+    campanhaView = 'historia'
+  } else if (page === 'trash') {
+    page = 'campanha'
+    campanhaView = 'historia'
+  }
+
+  if (campanhaView === 'sessoes') {
+    campanhaView = 'historia'
   }
 
   // Aba antiga Equipamentos → catálogo saiu; equipamento agora vive na ficha
@@ -168,32 +177,23 @@ export default function App() {
       <SaveToast />
     </>
   ) : (
-    <div style={{
-      position: 'relative',
-      zIndex: 1,
-      display: 'flex',
-      height: '100vh',
-      width: '100vw',
-      overflow: 'hidden',
-      background: 'transparent',
-    }}>
+    <div
+      className="relative z-[1] flex h-screen w-screen flex-col overflow-hidden bg-transparent md:flex-row"
+    >
       <Sidebar
         activePage={activePage}
         managementView={managementView}
         emjogoView={emjogoView}
         campanhaView={campanhaView}
         onNavigate={handleNavigate}
-        onGoHome={() => setInApp(false)}
-        footer={<SaveToolbar />}
+        footer={(
+          <ConfigNavButton
+            active={activePage === 'config'}
+            onOpen={() => handleNavigate('config')}
+          />
+        )}
       />
-      <main style={{
-        flex: 1,
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'transparent',
-        minWidth: 0,
-      }}>
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
         <PageComponent {...pageProps} />
       </main>
       <SaveToast />
@@ -202,7 +202,7 @@ export default function App() {
 
   return (
     <ClickSpark sparkColor="#c4b5fd" sparkCount={9} sparkRadius={18} sparkSize={11} duration={420}>
-      <DarkVeilLayer />
+      <EvilEyeLayer />
       {shell}
     </ClickSpark>
   )

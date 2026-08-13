@@ -16,7 +16,6 @@ import {
   PASSIVE_KINDS,
   rollPassive,
 } from '../../mechanics/equipment/gearPassiveEngine'
-import { getRupturaPool, formatRupturaPoolSources } from '../../constants/ecoOverload'
 import {
   getArmorTier,
 } from '../../mechanics/equipment/armorProgressionEngine'
@@ -24,9 +23,6 @@ import { getWeaponSkill } from '../../mechanics/equipment/weaponProgressionEngin
 import { getArmorType } from '../../constants/equipmentTypes'
 import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
 import { Button } from '../ui/Button'
-import { THEME_ACCENT } from '../../constants/theme'
-
-const ACCENT = THEME_ACCENT
 
 function SlotFrame({ children, onClick, borderColor = '#1e1e1e', title }) {
   return (
@@ -469,7 +465,6 @@ export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeap
   const weapon = getGearItem(character, GEAR_CATEGORIES.WEAPON)
   const armor = getGearItem(character, GEAR_CATEGORIES.ARMOR)
   const armorTier = getArmorTier(character)
-  const rupturaPool = getRupturaPool(character)
 
   const handleSave = (data) => {
     onForge?.(forging.category, data)
@@ -478,21 +473,6 @@ export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeap
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Sword size={14} style={{ color: ACCENT }} />
-          <span style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-            EQUIPAMENTO
-          </span>
-        </div>
-        <span style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#d97706' }}>
-          {rupturaPool.spent}/{rupturaPool.max}
-          {formatRupturaPoolSources(rupturaPool) && (
-            <span style={{ color: '#666' }}> · {formatRupturaPoolSources(rupturaPool)}</span>
-          )}
-        </span>
-      </div>
-
       <div style={{
         display: 'grid',
         gridTemplateColumns: '72px 1fr',

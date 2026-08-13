@@ -219,18 +219,9 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
       }}
       style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-        <Field label="Nome" required>
-          <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Nome do NPC" autoFocus />
-        </Field>
-        <Field label="Status">
-          <Select value={form.status} onChange={e => set('status', e.target.value)}>
-            <option value="vivo">Vivo</option>
-            <option value="morto">Morto</option>
-            <option value="desaparecido">Desaparecido</option>
-          </Select>
-        </Field>
-      </div>
+      <Field label="Nome" required>
+        <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Nome do NPC" autoFocus />
+      </Field>
 
       <div style={{ display: 'grid', gridTemplateColumns: isNew ? '1fr' : '1fr 1fr', gap: '1rem' }}>
         {!isNew && (

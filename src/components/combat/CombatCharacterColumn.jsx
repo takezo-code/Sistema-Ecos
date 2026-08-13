@@ -1,5 +1,8 @@
 import React, { useState } from 'react'
-import { Zap, Play, ChevronDown, ChevronUp, Star, Info, Sword, Shirt } from 'lucide-react'
+import {
+  Zap, Play, ChevronDown, ChevronUp, Star, Info, Sword, Shield as ShieldIcon,
+  Dices, Sparkles, StickyNote, Brain,
+} from 'lucide-react'
 import { COMBAT_HIGHLIGHT_XP } from '../../constants/progression'
 import { DamageMarksPanel, PLAYER_MARK_TYPES } from './DamageMarksPanel'
 import { EntityThumb } from '../ui/EntityThumb'
@@ -27,7 +30,6 @@ function socialAttrShort(attr) {
   return attr.label.slice(0, 3).toUpperCase()
 }
 
-/** Raios do card: vida boa = azul lento; vida baixa = vermelho rápido. */
 function electricForPhysical(physicalState) {
   if (physicalState === 'incapacitado') {
     return { color: '#ef4444', speed: 2.8, chaos: 0.26 }
@@ -39,6 +41,169 @@ function electricForPhysical(physicalState) {
     return { color: '#60a5fa', speed: 1.05, chaos: 0.14 }
   }
   return { color: '#3b82f6', speed: 0.45, chaos: 0.09 }
+}
+
+function IconChip({ active, color, disabled, title, onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      style={{
+        width: 30,
+        height: 30,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 0,
+        background: active
+          ? `linear-gradient(145deg, ${color}28, ${color}10)`
+          : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${active ? `${color}66` : 'rgba(255,255,255,0.08)'}`,
+        borderRadius: 9,
+        color: active ? color : '#3a3a3a',
+        cursor: disabled ? 'default' : 'pointer',
+        overflow: 'hidden',
+        boxShadow: active ? `0 0 14px ${color}33, inset 0 1px 0 rgba(255,255,255,0.08)` : 'none',
+        transition: 'border-color 0.15s, box-shadow 0.15s, color 0.15s',
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
+function SectionLabel({ children, accent = '#666' }) {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: '0.3rem',
+    }}>
+      <span style={{
+        fontSize: '0.42rem',
+        color: accent,
+        fontFamily: 'monospace',
+        letterSpacing: '0.12em',
+        fontWeight: 700,
+      }}>
+        {children}
+      </span>
+      <div style={{
+        flex: 1,
+        height: 1,
+        background: `linear-gradient(90deg, ${accent}44, transparent)`,
+      }} />
+    </div>
+  )
+}
+
+function AttrRollButton({
+  shortKey,
+  color,
+  displayVal,
+  classBonus,
+  reduced,
+  highlighted,
+  title,
+  onClick,
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      style={{
+        position: 'relative',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.015) 100%)',
+        border: `1px solid ${highlighted ? 'rgba(217,119,6,0.45)' : 'rgba(255,255,255,0.08)'}`,
+        borderRadius: 8,
+        padding: '0.38rem 0.15rem 0.32rem',
+        cursor: 'pointer',
+        textAlign: 'center',
+        overflow: 'hidden',
+        boxShadow: highlighted
+          ? '0 0 12px rgba(217,119,6,0.15), inset 0 1px 0 rgba(255,255,255,0.06)'
+          : 'inset 0 1px 0 rgba(255,255,255,0.04)',
+      }}
+    >
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: '15%',
+        right: '15%',
+        height: 2,
+        borderRadius: '0 0 2px 2px',
+        background: color,
+        boxShadow: `0 0 8px ${color}`,
+        opacity: 0.9,
+      }} />
+      <div style={{
+        fontSize: '0.42rem',
+        color,
+        fontFamily: 'monospace',
+        fontWeight: 700,
+        letterSpacing: '0.06em',
+        textShadow: `0 0 10px ${color}66`,
+      }}>
+        {shortKey}
+      </div>
+      <div style={{
+        fontSize: '0.98rem',
+        fontWeight: 800,
+        color: reduced ? '#ea580c' : '#f3f3f3',
+        lineHeight: 1.1,
+        marginTop: 2,
+        textShadow: reduced ? '0 0 10px rgba(234,88,12,0.35)' : 'none',
+      }}>
+        {displayVal}
+        {classBonus > 0 && (
+          <span style={{ fontSize: '0.48rem', color: '#fbbf24', marginLeft: 1 }}>+{classBonus}</span>
+        )}
+      </div>
+    </button>
+  )
+}
+
+function AccordionHeader({ open, onToggle, icon: Icon, label, accent = '#777' }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      style={{
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '0.42rem 0.7rem',
+        background: open
+          ? 'linear-gradient(90deg, rgba(255,255,255,0.04), transparent)'
+          : 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        color: open ? accent : '#555',
+        transition: 'color 0.15s, background 0.15s',
+      }}
+    >
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        fontSize: '0.52rem',
+        fontFamily: 'monospace',
+        letterSpacing: '0.08em',
+        fontWeight: 700,
+      }}>
+        <Icon size={11} strokeWidth={2.2} style={{ opacity: 0.85 }} />
+        {label}
+      </span>
+      {open
+        ? <ChevronUp size={12} strokeWidth={2.2} />
+        : <ChevronDown size={12} strokeWidth={2.2} />}
+    </button>
+  )
 }
 
 export function CombatCharacterColumn({
@@ -90,13 +255,14 @@ export function CombatCharacterColumn({
   const armor = getCharacterArmor(character)
   const armorTier = getArmorTier(character)
   const electric = electricForPhysical(physical)
+  const classColor = characterClass?.color || '#a855f7'
 
   return (
     <ElectricBorder
       color={electric.color}
       speed={electric.speed}
       chaos={electric.chaos}
-      borderRadius={8}
+      borderRadius={12}
       displacement={12}
       borderOffset={12}
       style={{
@@ -112,42 +278,51 @@ export function CombatCharacterColumn({
       flexShrink: 0,
       display: 'flex',
       flexDirection: 'column',
-      background: '#0d0d0d',
-      border: `1px solid ${physicalOpt.color}44`,
-      borderRadius: '8px',
+      background: 'linear-gradient(165deg, #121218 0%, #0a0a0e 55%, #0d0d12 100%)',
+      border: `1px solid ${physicalOpt.color}33`,
+      borderRadius: 12,
       overflow: infoOpen ? 'visible' : 'hidden',
       position: 'relative',
       zIndex: 1,
-      boxShadow: physicalOpt.glow ? `0 0 16px ${physicalOpt.glow}` : 'none',
+      boxShadow: physicalOpt.glow
+        ? `0 0 20px ${physicalOpt.glow}, inset 0 1px 0 rgba(255,255,255,0.04)`
+        : 'inset 0 1px 0 rgba(255,255,255,0.04)',
     }}>
 
-      <header style={{ padding: '0.5rem 0.625rem', background: '#111', borderBottom: '1px solid #1a1a1a', position: 'relative' }}>
+      <header style={{
+        padding: '0.6rem 0.7rem 0.55rem',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)',
+        position: 'relative',
+      }}>
         <button
           type="button"
           onClick={() => setInfoOpen(v => !v)}
           title="Bônus e detalhes"
           style={{
             position: 'absolute',
-            top: '0.35rem',
-            right: '0.35rem',
+            top: '0.45rem',
+            right: '0.45rem',
             zIndex: 2,
             display: 'flex',
             alignItems: 'center',
-            gap: '2px',
-            padding: '2px 5px',
-            background: infoOpen ? 'rgba(255,255,255,0.08)' : 'transparent',
-            border: `1px solid ${infoOpen ? '#444' : '#2a2a2a'}`,
-            borderRadius: '3px',
-            color: infoOpen ? '#ccc' : '#666',
+            gap: 3,
+            padding: '3px 7px',
+            background: infoOpen
+              ? 'linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04))'
+              : 'rgba(255,255,255,0.04)',
+            border: `1px solid ${infoOpen ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.1)'}`,
+            borderRadius: 999,
+            color: infoOpen ? '#e5e5e5' : '#777',
             cursor: 'pointer',
-            fontSize: '0.45rem',
+            fontSize: '0.48rem',
             fontFamily: 'monospace',
             fontWeight: 700,
-            letterSpacing: '0.04em',
+            letterSpacing: '0.06em',
             textTransform: 'uppercase',
+            boxShadow: infoOpen ? '0 0 12px rgba(255,255,255,0.08)' : 'none',
           }}
         >
-          <Info size={8} />
+          <Info size={9} strokeWidth={2.4} />
           Info
         </button>
 
@@ -155,21 +330,22 @@ export function CombatCharacterColumn({
           <div
             style={{
               position: 'absolute',
-              top: '1.55rem',
-              right: '0.35rem',
-              left: '0.35rem',
+              top: '1.75rem',
+              right: '0.45rem',
+              left: '0.45rem',
               zIndex: 30,
-              background: '#141414',
-              border: '1px solid #2a2a2a',
-              borderRadius: '5px',
-              padding: '0.45rem 0.5rem',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.55)',
+              background: 'rgba(14,14,20,0.96)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: 10,
+              padding: '0.55rem 0.6rem',
+              boxShadow: '0 12px 28px rgba(0,0,0,0.55)',
+              backdropFilter: 'blur(10px)',
               display: 'flex',
               flexDirection: 'column',
               gap: '0.3rem',
             }}
           >
-            <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#888', fontWeight: 700, letterSpacing: '0.06em' }}>
+            <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#999', fontWeight: 700, letterSpacing: '0.08em' }}>
               BÔNUS
             </div>
             {!hasInfoRows && (
@@ -178,7 +354,7 @@ export function CombatCharacterColumn({
               </div>
             )}
             {vitBuffer > 0 && (
-              <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#16a34a' }}>
+              <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#4ade80' }}>
                 +{vitBuffer} vida máx. (VIT)
               </div>
             )}
@@ -188,17 +364,24 @@ export function CombatCharacterColumn({
               </div>
             )}
             {buffMarks > 0 && (
-              <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#a855f7' }}>
+              <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#c084fc' }}>
                 +{buffMarks} vida · skills
               </div>
             )}
             {armorDexPenalty > 0 && (
-              <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#f97316' }}>
+              <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#fb923c' }}>
                 −{armorDexPenalty} DES · armadura
               </div>
             )}
             {activeBuffs.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '0.1rem', paddingTop: '0.3rem', borderTop: '1px solid #222' }}>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 3,
+                marginTop: 2,
+                paddingTop: 6,
+                borderTop: '1px solid rgba(255,255,255,0.08)',
+              }}>
                 {activeBuffs.map(b => (
                   <div
                     key={b.id || b.sourceTemplateId}
@@ -212,14 +395,22 @@ export function CombatCharacterColumn({
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center', paddingRight: '2.4rem' }}>
-          <EntityThumb src={character.image} alt={character.name} size={32} borderRadius="4px" />
+        <div style={{ display: 'flex', gap: '0.55rem', alignItems: 'center', paddingRight: '3rem' }}>
+          <div style={{
+            borderRadius: 10,
+            padding: 1,
+            background: `linear-gradient(145deg, ${classColor}66, transparent)`,
+            boxShadow: `0 0 14px ${classColor}22`,
+          }}>
+            <EntityThumb src={character.image} alt={character.name} size={36} borderRadius="9px" />
+          </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', minWidth: 0 }}>
               <span style={{
-                fontSize: '0.85rem',
+                fontSize: '0.88rem',
                 fontWeight: 800,
-                color: '#f5f5f5',
+                color: '#f8f8f8',
+                letterSpacing: '-0.02em',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -240,40 +431,91 @@ export function CombatCharacterColumn({
                   style={{
                     flexShrink: 0,
                     display: 'flex',
-                    padding: '2px 4px',
-                    background: xpFlash ? 'rgba(217,119,6,0.25)' : 'transparent',
-                    border: `1px solid ${xpFlash ? 'rgba(217,119,6,0.5)' : '#2a2a2a'}`,
-                    borderRadius: '3px',
-                    color: '#d97706',
+                    padding: 4,
+                    background: xpFlash
+                      ? 'linear-gradient(145deg, rgba(217,119,6,0.35), rgba(217,119,6,0.12))'
+                      : 'rgba(217,119,6,0.1)',
+                    border: `1px solid ${xpFlash ? 'rgba(251,191,36,0.65)' : 'rgba(217,119,6,0.35)'}`,
+                    borderRadius: 8,
+                    color: '#fbbf24',
                     cursor: 'pointer',
+                    boxShadow: xpFlash ? '0 0 14px rgba(217,119,6,0.4)' : 'none',
                   }}
                 >
-                  <Star size={9} fill={xpFlash ? '#d97706' : 'none'} />
+                  <Star size={10} fill={xpFlash ? '#fbbf24' : 'none'} strokeWidth={2.2} />
                 </button>
               )}
             </div>
-            <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#555', marginTop: '1px' }}>
-              Nv.{character.level ?? 1}
+            <div style={{
+              fontSize: '0.52rem',
+              fontFamily: 'monospace',
+              color: '#6b6b6b',
+              marginTop: 3,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              flexWrap: 'wrap',
+            }}>
+              <span>Nv.{character.level ?? 1}</span>
               {characterClass && (
-                <span style={{ color: characterClass.color }}> · {characterClass.label}</span>
+                <span style={{
+                  color: classColor,
+                  background: `${classColor}18`,
+                  border: `1px solid ${classColor}40`,
+                  borderRadius: 999,
+                  padding: '1px 6px',
+                  fontWeight: 700,
+                  letterSpacing: '0.02em',
+                  boxShadow: `0 0 10px ${classColor}22`,
+                }}>
+                  {characterClass.label}
+                </span>
               )}
             </div>
           </div>
         </div>
 
-        <div style={{ marginTop: '0.45rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Zap size={9} style={{ color: '#a855f7', flexShrink: 0 }} />
-            <div style={{ flex: 1, height: '3px', background: '#1a1a1a', borderRadius: '2px', overflow: 'hidden' }}>
+        <div style={{ marginTop: '0.55rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <div style={{
+              width: 18,
+              height: 18,
+              borderRadius: 6,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: `${barColor}18`,
+              border: `1px solid ${barColor}44`,
+              boxShadow: `0 0 10px ${barColor}33`,
+              flexShrink: 0,
+            }}>
+              <Zap size={10} fill={barColor} style={{ color: barColor }} strokeWidth={2} />
+            </div>
+            <div style={{
+              flex: 1,
+              height: 5,
+              background: 'rgba(255,255,255,0.06)',
+              borderRadius: 999,
+              overflow: 'hidden',
+              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.45)',
+            }}>
               <div style={{
                 height: '100%',
                 width: `${overloadPct * 100}%`,
-                background: barColor,
-                borderRadius: '2px',
+                background: `linear-gradient(90deg, ${barColor}aa, ${barColor})`,
+                borderRadius: 999,
+                boxShadow: `0 0 10px ${barColor}`,
                 transition: 'width 0.3s',
               }} />
             </div>
-            <span style={{ fontSize: '0.5rem', color: '#a855f7', fontFamily: 'monospace', flexShrink: 0, fontWeight: 700 }}>
+            <span style={{
+              fontSize: '0.52rem',
+              color: barColor,
+              fontFamily: 'monospace',
+              flexShrink: 0,
+              fontWeight: 800,
+              textShadow: `0 0 8px ${barColor}55`,
+            }}>
               {rupturaPool.spent}/{rupturaPool.max}
             </span>
           </div>
@@ -282,85 +524,73 @@ export function CombatCharacterColumn({
         <div
           title="Estado mental (definido pelos usos de Ruptura)"
           style={{
-            marginTop: '0.45rem',
-            fontSize: '0.65rem',
-            padding: '4px 6px',
+            marginTop: '0.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            fontSize: '0.68rem',
+            padding: '6px 8px',
             border: `1px solid ${mentalOpt.color}55`,
-            borderRadius: '4px',
+            borderRadius: 10,
             color: mentalOpt.color,
-            textAlign: 'center',
             fontFamily: 'monospace',
-            background: `${mentalOpt.color}12`,
+            fontWeight: 700,
+            background: `linear-gradient(145deg, ${mentalOpt.color}22, ${mentalOpt.color}08)`,
+            boxShadow: `0 0 16px ${mentalOpt.color}18, inset 0 1px 0 rgba(255,255,255,0.05)`,
             pointerEvents: 'none',
             userSelect: 'none',
+            letterSpacing: '0.02em',
           }}
         >
+          <Brain size={12} strokeWidth={2.2} />
           {mentalOpt.label}
         </div>
 
         {mentalStatuses.length > 0 && (
-          <div style={{ marginTop: '0.3rem', fontSize: '0.5rem', color: '#eab308', fontFamily: 'monospace' }}>
+          <div style={{
+            marginTop: '0.35rem',
+            fontSize: '0.5rem',
+            color: '#fbbf24',
+            fontFamily: 'monospace',
+            textAlign: 'center',
+            opacity: 0.9,
+          }}>
             {mentalStatuses.map(s => s.definition?.label).join(' · ')}
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.4rem' }}>
-          <button
-            type="button"
-            onClick={() => weapon && setGearView('arma')}
+        <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.45rem' }}>
+          <IconChip
+            active={!!weapon}
+            color="#f97316"
             disabled={!weapon}
             title={weapon ? `Arma: ${weapon.name}` : 'Sem arma'}
-            style={{
-              width: 26,
-              height: 26,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 0,
-              background: weapon ? 'rgba(249,115,22,0.1)' : 'transparent',
-              border: `1px solid ${weapon ? 'rgba(249,115,22,0.4)' : '#222'}`,
-              borderRadius: '4px',
-              color: weapon ? '#f97316' : '#333',
-              cursor: weapon ? 'pointer' : 'default',
-              overflow: 'hidden',
-            }}
+            onClick={() => weapon && setGearView('arma')}
           >
             {weapon?.image ? (
               <img src={weapon.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <Sword size={12} />
+              <Sword size={13} strokeWidth={2.2} />
             )}
-          </button>
-          <button
-            type="button"
-            onClick={() => armor && setGearView('armadura')}
+          </IconChip>
+          <IconChip
+            active={!!armor}
+            color={armorTier.color}
             disabled={!armor}
             title={armor ? `Armadura: ${armor.name}` : 'Sem armadura'}
-            style={{
-              width: 26,
-              height: 26,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 0,
-              background: armor ? `${armorTier.color}18` : 'transparent',
-              border: `1px solid ${armor ? `${armorTier.color}55` : '#222'}`,
-              borderRadius: '4px',
-              color: armor ? armorTier.color : '#333',
-              cursor: armor ? 'pointer' : 'default',
-              overflow: 'hidden',
-            }}
+            onClick={() => armor && setGearView('armadura')}
           >
             {armor?.image ? (
               <img src={armor.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <Shirt size={12} />
+              <ShieldIcon size={13} strokeWidth={2.2} />
             )}
-          </button>
+          </IconChip>
         </div>
       </header>
 
-      <section style={{ padding: '0.45rem 0.625rem', borderBottom: '1px solid #1a1a1a' }}>
+      <section style={{ padding: '0.5rem 0.7rem' }}>
         <DamageMarksPanel
           character={character}
           markTypes={PLAYER_MARK_TYPES}
@@ -372,33 +602,65 @@ export function CombatCharacterColumn({
         />
       </section>
 
-      <section style={{ padding: '0.45rem 0.625rem', borderBottom: '1px solid #1a1a1a' }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '2px', marginBottom: '0.35rem' }}>
-          {[8, 20].map(sides => {
-            const active = diceSides === sides
-            return (
-              <button
-                key={sides}
-                type="button"
-                onClick={() => setDiceSides(sides)}
-                title={`d${sides}`}
-                style={{
-                  padding: '1px 5px',
-                  fontSize: '0.5rem',
-                  fontFamily: 'monospace',
-                  fontWeight: 700,
-                  borderRadius: '3px',
-                  cursor: 'pointer',
-                  border: `1px solid ${active ? (sides === 8 ? '#06b6d4' : '#888') : '#222'}`,
-                  background: active ? (sides === 8 ? 'rgba(6,182,212,0.12)' : 'rgba(255,255,255,0.06)') : 'transparent',
-                  color: active ? (sides === 8 ? '#06b6d4' : '#ccc') : '#444',
-                }}
-              >
-                d{sides}
-              </button>
-            )
-          })}
+      <section style={{ padding: '0.15rem 0.7rem 0.55rem' }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '0.4rem',
+        }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+            color: '#666',
+            fontSize: '0.45rem',
+            fontFamily: 'monospace',
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+          }}>
+            <Dices size={11} strokeWidth={2.2} />
+            DADO
+          </div>
+          <div style={{
+            display: 'inline-flex',
+            padding: 2,
+            borderRadius: 9,
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            gap: 2,
+          }}>
+            {[8, 20].map(sides => {
+              const active = diceSides === sides
+              const accent = sides === 8 ? '#22d3ee' : '#e5e5e5'
+              return (
+                <button
+                  key={sides}
+                  type="button"
+                  onClick={() => setDiceSides(sides)}
+                  title={`d${sides}`}
+                  style={{
+                    padding: '3px 8px',
+                    fontSize: '0.52rem',
+                    fontFamily: 'monospace',
+                    fontWeight: 800,
+                    borderRadius: 7,
+                    cursor: 'pointer',
+                    border: 'none',
+                    background: active
+                      ? `linear-gradient(145deg, ${accent}33, ${accent}12)`
+                      : 'transparent',
+                    color: active ? accent : '#555',
+                    boxShadow: active ? `0 0 10px ${accent}33` : 'none',
+                  }}
+                >
+                  d{sides}
+                </button>
+              )
+            })}
+          </div>
         </div>
+
         {(() => {
           const physicalList = attributeList ?? ATTRIBUTES
 
@@ -416,54 +678,41 @@ export function CombatCharacterColumn({
                 destrezaPenalty: armorDexPenalty,
                 safeLimit,
               })
-                const classBonus = getClassAttributeBonus(character, attr.key)
-                const gearAttrBonus = sumAttrBonus(character, attr.key)
-                const gearRollExtra = sumGearRollBonus(character, attr.key)
-                const skillAttrBonus = sumAttrBuffBonus(character, attr.key)
-                const displayVal = eff + gearAttrBonus + skillAttrBonus
-                const rollBonus = eff + classBonus + gearRollExtra + skillAttrBonus
-                const reduced = eff < base
-                const shortKey = attr.key === 'inteligencia' ? 'INT'
-                  : attr.key === 'vitalidade' ? 'VIT'
-                  : attr.key === 'ruptura' ? 'RUP'
-                  : attr.label.slice(0, 3).toUpperCase()
-                return (
-                  <button
-                    key={attr.key}
-                    type="button"
-                    onClick={() => onRollAttribute?.(
-                      character, attr.key, attr.label, rollBonus, diceSides,
-                      { attrBonus: eff + skillAttrBonus, classBonus, weaponPenalty: 0, gearBonus: gearRollExtra },
-                    )}
-                    title={`d${diceSides} + ${attr.label}`}
-                    style={{
-                      background: '#111',
-                      border: `1px solid ${(classBonus > 0 || gearRollExtra > 0) ? 'rgba(217,119,6,0.3)' : '#1e1e1e'}`,
-                      borderRadius: '4px',
-                      padding: '0.3rem 0.2rem',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <div style={{ fontSize: '0.4rem', color: attr.color, fontFamily: 'monospace' }}>
-                      {shortKey}
-                    </div>
-                    <div style={{ fontSize: '0.95rem', fontWeight: 800, color: reduced ? '#ea580c' : '#e5e5e5', lineHeight: 1.1 }}>
-                      {displayVal}
-                      {classBonus > 0 && (
-                        <span style={{ fontSize: '0.5rem', color: '#d97706', marginLeft: '1px' }}>+{classBonus}</span>
-                      )}
-                    </div>
-                  </button>
-                )
+              const classBonus = getClassAttributeBonus(character, attr.key)
+              const gearAttrBonus = sumAttrBonus(character, attr.key)
+              const gearRollExtra = sumGearRollBonus(character, attr.key)
+              const skillAttrBonus = sumAttrBuffBonus(character, attr.key)
+              const displayVal = eff + gearAttrBonus + skillAttrBonus
+              const rollBonus = eff + classBonus + gearRollExtra + skillAttrBonus
+              const reduced = eff < base
+              const shortKey = attr.key === 'inteligencia' ? 'INT'
+                : attr.key === 'vitalidade' ? 'VIT'
+                : attr.key === 'ruptura' ? 'RUP'
+                : attr.label.slice(0, 3).toUpperCase()
+              return (
+                <AttrRollButton
+                  key={attr.key}
+                  shortKey={shortKey}
+                  color={attr.color}
+                  displayVal={displayVal}
+                  classBonus={classBonus}
+                  reduced={reduced}
+                  highlighted={classBonus > 0 || gearRollExtra > 0}
+                  title={`d${diceSides} + ${attr.label}`}
+                  onClick={() => onRollAttribute?.(
+                    character, attr.key, attr.label, rollBonus, diceSides,
+                    { attrBonus: eff + skillAttrBonus, classBonus, weaponPenalty: 0, gearBonus: gearRollExtra },
+                  )}
+                />
+              )
             }
 
             return (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: `repeat(${top.length}, 1fr)`,
-                  gap: '0.2rem',
+                  gap: '0.25rem',
                 }}>
                   {top.map(renderBtn)}
                 </div>
@@ -471,7 +720,7 @@ export function CombatCharacterColumn({
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: `repeat(${bottom.length}, 1fr)`,
-                    gap: '0.2rem',
+                    gap: '0.25rem',
                   }}>
                     {bottom.map(renderBtn)}
                   </div>
@@ -481,7 +730,7 @@ export function CombatCharacterColumn({
           }
 
           const renderSocial = () => (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.25rem' }}>
               {SOCIAL_ATTRIBUTES.map(attr => {
                 const base = character.socialAttributes?.[attr.key] ?? 0
                 const eff = getEffectiveSocialAttributeValue(character.socialAttributes || {}, attr.key, {
@@ -497,50 +746,33 @@ export function CombatCharacterColumn({
                 const rollBonus = eff + classBonus + gearRollExtra + skillAttrBonus
                 const reduced = eff < base
                 return (
-                  <button
+                  <AttrRollButton
                     key={attr.key}
-                    type="button"
+                    shortKey={socialAttrShort(attr)}
+                    color={attr.color}
+                    displayVal={displayVal}
+                    classBonus={classBonus}
+                    reduced={reduced}
+                    highlighted={classBonus > 0 || gearRollExtra > 0}
+                    title={`d${diceSides} + ${attr.label}`}
                     onClick={() => onRollAttribute?.(
                       character, attr.key, attr.label, rollBonus, diceSides,
                       { attrBonus: eff + skillAttrBonus, classBonus, weaponPenalty: 0, gearBonus: gearRollExtra },
                     )}
-                    title={`d${diceSides} + ${attr.label}`}
-                    style={{
-                      background: '#111',
-                      border: `1px solid ${(classBonus > 0 || gearRollExtra > 0) ? 'rgba(217,119,6,0.3)' : '#1e1e1e'}`,
-                      borderRadius: '4px',
-                      padding: '0.3rem 0.2rem',
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <div style={{ fontSize: '0.4rem', color: attr.color, fontFamily: 'monospace' }}>
-                      {socialAttrShort(attr)}
-                    </div>
-                    <div style={{ fontSize: '0.95rem', fontWeight: 800, color: reduced ? '#ea580c' : '#e5e5e5', lineHeight: 1.1 }}>
-                      {displayVal}
-                      {classBonus > 0 && (
-                        <span style={{ fontSize: '0.5rem', color: '#d97706', marginLeft: '1px' }}>+{classBonus}</span>
-                      )}
-                    </div>
-                  </button>
+                  />
                 )
               })}
             </div>
           )
 
           return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div>
-                <div style={{ fontSize: '0.4rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
-                  ATRIBUTOS
-                </div>
+                <SectionLabel accent="#888">ATRIBUTOS</SectionLabel>
                 {renderPhysical()}
               </div>
               <div>
-                <div style={{ fontSize: '0.4rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
-                  CENA
-                </div>
+                <SectionLabel accent="#64748b">CENA</SectionLabel>
                 {renderSocial()}
               </div>
             </div>
@@ -548,32 +780,19 @@ export function CombatCharacterColumn({
         })()}
       </section>
 
-      <section style={{ borderBottom: '1px solid #1a1a1a' }}>
-        <button
-          type="button"
-          onClick={() => setSkillsOpen(v => !v)}
-          style={{
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '0.35rem 0.625rem',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            color: '#555',
-          }}
-        >
-          <span style={{ fontSize: '0.5rem', fontFamily: 'monospace', letterSpacing: '0.06em' }}>
-            SKILLS · {skills.length}
-          </span>
-          {skillsOpen ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
-        </button>
+      <section style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <AccordionHeader
+          open={skillsOpen}
+          onToggle={() => setSkillsOpen(v => !v)}
+          icon={Sparkles}
+          label={`SKILLS · ${skills.length}`}
+          accent="#c084fc"
+        />
 
         {skillsOpen && (
-          <div style={{ maxHeight: '160px', overflowY: 'auto', padding: '0 0.5rem 0.45rem' }}>
+          <div style={{ maxHeight: '160px', overflowY: 'auto', padding: '0 0.55rem 0.5rem' }}>
             {skills.length === 0 ? (
-              <p style={{ fontSize: '0.65rem', color: '#333', textAlign: 'center', margin: 0 }}>Sem skills</p>
+              <p style={{ fontSize: '0.65rem', color: '#444', textAlign: 'center', margin: 0 }}>Sem skills</p>
             ) : (
               skills.map(rt => (
                 <div
@@ -586,21 +805,29 @@ export function CombatCharacterColumn({
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    background: '#111',
-                    border: `1px solid ${rt.visualMeta?.border || '#1a1a1a'}`,
-                    borderRadius: '4px',
-                    padding: '0.3rem 0.45rem',
-                    marginBottom: '0.2rem',
+                    background: 'linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015))',
+                    border: `1px solid ${rt.visualMeta?.border || 'rgba(255,255,255,0.08)'}`,
+                    borderRadius: 9,
+                    padding: '0.35rem 0.5rem',
+                    marginBottom: '0.25rem',
                     gap: '0.35rem',
                     cursor: onSelectSkill ? 'pointer' : 'default',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
                   }}
                 >
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#e5e5e5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{
+                      fontSize: '0.65rem',
+                      fontWeight: 650,
+                      color: '#ececec',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
                       {rt.catalog.name}
                     </div>
                     {!rt.isPassive && rt.cooldownTotal > 0 && (
-                      <div style={{ fontSize: '0.45rem', fontFamily: 'monospace', color: '#555' }}>
+                      <div style={{ fontSize: '0.45rem', fontFamily: 'monospace', color: '#666' }}>
                         CD {rt.cooldownRemaining}/{rt.cooldownTotal}
                       </div>
                     )}
@@ -616,9 +843,14 @@ export function CombatCharacterColumn({
                         onActivateSkill(character.id, rt.instance.id)
                       }}
                       title={rt.blockReason || 'Ativar'}
-                      style={{ padding: '2px 5px', opacity: rt.canActivate ? 1 : 0.35, flexShrink: 0 }}
+                      style={{
+                        padding: '3px 6px',
+                        opacity: rt.canActivate ? 1 : 0.35,
+                        flexShrink: 0,
+                        borderRadius: 7,
+                      }}
                     >
-                      <Play size={8} />
+                      <Play size={9} fill="currentColor" />
                     </Button>
                   )}
                 </div>
@@ -628,36 +860,32 @@ export function CombatCharacterColumn({
         )}
       </section>
 
-      <section>
-        <button
-          type="button"
-          onClick={() => setNotesOpen(v => !v)}
-          style={{
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '0.35rem 0.625rem',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            color: hasNotes ? '#777' : '#444',
-          }}
-        >
-          <span style={{ fontSize: '0.5rem', fontFamily: 'monospace', letterSpacing: '0.06em' }}>
-            NOTAS{hasNotes ? ' · ···' : ''}
-          </span>
-          {notesOpen ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
-        </button>
+      <section style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <AccordionHeader
+          open={notesOpen}
+          onToggle={() => setNotesOpen(v => !v)}
+          icon={StickyNote}
+          label={hasNotes ? 'NOTAS · ···' : 'NOTAS'}
+          accent={hasNotes ? '#94a3b8' : '#555'}
+        />
         {notesOpen && (
-          <div style={{ padding: '0 0.625rem 0.5rem' }}>
+          <div style={{ padding: '0 0.7rem 0.55rem' }}>
             <textarea
               className="input-base"
               rows={2}
               value={character.combatNotes ?? ''}
               onChange={e => onUpdate?.({ combatNotes: e.target.value })}
               placeholder="Anotações…"
-              style={{ fontSize: '0.7rem', lineHeight: 1.35, resize: 'none', width: '100%', padding: '4px 6px' }}
+              style={{
+                fontSize: '0.7rem',
+                lineHeight: 1.35,
+                resize: 'none',
+                width: '100%',
+                padding: '6px 8px',
+                borderRadius: 9,
+                background: 'rgba(255,255,255,0.03)',
+                borderColor: 'rgba(255,255,255,0.1)',
+              }}
             />
           </div>
         )}

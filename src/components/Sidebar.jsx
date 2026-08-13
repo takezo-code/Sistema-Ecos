@@ -1,24 +1,85 @@
-import React from 'react'
+import React, { useState } from 'react'
+import {
+  BookOpen,
+  Building2,
+  Settings,
+  Shield,
+  Skull,
+  Sparkles,
+  Swords,
+  Users,
+  UsersRound,
+} from 'lucide-react'
 import { MANAGEMENT_VIEWS } from '../constants/managementViews'
-import LineSidebar from './react-bits/LineSidebar'
+import {
+  AceternitySidebar,
+  SidebarBody,
+  SidebarLink,
+} from './ui/aceternity-sidebar'
+import { cn } from '../lib/utils'
+
+const ICON_CLASS = 'h-6 w-6 shrink-0'
 
 export const SIDEBAR_LINKS = [
-  { id: 'inicio', label: 'Início', home: true },
-  { id: 'historia', label: 'História', page: 'campanha', subView: 'historia' },
-  { id: 'sessoes', label: 'Sessões', page: 'campanha', subView: 'sessoes' },
-  { id: 'characters', label: 'Personagens', page: 'management', subView: MANAGEMENT_VIEWS.CHARACTERS },
-  { id: 'npcs', label: 'NPCs', page: 'management', subView: MANAGEMENT_VIEWS.NPCS },
-  { id: 'boss', label: 'Boss', page: 'management', subView: MANAGEMENT_VIEWS.BOSS },
-  { id: 'organizations', label: 'Organizações', page: 'management', subView: MANAGEMENT_VIEWS.ORGANIZATIONS },
-  { id: 'ficha', label: 'Ficha', page: 'emjogo', subView: 'ficha' },
-  { id: 'combat', label: 'Combate', page: 'emjogo', subView: 'combat' },
-  { id: 'creation', label: 'Criação', page: 'creation' },
-  { id: 'trash', label: 'Lixeira', page: 'trash' },
+  {
+    id: 'historia',
+    label: 'História',
+    page: 'campanha',
+    subView: 'historia',
+    icon: <BookOpen className={ICON_CLASS} />,
+  },
+  {
+    id: 'characters',
+    label: 'Personagens',
+    page: 'management',
+    subView: MANAGEMENT_VIEWS.CHARACTERS,
+    icon: <Users className={ICON_CLASS} />,
+  },
+  {
+    id: 'npcs',
+    label: 'NPCs',
+    page: 'management',
+    subView: MANAGEMENT_VIEWS.NPCS,
+    icon: <UsersRound className={ICON_CLASS} />,
+  },
+  {
+    id: 'boss',
+    label: 'Boss',
+    page: 'management',
+    subView: MANAGEMENT_VIEWS.BOSS,
+    icon: <Skull className={ICON_CLASS} />,
+  },
+  {
+    id: 'organizations',
+    label: 'Organizações',
+    page: 'management',
+    subView: MANAGEMENT_VIEWS.ORGANIZATIONS,
+    icon: <Building2 className={ICON_CLASS} />,
+  },
+  {
+    id: 'ficha',
+    label: 'Ficha',
+    page: 'emjogo',
+    subView: 'ficha',
+    icon: <Shield className={ICON_CLASS} />,
+  },
+  {
+    id: 'combat',
+    label: 'Combate',
+    page: 'emjogo',
+    subView: 'combat',
+    icon: <Swords className={ICON_CLASS} />,
+  },
+  {
+    id: 'creation',
+    label: 'Criação',
+    page: 'creation',
+    icon: <Sparkles className={ICON_CLASS} />,
+  },
 ]
 
 export function getSidebarActiveIndex({ activePage, managementView, emjogoView, campanhaView }) {
   const index = SIDEBAR_LINKS.findIndex(item => {
-    if (item.home) return false
     if (item.page !== activePage) return false
     if (item.page === 'management') return item.subView === managementView
     if (item.page === 'emjogo') return item.subView === emjogoView
@@ -28,15 +89,33 @@ export function getSidebarActiveIndex({ activePage, managementView, emjogoView, 
   return index >= 0 ? index : null
 }
 
+function ConfigFooterLink({ active, onOpen }) {
+  return (
+    <SidebarLink
+      active={active}
+      onClick={onOpen}
+      link={{
+        label: 'Config',
+        href: '#',
+        icon: (
+          <Settings
+            className={cn(ICON_CLASS, active ? 'text-violet-400' : 'text-neutral-400')}
+          />
+        ),
+      }}
+    />
+  )
+}
+
 export function Sidebar({
   activePage,
   managementView = MANAGEMENT_VIEWS.CHARACTERS,
   emjogoView = 'ficha',
   campanhaView = 'historia',
   onNavigate,
-  onGoHome,
   footer,
 }) {
+  const [open, setOpen] = useState(false)
   const activeIndex = getSidebarActiveIndex({
     activePage,
     managementView,
@@ -44,69 +123,38 @@ export function Sidebar({
     campanhaView,
   })
 
-  const handleItemClick = (_index, _label, item) => {
-    if (item?.home) {
-      onGoHome?.()
-      return
-    }
-    if (item?.page) onNavigate?.(item.page, item.subView)
-  }
-
   return (
-    <aside
-      style={{
-        width: '220px',
-        minWidth: '220px',
-        background: 'rgba(8,8,10,0.62)',
-        borderRight: '1px solid #1a1a1a',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        zIndex: 10,
-      }}
-    >
-      <div
-        style={{
-          padding: '1rem 1rem 0.75rem',
-          borderBottom: '1px solid #1a1a1a',
-          minHeight: '56px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-        }}
-      >
-        <div style={{ fontSize: '0.7rem', color: '#a855f7', fontFamily: 'monospace', letterSpacing: '0.15em', fontWeight: 700 }}>
-          ECOS
+    <AceternitySidebar open={open} setOpen={setOpen}>
+      <SidebarBody className="h-full min-h-0 justify-between gap-8">
+        <nav className="flex flex-col gap-4 overflow-y-auto py-2">
+          {SIDEBAR_LINKS.map((item, idx) => (
+            <SidebarLink
+              key={item.id}
+              active={activeIndex === idx}
+              onClick={() => {
+                if (item.page) onNavigate?.(item.page, item.subView)
+                setOpen(false)
+              }}
+              link={{
+                label: item.label,
+                href: '#',
+                icon: item.icon,
+              }}
+            />
+          ))}
+        </nav>
+        <div className="shrink-0 border-t border-white/[0.06] pt-5">
+          {footer ?? (
+            <ConfigFooterLink
+              active={activePage === 'config'}
+              onOpen={() => {
+                onNavigate?.('config')
+                setOpen(false)
+              }}
+            />
+          )}
         </div>
-        <div style={{ fontSize: '0.6rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-          PANEL v1.0
-        </div>
-      </div>
-
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: '0.5rem 0.75rem 0.5rem 0.5rem' }}>
-        <LineSidebar
-          items={SIDEBAR_LINKS}
-          activeIndex={activeIndex}
-          onItemClick={handleItemClick}
-          showIndex
-          showMarker
-          fontSize={0.82}
-          itemGap={14}
-          markerLength={36}
-          maxShift={14}
-          proximityRadius={72}
-        />
-      </div>
-
-      <div
-        style={{
-          borderTop: '1px solid #1a1a1a',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        {footer}
-      </div>
-    </aside>
+      </SidebarBody>
+    </AceternitySidebar>
   )
 }

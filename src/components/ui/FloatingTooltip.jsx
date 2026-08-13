@@ -204,6 +204,12 @@ function FloatingTooltipTrigger({
 
   const { setContent, setIsActive } = context
 
+  useEffect(() => {
+    return () => {
+      setIsActive(false)
+    }
+  }, [setIsActive])
+
   return (
     <div
       className={className}
@@ -213,6 +219,7 @@ function FloatingTooltipTrigger({
         setIsActive(true)
       }}
       onMouseLeave={() => setIsActive(false)}
+      onClick={() => setIsActive(false)}
     >
       {children}
     </div>

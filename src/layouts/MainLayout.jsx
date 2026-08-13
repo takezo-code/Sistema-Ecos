@@ -1,29 +1,24 @@
 import React from 'react'
 import { Sidebar } from '../components/Sidebar'
-import { SaveToolbar } from '../components/SaveToolbar'
+import { ConfigNavButton } from '../components/ConfigNavButton'
 
-export function MainLayout({ children, onNavigate, onGoHome, activePage, managementView, emjogoView, campanhaView }) {
+export function MainLayout({ children, onNavigate, activePage, managementView, emjogoView, campanhaView }) {
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: 'transparent' }}>
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-transparent md:flex-row">
       <Sidebar
         activePage={activePage}
         managementView={managementView}
         emjogoView={emjogoView}
         campanhaView={campanhaView}
         onNavigate={onNavigate}
-        onGoHome={onGoHome}
-        footer={<SaveToolbar />}
+        footer={(
+          <ConfigNavButton
+            active={activePage === 'config'}
+            onOpen={() => onNavigate?.('config')}
+          />
+        )}
       />
-      <main
-        style={{
-          flex: 1,
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          background: 'transparent',
-          minWidth: 0,
-        }}
-      >
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
         {children}
       </main>
     </div>

@@ -427,7 +427,6 @@ export function ManageCombat() {
           <div style={{
             flex: 1,
             minWidth: 0,
-            borderLeft: '1px solid rgba(220,38,38,0.25)',
             padding: '0.875rem',
             overflowY: 'auto',
             display: 'flex',

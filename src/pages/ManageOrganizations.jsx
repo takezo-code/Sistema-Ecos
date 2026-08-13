@@ -4,12 +4,17 @@ import { useOrganizationStore } from '../store/useOrganizationStore'
 import { useCampaignStore } from '../store/useCampaignStore'
 import { filterByActiveCampaign } from '../utils/campaignScope'
 import { useTrashStore } from '../store/useTrashStore'
-import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
 import { Modal } from '../components/ui/Modal'
 import { Field, Input, Textarea } from '../components/ui/Field'
 import { ImageUpload } from '../components/ui/ImageUpload'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Button } from '../components/ui/Button'
+import SpotlightCard from '../components/react-bits/SpotlightCard'
+import GlowingBadge from '../components/ui/GlowingBadge'
+import { FloatingTooltip } from '../components/ui/FloatingTooltip'
+import GlassSurface from '../components/react-bits/GlassSurface'
+
+const ACCENT = '#d97706'
 
 const EMPTY_FORM = {
   name: '', image: '', symbol: '', description: '', ideology: '', allies: '', enemies: ''
@@ -57,93 +62,231 @@ function OrgForm({ initial, onSave, onCancel }) {
   )
 }
 
-function OrgCard({ org, onEdit, onDelete }) {
+function OrgThumb({ org }) {
+  if (org.image) {
+    return (
+      <img
+        src={org.image}
+        alt={org.name}
+        style={{
+          width: 64,
+          height: 64,
+          objectFit: 'cover',
+          borderRadius: 12,
+          border: '1px solid rgba(255,255,255,0.08)',
+          flexShrink: 0,
+        }}
+        onError={e => { e.target.style.display = 'none' }}
+      />
+    )
+  }
   return (
-    <div
+    <div style={{
+      width: 64,
+      height: 64,
+      borderRadius: 12,
+      background: 'rgba(217,119,6,0.12)',
+      border: '1px solid rgba(217,119,6,0.28)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+      fontSize: org.symbol ? '1.6rem' : undefined,
+    }}>
+      {org.symbol || <Shield size={22} style={{ color: ACCENT }} />}
+    </div>
+  )
+}
+
+function OrgCard({ org, onEdit, onDelete }) {
+  const hasRelations = Boolean(org.allies || org.enemies)
+
+  return (
+    <SpotlightCard
+      onClick={onEdit}
+      spotlightColor="rgba(217, 119, 6, 0.2)"
       style={{
-        background: '#111',
-        border: '1px solid #1a1a1a',
-        borderRadius: '4px',
-        overflow: 'hidden',
-        transition: 'border-color 0.15s',
+        padding: 0,
+        cursor: 'pointer',
+        borderLeft: `3px solid ${ACCENT}`,
       }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = '#2a2a2a'}
-      onMouseLeave={e => e.currentTarget.style.borderColor = '#1a1a1a'}
     >
       <div style={{
-        padding: '1rem 1.25rem',
-        borderBottom: '1px solid #1a1a1a',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'space-between',
-        background: '#0d0d0d',
+        gap: '1rem',
+        padding: '1.1rem 1.2rem 0.85rem',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          {org.image ? (
-            <img
-              src={org.image}
-              alt={org.name}
-              style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '3px', border: '1px solid #2a2a2a' }}
-              onError={e => { e.target.style.display = 'none' }}
-            />
-          ) : org.symbol ? (
-            <span style={{ fontSize: '1.5rem', lineHeight: 1 }}>{org.symbol}</span>
-          ) : (
-            <Shield size={20} style={{ color: '#dc2626' }} />
-          )}
-          <div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#e5e5e5', letterSpacing: '-0.01em' }}>{org.name}</div>
-            <div style={{ fontSize: '0.6rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.1em' }}>ORGANIZAÇÃO</div>
+        <div style={{ display: 'flex', gap: '0.9rem', flex: 1, minWidth: 0 }}>
+          <OrgThumb org={org} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: '1.05rem',
+              fontWeight: 700,
+              color: '#f5f5f5',
+              letterSpacing: '-0.02em',
+              marginBottom: '0.45rem',
+            }}>
+              {org.name}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
+              <GlowingBadge variant="warning" pulse={false} dot>
+                Organização
+              </GlowingBadge>
+              {org.ideology && (
+                <GlowingBadge variant="cyan" pulse={false} dot>
+                  Ideologia
+                </GlowingBadge>
+              )}
+              {org.allies && (
+                <GlowingBadge variant="success" pulse={false} dot>
+                  Aliados
+                </GlowingBadge>
+              )}
+              {org.enemies && (
+                <GlowingBadge variant="error" pulse={false} dot>
+                  Inimigos
+                </GlowingBadge>
+              )}
+            </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.25rem' }}>
-          <button onClick={onEdit} title="Editar"
-            style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', padding: '4px', transition: 'color 0.15s', display: 'flex' }}
-            onMouseEnter={e => e.currentTarget.style.color = '#999'}
-            onMouseLeave={e => e.currentTarget.style.color = '#333'}
+
+        <FloatingTooltip.Provider>
+          <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flexShrink: 0 }}
+            onClick={e => e.stopPropagation()}
           >
-            <Pencil size={13} />
-          </button>
-          <button onClick={onDelete} title="Excluir"
-            style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', padding: '4px', transition: 'color 0.15s', display: 'flex' }}
-            onMouseEnter={e => e.currentTarget.style.color = '#dc2626'}
-            onMouseLeave={e => e.currentTarget.style.color = '#333'}
-          >
-            <Trash2 size={13} />
-          </button>
-        </div>
+            <FloatingTooltip.Trigger content="Editar">
+              <button
+                type="button"
+                onClick={onEdit}
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 8,
+                  color: '#888',
+                  cursor: 'pointer',
+                  padding: '6px',
+                  display: 'flex',
+                  transition: 'color 0.15s, border-color 0.15s',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.color = '#e5e5e5'
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.color = '#888'
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+                }}
+              >
+                <Pencil size={14} />
+              </button>
+            </FloatingTooltip.Trigger>
+            <FloatingTooltip.Trigger content="Excluir">
+              <button
+                type="button"
+                onClick={onDelete}
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 8,
+                  color: '#666',
+                  cursor: 'pointer',
+                  padding: '6px',
+                  display: 'flex',
+                  transition: 'color 0.15s, border-color 0.15s',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.color = '#f87171'
+                  e.currentTarget.style.borderColor = 'rgba(220,38,38,0.35)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.color = '#666'
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+                }}
+              >
+                <Trash2 size={14} />
+              </button>
+            </FloatingTooltip.Trigger>
+          </div>
+        </FloatingTooltip.Provider>
       </div>
 
-      <div style={{ padding: '1rem 1.25rem' }}>
-        {org.description && (
-          <p style={{ fontSize: '0.775rem', color: '#666', lineHeight: 1.6, marginBottom: '0.75rem' }}>
-            {org.description}
-          </p>
-        )}
-        {org.ideology && (
-          <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '3px', padding: '0.625rem 0.75rem', marginBottom: '0.625rem' }}>
-            <div style={{ fontSize: '0.6rem', color: '#06b6d4', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '3px' }}>IDEOLOGIA</div>
-            <div style={{ fontSize: '0.75rem', color: '#555', lineHeight: 1.5 }}>{org.ideology}</div>
-          </div>
-        )}
-        {(org.allies || org.enemies) && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-            {org.allies && (
-              <div style={{ background: '#0d0d0d', border: '1px solid rgba(22,163,74,0.15)', borderRadius: '3px', padding: '0.5rem 0.625rem' }}>
-                <div style={{ fontSize: '0.6rem', color: '#16a34a', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '3px' }}>ALIADOS</div>
-                <div style={{ fontSize: '0.7rem', color: '#555', lineHeight: 1.5 }}>{org.allies}</div>
+      {(org.description || org.ideology || hasRelations) && (
+        <div style={{ padding: '0 1.1rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+          {org.description && (
+            <p style={{
+              fontSize: '0.8rem',
+              color: '#888',
+              lineHeight: 1.55,
+              margin: 0,
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}>
+              {org.description}
+            </p>
+          )}
+
+          {org.ideology && (
+            <GlassSurface borderRadius={10} padding="0.65rem 0.75rem">
+              <div style={{
+                fontSize: '0.58rem',
+                color: '#67e8f9',
+                fontFamily: 'monospace',
+                letterSpacing: '0.1em',
+                marginBottom: 4,
+              }}>
+                IDEOLOGIA
               </div>
-            )}
-            {org.enemies && (
-              <div style={{ background: '#0d0d0d', border: '1px solid rgba(220,38,38,0.15)', borderRadius: '3px', padding: '0.5rem 0.625rem' }}>
-                <div style={{ fontSize: '0.6rem', color: '#dc2626', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '3px' }}>INIMIGOS</div>
-                <div style={{ fontSize: '0.7rem', color: '#555', lineHeight: 1.5 }}>{org.enemies}</div>
+              <div style={{ fontSize: '0.75rem', color: '#999', lineHeight: 1.5 }}>
+                {org.ideology}
               </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+            </GlassSurface>
+          )}
+
+          {hasRelations && (
+            <div style={{ display: 'grid', gridTemplateColumns: org.allies && org.enemies ? '1fr 1fr' : '1fr', gap: '0.45rem' }}>
+              {org.allies && (
+                <GlassSurface borderRadius={10} padding="0.65rem 0.75rem">
+                  <div style={{
+                    fontSize: '0.58rem',
+                    color: '#4ade80',
+                    fontFamily: 'monospace',
+                    letterSpacing: '0.1em',
+                    marginBottom: 4,
+                  }}>
+                    ALIADOS
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#999', lineHeight: 1.5 }}>
+                    {org.allies}
+                  </div>
+                </GlassSurface>
+              )}
+              {org.enemies && (
+                <GlassSurface borderRadius={10} padding="0.65rem 0.75rem">
+                  <div style={{
+                    fontSize: '0.58rem',
+                    color: '#f87171',
+                    fontFamily: 'monospace',
+                    letterSpacing: '0.1em',
+                    marginBottom: 4,
+                  }}>
+                    INIMIGOS
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#999', lineHeight: 1.5 }}>
+                    {org.enemies}
+                  </div>
+                </GlassSurface>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </SpotlightCard>
   )
 }
 
@@ -163,8 +306,6 @@ export function ManageOrganizations() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <ActiveCampaignBanner />
-
       <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem' }}>
         {filtered.length === 0 ? (
           <EmptyState
@@ -173,9 +314,14 @@ export function ManageOrganizations() {
             description="Crie organizações em Criação na sidebar para gerenciá-las aqui."
           />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '720px' }}>
             {filtered.map(o => (
-              <OrgCard key={o.id} org={o} onEdit={() => setEditing(o)} onDelete={() => setDeleteConfirm(o)} />
+              <OrgCard
+                key={o.id}
+                org={o}
+                onEdit={() => setEditing(o)}
+                onDelete={() => setDeleteConfirm(o)}
+              />
             ))}
           </div>
         )}
@@ -185,14 +331,14 @@ export function ManageOrganizations() {
         {editing && <OrgForm initial={editing} onSave={handleSave} onCancel={() => setEditing(null)} />}
       </Modal>
 
-      <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Confirmar Exclusão" maxWidth="380px">
+      <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Excluir organização" maxWidth="380px">
         <p style={{ fontSize: '0.85rem', color: '#999', marginBottom: '1.25rem' }}>
           Enviar a organização <strong style={{ color: '#e5e5e5' }}>{deleteConfirm?.name}</strong> para a lixeira?
           Você pode restaurá-la em Lixeira.
         </p>
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-          <button className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>
-          <Button variant="danger" onClick={() => { deleteOrganization(deleteConfirm.id); refreshTrash(); setDeleteConfirm(null) }}>Excluir</Button>
+          <button type="button" className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>
+          <Button type="button" variant="danger" onClick={() => { deleteOrganization(deleteConfirm.id); refreshTrash(); setDeleteConfirm(null) }}>Excluir</Button>
         </div>
       </Modal>
     </div>

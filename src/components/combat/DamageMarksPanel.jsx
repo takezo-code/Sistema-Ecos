@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Shield, Trash2, Plus } from 'lucide-react'
+import { HeartPulse, Trash2, Plus, Crosshair } from 'lucide-react'
 import {
   DAMAGE_MARK_META,
   DAMAGE_MARK_TYPES,
@@ -20,16 +20,36 @@ function LifeCountBlock({ current, max, stateOpt, compact = false }) {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '0.5rem',
-        padding: compact ? '0.4rem 0.55rem' : '0.5rem 0.65rem',
-        background: `${color}12`,
-        border: `1px solid ${color}33`,
-        borderRadius: '4px',
+        padding: compact ? '0.45rem 0.6rem' : '0.55rem 0.7rem',
+        background: `linear-gradient(145deg, ${color}22, ${color}08)`,
+        border: `1px solid ${color}44`,
+        borderRadius: compact ? 10 : 8,
+        boxShadow: `0 0 16px ${color}14, inset 0 1px 0 rgba(255,255,255,0.05)`,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', minWidth: 0 }}>
-        <Shield size={compact ? 11 : 12} style={{ color, flexShrink: 0 }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', minWidth: 0 }}>
+        <div style={{
+          width: compact ? 24 : 26,
+          height: compact ? 24 : 26,
+          borderRadius: 8,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: `${color}18`,
+          border: `1px solid ${color}44`,
+          boxShadow: `0 0 10px ${color}28`,
+          flexShrink: 0,
+        }}>
+          <HeartPulse size={compact ? 12 : 13} strokeWidth={2.3} style={{ color }} />
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', minWidth: 0 }}>
-          <span style={{ fontSize: compact ? '0.65rem' : '0.7rem', fontWeight: 700, color }}>
+          <span style={{
+            fontSize: compact ? '0.68rem' : '0.72rem',
+            fontWeight: 750,
+            color,
+            letterSpacing: '-0.01em',
+            textShadow: `0 0 10px ${color}44`,
+          }}>
             {stateOpt?.label ?? 'Saudável'}
           </span>
           {(stateOpt?.attrPenalty ?? 0) > 0 && (
@@ -46,16 +66,24 @@ function LifeCountBlock({ current, max, stateOpt, compact = false }) {
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div
           style={{
-            fontSize: compact ? '1.05rem' : '1.25rem',
+            fontSize: compact ? '1.1rem' : '1.25rem',
             fontWeight: 800,
             color,
             fontFamily: 'monospace',
             lineHeight: 1,
+            textShadow: `0 0 12px ${color}55`,
           }}
         >
           {current}{max > 0 ? `/${max}` : ''}
         </div>
-        <div style={{ fontSize: '0.45rem', color: '#666', fontFamily: 'monospace', marginTop: '2px' }}>
+        <div style={{
+          fontSize: '0.42rem',
+          color: '#777',
+          fontFamily: 'monospace',
+          marginTop: 3,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+        }}>
           vida
         </div>
       </div>
@@ -98,10 +126,10 @@ export function DamageMarksPanel({
 
   if (compact) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
         <LifeCountBlock current={current} max={max} stateOpt={stateOpt} compact />
 
-        <div style={{ display: 'flex', gap: '0.25rem' }}>
+        <div style={{ display: 'flex', gap: '0.3rem' }}>
           {types.map(type => {
             const meta = DAMAGE_MARK_META[type]
             if (!meta) return null
@@ -113,17 +141,24 @@ export function DamageMarksPanel({
                 title={`${meta.label} (−${meta.value} vida)`}
                 style={{
                   flex: 1,
-                  padding: '5px 2px',
-                  background: `${meta.color}10`,
-                  border: `1px solid ${meta.color}40`,
-                  borderRadius: '4px',
+                  padding: '6px 3px',
+                  background: `linear-gradient(145deg, ${meta.color}22, ${meta.color}0a)`,
+                  border: `1px solid ${meta.color}50`,
+                  borderRadius: 9,
                   color: meta.color,
                   cursor: 'pointer',
                   fontSize: '0.55rem',
                   fontFamily: 'monospace',
-                  fontWeight: 700,
+                  fontWeight: 800,
+                  letterSpacing: '0.02em',
+                  boxShadow: `0 0 12px ${meta.color}18, inset 0 1px 0 rgba(255,255,255,0.05)`,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 3,
                 }}
               >
+                <Crosshair size={9} strokeWidth={2.4} />
                 {meta.label} −{meta.value}
               </button>
             )
@@ -134,20 +169,23 @@ export function DamageMarksPanel({
             disabled={marks === 0}
             title="Recuperar 1 vida"
             style={{
-              width: '28px',
+              width: 30,
               flexShrink: 0,
-              padding: '5px 0',
-              background: 'transparent',
-              border: '1px solid #2a2a2a',
-              borderRadius: '4px',
-              color: marks === 0 ? '#2a2a2a' : '#16a34a',
+              padding: 0,
+              background: marks === 0
+                ? 'rgba(255,255,255,0.02)'
+                : 'linear-gradient(145deg, rgba(22,163,74,0.22), rgba(22,163,74,0.08))',
+              border: `1px solid ${marks === 0 ? 'rgba(255,255,255,0.06)' : 'rgba(22,163,74,0.45)'}`,
+              borderRadius: 9,
+              color: marks === 0 ? '#2f2f2f' : '#4ade80',
               cursor: marks === 0 ? 'default' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              boxShadow: marks === 0 ? 'none' : '0 0 10px rgba(22,163,74,0.2)',
             }}
           >
-            <Plus size={10} />
+            <Plus size={12} strokeWidth={2.4} />
           </button>
           <button
             type="button"
@@ -155,20 +193,31 @@ export function DamageMarksPanel({
             disabled={marks === 0}
             title={confirmClear ? 'Confirmar restaurar vida' : 'Restaurar vida total'}
             style={{
-              width: '28px',
+              width: 30,
               flexShrink: 0,
-              padding: '5px 0',
-              background: confirmClear ? 'rgba(220,38,38,0.12)' : 'transparent',
-              border: `1px solid ${confirmClear ? 'rgba(220,38,38,0.4)' : '#2a2a2a'}`,
-              borderRadius: '4px',
-              color: marks === 0 ? '#2a2a2a' : confirmClear ? '#ef4444' : '#555',
+              padding: 0,
+              background: confirmClear
+                ? 'linear-gradient(145deg, rgba(220,38,38,0.28), rgba(220,38,38,0.1))'
+                : marks === 0
+                  ? 'rgba(255,255,255,0.02)'
+                  : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${
+                marks === 0
+                  ? 'rgba(255,255,255,0.06)'
+                  : confirmClear
+                    ? 'rgba(239,68,68,0.55)'
+                    : 'rgba(255,255,255,0.1)'
+              }`,
+              borderRadius: 9,
+              color: marks === 0 ? '#2f2f2f' : confirmClear ? '#f87171' : '#777',
               cursor: marks === 0 ? 'default' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              boxShadow: confirmClear ? '0 0 12px rgba(239,68,68,0.25)' : 'none',
             }}
           >
-            <Trash2 size={10} />
+            <Trash2 size={11} strokeWidth={2.3} />
           </button>
         </div>
       </div>

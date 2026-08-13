@@ -1,43 +1,6 @@
-import SpecularButton from '../react-bits/SpecularButton'
-
-const VARIANTS = {
-  primary: {
-    tint: '#2563eb',
-    tintOpacity: 0.28,
-    blur: 10,
-    textColor: '#f8fafc',
-    lineColor: '#bfdbfe',
-    baseColor: '#1d4ed8',
-    intensity: 1.2,
-    radius: 8,
-    autoAnimate: false,
-  },
-  secondary: {
-    tint: '#ffffff',
-    tintOpacity: 0.05,
-    blur: 8,
-    textColor: '#e5e5e5',
-    lineColor: '#d4d4d8',
-    baseColor: '#52525b',
-    intensity: 0.95,
-    radius: 8,
-    autoAnimate: false,
-  },
-  danger: {
-    tint: '#dc2626',
-    tintOpacity: 0.22,
-    blur: 8,
-    textColor: '#fef2f2',
-    lineColor: '#fecaca',
-    baseColor: '#991b1b',
-    intensity: 1.1,
-    radius: 8,
-    autoAnimate: false,
-  },
-}
-
 /**
- * Botão padrão do sistema (Specular Button).
+ * Botão padrão do sistema (CSS — sem WebGL).
+ * SpecularButton WebGL conflita com fundos como Evil Eye e vira “quadrado branco”.
  * variant: primary | secondary | danger | ghost
  */
 export function Button({
@@ -50,7 +13,11 @@ export function Button({
   disabled = false,
   onClick,
   block = false,
-  autoAnimate,
+  autoAnimate: _autoAnimate,
+  tintOpacity: _tintOpacity,
+  blur: _blur,
+  radius: _radius,
+  intensity: _intensity,
   ...rest
 }) {
   if (variant === 'ghost') {
@@ -68,29 +35,36 @@ export function Button({
     )
   }
 
-  const preset = VARIANTS[variant] || VARIANTS.primary
+  const sizeStyle = {
+    xs: { fontSize: '0.7rem', padding: '0.4rem 0.75rem' },
+    sm: { fontSize: '0.875rem', padding: '0.5rem 1rem' },
+    md: { fontSize: '0.9rem', padding: '0.85rem 1.35rem' },
+    lg: { fontSize: '1rem', padding: '1rem 1.6rem' },
+  }[size] || {}
+
+  const variantClass = {
+    primary: 'btn-primary',
+    secondary: 'btn-secondary',
+    danger: 'btn-danger',
+  }[variant] || 'btn-primary'
 
   return (
-    <SpecularButton
+    <button
       type={type}
-      size={size}
+      className={[variantClass, className].filter(Boolean).join(' ')}
+      style={{
+        ...sizeStyle,
+        display: block ? 'flex' : undefined,
+        width: block ? '100%' : undefined,
+        alignItems: block ? 'center' : undefined,
+        justifyContent: block ? 'center' : undefined,
+        ...style,
+      }}
       disabled={disabled}
       onClick={onClick}
-      className={className}
-      style={style}
-      block={block}
-      autoAnimate={autoAnimate ?? preset.autoAnimate}
-      tint={preset.tint}
-      tintOpacity={preset.tintOpacity}
-      blur={preset.blur}
-      textColor={preset.textColor}
-      lineColor={preset.lineColor}
-      baseColor={preset.baseColor}
-      intensity={preset.intensity}
-      radius={preset.radius}
       {...rest}
     >
       {children}
-    </SpecularButton>
+    </button>
   )
 }
