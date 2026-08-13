@@ -35,6 +35,7 @@ html, body {
 
 #root {
   height: 100vh;
+  width: 100%;
   display: flex;
   background: transparent;
 }

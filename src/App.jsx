@@ -13,6 +13,7 @@ import { Creation } from './pages/Creation'
 import { isAppBootstrapped, persistUiState, autoSave } from './services/saveService'
 import { storage, KEYS } from './services/storage'
 import { DarkVeilLayer } from './components/react-bits/DarkVeilLayer'
+import ClickSpark from './components/react-bits/ClickSpark'
 
 const PAGES = {
   campanha: Campanha,
@@ -202,9 +203,9 @@ export default function App() {
   )
 
   return (
-    <>
+    <ClickSpark sparkColor="#c4b5fd" sparkCount={9} sparkRadius={18} sparkSize={11} duration={420}>
       <DarkVeilLayer />
       {shell}
-    </>
+    </ClickSpark>
   )
 }
