@@ -5,7 +5,7 @@ import { NPCs } from './NPCs'
 import { Bosses } from './Bosses'
 import { Organizations } from './Organizations'
 import { useCampaignStore } from '../store/useCampaignStore'
-import { CreationChoiceCard } from '../components/creation/CreationChoiceCard'
+import { CreationChoiceGrid } from '../components/creation/CreationChoiceCard'
 
 const CREATION_TYPES = [
   {
@@ -138,16 +138,12 @@ export function ManagementCreationHub({
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.75rem' }}>
-          {CREATION_TYPES.map(type => (
-            <CreationChoiceCard
-              key={type.id}
-              type={type}
-              disabled={!activeCampaignId}
-              onClick={handleSelect}
-            />
-          ))}
-        </div>
+        <CreationChoiceGrid
+          types={CREATION_TYPES}
+          disabled={!activeCampaignId}
+          onClick={handleSelect}
+          columns={2}
+        />
       </div>
     </div>
   )

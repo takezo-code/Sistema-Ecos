@@ -3,7 +3,7 @@ import {
   ArrowLeft, Sword, Skull, Building2, ShieldAlert, Sparkles,
 } from 'lucide-react'
 import { PageHeader } from '../components/ui/PageHeader'
-import { CreationChoiceCard } from '../components/creation/CreationChoiceCard'
+import { CreationChoiceGrid } from '../components/creation/CreationChoiceCard'
 import { Characters } from './Characters'
 import { NPCs } from './NPCs'
 import { Bosses } from './Bosses'
@@ -90,16 +90,12 @@ function BackBar({ onBack, label = 'Voltar' }) {
 
 function ChoiceGrid({ types, disabled, onClick }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.75rem' }}>
-      {types.map(type => (
-        <CreationChoiceCard
-          key={type.id}
-          type={type}
-          disabled={disabled?.(type) ?? false}
-          onClick={onClick}
-        />
-      ))}
-    </div>
+    <CreationChoiceGrid
+      types={types}
+      disabled={disabled}
+      onClick={onClick}
+      columns={2}
+    />
   )
 }
 
