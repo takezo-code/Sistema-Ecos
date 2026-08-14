@@ -1,9 +1,96 @@
 import React from 'react'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, Sparkles, Timer, Zap } from 'lucide-react'
 import { ClassSkillBook } from '../skills/ClassSkillBook'
 import { getSkillDisplay } from '../../services/skillService'
 import { MAX_CLASS_SKILL_LEVEL } from '../../constants/progression'
 import { getCharacterClass } from '../../constants/classes'
+import SpotlightCard from '../react-bits/SpotlightCard'
+import GlassSurface from '../react-bits/GlassSurface'
+import { FloatingTooltip } from '../ui/FloatingTooltip'
+
+function Chip({ icon: Icon, color = '#8a8a8a', children }) {
+  return (
+    <span style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 4,
+      fontSize: '0.58rem',
+      fontFamily: 'monospace',
+      letterSpacing: '0.04em',
+      color,
+      background: `${color}12`,
+      border: `1px solid ${color}30`,
+      borderRadius: 999,
+      padding: '0.16rem 0.45rem',
+      whiteSpace: 'nowrap',
+    }}>
+      {Icon && <Icon size={10} />}
+      {children}
+    </span>
+  )
+}
+
+function IconAction({ label, color, onClick, children }) {
+  return (
+    <FloatingTooltip.Trigger content={label}>
+      <button
+        type="button"
+        onClick={onClick}
+        style={{
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 8,
+          color: '#6a6a6a',
+          cursor: 'pointer',
+          padding: '5px',
+          display: 'flex',
+          transition: 'color 0.15s, border-color 0.15s, background 0.15s',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.color = color
+          e.currentTarget.style.borderColor = `${color}55`
+          e.currentTarget.style.background = `${color}12`
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.color = '#6a6a6a'
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+          e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+        }}
+      >
+        {children}
+      </button>
+    </FloatingTooltip.Trigger>
+  )
+}
+
+function TextBlock({ label, color, children }) {
+  return (
+    <GlassSurface borderRadius={10} padding="0.6rem 0.7rem">
+      <div style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        fontSize: '0.52rem',
+        color,
+        fontFamily: 'monospace',
+        letterSpacing: '0.1em',
+        marginBottom: 6,
+      }}>
+        <span style={{
+          width: 4,
+          height: 4,
+          borderRadius: 999,
+          background: color,
+          boxShadow: `0 0 7px ${color}`,
+        }} />
+        {label}
+      </div>
+      <div style={{ fontSize: '0.75rem', color: '#c0c0c0', lineHeight: 1.55 }}>
+        {children}
+      </div>
+    </GlassSurface>
+  )
+}
 
 /**
  * Skills de Eco do personagem — livro de classe (investir Eco) ou lista legada/NPC/boss.
@@ -38,101 +125,152 @@ export function EcoSkillsSection({
 
   // NPC / boss / sem classe: lista simples
   return (
-    <div>
-      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>
-        HABILIDADES · {skills.length}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '0.75rem',
+        flexWrap: 'wrap',
+      }}>
+        <span style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          fontSize: '0.62rem',
+          color: '#888',
+          fontFamily: 'monospace',
+          letterSpacing: '0.1em',
+        }}>
+          <Sparkles size={11} style={{ color: '#a855f7' }} />
+          Habilidades
+        </span>
+        {skills.length > 0 && (
+          <Chip color="#a855f7">{skills.length}</Chip>
+        )}
       </div>
+
       {skills.length === 0 ? (
         <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '0.5rem',
+          padding: '1.75rem 1.25rem',
+          borderRadius: 12,
+          border: '1px solid rgba(255,255,255,0.06)',
+          background: 'rgba(255,255,255,0.018)',
           textAlign: 'center',
-          padding: '1.5rem',
-          border: '1px dashed #1a1a1a',
-          borderRadius: '4px',
-          color: '#333',
-          fontSize: '0.775rem',
         }}>
-          Nenhuma habilidade.
+          <Sparkles size={20} style={{ color: '#555' }} />
+          <div style={{ fontSize: '0.8rem', color: '#aaa', fontWeight: 600 }}>
+            Nenhuma habilidade
+          </div>
           {inlineOwned && (
-            <div style={{ marginTop: '0.5rem', color: '#555' }}>Use &quot;Criar skill&quot; acima.</div>
+            <div style={{ fontSize: '0.7rem', color: '#666' }}>
+              Use <span style={{ color: '#999' }}>Criar skill</span> acima.
+            </div>
           )}
           {!manualSkillPick && !classMeta && (
-            <div style={{ marginTop: '0.5rem', color: '#555' }}>Defina a classe para abrir o livro de skills.</div>
+            <div style={{ fontSize: '0.7rem', color: '#666' }}>
+              Defina a classe para abrir o livro de skills.
+            </div>
           )}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {skills.map(skill => {
-            const display = getSkillDisplay(skill, rupture, mentalState, ecoOverload)
-            const atMaxTier = skill.tier >= MAX_CLASS_SKILL_LEVEL
-            return (
-              <div
-                key={skill.id}
-                style={{
-                  background: '#0d0d0d',
-                  border: '1px solid rgba(168,85,247,0.12)',
-                  borderRadius: '4px',
-                  padding: '0.875rem 1rem',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#e5e5e5' }}>{skill.name}</div>
-                    <div style={{ fontSize: '0.6rem', color: '#a855f7', fontFamily: 'monospace', marginTop: '2px' }}>
-                      <span style={{ color: display.typeMeta?.color }}>{display.typeMeta?.label?.toUpperCase()} · </span>
-                      {inlineOwned
-                        ? `CD ${skill.cooldownTurns ?? 0} · Usos ${skill.overloadCost ?? 1}`
-                        : `NÍVEL ${skill.tier}${atMaxTier ? ' (máx)' : ''} · PODER ${display.effectivePower}`}
-                      {!inlineOwned && display.overloadAttrPenalty > 0 && (
-                        <span style={{ color: '#dc2626' }}> (−{display.overloadAttrPenalty} INT/PER/SAB/CAR)</span>
-                      )}
+        <FloatingTooltip.Provider>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            {skills.map(skill => {
+              const display = getSkillDisplay(skill, rupture, mentalState, ecoOverload)
+              const atMaxTier = skill.tier >= MAX_CLASS_SKILL_LEVEL
+              const typeColor = display.typeMeta?.color || '#a855f7'
+              return (
+                <SpotlightCard
+                  key={skill.id}
+                  spotlightColor={`${typeColor}22`}
+                  style={{
+                    padding: '0.85rem 0.95rem',
+                    borderLeft: `3px solid ${typeColor}`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.6rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.6rem' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{
+                        fontSize: '0.9rem',
+                        fontWeight: 700,
+                        color: '#f2f2f2',
+                        letterSpacing: '-0.02em',
+                      }}>
+                        {skill.name}
+                      </div>
+                      <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+                        <Chip color={typeColor}>{display.typeMeta?.label}</Chip>
+                        {inlineOwned ? (
+                          <>
+                            <Chip icon={Timer}>CD {skill.cooldownTurns ?? 0}</Chip>
+                            <Chip icon={Zap} color="#67e8f9">{skill.overloadCost ?? 1} uso(s)</Chip>
+                          </>
+                        ) : (
+                          <>
+                            <Chip color="#67e8f9">
+                              Nível {skill.tier}{atMaxTier ? ' · máx' : ''}
+                            </Chip>
+                            <Chip>Poder {display.effectivePower}</Chip>
+                            {display.overloadAttrPenalty > 0 && (
+                              <Chip color="#f87171">−{display.overloadAttrPenalty} mentais</Chip>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
+
+                    {inlineOwned && (onEditSkill || onRemoveSkill) && (
+                      <div style={{ display: 'flex', gap: '0.3rem', flexShrink: 0 }}>
+                        {onEditSkill && (
+                          <IconAction label="Editar skill" color="#67e8f9" onClick={() => onEditSkill(skill)}>
+                            <Pencil size={13} />
+                          </IconAction>
+                        )}
+                        {onRemoveSkill && (
+                          <IconAction label="Remover skill" color="#f87171" onClick={() => onRemoveSkill(skill.id)}>
+                            <Trash2 size={13} />
+                          </IconAction>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {inlineOwned && (onEditSkill || onRemoveSkill) && (
-                    <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
-                      {onEditSkill && (
-                        <button
-                          type="button"
-                          className="btn-ghost"
-                          onClick={() => onEditSkill(skill)}
-                          title="Editar"
-                          style={{ padding: '0.25rem' }}
-                        >
-                          <Pencil size={13} />
-                        </button>
-                      )}
-                      {onRemoveSkill && (
-                        <button
-                          type="button"
-                          className="btn-ghost"
-                          onClick={() => onRemoveSkill(skill.id)}
-                          title="Remover"
-                          style={{ padding: '0.25rem', color: '#dc2626' }}
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      )}
-                    </div>
+
+                  {skill.description && (
+                    <p style={{
+                      fontSize: '0.76rem',
+                      color: '#8a8a8a',
+                      lineHeight: 1.55,
+                      margin: 0,
+                      fontStyle: 'italic',
+                    }}>
+                      {skill.description}
+                    </p>
                   )}
-                </div>
-                {skill.description && (
-                  <p style={{ fontSize: '0.75rem', color: '#666', lineHeight: 1.6, marginBottom: '0.5rem' }}>{skill.description}</p>
-                )}
-                {(skill.effect || skill.mechanicalEffect) && (
-                  <div style={{ background: '#111', border: '1px solid #1a1a1a', borderRadius: '3px', padding: '0.5rem 0.625rem', marginBottom: '0.35rem' }}>
-                    <div style={{ fontSize: '0.55rem', color: '#06b6d4', fontFamily: 'monospace', marginBottom: '2px' }}>EFEITO</div>
-                    <div style={{ fontSize: '0.7rem', color: '#888', lineHeight: 1.5 }}>{skill.effect || skill.mechanicalEffect}</div>
-                  </div>
-                )}
-                {(skill.sideEffect || skill.narrativeConsequence) && (
-                  <div style={{ background: 'rgba(220,38,38,0.04)', border: '1px solid rgba(220,38,38,0.12)', borderRadius: '3px', padding: '0.5rem 0.625rem' }}>
-                    <div style={{ fontSize: '0.55rem', color: '#dc2626', fontFamily: 'monospace', marginBottom: '2px' }}>EFEITO COLATERAL</div>
-                    <div style={{ fontSize: '0.7rem', color: '#666', lineHeight: 1.5 }}>{skill.sideEffect || skill.narrativeConsequence}</div>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
+
+                  {(skill.effect || skill.mechanicalEffect) && (
+                    <TextBlock label="EFEITO" color="#22d3ee">
+                      {skill.effect || skill.mechanicalEffect}
+                    </TextBlock>
+                  )}
+
+                  {(skill.sideEffect || skill.narrativeConsequence) && (
+                    <TextBlock label="EFEITO COLATERAL" color="#f87171">
+                      {skill.sideEffect || skill.narrativeConsequence}
+                    </TextBlock>
+                  )}
+                </SpotlightCard>
+              )
+            })}
+          </div>
+        </FloatingTooltip.Provider>
       )}
     </div>
   )
