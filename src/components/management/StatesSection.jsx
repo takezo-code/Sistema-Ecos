@@ -1,12 +1,36 @@
 import React from 'react'
 import { Heart, Brain } from 'lucide-react'
-import { PHYSICAL_STATES, MENTAL_STATES } from '../../constants/states'
+import { PHYSICAL_STATES, MENTAL_STATES, getMentalStateOption } from '../../constants/states'
 import { StatePicker } from './StatePicker'
-import { getPhysicalPenaltyLines } from '../../services/stateModifiers'
+import { getPhysicalPenaltyLines, getMentalAttrPenaltyLines } from '../../services/stateModifiers'
 import { listActiveMentalStatusDetails } from '../../services/mentalStatusService'
+
+function PenaltyBox({ lines, color = '#ea580c' }) {
+  if (!lines?.length) return null
+  return (
+    <div style={{
+      padding: '0.45rem 0.625rem',
+      background: '#141418',
+      border: '1px solid rgba(255,255,255,0.1)',
+      borderRadius: '3px',
+      fontSize: '0.6rem',
+      fontFamily: 'monospace',
+      color,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.2rem',
+    }}>
+      {lines.map(line => (
+        <span key={line}>{line}</span>
+      ))}
+    </div>
+  )
+}
 
 export function StatesSection({ entity, physicalState, mentalState, onPhysicalChange, onMentalChange }) {
   const physicalPenaltyLines = getPhysicalPenaltyLines(physicalState)
+  const mentalOpt = getMentalStateOption(mentalState)
+  const mentalPenaltyLines = getMentalAttrPenaltyLines(mentalOpt.mentalAttrPenalty ?? 0)
   const activeStatuses = listActiveMentalStatusDetails(entity?.activeMentalStatuses)
 
   return (
@@ -20,24 +44,7 @@ export function StatesSection({ entity, physicalState, mentalState, onPhysicalCh
         onChange={onPhysicalChange}
       />
 
-      {physicalPenaltyLines.length > 0 && (
-        <div style={{
-          padding: '0.45rem 0.625rem',
-          background: '#141418',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: '3px',
-          fontSize: '0.6rem',
-          fontFamily: 'monospace',
-          color: '#ea580c',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.2rem',
-        }}>
-          {physicalPenaltyLines.map(line => (
-            <span key={line}>{line}</span>
-          ))}
-        </div>
-      )}
+      <PenaltyBox lines={physicalPenaltyLines} color="#ea580c" />
 
       <StatePicker
         title="ESTADO MENTAL"
@@ -47,6 +54,8 @@ export function StatesSection({ entity, physicalState, mentalState, onPhysicalCh
         value={mentalState}
         onChange={onMentalChange}
       />
+
+      <PenaltyBox lines={mentalPenaltyLines} color={mentalOpt.color || '#a855f7'} />
 
       {activeStatuses.length > 0 && (
         <div style={{ fontSize: '0.65rem', color: '#888' }}>

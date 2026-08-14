@@ -38,9 +38,6 @@ function StarterPassivesRoller({ category, item, color, onChange }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-      <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#444', letterSpacing: '0.06em' }}>
-        ATRIBUTOS DE ITEM
-      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
         <Button
           type="button"
@@ -123,9 +120,6 @@ export function StarterGearSection({
 
   return (
     <>
-      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-        EQUIPAMENTO INICIAL
-      </div>
       {subtitle && (
         <p style={{ fontSize: '0.72rem', color: '#666', margin: '0 0 0.75rem', lineHeight: 1.45 }}>
           {subtitle}

@@ -50,22 +50,16 @@ html, body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Scroll sem barra visível — rolagem pelo mouse/trackpad. */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: #111111;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #2a2a2a;
-  border-radius: 2px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #3a3a3a;
+  width: 0;
+  height: 0;
+  background: transparent;
 }
 
 .text-accent { color: #2563eb; }

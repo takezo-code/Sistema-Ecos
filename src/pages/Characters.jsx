@@ -6,7 +6,7 @@ import { filterByActiveCampaign, withActiveCampaign } from '../utils/campaignSco
 import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Modal } from '../components/ui/Modal'
-import { Field, Input, Textarea } from '../components/ui/Field'
+import { Field, Input } from '../components/ui/Field'
 import { ImageUpload } from '../components/ui/ImageUpload'
 import { EntityThumb } from '../components/ui/EntityThumb'
 import { EmptyState } from '../components/ui/EmptyState'
@@ -59,14 +59,6 @@ const EMPTY_FORM = {
   skills: [],
   starterWeapon: { name: '', kind: '', description: '', image: '', passives: [] },
   starterArmor: { name: '', type: getForgeableArmorTypes()[0].id, image: '', passives: [] },
-}
-
-const narrativeSectionLabel = {
-  fontSize: '0.65rem',
-  color: '#444',
-  fontFamily: 'monospace',
-  letterSpacing: '0.1em',
-  marginBottom: '0.25rem',
 }
 
 function AttributeInput({ attr, value, onChange, canIncrease, classBonus = 0, isClassAttr = false }) {
@@ -237,14 +229,6 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
     onSave(payload)
   }
 
-  const stepTitle = {
-    fontSize: '0.65rem',
-    color: '#666',
-    fontFamily: 'monospace',
-    letterSpacing: '0.12em',
-    marginBottom: '0.75rem',
-  }
-
   const profileBlock = (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
       <Field label="Nome" required>
@@ -255,27 +239,6 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
         onChange={v => set('image', v)}
         label="Foto do personagem"
       />
-      <div>
-        <div style={narrativeSectionLabel}>PERFIL NARRATIVO</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <Field label="História">
-            <Textarea
-              value={form.history}
-              onChange={e => set('history', e.target.value)}
-              placeholder="Passado, origem, eventos relevantes..."
-              rows={3}
-            />
-          </Field>
-          <Field label="Motivações">
-            <Textarea
-              value={form.motivation}
-              onChange={e => set('motivation', e.target.value)}
-              placeholder="Objetivos, medos, o que move este personagem..."
-              rows={2}
-            />
-          </Field>
-        </div>
-      </div>
     </div>
   )
 
@@ -411,19 +374,15 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
         <>
           <Stepper step={step} onStepChange={setStep} hideDefaultNav>
             <Step>
-              <div style={stepTitle}>1 · PERFIL</div>
               {profileBlock}
             </Step>
             <Step>
-              <div style={stepTitle}>2 · CLASSE</div>
               {classBlock}
             </Step>
             <Step>
-              <div style={stepTitle}>3 · ATRIBUTOS</div>
               {attributesBlock}
             </Step>
             <Step>
-              <div style={stepTitle}>4 · EQUIPAMENTO & ECO</div>
               {equipmentBlock}
               {errorBlock}
             </Step>

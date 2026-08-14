@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   AnimatePresence,
@@ -42,6 +42,32 @@ const VARIANT_STYLES = {
   },
 }
 
+const EDGE_PAD = 12
+const CURSOR_GAP = 16
+const EST_WIDTH = 120
+const EST_HEIGHT = 44
+
+function getZoom() {
+  if (typeof window === 'undefined') return 1
+  const computedZoom = window.getComputedStyle(document.documentElement).zoom
+  return computedZoom ? parseFloat(computedZoom) : 1
+}
+
+function computePlacement(clientX, clientY, size) {
+  const zoom = getZoom()
+  const px = clientX / zoom
+  const py = clientY / zoom
+  const vw = window.innerWidth / zoom
+  const vh = window.innerHeight / zoom
+  const w = size?.w || EST_WIDTH
+  const h = size?.h || EST_HEIGHT
+
+  return {
+    flipX: px + CURSOR_GAP + w > vw - EDGE_PAD,
+    flipY: py + CURSOR_GAP + h > vh - EDGE_PAD,
+  }
+}
+
 function FloatingTooltipProvider({
   children,
   className = '',
@@ -51,6 +77,8 @@ function FloatingTooltipProvider({
 }) {
   const x = useMotionValue(0)
   const y = useMotionValue(0)
+  const pointerRef = useRef({ x: 0, y: 0 })
+  const sizeRef = useRef({ w: EST_WIDTH, h: EST_HEIGHT })
 
   const springConfig = { damping: 45, stiffness: 750 }
   const smoothX = useSpring(x, springConfig)
@@ -70,6 +98,7 @@ function FloatingTooltipProvider({
   const [contentClassName, setContentClassName] = useState('')
   const [descriptionClassName, setDescriptionClassName] = useState('')
   const [mounted, setMounted] = useState(false)
+  const [placement, setPlacement] = useState({ flipX: false, flipY: false })
 
   useEffect(() => {
     setMounted(true)
@@ -78,20 +107,25 @@ function FloatingTooltipProvider({
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const getZoom = () => {
-      const computedZoom = window.getComputedStyle(document.documentElement).zoom
-      return computedZoom ? parseFloat(computedZoom) : 1
-    }
-
     const handleMouseMove = (e) => {
       const zoom = getZoom()
+      pointerRef.current = { x: e.clientX, y: e.clientY }
       x.set(e.clientX / zoom)
       y.set(e.clientY / zoom)
+      if (isActive) {
+        setPlacement(computePlacement(e.clientX, e.clientY, sizeRef.current))
+      }
     }
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true })
     return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [x, y])
+  }, [x, y, isActive])
+
+  const activate = () => {
+    const { x: cx, y: cy } = pointerRef.current
+    setPlacement(computePlacement(cx, cy, sizeRef.current))
+    setIsActive(true)
+  }
 
   const handleSetContent = (
     newContent,
@@ -109,7 +143,9 @@ function FloatingTooltipProvider({
   const variantStyle = VARIANT_STYLES[variant] || VARIANT_STYLES.default
 
   return (
-    <TooltipContext.Provider value={{ setContent: handleSetContent, setIsActive }}>
+    <TooltipContext.Provider
+      value={{ setContent: handleSetContent, setIsActive, activate }}
+    >
       {children}
       {mounted &&
         createPortal(
@@ -117,14 +153,29 @@ function FloatingTooltipProvider({
             {isActive && content && (
               <motion.div
                 className="floating-tooltip-root"
+                ref={(node) => {
+                  if (!node) return
+                  const rect = node.getBoundingClientRect()
+                  const next = { w: rect.width, h: rect.height }
+                  if (
+                    Math.abs(next.w - sizeRef.current.w) > 1 ||
+                    Math.abs(next.h - sizeRef.current.h) > 1
+                  ) {
+                    sizeRef.current = next
+                    const { x: cx, y: cy } = pointerRef.current
+                    setPlacement(computePlacement(cx, cy, next))
+                  }
+                }}
                 style={{
                   position: 'fixed',
                   top: smoothY,
                   left: smoothX,
+                  x: placement.flipX ? '-100%' : '0%',
+                  y: placement.flipY ? '-100%' : '0%',
+                  marginLeft: placement.flipX ? -CURSOR_GAP : CURSOR_GAP,
+                  marginTop: placement.flipY ? -CURSOR_GAP : CURSOR_GAP,
                   pointerEvents: 'none',
                   zIndex: 9999,
-                  marginLeft: 16,
-                  marginTop: 16,
                 }}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -202,7 +253,7 @@ function FloatingTooltipTrigger({
     throw new Error('FloatingTooltip.Trigger must be used within FloatingTooltip.Provider')
   }
 
-  const { setContent, setIsActive } = context
+  const { setContent, setIsActive, activate } = context
 
   useEffect(() => {
     return () => {
@@ -216,7 +267,7 @@ function FloatingTooltipTrigger({
       style={{ display: 'inline-flex', ...style }}
       onMouseEnter={() => {
         setContent(content, description, contentClassName, descriptionClassName)
-        setIsActive(true)
+        activate()
       }}
       onMouseLeave={() => setIsActive(false)}
       onClick={() => setIsActive(false)}

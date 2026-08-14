@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Sword, Settings2, Trash2, Sparkles, Package } from 'lucide-react'
+import { Sword, Settings2, Package } from 'lucide-react'
 import { EntityThumb } from '../components/ui/EntityThumb'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useCampaignStore } from '../store/useCampaignStore'
@@ -10,15 +10,12 @@ import { useCharacterManagementPanel } from '../hooks/useCharacterManagementPane
 import { ATTRIBUTES } from '../constants/attributes'
 import { getCharacterClass } from '../constants/classes'
 import { filterByActiveCampaign } from '../utils/campaignScope'
-import { useTrashStore } from '../store/useTrashStore'
 import { getEntityEffectiveAttributes } from '../services/stateModifiers'
-import { Button } from '../components/ui/Button'
 import SpotlightCard from '../components/react-bits/SpotlightCard'
-import GlowingBadge from '../components/ui/GlowingBadge'
 import { FloatingTooltip } from '../components/ui/FloatingTooltip'
 import GlassSurface from '../components/react-bits/GlassSurface'
 
-function CharacterManageCard({ character, onManage, onDelete }) {
+function CharacterManageCard({ character, onManage }) {
   const { effective: attrs, base } = getEntityEffectiveAttributes(character)
   const charClass = getCharacterClass(character)
   const inventoryCount = character.inventory?.length || 0
@@ -53,34 +50,8 @@ function CharacterManageCard({ character, onManage, onDelete }) {
               fontWeight: 700,
               color: '#f5f5f5',
               letterSpacing: '-0.02em',
-              marginBottom: '0.45rem',
             }}>
               {character.name}
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
-              <GlowingBadge variant="default" dot>
-                NVL {character.level || 1}
-              </GlowingBadge>
-              <GlowingBadge variant="cyan" pulse dot>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  <Sparkles size={10} />
-                  {character.ecoPoints ?? 0} Ecos
-                </span>
-              </GlowingBadge>
-              {charClass && (
-                <span style={{
-                  fontSize: '0.68rem',
-                  fontWeight: 600,
-                  color: charClass.color,
-                  background: `${charClass.color}18`,
-                  border: `1px solid ${charClass.color}40`,
-                  borderRadius: 999,
-                  padding: '0.22rem 0.55rem',
-                  letterSpacing: '0.02em',
-                }}>
-                  {charClass.label}
-                </span>
-              )}
             </div>
           </div>
         </div>
@@ -114,32 +85,6 @@ function CharacterManageCard({ character, onManage, onDelete }) {
                 }}
               >
                 <Settings2 size={14} />
-              </button>
-            </FloatingTooltip.Trigger>
-            <FloatingTooltip.Trigger content="Excluir">
-              <button
-                type="button"
-                onClick={onDelete}
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 8,
-                  color: '#666',
-                  cursor: 'pointer',
-                  padding: '6px',
-                  display: 'flex',
-                  transition: 'color 0.15s, border-color 0.15s',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.color = '#f87171'
-                  e.currentTarget.style.borderColor = 'rgba(220,38,38,0.35)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.color = '#666'
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
-                }}
-              >
-                <Trash2 size={14} />
               </button>
             </FloatingTooltip.Trigger>
           </div>
@@ -207,22 +152,10 @@ function CharacterManageCard({ character, onManage, onDelete }) {
 
 export function ManageCharacters({ embedded = false }) {
   const { activeCampaignId } = useCampaignStore()
-  const { characters, deleteCharacter } = useCharacterStore()
-  const refreshTrash = useTrashStore(s => s.refresh)
+  const { characters } = useCharacterStore()
   const [managingId, setManagingId] = useState(null)
-  const [deleteConfirm, setDeleteConfirm] = useState(null)
   const filtered = filterByActiveCampaign(characters, activeCampaignId)
   const { entity: current, clearPanelSession } = useCharacterManagementPanel(managingId, { adminMode: true })
-
-  const handleDelete = (character) => {
-    deleteCharacter(character.id)
-    refreshTrash()
-    if (managingId === character.id) {
-      setManagingId(null)
-      clearPanelSession()
-    }
-    setDeleteConfirm(null)
-  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
@@ -240,7 +173,6 @@ export function ManageCharacters({ embedded = false }) {
                 key={c.id}
                 character={c}
                 onManage={() => setManagingId(c.id)}
-                onDelete={() => setDeleteConfirm(c)}
               />
             ))}
           </div>
@@ -254,17 +186,6 @@ export function ManageCharacters({ embedded = false }) {
         maxWidth="720px"
       >
         {managingId && <CharacterFichaSheet characterId={managingId} adminMode />}
-      </Modal>
-
-      <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Excluir personagem" maxWidth="380px">
-        <p style={{ fontSize: '0.85rem', color: '#999', marginBottom: '1.25rem' }}>
-          Enviar o personagem <strong style={{ color: '#e5e5e5' }}>{deleteConfirm?.name}</strong> para a lixeira?
-          Será removido dos grupos da campanha. Você pode restaurá-lo em Lixeira.
-        </p>
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-          <button type="button" className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>
-          <Button type="button" variant="danger" onClick={() => handleDelete(deleteConfirm)}>Excluir</Button>
-        </div>
       </Modal>
 
     </div>

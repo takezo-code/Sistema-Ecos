@@ -88,28 +88,33 @@ export function EcoOverloadSection({
           </Button>
         )}
         {onSetOverload && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <input
               type="number"
               min={0}
               max={lim + ECO_OVERLOAD_OVERAGE_TO_TOTAL + 5}
               value={masterLevel}
               onChange={e => setMasterLevel(e.target.value)}
+              aria-label="Nível de sobrecarga (mestre)"
               style={{
-                width: '48px',
+                width: '52px',
                 background: 'rgba(0,0,0,0.35)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.12)',
                 borderRadius: '8px',
-                color: '#ccc',
-                fontSize: '0.7rem',
+                color: '#e5e5e5',
+                fontSize: '0.75rem',
                 padding: '6px 8px',
                 fontFamily: 'monospace',
               }}
             />
-            <button type="button" className="btn-ghost" style={{ fontSize: '0.65rem' }}
-              onClick={() => onSetOverload(Number(masterLevel) || 0)}>
-              Ajustar (mestre)
-            </button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="xs"
+              onClick={() => onSetOverload(Number(masterLevel) || 0)}
+            >
+              Confirmar
+            </Button>
           </div>
         )}
       </div>

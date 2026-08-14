@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import {
   Zap, Play, ChevronDown, ChevronUp, Star, Info, Sword, Shield as ShieldIcon,
-  Dices, Sparkles, StickyNote, Brain,
+  Dices, Sparkles, Brain,
 } from 'lucide-react'
 import { COMBAT_HIGHLIGHT_XP } from '../../constants/progression'
 import { DamageMarksPanel, PLAYER_MARK_TYPES } from './DamageMarksPanel'
@@ -198,7 +198,6 @@ export function CombatCharacterColumn({
   onDiceSidesChange,
 }) {
   const [skillsOpen, setSkillsOpen] = useState(false)
-  const [notesOpen, setNotesOpen] = useState(false)
   const [xpFlash, setXpFlash] = useState(false)
   const [internalDiceSides, setInternalDiceSides] = useState(20)
   const [infoOpen, setInfoOpen] = useState(false)
@@ -224,7 +223,6 @@ export function CombatCharacterColumn({
     : overloadPhase === ECO_OVERLOAD_PHASES.SHAKEN
       ? '#f97316'
       : '#a855f7'
-  const hasNotes = Boolean((character.combatNotes || '').trim())
   const vitBuffer = Math.floor(Math.max(0, Number(character.attributes?.vitalidade) || 0) / 2)
   const armorMarks = getArmorMarkBonus(character)
   const buffMarks = sumMarkBuffBonus(character)
@@ -808,37 +806,6 @@ export function CombatCharacterColumn({
                 </div>
               ))
             )}
-          </div>
-        )}
-      </section>
-
-      <section style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <AccordionHeader
-          open={notesOpen}
-          onToggle={() => setNotesOpen(v => !v)}
-          icon={StickyNote}
-          label={hasNotes ? 'NOTAS · ···' : 'NOTAS'}
-          accent={hasNotes ? '#94a3b8' : '#555'}
-        />
-        {notesOpen && (
-          <div style={{ padding: '0 0.7rem 0.55rem' }}>
-            <textarea
-              className="input-base"
-              rows={2}
-              value={character.combatNotes ?? ''}
-              onChange={e => onUpdate?.({ combatNotes: e.target.value })}
-              placeholder="Anotações…"
-              style={{
-                fontSize: '0.7rem',
-                lineHeight: 1.35,
-                resize: 'none',
-                width: '100%',
-                padding: '6px 8px',
-                borderRadius: 9,
-                background: 'rgba(255,255,255,0.03)',
-                borderColor: 'rgba(255,255,255,0.1)',
-              }}
-            />
           </div>
         )}
       </section>

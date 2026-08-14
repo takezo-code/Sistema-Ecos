@@ -6,7 +6,6 @@ import { Modal } from '../ui/Modal'
 import { SkillForm } from '../skills/SkillForm'
 import { EcoOverloadSection } from './EcoOverloadSection'
 import { EcoSkillsSection } from './EcoSkillsSection'
-import { SkillGrimoirePicker } from './SkillGrimoirePicker'
 import { getCatalogAudienceForEntity } from '../../services/skillsCatalogService'
 import { Button } from '../ui/Button'
 import SpotlightCard from '../react-bits/SpotlightCard'
@@ -17,7 +16,7 @@ export function EntitySkillsPanel({
   entity,
   onInvestSkillPoint,
   onUpgradeSkillGrade,
-  onLearnCatalogSkill,
+  onLearnCatalogSkill: _onLearnCatalogSkill,
   onAddInlineSkill,
   onUpdateInlineSkill,
   onRemoveSkill,
@@ -28,7 +27,6 @@ export function EntitySkillsPanel({
   adminMode = false,
   manualSkillPick = false,
 }) {
-  const [grimoireOpen, setGrimoireOpen] = useState(false)
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingSkill, setEditingSkill] = useState(null)
   const catalogAudience = getCatalogAudienceForEntity(entity)
@@ -36,7 +34,6 @@ export function EntitySkillsPanel({
   const inlineMode = typeof onAddInlineSkill === 'function'
   const eco = entity.ecoPoints ?? 0
   const hasEcoToSpend = eco >= ECO_UNLOCK_SKILL_COST
-  const skills = entity.skills || []
 
   const openCreate = () => {
     setEditingSkill(null)
@@ -127,32 +124,6 @@ export function EntitySkillsPanel({
           <Plus size={14} style={{ color: '#a855f7' }} />
           Criar skill
         </Button>
-      )}
-
-      {adminMode && !inlineMode && onLearnCatalogSkill && (
-        <>
-          <Button
-            type="button"
-            variant="secondary"
-            size="xs"
-            onClick={() => setGrimoireOpen(true)}
-            block
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-          >
-            <Plus size={14} style={{ color: '#a855f7' }} />
-            Adicionar skill
-          </Button>
-          <Modal open={grimoireOpen} onClose={() => setGrimoireOpen(false)} title="Grimório de skills" maxWidth="560px">
-            <SkillGrimoirePicker
-              selectedSkills={skills}
-              onAdd={instance => onLearnCatalogSkill(instance.templateId)}
-              onRemove={onRemoveSkill}
-              freePick
-              compact
-              audience={catalogAudience}
-            />
-          </Modal>
-        </>
       )}
 
       {inlineMode && (

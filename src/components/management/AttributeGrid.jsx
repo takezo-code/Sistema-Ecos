@@ -17,7 +17,6 @@ import { getAttributesForEntity } from '../../constants/entityProgression'
 import {
   calculateEffectiveAttributes,
   calculateEffectiveSocialAttributes,
-  getPhysicalPenaltyLines,
 } from '../../services/stateModifiers'
 import { getArmorDestrezaPenalty } from '../../mechanics/equipment/armorEffectsEngine'
 import { sumAttrBonus } from '../../mechanics/equipment/gearPassiveEngine'
@@ -124,7 +123,6 @@ export function AttributeGrid({
   for (const key of Object.keys(effectiveSocial)) {
     effectiveSocial[key] = (Number(effectiveSocial[key]) || 0) + sumAttrBonus(entity, key)
   }
-  const physicalPenaltyLines = getPhysicalPenaltyLines(physicalState)
 
   const handleChange = (key, newVal) => {
     if (adminMode) {
@@ -217,13 +215,9 @@ export function AttributeGrid({
               </span>
               {pending > 0 && <span style={{ color: '#d97706' }}>{pending} pend.</span>}
             </>
-          ) : (
-            <>
-              {physicalPenaltyLines.map(line => (
-                <span key={line} style={{ color: '#ea580c' }}>{line}</span>
-              ))}
-            </>
-          )}
+          ) : pending > 0 ? (
+            <span style={{ color: '#d97706' }}>{pending} pend.</span>
+          ) : null}
         </div>
       </div>
       {adminMode && validation && !validation.valid && (

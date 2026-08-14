@@ -165,7 +165,7 @@ export function ClassSkillBook({
         flexWrap: 'wrap',
       }}>
         <div style={{ fontSize: '0.65rem', color: '#888', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-          LIVRO DE SKILLS · <span style={{ color: classColor }}>{classMeta.label.toUpperCase()}</span>
+          Habilidades
         </div>
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
           <GlowingBadge variant={eco > 0 ? 'cyan' : 'gray'} pulse={eco > 0} dot>

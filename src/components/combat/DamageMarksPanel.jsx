@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { HeartPulse, Trash2, Plus, Crosshair } from 'lucide-react'
+import React from 'react'
+import { HeartPulse, Plus, Crosshair } from 'lucide-react'
 import {
   DAMAGE_MARK_META,
   DAMAGE_MARK_TYPES,
@@ -38,15 +38,6 @@ function LifeCountBlock({ current, max, stateOpt, compact = false }) {
           }}>
             {stateOpt?.label ?? 'Saudável'}
           </span>
-          {(stateOpt?.attrPenalty ?? 0) > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {(stateOpt.noteLines || []).map(line => (
-                <span key={line} style={{ fontSize: '0.45rem', color, fontFamily: 'monospace', opacity: 0.85 }}>
-                  {line}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -81,13 +72,10 @@ export function DamageMarksPanel({
   maxMarks = 0,
   onApplyMarks,
   onHealMarks,
-  onClearMarks,
   onNotice,
   markTypes = null,
   compact = false,
 }) {
-  const [confirmClear, setConfirmClear] = useState(false)
-
   const physicalState = character.physicalState ?? 'bem'
   const stateOpt = getPhysicalStateOption(physicalState)
   const life = getRemainingLife(
@@ -101,12 +89,6 @@ export function DamageMarksPanel({
     if (result?.narratives?.length && onNotice) {
       onNotice(result.narratives.join(' · '), result.stateChanged ? 'warning' : 'info')
     }
-  }
-
-  const handleClear = () => {
-    if (!confirmClear) { setConfirmClear(true); setTimeout(() => setConfirmClear(false), 2500); return }
-    onClearMarks?.()
-    setConfirmClear(false)
   }
 
   if (compact) {
@@ -171,38 +153,6 @@ export function DamageMarksPanel({
             }}
           >
             <Plus size={12} strokeWidth={2.4} />
-          </button>
-          <button
-            type="button"
-            onClick={handleClear}
-            disabled={marks === 0}
-            title={confirmClear ? 'Confirmar restaurar vida' : 'Restaurar vida total'}
-            style={{
-              width: 30,
-              flexShrink: 0,
-              padding: 0,
-              background: confirmClear
-                ? 'linear-gradient(145deg, rgba(220,38,38,0.28), rgba(220,38,38,0.1))'
-                : marks === 0
-                  ? 'rgba(255,255,255,0.02)'
-                  : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${
-                marks === 0
-                  ? 'rgba(255,255,255,0.06)'
-                  : confirmClear
-                    ? 'rgba(239,68,68,0.55)'
-                    : 'rgba(255,255,255,0.1)'
-              }`,
-              borderRadius: 9,
-              color: marks === 0 ? '#2f2f2f' : confirmClear ? '#f87171' : '#777',
-              cursor: marks === 0 ? 'default' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: confirmClear ? '0 0 12px rgba(239,68,68,0.25)' : 'none',
-            }}
-          >
-            <Trash2 size={11} strokeWidth={2.3} />
           </button>
         </div>
       </div>
@@ -271,30 +221,6 @@ export function DamageMarksPanel({
           }}
         >
           <Plus size={9} /> +1
-        </button>
-        <button
-          type="button"
-          onClick={handleClear}
-          disabled={marks === 0}
-          title={confirmClear ? 'Clique novamente para confirmar' : 'Restaurar vida total'}
-          style={{
-            flex: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '3px',
-            padding: '3px',
-            background: confirmClear ? 'rgba(220,38,38,0.12)' : 'transparent',
-            border: `1px solid ${confirmClear ? 'rgba(220,38,38,0.4)' : '#2a2a2a'}`,
-            borderRadius: '4px',
-            color: marks === 0 ? '#2a2a2a' : confirmClear ? '#ef4444' : '#666',
-            cursor: marks === 0 ? 'default' : 'pointer',
-            fontSize: '0.5rem',
-            fontFamily: 'monospace',
-          }}
-        >
-          <Trash2 size={9} />
-          {confirmClear ? 'Confirmar?' : 'Restaurar'}
         </button>
       </div>
     </div>

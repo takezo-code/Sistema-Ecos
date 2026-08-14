@@ -46,7 +46,7 @@ export const PHYSICAL_STATES = [
     attrPenalty: 1,
     color: '#eab308',
     glow: 'rgba(234,179,8,0.15)',
-  }, buildPenaltyLines(1, PHYSICAL_PENALTY_LABELS)),
+  }, []),
   withNote({
     value: 'grave',
     label: 'Grave',
@@ -55,7 +55,7 @@ export const PHYSICAL_STATES = [
     attrPenalty: 2,
     color: '#ea580c',
     glow: 'rgba(234,88,12,0.18)',
-  }, buildPenaltyLines(2, PHYSICAL_PENALTY_LABELS)),
+  }, []),
   withNote({
     value: 'incapacitado',
     label: 'Incapacitado',
@@ -64,7 +64,7 @@ export const PHYSICAL_STATES = [
     attrPenalty: 3,
     color: '#991b1b',
     glow: 'rgba(153,27,27,0.25)',
-  }, buildPenaltyLines(3, PHYSICAL_PENALTY_LABELS, ['Combate limitado'])),
+  }, []),
 ]
 
 /**

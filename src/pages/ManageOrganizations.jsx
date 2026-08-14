@@ -10,7 +10,6 @@ import { ImageUpload } from '../components/ui/ImageUpload'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Button } from '../components/ui/Button'
 import SpotlightCard from '../components/react-bits/SpotlightCard'
-import GlowingBadge from '../components/ui/GlowingBadge'
 import { FloatingTooltip } from '../components/ui/FloatingTooltip'
 import GlassSurface from '../components/react-bits/GlassSurface'
 
@@ -126,29 +125,8 @@ function OrgCard({ org, onEdit, onDelete }) {
               fontWeight: 700,
               color: '#f5f5f5',
               letterSpacing: '-0.02em',
-              marginBottom: '0.45rem',
             }}>
               {org.name}
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
-              <GlowingBadge variant="warning" pulse={false} dot>
-                Organização
-              </GlowingBadge>
-              {org.ideology && (
-                <GlowingBadge variant="cyan" pulse={false} dot>
-                  Ideologia
-                </GlowingBadge>
-              )}
-              {org.allies && (
-                <GlowingBadge variant="success" pulse={false} dot>
-                  Aliados
-                </GlowingBadge>
-              )}
-              {org.enemies && (
-                <GlowingBadge variant="error" pulse={false} dot>
-                  Inimigos
-                </GlowingBadge>
-              )}
             </div>
           </div>
         </div>

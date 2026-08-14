@@ -15,13 +15,14 @@ import { useCharacterManagementPanel } from '../hooks/useCharacterManagementPane
 import { useCharacterPanelStore } from '../store/useCharacterPanelStore'
 import { ATTRIBUTES } from '../constants/attributes'
 import { getPhysicalStateOption, getMentalStateOption } from '../constants/states'
-import { formatOverloadDisplay } from '../constants/ecoOverload'
+import { getRupturaPool } from '../constants/ecoOverload'
+import { getCharacterClass } from '../constants/classes'
+import { getRemainingLife } from '../mechanics/combat/damageMarksEngine'
 import { filterByActiveCampaign } from '../utils/campaignScope'
 import { useSaveStore } from '../store/useSaveStore'
 import { getEntityEffectiveAttributes } from '../services/stateModifiers'
 import { Button } from '../components/ui/Button'
 import SpotlightCard from '../components/react-bits/SpotlightCard'
-import GlowingBadge from '../components/ui/GlowingBadge'
 import { FloatingTooltip } from '../components/ui/FloatingTooltip'
 
 function GroupForm({ initial, onSave, onCancel }) {
@@ -47,123 +48,228 @@ function GroupForm({ initial, onSave, onCancel }) {
   )
 }
 
+function StateChip({ label, color }) {
+  return (
+    <span style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 5,
+      fontSize: '0.6rem',
+      fontWeight: 600,
+      letterSpacing: '0.01em',
+      color,
+      background: `${color}14`,
+      border: `1px solid ${color}38`,
+      borderRadius: 999,
+      padding: '0.16rem 0.5rem',
+      whiteSpace: 'nowrap',
+    }}>
+      <span style={{
+        width: 5,
+        height: 5,
+        borderRadius: 999,
+        background: color,
+        boxShadow: `0 0 6px ${color}`,
+      }} />
+      {label}
+    </span>
+  )
+}
+
+function MiniBar({ label, current, max, color }) {
+  const pct = max > 0 ? Math.min(100, (current / max) * 100) : 0
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+      <span style={{
+        fontSize: '0.5rem',
+        fontFamily: 'monospace',
+        letterSpacing: '0.1em',
+        color: '#6b6b6b',
+        width: 26,
+        flexShrink: 0,
+      }}>
+        {label}
+      </span>
+      <div style={{
+        flex: 1,
+        height: 4,
+        borderRadius: 999,
+        background: 'rgba(255,255,255,0.06)',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          width: `${pct}%`,
+          height: '100%',
+          borderRadius: 999,
+          background: color,
+          boxShadow: `0 0 8px ${color}88`,
+          transition: 'width 0.25s',
+        }} />
+      </div>
+      <span style={{
+        fontSize: '0.55rem',
+        fontFamily: 'monospace',
+        fontWeight: 700,
+        color,
+        flexShrink: 0,
+      }}>
+        {current}/{max}
+      </span>
+    </div>
+  )
+}
+
 function MemberRow({ character, selected, onManage, onRemove }) {
   const { effective: attrs } = getEntityEffectiveAttributes(character)
   const physical = getPhysicalStateOption(character.physicalState ?? character.condition)
   const mental = getMentalStateOption(character.mentalState)
-  const marks = character.damageMarks ?? 0
-  const overload = character.ecoOverload ?? 0
-  const classColor = '#a855f7'
+  const charClass = getCharacterClass(character)
+  const classColor = charClass?.color || '#a855f7'
+  const life = getRemainingLife(character)
+  const ruptura = getRupturaPool(character)
 
   return (
     <SpotlightCard
       onClick={onManage}
-      spotlightColor={selected ? 'rgba(168, 85, 247, 0.28)' : 'rgba(168, 85, 247, 0.14)'}
+      spotlightColor={selected ? `${classColor}44` : `${classColor}22`}
       style={{
-        padding: '0.85rem 0.95rem',
+        padding: 0,
         cursor: 'pointer',
-        borderLeft: `3px solid ${selected ? classColor : 'rgba(168,85,247,0.35)'}`,
-        background: selected ? 'rgba(168,85,247,0.06)' : undefined,
+        overflow: 'hidden',
+        borderColor: selected ? `${classColor}66` : undefined,
+        background: selected ? `${classColor}0f` : undefined,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-        <EntityThumb src={character.image} alt={character.name} size={48} borderRadius="10px" />
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.65rem',
+        padding: '0.7rem 0.8rem 0.6rem',
+      }}>
+        <div style={{
+          padding: 1.5,
+          borderRadius: 12,
+          flexShrink: 0,
+          background: `linear-gradient(145deg, ${classColor}88, transparent)`,
+        }}>
+          <EntityThumb src={character.image} alt={character.name} size={40} borderRadius="10px" />
+        </div>
+
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '0.5rem',
-            marginBottom: '0.4rem',
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            color: '#f5f5f5',
+            letterSpacing: '-0.02em',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}>
-            <span style={{
-              fontSize: '0.9rem',
-              fontWeight: 700,
-              color: '#f5f5f5',
-              letterSpacing: '-0.02em',
-            }}>
-              {character.name}
-            </span>
-            <FloatingTooltip.Provider>
-              <FloatingTooltip.Trigger content="Remover do grupo">
-                <button
-                  type="button"
-                  onClick={e => { e.stopPropagation(); onRemove() }}
-                  style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 8,
-                    color: '#666',
-                    cursor: 'pointer',
-                    padding: '5px',
-                    display: 'flex',
-                    flexShrink: 0,
-                    transition: 'color 0.15s, border-color 0.15s',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.color = '#f87171'
-                    e.currentTarget.style.borderColor = 'rgba(220,38,38,0.35)'
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.color = '#666'
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
-                  }}
-                >
-                  <X size={13} />
-                </button>
-              </FloatingTooltip.Trigger>
-            </FloatingTooltip.Provider>
+            {character.name}
           </div>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.45rem' }}>
-            <GlowingBadge
-              variant={physical.value === 'bem' ? 'success' : 'warning'}
-              pulse={false}
-              dot
-            >
-              {physical.label}
-            </GlowingBadge>
-            {mental.value !== 'estavel' && (
-              <GlowingBadge variant="warning" pulse={false} dot>
-                {mental.label}
-              </GlowingBadge>
-            )}
-            <GlowingBadge variant="default" pulse={false} dot>
-              NVL {character.level || 1}
-            </GlowingBadge>
-            {marks > 0 && (
-              <GlowingBadge variant="error" pulse={false} dot>
-                {marks}M
-              </GlowingBadge>
-            )}
-            {overload > 0 && (
-              <GlowingBadge variant="cyan" pulse={false} dot>
-                {formatOverloadDisplay(overload, character)}
-              </GlowingBadge>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap' }}>
-            {ATTRIBUTES.map(attr => {
-              const eff = attrs[attr.key] || 0
-              const raw = character.attributes?.[attr.key] || 0
-              const reduced = eff < raw
-              return (
-                <span
-                  key={attr.key}
-                  style={{
-                    fontSize: '0.62rem',
-                    fontFamily: 'monospace',
-                    letterSpacing: '0.04em',
-                    color: eff > 0 ? (reduced ? '#ea580c' : attr.color) : '#555',
-                  }}
-                >
-                  {attr.label.slice(0, 3).toUpperCase()} {eff}
-                </span>
-              )
-            })}
+          <div style={{
+            fontSize: '0.55rem',
+            fontFamily: 'monospace',
+            color: '#6b6b6b',
+            marginTop: 2,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}>
+            Nv.{character.level || 1}
+            {charClass && <span style={{ color: classColor }}> · {charClass.label}</span>}
           </div>
         </div>
+
+        <FloatingTooltip.Provider>
+          <FloatingTooltip.Trigger content="Remover do grupo">
+            <button
+              type="button"
+              onClick={e => { e.stopPropagation(); onRemove() }}
+              style={{
+                background: 'transparent',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 8,
+                color: '#5a5a5a',
+                cursor: 'pointer',
+                padding: '4px',
+                display: 'flex',
+                flexShrink: 0,
+                transition: 'color 0.15s, border-color 0.15s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.color = '#f87171'
+                e.currentTarget.style.borderColor = 'rgba(220,38,38,0.35)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = '#5a5a5a'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+              }}
+            >
+              <X size={12} />
+            </button>
+          </FloatingTooltip.Trigger>
+        </FloatingTooltip.Provider>
+      </div>
+
+      <div style={{ padding: '0 0.8rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+        <MiniBar label="VIDA" current={life.current} max={life.max} color={physical.color} />
+        <MiniBar label="ECO" current={ruptura.spent} max={ruptura.max} color="#22d3ee" />
+      </div>
+
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '0.3rem',
+        padding: '0.55rem 0.8rem 0',
+      }}>
+        <StateChip label={physical.label} color={physical.color} />
+        {mental.value !== 'estavel' && (
+          <StateChip label={mental.label} color={mental.color} />
+        )}
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${ATTRIBUTES.length}, minmax(0, 1fr))`,
+        gap: 3,
+        padding: '0.6rem 0.8rem 0.7rem',
+      }}>
+        {ATTRIBUTES.map(attr => {
+          const eff = attrs[attr.key] || 0
+          const raw = character.attributes?.[attr.key] || 0
+          const reduced = eff < raw
+          const valueColor = eff > 0 ? (reduced ? '#ea580c' : '#ececec') : '#4a4a4a'
+          return (
+            <div
+              key={attr.key}
+              style={{
+                background: 'rgba(255,255,255,0.035)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: 7,
+                padding: '0.3rem 0.15rem',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{
+                fontSize: '0.42rem',
+                fontFamily: 'monospace',
+                letterSpacing: '0.06em',
+                color: eff > 0 ? attr.color : '#4a4a4a',
+              }}>
+                {attr.label.slice(0, 3).toUpperCase()}
+              </div>
+              <div style={{
+                fontSize: '0.8rem',
+                fontWeight: 800,
+                color: valueColor,
+                lineHeight: 1.2,
+              }}>
+                {eff}
+              </div>
+            </div>
+          )
+        })}
       </div>
     </SpotlightCard>
   )

@@ -49,6 +49,7 @@ function ParticleCard({
     timeoutsRef.current.forEach(clearTimeout)
     timeoutsRef.current = []
     particlesRef.current.forEach(particle => {
+      gsap.killTweensOf(particle)
       gsap.to(particle, {
         scale: 0,
         opacity: 0,
@@ -77,7 +78,9 @@ function ParticleCard({
             x: (Math.random() - 0.5) * 60,
             y: (Math.random() - 0.5) * 60,
             duration: 1.6 + Math.random(),
-            ease: 'none',
+            ease: 'sine.inOut',
+            repeat: -1,
+            yoyo: true,
           })
         }, i * 40)
         timeoutsRef.current.push(timeout)

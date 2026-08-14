@@ -52,11 +52,11 @@ export function DesktopSidebar({ className, children, ...props }) {
   return (
     <motion.div
       className={cn(
-        'h-full min-h-0 overflow-hidden py-5 px-2.5 hidden md:flex md:flex-col bg-transparent border-r border-white/6 shrink-0',
+        'h-full min-h-0 overflow-hidden py-4 px-1.5 hidden md:flex md:flex-col bg-transparent border-r border-white/6 shrink-0',
         className,
       )}
       animate={{
-        width: animate ? (open ? 280 : 64) : 280,
+        width: animate ? (open ? 256 : 56) : 256,
       }}
       transition={{ duration: 0.25, ease: 'easeInOut' }}
       onMouseEnter={() => setOpen(true)}
@@ -128,8 +128,7 @@ export function SidebarLink({ link, className, onClick, active = false, ...props
       href={link.href || '#'}
       onClick={handleClick}
       className={cn(
-        // Layout estável: ícone sempre no mesmo slot — sem trocar justify-center/start
-        'relative flex w-full min-h-[3.75rem] items-center rounded-2xl py-5',
+        'relative flex w-full min-h-[3.5rem] items-center rounded-2xl py-4',
         active
           ? 'text-violet-300 bg-white/[0.07]'
           : 'text-neutral-400 hover:text-neutral-100 hover:bg-white/[0.05]',
@@ -137,14 +136,19 @@ export function SidebarLink({ link, className, onClick, active = false, ...props
       )}
       {...props}
     >
-      <span className="flex h-6 w-10 shrink-0 items-center justify-center">
+      <span
+        className={cn(
+          'flex h-6 shrink-0 items-center justify-center transition-[width] duration-200',
+          showLabel ? 'w-10' : 'w-full',
+        )}
+      >
         {link.icon}
       </span>
       <motion.span
         initial={false}
         animate={{
           opacity: showLabel ? 1 : 0,
-          maxWidth: showLabel ? 180 : 0,
+          maxWidth: showLabel ? 170 : 0,
           marginLeft: showLabel ? 4 : 0,
         }}
         transition={{ duration: 0.2, ease: 'easeInOut' }}

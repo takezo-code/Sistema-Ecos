@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ShieldAlert, Settings2, Search, Trash2, Sparkles, Package } from 'lucide-react'
+import { ShieldAlert, Settings2, Package } from 'lucide-react'
 import { EntityThumb } from '../components/ui/EntityThumb'
 import { useNPCStore } from '../store/useNPCStore'
 import { useCampaignStore } from '../store/useCampaignStore'
@@ -8,26 +8,18 @@ import { EmptyState } from '../components/ui/EmptyState'
 import { filterByActiveCampaign } from '../utils/campaignScope'
 import { EntityManagePanel } from '../components/management/EntityManagePanel'
 import { CombatStatsSection } from '../components/management/CombatStatsSection'
-import { getAttributesForEntity, entityHasEcoPowers } from '../constants/entityProgression'
-import { useTrashStore } from '../store/useTrashStore'
+import { getAttributesForEntity } from '../constants/entityProgression'
 import { getEntityEffectiveAttributes } from '../services/stateModifiers'
-import { Button } from '../components/ui/Button'
 import SpotlightCard from '../components/react-bits/SpotlightCard'
-import GlowingBadge from '../components/ui/GlowingBadge'
 import { FloatingTooltip } from '../components/ui/FloatingTooltip'
 import GlassSurface from '../components/react-bits/GlassSurface'
 
 const ACCENT = '#dc2626'
 
-function BossManageCard({ npc, onManage, onDelete }) {
+function BossManageCard({ npc, onManage }) {
   const { effective: attrs, base } = getEntityEffectiveAttributes(npc)
   const attrList = getAttributesForEntity(npc)
   const inventoryCount = npc.inventory?.length || 0
-  const skillCount = npc.skills?.length || 0
-  const hasEco = entityHasEcoPowers(npc)
-  const marks = npc.damageMarks ?? 0
-  const maxMarks = npc.marcasMaximas ?? 0
-  const lifeLeft = Math.max(0, maxMarks - marks)
 
   return (
     <SpotlightCard
@@ -60,42 +52,8 @@ function BossManageCard({ npc, onManage, onDelete }) {
               fontWeight: 700,
               color: '#f5f5f5',
               letterSpacing: '-0.02em',
-              marginBottom: '0.45rem',
             }}>
               {npc.name}
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'center' }}>
-              <span style={{
-                fontSize: '0.68rem',
-                fontWeight: 700,
-                color: ACCENT,
-                background: 'rgba(220,38,38,0.14)',
-                border: '1px solid rgba(220,38,38,0.35)',
-                borderRadius: 999,
-                padding: '0.22rem 0.55rem',
-                letterSpacing: '0.04em',
-              }}>
-                BOSS
-              </span>
-              <GlowingBadge variant="default" dot>
-                NVL {npc.level || 1}
-              </GlowingBadge>
-              <GlowingBadge variant="error" pulse={false} dot>
-                VIDA {lifeLeft}{maxMarks > 0 ? `/${maxMarks}` : ''}
-              </GlowingBadge>
-              {hasEco && (
-                <GlowingBadge variant="cyan" pulse dot>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <Sparkles size={10} />
-                    {npc.ecoPoints ?? 0} Ecos
-                  </span>
-                </GlowingBadge>
-              )}
-              {hasEco && skillCount > 0 && (
-                <GlowingBadge variant="default" pulse={false} dot>
-                  {skillCount} skill{skillCount === 1 ? '' : 's'}
-                </GlowingBadge>
-              )}
             </div>
           </div>
         </div>
@@ -129,32 +87,6 @@ function BossManageCard({ npc, onManage, onDelete }) {
                 }}
               >
                 <Settings2 size={14} />
-              </button>
-            </FloatingTooltip.Trigger>
-            <FloatingTooltip.Trigger content="Excluir">
-              <button
-                type="button"
-                onClick={onDelete}
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 8,
-                  color: '#666',
-                  cursor: 'pointer',
-                  padding: '6px',
-                  display: 'flex',
-                  transition: 'color 0.15s, border-color 0.15s',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.color = '#f87171'
-                  e.currentTarget.style.borderColor = 'rgba(220,38,38,0.35)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.color = '#666'
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
-                }}
-              >
-                <Trash2 size={14} />
               </button>
             </FloatingTooltip.Trigger>
           </div>
@@ -225,7 +157,6 @@ export function ManageBoss({ embedded = false }) {
   const {
     npcs,
     updateNPC,
-    deleteNPC,
     changeAttribute,
     setMasterAttribute,
     setMasterProgression,
@@ -254,13 +185,8 @@ export function ManageBoss({ embedded = false }) {
     updateInventoryItem,
     removeInventoryItem,
   } = useNPCStore()
-  const refreshTrash = useTrashStore(s => s.refresh)
   const [managing, setManaging] = useState(null)
-  const [deleteConfirm, setDeleteConfirm] = useState(null)
-  const [search, setSearch] = useState('')
-
-  let filtered = filterByActiveCampaign(npcs, activeCampaignId).filter(n => n.papelCombate === 'boss')
-  if (search) filtered = filtered.filter(n => n.name.toLowerCase().includes(search.toLowerCase()))
+  const filtered = filterByActiveCampaign(npcs, activeCampaignId).filter(n => n.papelCombate === 'boss')
 
   const current = managing ? npcs.find(n => n.id === managing.id) : null
 
@@ -272,35 +198,9 @@ export function ManageBoss({ embedded = false }) {
     })
   }
 
-  const handleDelete = (npc) => {
-    deleteNPC(npc.id)
-    refreshTrash()
-    if (managing?.id === npc.id) setManaging(null)
-    setDeleteConfirm(null)
-  }
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <div style={{ padding: '1rem 1.5rem 0', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1, maxWidth: 280 }}>
-          <Search size={13} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#555' }} />
-          <input
-            className="input-base"
-            style={{
-              paddingLeft: '2.15rem',
-              fontSize: '0.8rem',
-              borderRadius: 10,
-              background: 'rgba(255,255,255,0.03)',
-              borderColor: 'rgba(255,255,255,0.08)',
-            }}
-            placeholder="Buscar boss..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.5rem 1.25rem' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem' }}>
         {filtered.length === 0 ? (
           <EmptyState
             icon={ShieldAlert}
@@ -314,7 +214,6 @@ export function ManageBoss({ embedded = false }) {
                 key={n.id}
                 npc={n}
                 onManage={() => handleOpenManage(n)}
-                onDelete={() => setDeleteConfirm(n)}
               />
             ))}
           </div>
@@ -368,16 +267,6 @@ export function ManageBoss({ embedded = false }) {
             />
           </>
         )}
-      </Modal>
-
-      <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Excluir boss" maxWidth="380px">
-        <p style={{ fontSize: '0.85rem', color: '#999', marginBottom: '1.25rem' }}>
-          Enviar <strong style={{ color: '#e5e5e5' }}>{deleteConfirm?.name}</strong> para a lixeira?
-        </p>
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-          <button type="button" className="btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</button>
-          <Button type="button" variant="danger" onClick={() => handleDelete(deleteConfirm)}>Excluir</Button>
-        </div>
       </Modal>
     </div>
   )
