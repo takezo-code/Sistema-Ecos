@@ -12,6 +12,7 @@ import { listCharacterSkillsRuntime } from '../services/ecoSkillRuntimeService'
 import { CombatCharacterColumn } from '../components/combat/CombatCharacterColumn'
 import { CombatEnemyCard } from '../components/combat/CombatEnemyCard'
 import { CombatSkillDetailModal } from '../components/combat/CombatSkillDetailModal'
+import { RollHistoryDrawer } from '../components/combat/RollHistoryDrawer'
 import { EmptyState } from '../components/ui/EmptyState'
 import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
 import { getRollOutcome, DIFFICULTY_PRESETS, getDefaultDc, getDcForPreset } from '../mechanics/combat/rollOutcome'
@@ -259,14 +260,23 @@ export function ManageCombat() {
   const {
     combatGroupId,
     activeEnemyId,
+    rollHistory,
     setCampaign,
     setActiveEnemy,
+    addRoll,
+    deleteRoll,
+    clearRollHistory,
   } = useCombatStore()
 
   const [rollResult, setRollResult] = useState(null)
   const [combatNotice, setCombatNotice] = useState(null)
   const [skillDetailRef, setSkillDetailRef] = useState(null)
   const [dcPreset, setDcPreset] = useState('medium')
+
+  const campaignRolls = useMemo(
+    () => rollHistory.filter(roll => roll.campaignId === activeCampaignId),
+    [rollHistory, activeCampaignId],
+  )
 
   useEffect(() => {
     setCampaign(activeCampaignId)
@@ -316,11 +326,16 @@ export function ManageCombat() {
     setSkillDetailRef({ characterId: character.id, skillId: runtime.instance.id })
   }, [])
 
+  const recordRoll = useCallback((roll) => {
+    setRollResult(roll)
+    addRoll({ ...roll, campaignId: activeCampaignId })
+  }, [activeCampaignId, addRoll])
+
   const handleRollAttribute = useCallback((character, _attrKey, attrLabel, eff, sides = 20, breakdown = null) => {
     const dice = Math.floor(Math.random() * sides) + 1
     const total = dice + eff
     const dc = getDcForPreset(dcPreset, sides)
-    setRollResult({
+    recordRoll({
       dice,
       sides,
       bonus: eff,
@@ -332,9 +347,11 @@ export function ManageCombat() {
       dc,
       characterName: character.name,
       attrLabel,
+      actorId: character.id,
+      actorType: 'player',
     })
     advanceTurn(character.id)
-  }, [advanceTurn, dcPreset])
+  }, [advanceTurn, dcPreset, recordRoll])
 
   const handleApplyMarks = useCallback((character, markType) => {
     const result = applyDamageMarks(character.id, markType)
@@ -357,7 +374,7 @@ export function ManageCombat() {
     const dice = Math.floor(Math.random() * sides) + 1
     const total = dice + eff
     const dc = getDcForPreset(dcPreset, sides)
-    setRollResult({
+    recordRoll({
       dice,
       sides,
       bonus: eff,
@@ -369,8 +386,10 @@ export function ManageCombat() {
       dc,
       characterName: enemy.name,
       attrLabel,
+      actorId: enemy.id,
+      actorType: 'enemy',
     })
-  }, [dcPreset])
+  }, [dcPreset, recordRoll])
 
   const handleEnemyApplyMarks = useCallback((markType) => {
     if (!activeEnemyId) return
@@ -410,7 +429,25 @@ export function ManageCombat() {
       background: 'transparent',
     }}>
 
-      <DifficultyBar value={dcPreset} onChange={setDcPreset} />
+      <div style={{
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '0.75rem',
+        paddingRight: '1rem',
+      }}>
+        <DifficultyBar value={dcPreset} onChange={setDcPreset} />
+        <RollHistoryDrawer
+          rolls={campaignRolls}
+          onDelete={deleteRoll}
+          onClear={() => {
+            if (window.confirm('Limpar todo o histórico de rolagens desta campanha?')) {
+              clearRollHistory(activeCampaignId)
+            }
+          }}
+        />
+      </div>
 
       {/* Banner de resultado da rolagem */}
       <RollResultBanner result={rollResult} onDismiss={() => setRollResult(null)} />

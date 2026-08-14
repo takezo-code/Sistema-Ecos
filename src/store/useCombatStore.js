@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { storage, KEYS } from '../services/storage'
+import { genId } from '../utils/id'
 
 const load = () => storage.get(KEYS.combatSession) || {
   globalNotes: '',
@@ -7,6 +8,7 @@ const load = () => storage.get(KEYS.combatSession) || {
   campaignId: null,
   combatGroupId: null,
   activeEnemyId: null,
+  rollHistory: [],
 }
 
 export const useCombatStore = create((set, get) => ({
@@ -15,11 +17,19 @@ export const useCombatStore = create((set, get) => ({
   campaignId: load().campaignId ?? null,
   combatGroupId: load().combatGroupId ?? null,
   activeEnemyId: load().activeEnemyId ?? null,
+  rollHistory: load().rollHistory ?? [],
   lastRoll: null,
 
   persist() {
-    const { globalNotes, turn, campaignId, combatGroupId, activeEnemyId } = get()
-    storage.set(KEYS.combatSession, { globalNotes, turn, campaignId, combatGroupId, activeEnemyId })
+    const { globalNotes, turn, campaignId, combatGroupId, activeEnemyId, rollHistory } = get()
+    storage.set(KEYS.combatSession, {
+      globalNotes,
+      turn,
+      campaignId,
+      combatGroupId,
+      activeEnemyId,
+      rollHistory,
+    })
   },
 
   setCampaign(campaignId) {
@@ -59,5 +69,30 @@ export const useCombatStore = create((set, get) => ({
 
   setLastRoll(roll) {
     set({ lastRoll: roll })
+  },
+
+  addRoll(roll) {
+    const entry = {
+      ...roll,
+      id: genId(),
+      createdAt: new Date().toISOString(),
+    }
+    set({ rollHistory: [entry, ...get().rollHistory].slice(0, 150) })
+    get().persist()
+    return entry
+  },
+
+  deleteRoll(rollId) {
+    set({ rollHistory: get().rollHistory.filter(roll => roll.id !== rollId) })
+    get().persist()
+  },
+
+  clearRollHistory(campaignId = null) {
+    set({
+      rollHistory: campaignId
+        ? get().rollHistory.filter(roll => roll.campaignId !== campaignId)
+        : [],
+    })
+    get().persist()
   },
 }))
