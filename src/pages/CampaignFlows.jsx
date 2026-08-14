@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import {
-  ArrowLeft, GitBranch, Plus, Pencil, Trash2, ChevronUp, ChevronDown,
+  ArrowLeft, GitBranch, Pencil, Trash2,
   BookOpen, Split, Circle, Loader, CheckCheck, RotateCcw,
 } from 'lucide-react'
 import { useNarrativeStore } from '../store/useNarrativeStore'
@@ -64,7 +64,7 @@ function HistoriaForm({ initial, onSave, onCancel }) {
         if (!form.title.trim()) return
         onSave({ ...form, images: normalizeSceneImages(form.images) })
       }}
-      style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
     >
       <Field label="Título da cena" required>
         <Input value={form.title} onChange={e => set('title', e.target.value)} placeholder="Ex: Chegada ao vilarejo" autoFocus />
@@ -129,7 +129,7 @@ function EscolhaForm({ initial, onSave, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <Field label="Título" required>
         <Input value={form.title} onChange={e => set('title', e.target.value)} placeholder="Ex: A encruzilhada na floresta" autoFocus />
       </Field>
@@ -143,22 +143,36 @@ function EscolhaForm({ initial, onSave, onCancel }) {
       </Field>
 
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-          <span style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>OPÇÕES E CONSEQUÊNCIAS</span>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
           <button type="button" className="btn-ghost" onClick={addChoice} style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem' }}>
             + Opção
           </button>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           {form.choices.map((choice, idx) => (
-            <div key={choice.id} style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '4px', padding: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ fontSize: '0.6rem', color: '#d97706', fontFamily: 'monospace' }}>OPÇÃO {idx + 1}</span>
+            <div
+              key={choice.id}
+              style={{
+                background: '#0d0d0d',
+                border: '1px solid #1a1a1a',
+                borderRadius: '8px',
+                padding: '0.9rem 1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.85rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.6rem', color: '#d97706', fontFamily: 'monospace', letterSpacing: '0.08em' }}>
+                  OPÇÃO {idx + 1}
+                </span>
                 {form.choices.length > 2 && (
-                  <button type="button" onClick={() => removeChoice(idx)}
+                  <button
+                    type="button"
+                    onClick={() => removeChoice(idx)}
                     style={{ background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', fontSize: '0.65rem' }}
-                    onMouseEnter={e => e.currentTarget.style.color = '#dc2626'}
-                    onMouseLeave={e => e.currentTarget.style.color = '#333'}
+                    onMouseEnter={e => { e.currentTarget.style.color = '#dc2626' }}
+                    onMouseLeave={e => { e.currentTarget.style.color = '#333' }}
                   >
                     Remover
                   </button>
@@ -184,7 +198,7 @@ function EscolhaForm({ initial, onSave, onCancel }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
         <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
         <Button type="submit">Salvar</Button>
       </div>
@@ -207,7 +221,7 @@ function FlowConnector({ index, total, color }) {
   )
 }
 
-function HistoriaFlowCard({ event, index, total, onEdit, onDelete, onMoveUp, onMoveDown, onStatusChange }) {
+function HistoriaFlowCard({ event, index, total, onEdit, onDelete, onStatusChange }) {
   const Icon = STATUS_ICONS[event.status] || Circle
   const color = STATUS_COLORS[event.status] || '#555'
 
@@ -234,7 +248,7 @@ function HistoriaFlowCard({ event, index, total, onEdit, onDelete, onMoveUp, onM
             <StatusTag status={event.status} />
           </div>
           <div onClick={e => e.stopPropagation()}>
-            <FlowActions index={index} total={total} onEdit={onEdit} onDelete={onDelete} onMoveUp={onMoveUp} onMoveDown={onMoveDown} />
+            <FlowActions onEdit={onEdit} onDelete={onDelete} />
           </div>
         </div>
         {event.description && (
@@ -259,7 +273,7 @@ function HistoriaFlowCard({ event, index, total, onEdit, onDelete, onMoveUp, onM
   )
 }
 
-function EscolhaFlowCard({ event, index, total, onEdit, onDelete, onMoveUp, onMoveDown, onSelectChoice, onClearChoice }) {
+function EscolhaFlowCard({ event, index, total, onEdit, onDelete, onSelectChoice, onClearChoice }) {
   const selected = event.choices.find(c => c.id === event.selectedChoiceId)
   const color = selected ? '#16a34a' : STATUS_COLORS[event.status] || '#d97706'
 
@@ -267,11 +281,13 @@ function EscolhaFlowCard({ event, index, total, onEdit, onDelete, onMoveUp, onMo
     <div style={{ display: 'flex', gap: 0 }}>
       <FlowConnector index={index} total={total} color={color} />
       <SpotlightCard
+        onClick={onEdit}
         spotlightColor={selected ? 'rgba(22,163,74,0.16)' : 'rgba(217,119,6,0.14)'}
         style={{
           flex: 1,
           margin: '6px 0',
           padding: '1rem 1.15rem',
+          cursor: 'pointer',
           borderColor: selected ? 'rgba(22,163,74,0.3)' : 'rgba(217,119,6,0.22)',
         }}
       >
@@ -282,7 +298,9 @@ function EscolhaFlowCard({ event, index, total, onEdit, onDelete, onMoveUp, onMo
             <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f0f0f0' }}>{event.title}</span>
             {selected && <StatusTag status="concluído" />}
           </div>
-          <FlowActions index={index} total={total} onEdit={onEdit} onDelete={onDelete} onMoveUp={onMoveUp} onMoveDown={onMoveDown} />
+          <div onClick={e => e.stopPropagation()}>
+            <FlowActions onEdit={onEdit} onDelete={onDelete} />
+          </div>
         </div>
 
         {(event.prompt || event.description) && (
@@ -295,7 +313,10 @@ function EscolhaFlowCard({ event, index, total, onEdit, onDelete, onMoveUp, onMo
           {selected ? 'ESCOLHA DOS JOGADORES' : 'CLIQUE NA OPÇÃO ESCOLHIDA PELOS JOGADORES'}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div
+          style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
+          onClick={e => e.stopPropagation()}
+        >
           {event.choices.map(choice => {
             const isSelected = event.selectedChoiceId === choice.id
             return (
@@ -323,60 +344,90 @@ function EscolhaFlowCard({ event, index, total, onEdit, onDelete, onMoveUp, onMo
         </div>
 
         {selected && (
-          <GlassSurface borderRadius={10} padding="0.75rem" style={{ marginTop: '0.75rem' }}>
-            <div style={{ fontSize: '0.6rem', color: '#16a34a', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '4px' }}>NARRATIVA DESTA ESCOLHA</div>
-            <p style={{ fontSize: '0.8rem', color: '#aaa', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{selected.outcome || 'Sem consequência definida.'}</p>
-            <button
-              type="button"
-              onClick={onClearChoice}
-              style={{
-                marginTop: '0.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                background: 'transparent',
-                border: 'none',
-                color: '#666',
-                cursor: 'pointer',
-                fontSize: '0.65rem',
-                fontFamily: 'monospace',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#aaa' }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#666' }}
-            >
-              <RotateCcw size={11} /> Redefinir escolha
-            </button>
-          </GlassSurface>
+          <div onClick={e => e.stopPropagation()}>
+            <GlassSurface borderRadius={10} padding="0.75rem" style={{ marginTop: '0.75rem' }}>
+              <div style={{ fontSize: '0.6rem', color: '#16a34a', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '4px' }}>NARRATIVA DESTA ESCOLHA</div>
+              <p style={{ fontSize: '0.8rem', color: '#aaa', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{selected.outcome || 'Sem consequência definida.'}</p>
+              <button
+                type="button"
+                onClick={onClearChoice}
+                style={{
+                  marginTop: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#666',
+                  cursor: 'pointer',
+                  fontSize: '0.65rem',
+                  fontFamily: 'monospace',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#aaa' }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#666' }}
+              >
+                <RotateCcw size={11} /> Redefinir escolha
+              </button>
+            </GlassSurface>
+          </div>
         )}
       </SpotlightCard>
     </div>
   )
 }
 
-function FlowActions({ index, total, onEdit, onDelete, onMoveUp, onMoveDown }) {
+function FlowActions({ onEdit, onDelete }) {
+  const baseBtn = {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 8,
+    cursor: 'pointer',
+    padding: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'color 0.15s, border-color 0.15s, background 0.15s',
+  }
+
   return (
     <FloatingTooltip.Provider>
-      <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
-        <FloatingTooltip.Trigger content="Mover acima">
-          <button type="button" onClick={onMoveUp} disabled={index === 0}
-            style={{ background: 'transparent', border: 'none', color: index === 0 ? '#2a2a2a' : '#666', cursor: index === 0 ? 'default' : 'pointer', padding: '3px', display: 'flex' }}>
-            <ChevronUp size={13} />
-          </button>
-        </FloatingTooltip.Trigger>
-        <FloatingTooltip.Trigger content="Mover abaixo">
-          <button type="button" onClick={onMoveDown} disabled={index === total - 1}
-            style={{ background: 'transparent', border: 'none', color: index === total - 1 ? '#2a2a2a' : '#666', cursor: index === total - 1 ? 'default' : 'pointer', padding: '3px', display: 'flex' }}>
-            <ChevronDown size={13} />
-          </button>
-        </FloatingTooltip.Trigger>
+      <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
         <FloatingTooltip.Trigger content="Editar">
-          <button type="button" onClick={onEdit} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', padding: '3px', display: 'flex' }}>
-            <Pencil size={13} />
+          <button
+            type="button"
+            onClick={onEdit}
+            style={{ ...baseBtn, color: '#888' }}
+            onMouseEnter={e => {
+              e.currentTarget.style.color = '#e5e5e5'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
+              e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.color = '#888'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+              e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
+            }}
+          >
+            <Pencil size={14} strokeWidth={2.1} />
           </button>
         </FloatingTooltip.Trigger>
         <FloatingTooltip.Trigger content="Excluir">
-          <button type="button" onClick={onDelete} style={{ background: 'transparent', border: 'none', color: '#666', cursor: 'pointer', padding: '3px', display: 'flex' }}>
-            <Trash2 size={13} />
+          <button
+            type="button"
+            onClick={onDelete}
+            style={{ ...baseBtn, color: '#777' }}
+            onMouseEnter={e => {
+              e.currentTarget.style.color = '#f87171'
+              e.currentTarget.style.borderColor = 'rgba(239,68,68,0.4)'
+              e.currentTarget.style.background = 'rgba(239,68,68,0.1)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.color = '#777'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+              e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
+            }}
+          >
+            <Trash2 size={14} strokeWidth={2.1} />
           </button>
         </FloatingTooltip.Trigger>
       </div>
@@ -485,6 +536,8 @@ export function CampaignFlows({ campaign, onBack }) {
   const { events, addEvent, updateEvent, deleteEvent, reorderEvents, selectChoice, clearChoice } = useNarrativeStore()
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [editModal, setEditModal] = useState(null)
+  const [draggingId, setDraggingId] = useState(null)
+  const [dragOverId, setDragOverId] = useState(null)
 
   const flows = events
     .filter(e => e.campaignId === campaign.id)
@@ -497,18 +550,25 @@ export function CampaignFlows({ campaign, onBack }) {
     setEditModal(null)
   }
 
-  const moveUp = (idx) => {
-    if (idx === 0) return
-    const ids = flows.map(e => e.id)
-    ;[ids[idx - 1], ids[idx]] = [ids[idx], ids[idx - 1]]
-    reorderEvents(campaign.id, ids)
-  }
+  const dropFlow = (targetId) => {
+    if (!draggingId || draggingId === targetId) {
+      setDraggingId(null)
+      setDragOverId(null)
+      return
+    }
 
-  const moveDown = (idx) => {
-    if (idx === flows.length - 1) return
     const ids = flows.map(e => e.id)
-    ;[ids[idx], ids[idx + 1]] = [ids[idx + 1], ids[idx]]
+    const sourceIndex = ids.indexOf(draggingId)
+    const targetIndex = ids.indexOf(targetId)
+    if (sourceIndex < 0 || targetIndex < 0) return
+
+    ids.splice(sourceIndex, 1)
+    const adjustedTarget = ids.indexOf(targetId)
+    const insertAt = sourceIndex < targetIndex ? adjustedTarget + 1 : adjustedTarget
+    ids.splice(insertAt, 0, draggingId)
     reorderEvents(campaign.id, ids)
+    setDraggingId(null)
+    setDragOverId(null)
   }
 
   const handleSelectChoice = (eventId, choiceId) => {
@@ -538,7 +598,7 @@ export function CampaignFlows({ campaign, onBack }) {
           size="xs"
           style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
         >
-          <Plus size={13} /> Adicionar Fluxo
+          Adicionar Fluxo
         </Button>
       </div>
 
@@ -556,34 +616,64 @@ export function CampaignFlows({ campaign, onBack }) {
           />
         ) : (
           <div style={{ maxWidth: '800px' }}>
-            {flows.map((flow, idx) =>
-              flow.type === 'escolha' ? (
-                <EscolhaFlowCard
-                  key={flow.id}
-                  event={flow}
-                  index={idx}
-                  total={flows.length}
-                  onEdit={() => setEditModal(flow)}
-                  onDelete={() => deleteEvent(flow.id)}
-                  onMoveUp={() => moveUp(idx)}
-                  onMoveDown={() => moveDown(idx)}
-                  onSelectChoice={(choiceId) => handleSelectChoice(flow.id, choiceId)}
-                  onClearChoice={() => clearChoice(flow.id)}
-                />
-              ) : (
-                <HistoriaFlowCard
-                  key={flow.id}
-                  event={flow}
-                  index={idx}
-                  total={flows.length}
-                  onEdit={() => setEditModal(flow)}
-                  onDelete={() => deleteEvent(flow.id)}
-                  onMoveUp={() => moveUp(idx)}
-                  onMoveDown={() => moveDown(idx)}
-                  onStatusChange={(s) => updateEvent(flow.id, { status: s })}
-                />
-              )
-            )}
+            {flows.map((flow, idx) => (
+              <div
+                key={flow.id}
+                draggable
+                onDragStart={e => {
+                  setDraggingId(flow.id)
+                  e.dataTransfer.effectAllowed = 'move'
+                  e.dataTransfer.setData('text/plain', flow.id)
+                }}
+                onDragOver={e => {
+                  e.preventDefault()
+                  e.dataTransfer.dropEffect = 'move'
+                  setDragOverId(flow.id)
+                }}
+                onDragLeave={e => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) setDragOverId(null)
+                }}
+                onDrop={e => {
+                  e.preventDefault()
+                  dropFlow(flow.id)
+                }}
+                onDragEnd={() => {
+                  setDraggingId(null)
+                  setDragOverId(null)
+                }}
+                style={{
+                  cursor: draggingId === flow.id ? 'grabbing' : 'grab',
+                  opacity: draggingId === flow.id ? 0.45 : 1,
+                  borderRadius: 14,
+                  boxShadow: dragOverId === flow.id && draggingId !== flow.id
+                    ? '0 0 0 2px rgba(6,182,212,0.6), 0 0 22px rgba(6,182,212,0.18)'
+                    : 'none',
+                  transform: dragOverId === flow.id && draggingId !== flow.id ? 'translateY(2px)' : 'none',
+                  transition: 'opacity 0.15s, box-shadow 0.15s, transform 0.15s',
+                }}
+              >
+                {flow.type === 'escolha' ? (
+                  <EscolhaFlowCard
+                    event={flow}
+                    index={idx}
+                    total={flows.length}
+                    onEdit={() => setEditModal(flow)}
+                    onDelete={() => deleteEvent(flow.id)}
+                    onSelectChoice={(choiceId) => handleSelectChoice(flow.id, choiceId)}
+                    onClearChoice={() => clearChoice(flow.id)}
+                  />
+                ) : (
+                  <HistoriaFlowCard
+                    event={flow}
+                    index={idx}
+                    total={flows.length}
+                    onEdit={() => setEditModal(flow)}
+                    onDelete={() => deleteEvent(flow.id)}
+                    onStatusChange={(s) => updateEvent(flow.id, { status: s })}
+                  />
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>

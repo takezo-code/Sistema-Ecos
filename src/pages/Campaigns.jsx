@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { BookOpen, Plus, Pencil, Trash2, CheckCircle, GitBranch } from 'lucide-react'
+import { BookOpen, Pencil, Trash2 } from 'lucide-react'
 import { CampaignFlows } from './CampaignFlows'
 import { useCampaignStore } from '../store/useCampaignStore'
 import { Button } from '../components/ui/Button'
@@ -57,7 +57,7 @@ function CampaignForm({ initial, onSave, onCancel }) {
   )
 }
 
-function CampaignCard({ campaign, isActive, onOpen, onEdit, onDelete, onActivate }) {
+function CampaignCard({ campaign, isActive, onOpen, onEdit, onDelete }) {
   return (
     <SpotlightCard
       onClick={onOpen}
@@ -108,30 +108,6 @@ function CampaignCard({ campaign, isActive, onOpen, onEdit, onDelete, onActivate
         </div>
         <FloatingTooltip.Provider>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', minWidth: '32px' }} onClick={e => e.stopPropagation()}>
-            <FloatingTooltip.Trigger content="Ver fluxos">
-              <button
-                type="button"
-                onClick={onOpen}
-                style={{ background: 'transparent', border: 'none', color: '#555', cursor: 'pointer', padding: '4px', display: 'flex' }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#06b6d4' }}
-                onMouseLeave={e => { e.currentTarget.style.color = '#555' }}
-              >
-                <GitBranch size={14} />
-              </button>
-            </FloatingTooltip.Trigger>
-            {!isActive && (
-              <FloatingTooltip.Trigger content="Definir como ativa">
-                <button
-                  type="button"
-                  onClick={onActivate}
-                  style={{ background: 'transparent', border: 'none', color: '#555', cursor: 'pointer', padding: '4px', display: 'flex' }}
-                  onMouseEnter={e => { e.currentTarget.style.color = '#16a34a' }}
-                  onMouseLeave={e => { e.currentTarget.style.color = '#555' }}
-                >
-                  <CheckCircle size={14} />
-                </button>
-              </FloatingTooltip.Trigger>
-            )}
             <FloatingTooltip.Trigger content="Editar">
               <button
                 type="button"
@@ -224,7 +200,6 @@ export function Campaigns() {
                 onOpen={() => openFlows(c)}
                 onEdit={() => openEdit(c)}
                 onDelete={() => setDeleteConfirm(c)}
-                onActivate={() => setActiveCampaign(c.id)}
               />
             ))}
           </div>
@@ -245,7 +220,7 @@ export function Campaigns() {
           boxShadow: '0 8px 28px rgba(0,0,0,0.45)',
         }}
       >
-        <Plus size={14} /> Nova Campanha
+        Adicionar Campanha
       </Button>
 
       <Modal open={modalOpen} onClose={closeModal} title={editing ? 'Editar Campanha' : 'Nova Campanha'} maxWidth="640px">
