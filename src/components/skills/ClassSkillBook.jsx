@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Plus, Zap, Gem } from 'lucide-react'
+import { Gem } from 'lucide-react'
 import { getCharacterClass } from '../../constants/classes'
 import {
   ECO_SKILL_POINT_COST,
@@ -15,6 +15,7 @@ import {
 import { countGradeCatalysts } from '../../constants/merchantItems'
 import { Button } from '../ui/Button'
 import SpotlightCard from '../react-bits/SpotlightCard'
+import ElectricBorder from '../react-bits/ElectricBorder'
 import GlassSurface from '../react-bits/GlassSurface'
 import GlowingBadge from '../ui/GlowingBadge'
 
@@ -30,6 +31,44 @@ function levelLabel(level) {
   return String(level)
 }
 
+function ElectricShell({
+  active,
+  color,
+  speed,
+  chaos,
+  displacement,
+  borderRadius = 12,
+  borderOffset = 12,
+  children,
+}) {
+  if (!active) return children
+  return (
+    <ElectricBorder
+      color={color}
+      speed={speed}
+      chaos={chaos}
+      displacement={displacement}
+      borderRadius={borderRadius}
+      borderOffset={borderOffset}
+      style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}
+    >
+      {children}
+    </ElectricBorder>
+  )
+}
+
+/** Quanto maior o nível, mais rápidos e caóticos os choques na borda. */
+function electricForSkill(entry, classColor) {
+  const level = Math.max(0, entry?.level ?? 0)
+  const t = Math.min(1, level / MAX_CLASS_SKILL_LEVEL)
+  return {
+    color: entry?.isGrade ? '#c084fc' : classColor,
+    speed: 0.45 + t * 1.35,
+    chaos: 0.05 + t * 0.16,
+    displacement: 6 + t * 12,
+  }
+}
+
 function SkillIconCell({ entry, selected, classColor, onSelect }) {
   const { def, level, unlocked, isGrade } = entry
   const rgb = hexToRgb(classColor)
@@ -43,79 +82,86 @@ function SkillIconCell({ entry, selected, classColor, onSelect }) {
         : 'rgba(255,255,255,0.08)'
 
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(def.templateId)}
-      title={def.name}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '0.4rem',
-        padding: '0.65rem 0.4rem',
-        background: selected
-          ? `rgba(${rgb}, 0.16)`
-          : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${borderColor}`,
-        borderRadius: 12,
-        cursor: 'pointer',
-        opacity: unlocked ? 1 : 0.55,
-        minWidth: 0,
-        boxShadow: selected ? `0 0 20px rgba(${rgb}, 0.2)` : 'none',
-        transition: 'border-color 0.15s, background 0.15s, box-shadow 0.15s',
-      }}
+    <ElectricShell
+      active={unlocked}
+      {...electricForSkill(entry, classColor)}
+      borderRadius={12}
+      borderOffset={10}
     >
-      <div style={{
-        width: 54,
-        height: 54,
-        clipPath: 'polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)',
-        background: unlocked
-          ? `linear-gradient(145deg, rgba(${rgb},${intensity + 0.2}), rgba(${rgb},${intensity * 0.35}))`
-          : 'rgba(255,255,255,0.04)',
-        border: `2px solid ${isGrade ? '#a855f7' : unlocked ? classColor : '#2a2a2a'}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        filter: unlocked ? 'none' : 'grayscale(1)',
-        boxShadow: unlocked ? `inset 0 0 14px rgba(${rgb}, 0.3), 0 0 12px rgba(${rgb}, 0.15)` : 'none',
-      }}>
-        <span style={{
-          fontSize: '0.85rem',
-          fontWeight: 800,
-          fontFamily: 'monospace',
-          color: unlocked ? '#f5f5f5' : '#555',
-          letterSpacing: '0.02em',
+      <button
+        type="button"
+        onClick={() => onSelect(def.templateId)}
+        title={def.name}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '0.4rem',
+          padding: '0.65rem 0.4rem',
+          background: selected
+            ? `rgba(${rgb}, 0.16)`
+            : 'rgba(255,255,255,0.03)',
+          border: `1px solid ${borderColor}`,
+          borderRadius: 12,
+          cursor: 'pointer',
+          opacity: unlocked ? 1 : 0.55,
+          minWidth: 0,
+          boxShadow: selected ? `0 0 20px rgba(${rgb}, 0.2)` : 'none',
+          transition: 'border-color 0.15s, background 0.15s, box-shadow 0.15s',
+        }}
+      >
+        <div style={{
+          width: 54,
+          height: 54,
+          clipPath: 'polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)',
+          background: unlocked
+            ? `linear-gradient(145deg, rgba(${rgb},${intensity + 0.2}), rgba(${rgb},${intensity * 0.35}))`
+            : 'rgba(255,255,255,0.04)',
+          border: `2px solid ${isGrade ? '#a855f7' : unlocked ? classColor : '#2a2a2a'}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          filter: unlocked ? 'none' : 'grayscale(1)',
+          boxShadow: unlocked ? `inset 0 0 14px rgba(${rgb}, 0.3), 0 0 12px rgba(${rgb}, 0.15)` : 'none',
         }}>
-          {def.icon}
-        </span>
-        <span style={{
-          position: 'absolute',
-          right: 2,
-          bottom: 1,
-          fontSize: '0.55rem',
-          fontFamily: 'monospace',
-          fontWeight: 700,
-          color: isGrade ? '#c084fc' : unlocked ? classColor : '#444',
-          textShadow: '0 1px 2px #000',
+          <span style={{
+            fontSize: '0.85rem',
+            fontWeight: 800,
+            fontFamily: 'monospace',
+            color: unlocked ? '#f5f5f5' : '#555',
+            letterSpacing: '0.02em',
+          }}>
+            {def.icon}
+          </span>
+          <span style={{
+            position: 'absolute',
+            right: 2,
+            bottom: 1,
+            fontSize: '0.55rem',
+            fontFamily: 'monospace',
+            fontWeight: 700,
+            color: isGrade ? '#c084fc' : unlocked ? classColor : '#444',
+            textShadow: '0 1px 2px #000',
+          }}>
+            {levelLabel(level)}
+          </span>
+        </div>
+        <div style={{
+          fontSize: '0.62rem',
+          color: selected ? '#f0f0f0' : '#888',
+          textAlign: 'center',
+          lineHeight: 1.25,
+          maxWidth: 76,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          fontWeight: selected ? 600 : 500,
         }}>
-          {levelLabel(level)}
-        </span>
-      </div>
-      <div style={{
-        fontSize: '0.62rem',
-        color: selected ? '#f0f0f0' : '#888',
-        textAlign: 'center',
-        lineHeight: 1.25,
-        maxWidth: 76,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        fontWeight: selected ? 600 : 500,
-      }}>
-        {def.name}
-      </div>
-    </button>
+          {def.name}
+        </div>
+      </button>
+    </ElectricShell>
   )
 }
 
@@ -169,9 +215,7 @@ export function ClassSkillBook({
         </div>
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
           <GlowingBadge variant={eco > 0 ? 'cyan' : 'gray'} pulse={eco > 0} dot>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              <Zap size={11} /> eco [{eco}]
-            </span>
+            {eco} · Ecos disponíveis
           </GlowingBadge>
           {!compact && MAX_CLASS_SKILL_LEVEL > ECO_SKILL_MAX_LEVEL && (
             <GlowingBadge variant={catalysts > 0 ? 'default' : 'gray'} pulse={catalysts > 0} dot>
@@ -258,8 +302,7 @@ export function ClassSkillBook({
                     : undefined}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', opacity: investCheck.ok ? 1 : 0.45 }}
                 >
-                  <Plus size={12} />
-                  {selected.unlocked ? 'Aumentar nível' : 'Desbloquear'}
+                  {selected.unlocked ? 'Investir Eco' : 'Desbloquear'}
                 </Button>
               )}
               {needsGrade && (

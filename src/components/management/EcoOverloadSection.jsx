@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Activity, RotateCcw, AlertTriangle } from 'lucide-react'
+import { Activity, AlertTriangle, Minus, Plus } from 'lucide-react'
 import { getEcoOverloadSnapshot } from '../../services/ecoOverloadService'
 import { ECO_OVERLOAD_PHASES, ECO_OVERLOAD_OVERAGE_TO_TOTAL } from '../../constants/ecoOverload'
 import { Button } from '../ui/Button'
@@ -16,7 +16,6 @@ const PHASE_LABELS = {
 
 export function EcoOverloadSection({
   entity,
-  onRestOverload,
   onSetOverload,
   lastOverloadEvents = [],
   onClearEvents,
@@ -25,9 +24,17 @@ export function EcoOverloadSection({
   const phaseMeta = PHASE_LABELS[snapshot.phase] || PHASE_LABELS[ECO_OVERLOAD_PHASES.STABLE]
   const [masterLevel, setMasterLevel] = useState(String(snapshot.overload))
   const lim = snapshot.safeLimit
+  const maxLevel = lim + ECO_OVERLOAD_OVERAGE_TO_TOTAL + 5
 
   const barPercent = Math.min(100, (snapshot.overload / Math.max(lim, 1)) * 100)
   const barColor = snapshot.inRupturePhase ? '#dc2626' : snapshot.atCap ? '#eab308' : '#a855f7'
+
+  const nudgeLevel = (delta) => {
+    const current = Number(masterLevel)
+    const base = Number.isFinite(current) ? current : 0
+    const next = Math.max(0, Math.min(maxLevel, base + delta))
+    setMasterLevel(String(next))
+  }
 
   return (
     <SpotlightCard
@@ -80,44 +87,60 @@ export function EcoOverloadSection({
         </GlassSurface>
       )}
 
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        {onRestOverload && (
-          <Button type="button" variant="secondary" size="xs" onClick={onRestOverload}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <RotateCcw size={12} /> Descansar Eco (0/{lim})
+      {onSetOverload && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="xs"
+            onClick={() => nudgeLevel(-1)}
+            aria-label="Diminuir sobrecarga"
+            style={{ width: 28, height: 28, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Minus size={12} />
           </Button>
-        )}
-        {onSetOverload && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <input
-              type="number"
-              min={0}
-              max={lim + ECO_OVERLOAD_OVERAGE_TO_TOTAL + 5}
-              value={masterLevel}
-              onChange={e => setMasterLevel(e.target.value)}
-              aria-label="Nível de sobrecarga (mestre)"
-              style={{
-                width: '52px',
-                background: 'rgba(0,0,0,0.35)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: '8px',
-                color: '#e5e5e5',
-                fontSize: '0.75rem',
-                padding: '6px 8px',
-                fontFamily: 'monospace',
-              }}
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              size="xs"
-              onClick={() => onSetOverload(Number(masterLevel) || 0)}
-            >
-              Confirmar
-            </Button>
-          </div>
-        )}
-      </div>
+          <input
+            type="number"
+            min={0}
+            max={maxLevel}
+            value={masterLevel}
+            onChange={e => setMasterLevel(e.target.value)}
+            aria-label="Nível de sobrecarga (mestre)"
+            className="input-base"
+            style={{
+              width: '52px',
+              textAlign: 'center',
+              background: 'rgba(0,0,0,0.35)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: '8px',
+              color: '#e5e5e5',
+              fontSize: '0.75rem',
+              padding: '6px 8px',
+              fontFamily: 'monospace',
+              MozAppearance: 'textfield',
+              appearance: 'textfield',
+            }}
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            size="xs"
+            onClick={() => nudgeLevel(1)}
+            aria-label="Aumentar sobrecarga"
+            style={{ width: 28, height: 28, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Plus size={12} />
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="xs"
+            onClick={() => onSetOverload(Number(masterLevel) || 0)}
+          >
+            Confirmar
+          </Button>
+        </div>
+      )}
 
       {lastOverloadEvents?.length > 0 && (
         <GlassSurface borderRadius={10} padding="0.75rem" style={{ borderColor: 'rgba(220,38,38,0.25)' }}>

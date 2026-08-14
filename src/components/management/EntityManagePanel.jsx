@@ -5,7 +5,6 @@ import { EntityThumb } from '../ui/EntityThumb'
 import { Modal } from '../ui/Modal'
 import { AttributeGrid } from './AttributeGrid'
 import { ProgressionSection } from './ProgressionSection'
-import { StatesSection } from './StatesSection'
 import { EntitySkillsPanel } from './EntitySkillsPanel'
 import { CharacterGearPanel } from '../equipment/CharacterGearPanel'
 import { isInCreationPhase } from '../../constants/attributes'
@@ -49,41 +48,68 @@ export function EntityManagePanel({
   const isCreation = isInCreationPhase(entity)
   const hasEco = entityHasEcoPowers(entity)
 
-  const physicalState = entity.physicalState ?? 'bem'
-  const mentalState = entity.mentalState ?? 'estavel'
-
   return (
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      gap: '1.25rem',
+      gap: '0.75rem',
       background: 'rgba(10, 10, 14, 0.94)',
       border: '1px solid rgba(255,255,255,0.08)',
-      borderRadius: 12,
-      padding: '1.1rem 1.15rem',
+      borderRadius: 14,
+      padding: '1rem 1.05rem',
       backdropFilter: 'blur(18px)',
       WebkitBackdropFilter: 'blur(18px)',
       boxShadow: '0 12px 40px rgba(0,0,0,0.45)',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <EntityThumb src={entity.image} alt={entity.name} size={48} borderRadius="4px" />
+      <header style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.85rem',
+        flexWrap: 'wrap',
+        padding: '0.15rem 0 0.85rem',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        <EntityThumb src={entity.image} alt={entity.name} size={54} borderRadius="12px" />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', minWidth: 0, flexWrap: 'wrap' }}>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#e5e5e5' }}>{entity.name}</div>
-            {onEditProfile && (
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={onEditProfile}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.65rem', padding: '0.2rem 0.45rem' }}
-              >
-                <Pencil size={11} /> Editar ficha
-              </button>
-            )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '1.1rem', fontWeight: 750, color: '#f5f5f5', letterSpacing: '-0.02em' }}>
+              {entity.name}
+            </span>
+            <span style={{
+              fontSize: '0.58rem',
+              fontFamily: 'monospace',
+              color: '#c084fc',
+              background: 'rgba(168,85,247,0.12)',
+              border: '1px solid rgba(168,85,247,0.28)',
+              borderRadius: 999,
+              padding: '0.18rem 0.5rem',
+              letterSpacing: '0.06em',
+            }}>
+              NVL {entity.level || 1}
+            </span>
           </div>
-          <div style={{ fontSize: '0.65rem', color: '#666', fontFamily: 'monospace', marginTop: '2px' }}>
-            NVL {entity.level || 1}
-          </div>
+          {onEditProfile && (
+            <button
+              type="button"
+              onClick={onEditProfile}
+              style={{
+                marginTop: 6,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                fontSize: '0.65rem',
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                color: '#777',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#c9c9c9' }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#777' }}
+            >
+              <Pencil size={11} /> Editar ficha
+            </button>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <Button
@@ -121,15 +147,7 @@ export function EntityManagePanel({
             </Button>
           )}
         </div>
-      </div>
-
-      <StatesSection
-        entity={entity}
-        physicalState={physicalState}
-        mentalState={mentalState}
-        onPhysicalChange={v => onUpdate?.({ physicalState: v })}
-        onMentalChange={v => onUpdate?.({ mentalState: v })}
-      />
+      </header>
 
       {showProgression && (
         <ProgressionSection

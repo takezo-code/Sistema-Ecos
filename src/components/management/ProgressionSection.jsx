@@ -1,31 +1,85 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { ChevronUp, ChevronDown } from 'lucide-react'
+import { ChevronUp, ChevronDown, TrendingUp, AlertTriangle } from 'lucide-react'
 import { Input } from '../ui/Field'
 import { MAX_LEVEL } from '../../constants/progression'
 import { getProgressionSnapshot, validateProgression } from '../../services/progressionBudget'
 import { entityHasEcoPowers, isNpcEntity } from '../../constants/entityProgression'
 import { isInCreationPhase, STARTING_ATTRIBUTE_POINTS } from '../../constants/attributes'
 import { Button } from '../ui/Button'
+import { PanelSection, SectionLabel, MetaChip } from './PanelSection'
 
 function clampLevel(value) {
   return Math.min(MAX_LEVEL, Math.max(1, value))
 }
 
-function AdminStepper({ label, value, min, max, onChange, color = '#e5e5e5' }) {
+function StatCard({ label, value, suffix, color = '#e5e5e5', accent = '#666', warn = false }) {
+  return (
+    <div style={{
+      flex: 1,
+      minWidth: 92,
+      padding: '0.6rem 0.75rem',
+      borderRadius: 10,
+      border: `1px solid ${warn ? 'rgba(220,38,38,0.35)' : 'rgba(255,255,255,0.07)'}`,
+      background: 'rgba(255,255,255,0.025)',
+    }}>
+      <div style={{
+        fontSize: '0.55rem',
+        fontFamily: 'monospace',
+        letterSpacing: '0.1em',
+        color: accent,
+        marginBottom: 4,
+        textTransform: 'uppercase',
+      }}>
+        {label}
+      </div>
+      <div style={{ fontSize: '1.4rem', fontWeight: 800, color, lineHeight: 1, letterSpacing: '-0.02em' }}>
+        {value}
+        {suffix != null && (
+          <span style={{ fontSize: '0.62rem', color: '#555', fontWeight: 400 }}> / {suffix}</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function Stepper({ label, value, min, max, onChange, color = '#e5e5e5' }) {
   const atMin = value <= min
   const atMax = value >= max
+  const btn = (disabled) => ({
+    width: 26,
+    height: 26,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 8,
+    color: disabled ? '#333' : '#999',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    padding: 0,
+  })
+
   return (
-    <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '4px', padding: '0.5rem 0.75rem', flex: 1, minWidth: '120px' }}>
-      <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', marginBottom: '4px' }}>{label}</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-        <button type="button" disabled={atMin} onClick={() => onChange(value - 1)}
-          style={{ background: '#1a1a1a', border: 'none', color: atMin ? '#222' : '#666', cursor: atMin ? 'not-allowed' : 'pointer', padding: '2px 5px', borderRadius: '2px', display: 'flex' }}>
-          <ChevronDown size={12} />
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '0.6rem',
+      padding: '0.55rem 0.7rem',
+      borderRadius: 10,
+      border: '1px solid rgba(255,255,255,0.07)',
+      background: 'rgba(255,255,255,0.02)',
+    }}>
+      <span style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: '#777', letterSpacing: '0.06em' }}>
+        {label}
+      </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        <button type="button" disabled={atMin} onClick={() => onChange(value - 1)} style={btn(atMin)}>
+          <ChevronDown size={13} />
         </button>
-        <span style={{ fontSize: '1.25rem', fontWeight: 700, color, flex: 1, textAlign: 'center' }}>{value}</span>
-        <button type="button" disabled={atMax} onClick={() => onChange(value + 1)}
-          style={{ background: '#1a1a1a', border: 'none', color: atMax ? '#222' : '#666', cursor: atMax ? 'not-allowed' : 'pointer', padding: '2px 5px', borderRadius: '2px', display: 'flex' }}>
-          <ChevronUp size={12} />
+        <span style={{ fontSize: '1rem', fontWeight: 800, color, minWidth: 24, textAlign: 'center' }}>{value}</span>
+        <button type="button" disabled={atMax} onClick={() => onChange(value + 1)} style={btn(atMax)}>
+          <ChevronUp size={13} />
         </button>
       </div>
     </div>
@@ -94,85 +148,94 @@ export function ProgressionSection({
     setLevelDraft(String(clampLevel(parsedLevelDraft + delta)))
   }
 
+  const availableChips = []
+  if (!adminMode) {
+    if (pending > 0) availableChips.push({ key: 'attr', color: '#d97706', text: `${pending} atributo` })
+    if (pendingSocial > 0) availableChips.push({ key: 'social', color: '#e879f9', text: `${pendingSocial} cena` })
+    if (pool > 0) availableChips.push({ key: 'pool', color: '#16a34a', text: `${pool} criação` })
+    if (hasEco && (entity.ecoPoints ?? 0) > 0) {
+      availableChips.push({ key: 'eco', color: '#a855f7', text: `${entity.ecoPoints} eco` })
+    }
+  }
+
+  const errorMessage = masterError?.message || (validation && !validation.valid ? validation.errors[0]?.message : null)
+
   return (
-    <div>
-      <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>
-        NÍVEL E EXPERIÊNCIA
-      </div>
-
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-        <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: '4px', padding: '0.75rem 1rem', minWidth: '100px' }}>
-          <div style={{ fontSize: '0.6rem', color: '#a855f7', fontFamily: 'monospace', marginBottom: '4px' }}>NÍVEL</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 700, color: atMax ? '#d97706' : '#e5e5e5', lineHeight: 1 }}>
-            {level}
-            <span style={{ fontSize: '0.65rem', color: '#444', fontWeight: 400 }}> / {MAX_LEVEL}</span>
-          </div>
+    <PanelSection
+      icon={TrendingUp}
+      title="Nível e progressão"
+      accent="#a855f7"
+      meta={availableChips.length > 0 ? (
+        <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {availableChips.map(chip => (
+            <MetaChip key={chip.key} color={chip.color} tone="solid">{chip.text}</MetaChip>
+          ))}
         </div>
-
+      ) : null}
+    >
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <StatCard
+          label="Nível"
+          value={level}
+          suffix={MAX_LEVEL}
+          accent="#a855f7"
+          color={atMax ? '#d97706' : '#f0f0f0'}
+        />
         {hasEco && (
-          <div style={{ background: '#0d0d0d', border: '1px solid rgba(168,85,247,0.15)', borderRadius: '4px', padding: '0.75rem 1rem', minWidth: '80px' }}>
-            <div style={{ fontSize: '0.6rem', color: '#a855f7', fontFamily: 'monospace', marginBottom: '4px' }}>ECOS</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#e5e5e5' }}>{entity.ecoPoints ?? 0}</div>
-          </div>
+          <StatCard label="Ecos" value={entity.ecoPoints ?? 0} accent="#a855f7" />
+        )}
+        {adminMode && snapshot && (
+          <>
+            <StatCard
+              label="Pts atributos"
+              value={snapshot.spent}
+              suffix={snapshot.budget}
+              accent="#d97706"
+              warn={snapshot.spent > snapshot.budget}
+              color={snapshot.spent > snapshot.budget ? '#f87171' : '#f0f0f0'}
+            />
+            <StatCard
+              label="Pts cena"
+              value={snapshot.socialSpent}
+              suffix={snapshot.socialBudget}
+              accent="#e879f9"
+              warn={snapshot.socialSpent > snapshot.socialBudget}
+              color={snapshot.socialSpent > snapshot.socialBudget ? '#f87171' : '#f0f0f0'}
+            />
+          </>
         )}
       </div>
-
-      {!adminMode && (pending > 0 || pool > 0 || (entity.ecoPoints ?? 0) > 0 || (entity.pendingSocialPoints ?? 0) > 0) && (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.35rem',
-          marginBottom: '0.75rem',
-          padding: '0.625rem 0.75rem',
-          background: '#0d0d0d',
-          border: '1px solid #1a1a1a',
-          borderRadius: '4px',
-        }}>
-          <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', marginBottom: '2px' }}>
-            PONTOS DISPONÍVEIS
-          </div>
-          {pending > 0 && (
-            <span style={{ fontSize: '0.7rem', color: '#d97706', fontFamily: 'monospace' }}>
-              {pending} ponto(s) de atributo pendente(s)
-            </span>
-          )}
-          {(entity.pendingSocialPoints ?? 0) > 0 && (
-            <span style={{ fontSize: '0.7rem', color: '#e879f9', fontFamily: 'monospace' }}>
-              {entity.pendingSocialPoints} ponto(s) de cena pendente(s)
-            </span>
-          )}
-          {pool > 0 && (
-            <span style={{ fontSize: '0.7rem', color: '#16a34a', fontFamily: 'monospace' }}>
-              {pool} ponto(s) de criação
-            </span>
-          )}
-          {hasEco && (entity.ecoPoints ?? 0) > 0 && (
-            <span style={{ fontSize: '0.7rem', color: '#a855f7', fontFamily: 'monospace' }}>
-              {entity.ecoPoints} Eco(s) para skills
-            </span>
-          )}
-        </div>
-      )}
 
       {adminMode && snapshot && (
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.75rem',
-          marginBottom: '1rem',
-          padding: '0.75rem',
-          background: 'rgba(217,119,6,0.05)',
-          border: '1px solid rgba(217,119,6,0.15)',
-          borderRadius: '4px',
+          gap: '0.7rem',
+          padding: '0.8rem',
+          borderRadius: 10,
+          border: '1px solid rgba(217,119,6,0.18)',
+          background: 'rgba(217,119,6,0.045)',
         }}>
-          <div>
-            <div style={{ fontSize: '0.6rem', color: '#444', fontFamily: 'monospace', marginBottom: '4px' }}>ALTERAR NÍVEL</div>
-            <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <SectionLabel accent="#d97706">Ajustes do mestre</SectionLabel>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <button
                 type="button"
                 disabled={parsedLevelDraft <= 1}
                 onClick={() => nudgeLevel(-1)}
-                style={{ background: '#1a1a1a', border: 'none', color: parsedLevelDraft <= 1 ? '#222' : '#666', cursor: parsedLevelDraft <= 1 ? 'not-allowed' : 'pointer', padding: '6px 8px', borderRadius: '2px', display: 'flex' }}
+                style={{
+                  width: 28,
+                  height: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 8,
+                  color: parsedLevelDraft <= 1 ? '#333' : '#999',
+                  cursor: parsedLevelDraft <= 1 ? 'not-allowed' : 'pointer',
+                  padding: 0,
+                }}
               >
                 <ChevronDown size={14} />
               </button>
@@ -182,52 +245,62 @@ export function ProgressionSection({
                 max={MAX_LEVEL}
                 value={levelDraft}
                 onChange={e => setLevelDraft(e.target.value)}
-                style={{ width: '64px', textAlign: 'center' }}
+                style={{ width: '64px', textAlign: 'center', padding: '5px 8px' }}
               />
               <button
                 type="button"
                 disabled={parsedLevelDraft >= MAX_LEVEL}
                 onClick={() => nudgeLevel(1)}
-                style={{ background: '#1a1a1a', border: 'none', color: parsedLevelDraft >= MAX_LEVEL ? '#222' : '#666', cursor: parsedLevelDraft >= MAX_LEVEL ? 'not-allowed' : 'pointer', padding: '6px 8px', borderRadius: '2px', display: 'flex' }}
+                style={{
+                  width: 28,
+                  height: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 8,
+                  color: parsedLevelDraft >= MAX_LEVEL ? '#333' : '#999',
+                  cursor: parsedLevelDraft >= MAX_LEVEL ? 'not-allowed' : 'pointer',
+                  padding: 0,
+                }}
               >
                 <ChevronUp size={14} />
               </button>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.5rem' }}>
+          {(showCreationPool || (hasEco && snapshot.maxEcoFree > 0)) && (
             <div style={{
-              background: pending > 0 ? 'rgba(217,119,6,0.08)' : '#0d0d0d',
-              border: `1px solid ${pending > 0 ? 'rgba(217,119,6,0.25)' : '#1a1a1a'}`,
-              borderRadius: '4px',
-              padding: '0.625rem 0.75rem',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '0.5rem',
             }}>
-              <div style={{ fontSize: '0.55rem', color: '#d97706', fontFamily: 'monospace' }}>PTS ATRIBUTOS</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: snapshot.spent > snapshot.budget ? '#dc2626' : '#e5e5e5' }}>
-                {snapshot.spent}<span style={{ fontSize: '0.7rem', color: '#555' }}> / {snapshot.budget}</span>
-              </div>
+              {showCreationPool && (
+                <Stepper
+                  label="PTS DE CRIAÇÃO"
+                  value={poolDraft}
+                  min={0}
+                  max={Math.max(0, STARTING_ATTRIBUTE_POINTS - snapshot.spent + (entity.unspentAttributePoints ?? 0))}
+                  color="#4ade80"
+                  onChange={setPoolDraft}
+                />
+              )}
+              {hasEco && snapshot.maxEcoFree > 0 && (
+                <Stepper
+                  label={`ECOS (MÁX ${snapshot.maxEcoFree})`}
+                  value={ecoDraft}
+                  min={0}
+                  max={snapshot.maxEcoFree}
+                  color="#c084fc"
+                  onChange={setEcoDraft}
+                />
+              )}
             </div>
-            <div style={{
-              background: pendingSocial > 0 ? 'rgba(232,121,249,0.08)' : '#0d0d0d',
-              border: `1px solid ${pendingSocial > 0 ? 'rgba(232,121,249,0.25)' : '#1a1a1a'}`,
-              borderRadius: '4px',
-              padding: '0.625rem 0.75rem',
-            }}>
-              <div style={{ fontSize: '0.55rem', color: '#e879f9', fontFamily: 'monospace' }}>PTS CENA</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: snapshot.socialSpent > snapshot.socialBudget ? '#dc2626' : '#e5e5e5' }}>
-                {snapshot.socialSpent}<span style={{ fontSize: '0.7rem', color: '#555' }}> / {snapshot.socialBudget}</span>
-              </div>
-            </div>
-            {hasEco && (
-              <div style={{ background: '#0d0d0d', border: '1px solid rgba(168,85,247,0.2)', borderRadius: '4px', padding: '0.625rem 0.75rem' }}>
-                <div style={{ fontSize: '0.55rem', color: '#a855f7', fontFamily: 'monospace' }}>PTS ECO</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e5e5e5' }}>{snapshot.ecoFree}</div>
-              </div>
-            )}
-          </div>
+          )}
 
           {(pending > 0 || pendingSocial > 0) && !showCreationPool && (
-            <p style={{ fontSize: '0.75rem', color: '#888', margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: '0.72rem', color: '#888', margin: 0, lineHeight: 1.5 }}>
               Use as setas na grade abaixo para gastar
               {pending > 0 && (
                 <> <strong style={{ color: '#d97706' }}>{pending} de atributo</strong></>
@@ -241,28 +314,6 @@ export function ProgressionSection({
             </p>
           )}
 
-          {showCreationPool && (
-            <AdminStepper
-              label="PTS DE CRIAÇÃO (ficha nova)"
-              value={poolDraft}
-              min={0}
-              max={Math.max(0, STARTING_ATTRIBUTE_POINTS - snapshot.spent + (entity.unspentAttributePoints ?? 0))}
-              color="#16a34a"
-              onChange={setPoolDraft}
-            />
-          )}
-
-          {hasEco && snapshot.maxEcoFree > 0 && (
-            <AdminStepper
-              label={`AJUSTAR ECOS (máx ${snapshot.maxEcoFree})`}
-              value={ecoDraft}
-              min={0}
-              max={snapshot.maxEcoFree}
-              color="#a855f7"
-              onChange={setEcoDraft}
-            />
-          )}
-
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
             <Button
               type="button"
@@ -274,46 +325,43 @@ export function ProgressionSection({
               Confirmar alterações
             </Button>
             {isDirty && (
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={resetDrafts}
-                style={{ fontSize: '0.7rem' }}
-              >
+              <button type="button" className="btn-ghost" onClick={resetDrafts} style={{ fontSize: '0.7rem' }}>
                 Descartar
               </button>
             )}
+            {validation && !validation.valid && (
+              <>
+                <button type="button" className="btn-ghost" onClick={onClampAuxiliary} style={{ fontSize: '0.7rem', color: '#d97706' }}>
+                  Corrigir XP / Ecos
+                </button>
+                {snapshot.spent > snapshot.budget && (
+                  <Button type="button" variant="secondary" size="xs" onClick={onScaleAttributes}>
+                    Ajustar atributos ({snapshot.budget} pts)
+                  </Button>
+                )}
+              </>
+            )}
           </div>
-
-          {validation && !validation.valid && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-              <button type="button" className="btn-ghost" onClick={onClampAuxiliary} style={{ fontSize: '0.7rem', color: '#d97706' }}>
-                Corrigir XP / Ecos
-              </button>
-              {snapshot.spent > snapshot.budget && (
-                <Button type="button" variant="secondary" size="xs" onClick={onScaleAttributes}>
-                  Ajustar atributos ({snapshot.budget} pts)
-                </Button>
-              )}
-            </div>
-          )}
         </div>
       )}
 
-      {adminMode && (masterError || (validation && !validation.valid)) && (
+      {adminMode && errorMessage && (
         <div style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '0.5rem',
           fontSize: '0.7rem',
-          color: '#dc2626',
-          background: 'rgba(220,38,38,0.08)',
-          border: '1px solid rgba(220,38,38,0.2)',
-          borderRadius: '3px',
-          padding: '0.5rem 0.75rem',
-          marginBottom: '0.75rem',
+          color: '#f87171',
+          background: 'rgba(220,38,38,0.07)',
+          border: '1px solid rgba(220,38,38,0.22)',
+          borderRadius: 10,
+          padding: '0.55rem 0.7rem',
+          lineHeight: 1.45,
         }}>
-          {masterError?.message || validation?.errors[0]?.message}
+          <AlertTriangle size={12} style={{ flexShrink: 0, marginTop: 2 }} />
+          <span>{errorMessage}</span>
         </div>
       )}
-
-    </div>
+    </PanelSection>
   )
 }

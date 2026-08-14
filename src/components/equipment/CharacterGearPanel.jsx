@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Dices } from 'lucide-react'
+import { Dices, Sword, Shield, Sparkles } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import { Field, Input, Select, Textarea } from '../ui/Field'
 import { GearForgeForm } from './GearForgeForm'
@@ -22,6 +22,66 @@ import { getWeaponSkill } from '../../mechanics/equipment/weaponProgressionEngin
 import { getArmorType } from '../../constants/equipmentTypes'
 import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
 import { Button } from '../ui/Button'
+
+function GearHeader({ icon: Icon, name, color, tags = [] }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexWrap: 'wrap' }}>
+      <span style={{
+        width: 26,
+        height: 26,
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 8,
+        background: `${color}1a`,
+        border: `1px solid ${color}44`,
+        color,
+      }}>
+        <Icon size={13} strokeWidth={2.2} />
+      </span>
+      <span style={{ fontSize: '0.9rem', fontWeight: 750, color: '#f0f0f0', letterSpacing: '-0.01em' }}>
+        {name}
+      </span>
+      {tags.filter(Boolean).map(tag => (
+        <span
+          key={tag.label}
+          style={{
+            fontSize: '0.55rem',
+            fontFamily: 'monospace',
+            letterSpacing: '0.06em',
+            color: tag.color,
+            background: `${tag.color}12`,
+            border: `1px solid ${tag.color}30`,
+            borderRadius: 999,
+            padding: '0.15rem 0.45rem',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {tag.label}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function PassiveRow({ text, color, empty = false, highlight = false }) {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      padding: '0.45rem 0.6rem',
+      borderRadius: 8,
+      border: `1px solid ${empty ? 'rgba(255,255,255,0.06)' : `${color}3a`}`,
+      background: highlight ? 'rgba(168,85,247,0.07)' : 'rgba(255,255,255,0.02)',
+      fontSize: '0.7rem',
+      fontFamily: 'monospace',
+      color: empty ? '#4a4a4a' : '#d4d4d4',
+    }}>
+      {text}
+    </div>
+  )
+}
 
 function ItemAttributesRow({ category, item, color, onKeepAll }) {
   const slots = getPassiveSlotsForCategory(category)
@@ -47,7 +107,7 @@ function ItemAttributesRow({ category, item, color, onKeepAll }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
         <Button
           type="button"
@@ -77,24 +137,13 @@ function ItemAttributesRow({ category, item, color, onKeepAll }) {
         const draft = hasDrafts ? drafts[def.slot] : null
         const shown = draft || (!hasDrafts ? kept : null)
         return (
-          <div
+          <PassiveRow
             key={def.slot}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.4rem 0.5rem',
-              border: `1px solid ${shown ? `${color}44` : '#1e1e1e'}`,
-              borderRadius: '3px',
-              background: draft ? 'rgba(168,85,247,0.06)' : '#0a0a0a',
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '0.7rem', color: shown ? '#ccc' : '#333', fontFamily: 'monospace' }}>
-                {shown ? formatPassive(shown) : (hasDrafts ? '—' : 'não rolado')}
-              </div>
-            </div>
-          </div>
+            color={color}
+            empty={!shown}
+            highlight={!!draft}
+            text={shown ? formatPassive(shown) : (hasDrafts ? '—' : 'não rolado')}
+          />
         )
       })}
     </div>
@@ -132,26 +181,16 @@ function ManualItemAttributesRow({ category, item, color, onSave }) {
 
   if (!editing) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
         {slots.map((def, index) => {
           const kept = aligned[index]
           return (
-            <div
+            <PassiveRow
               key={def.slot}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                padding: '0.4rem 0.5rem',
-                border: `1px solid ${kept ? `${color}44` : '#1e1e1e'}`,
-                borderRadius: '3px',
-                background: '#0a0a0a',
-              }}
-            >
-              <div style={{ fontSize: '0.7rem', color: kept ? '#ccc' : '#333', fontFamily: 'monospace' }}>
-                {kept ? formatPassive(kept) : 'sem valor'}
-              </div>
-            </div>
+              color={color}
+              empty={!kept}
+              text={kept ? formatPassive(kept) : 'sem valor'}
+            />
           )
         })}
         <Button
@@ -275,18 +314,14 @@ function WeaponDetails({ character, weapon, onSetPassive, onSetWeaponSkill, manu
   const [editingSkill, setEditingSkill] = useState(false)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#e5e5e5' }}>{weapon.name}</span>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+      <GearHeader
+        icon={Sword}
+        name={weapon.name}
+        color="#f97316"
+        tags={[kindLabel ? { label: kindLabel, color: '#f97316' } : null]}
+      />
 
-      {kindLabel && (
-        <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: '#f97316' }}>
-          {kindLabel}
-        </div>
-      )}
-
-      <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#444' }}>ATRIBUTOS DE ITEM</div>
       {manualValues ? (
         <ManualItemAttributesRow
           category={GEAR_CATEGORIES.WEAPON}
@@ -304,15 +339,26 @@ function WeaponDetails({ character, weapon, onSetPassive, onSetWeaponSkill, manu
       )}
 
       <div style={{
-        marginTop: '0.25rem',
-        padding: '0.5rem 0.55rem',
-        border: '1px solid #1e1e1e',
-        borderRadius: '3px',
-        background: '#0a0a0a',
+        marginTop: '0.1rem',
+        padding: '0.6rem 0.7rem',
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: 10,
+        background: 'rgba(255,255,255,0.02)',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-          <span style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#444' }}>SKILL DA ARMA (4ª)</span>
-          <button type="button" className="btn-ghost" onClick={() => setEditingSkill(v => !v)} style={{ fontSize: '0.55rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', marginBottom: '0.45rem' }}>
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+            fontSize: '0.55rem',
+            fontFamily: 'monospace',
+            letterSpacing: '0.1em',
+            color: '#7a7a7a',
+          }}>
+            <Sparkles size={10} style={{ color: '#a855f7' }} />
+            SKILL DA ARMA
+          </span>
+          <button type="button" className="btn-ghost" onClick={() => setEditingSkill(v => !v)} style={{ fontSize: '0.6rem' }}>
             {editingSkill ? 'Fechar' : (weaponSkill ? 'Editar' : 'Criar')}
           </button>
         </div>
@@ -326,15 +372,15 @@ function WeaponDetails({ character, weapon, onSetPassive, onSetWeaponSkill, manu
           />
         ) : weaponSkill ? (
           <div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#e5e5e5' }}>{weaponSkill.name}</div>
+            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#e5e5e5' }}>{weaponSkill.name}</div>
             {weaponSkill.mechanicalEffect && (
-              <p style={{ fontSize: '0.65rem', color: '#888', margin: '0.25rem 0 0', lineHeight: 1.45 }}>
+              <p style={{ fontSize: '0.66rem', color: '#888', margin: '0.25rem 0 0', lineHeight: 1.5 }}>
                 {weaponSkill.mechanicalEffect}
               </p>
             )}
           </div>
         ) : (
-          <div style={{ fontSize: '0.65rem', color: '#444' }}>Player + mestre definem a skill aqui.</div>
+          <div style={{ fontSize: '0.66rem', color: '#555' }}>Player + mestre definem a skill aqui.</div>
         )}
       </div>
 
@@ -350,21 +396,17 @@ function ArmorDetails({ character, armor, onSetPassive, manualValues = false }) 
   const tier = getArmorTier(character)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#e5e5e5' }}>{armor.name}</span>
-        <span style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: tier.color }}>
-          {tier.label.toUpperCase()} · NV {tier.level}
-        </span>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+      <GearHeader
+        icon={Shield}
+        name={armor.name}
+        color="#16a34a"
+        tags={[
+          { label: `${tier.label.toUpperCase()} · NV ${tier.level}`, color: tier.color },
+          typeMeta ? { label: typeMeta.label, color: typeMeta.color } : null,
+        ]}
+      />
 
-      {typeMeta && (
-        <div style={{ fontSize: '0.55rem', fontFamily: 'monospace', color: typeMeta.color }}>
-          {typeMeta.icon} {typeMeta.label}
-        </div>
-      )}
-
-      <div style={{ fontSize: '0.5rem', fontFamily: 'monospace', color: '#444' }}>ATRIBUTOS DE ITEM</div>
       {manualValues ? (
         <ManualItemAttributesRow
           category={GEAR_CATEGORIES.ARMOR}
@@ -408,10 +450,11 @@ export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeap
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <div style={{
-          background: '#0d0d0d',
-          border: `1px solid ${weapon ? 'rgba(249,115,22,0.25)' : '#1a1a1a'}`,
-          borderRadius: '4px',
-          padding: '0.65rem 0.75rem',
+          background: 'rgba(255,255,255,0.018)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderLeft: `3px solid ${weapon ? '#f97316' : 'rgba(255,255,255,0.08)'}`,
+          borderRadius: 12,
+          padding: '0.8rem 0.9rem',
         }}>
           {weapon ? (
             <WeaponDetails
@@ -434,10 +477,11 @@ export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeap
         </div>
 
         <div style={{
-          background: '#0d0d0d',
-          border: `1px solid ${armor ? 'rgba(22,163,74,0.25)' : '#1a1a1a'}`,
-          borderRadius: '4px',
-          padding: '0.65rem 0.75rem',
+          background: 'rgba(255,255,255,0.018)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderLeft: `3px solid ${armor ? '#16a34a' : 'rgba(255,255,255,0.08)'}`,
+          borderRadius: 12,
+          padding: '0.8rem 0.9rem',
         }}>
           {armor ? (
             <ArmorDetails character={character} armor={armor} onSetPassive={onSetPassive} manualValues={manualValues} />

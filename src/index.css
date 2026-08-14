@@ -140,6 +140,17 @@ html, body {
   color: #444444;
 }
 
+.input-base[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.input-base[type='number']::-webkit-outer-spin-button,
+.input-base[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* Preferir <Button> (Specular). Classes abaixo = fallback visual alinhado. */
 .btn-primary {
   background: color-mix(in srgb, #2563eb 28%, transparent);

@@ -1,5 +1,6 @@
 import React from 'react'
-import { ChevronUp, ChevronDown } from 'lucide-react'
+import { ChevronUp, ChevronDown, Dumbbell, Users } from 'lucide-react'
+import { PanelSection, MetaChip } from './PanelSection'
 import {
   SOCIAL_ATTRIBUTES,
   getTotalAttributePoints,
@@ -25,55 +26,70 @@ import { getSocialPointsFromLevel } from '../../constants/progression'
 
 function AttributeInput({ attr, value, effectiveValue, max, showMax, onChange, canIncrease, canDecrease }) {
   const modified = effectiveValue != null && effectiveValue !== value
+  const stepBtn = (enabled) => ({
+    width: 22,
+    height: 18,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 0,
+    background: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(255,255,255,0.07)',
+    borderRadius: 6,
+    color: enabled ? '#aaa' : '#333',
+    cursor: enabled ? 'pointer' : 'not-allowed',
+  })
 
   return (
     <div style={{
-      background: '#16161c',
-      border: `1px solid ${modified ? 'rgba(234,88,12,0.35)' : 'rgba(255,255,255,0.1)'}`,
-      borderRadius: '3px',
-      padding: '0.625rem 0.75rem',
+      background: 'rgba(255,255,255,0.025)',
+      border: `1px solid ${modified ? 'rgba(234,88,12,0.35)' : 'rgba(255,255,255,0.07)'}`,
+      borderRadius: 10,
+      padding: '0.6rem 0.7rem',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
+      gap: '0.5rem',
     }}>
-      <div>
-        <div style={{ fontSize: '0.6rem', color: attr.color, fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: '2px' }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{
+          fontSize: '0.55rem',
+          color: attr.color,
+          fontFamily: 'monospace',
+          letterSpacing: '0.1em',
+          marginBottom: 3,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}>
           {attr.label.toUpperCase()}
         </div>
-        <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f0f0f0', lineHeight: 1 }}>
+        <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#f0f0f0', lineHeight: 1, letterSpacing: '-0.02em' }}>
           {modified ? (
             <>
               <span style={{ color: '#ea580c' }}>{effectiveValue}</span>
-              <span style={{ fontSize: '0.65rem', color: '#777', fontWeight: 400, marginLeft: '4px' }}>({value})</span>
+              <span style={{ fontSize: '0.62rem', color: '#777', fontWeight: 400, marginLeft: 4 }}>({value})</span>
             </>
           ) : (
             value
           )}
-          {showMax && <span style={{ fontSize: '0.6rem', color: '#555', fontWeight: 400 }}>/{max}</span>}
+          {showMax && <span style={{ fontSize: '0.58rem', color: '#4a4a4a', fontWeight: 400 }}> / {max}</span>}
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-        <button type="button"
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flexShrink: 0 }}>
+        <button
+          type="button"
           disabled={!canIncrease}
           onClick={() => onChange(value + 1)}
-          style={{
-            background: '#222228', border: 'none',
-            color: canIncrease ? '#aaa' : '#3a3a40',
-            cursor: canIncrease ? 'pointer' : 'not-allowed',
-            padding: '3px 6px', borderRadius: '2px', display: 'flex',
-          }}
+          style={stepBtn(canIncrease)}
         >
           <ChevronUp size={12} />
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => canDecrease && onChange(value - 1)}
           disabled={!canDecrease}
-          style={{
-            background: '#222228', border: 'none',
-            color: canDecrease ? '#aaa' : '#3a3a40',
-            cursor: canDecrease ? 'pointer' : 'not-allowed',
-            padding: '3px 6px', borderRadius: '2px', display: 'flex',
-          }}
+          style={stepBtn(canDecrease)}
         >
           <ChevronDown size={12} />
         </button>
@@ -188,123 +204,99 @@ export function AttributeGrid({
     return false
   }
 
-  return (
-    <div>
-      {/* ATRIBUTOS FÍSICOS */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-          ATRIBUTOS FÍSICOS
-        </div>
-        <div style={{
-          fontSize: '0.65rem',
-          fontFamily: 'monospace',
-          textAlign: 'right',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-        }}>
-          {isCreation ? (
-            <span>
-              <span style={{ color: pool > 0 ? '#eab308' : '#16a34a' }}>{pool}</span>
-              <span style={{ color: '#444' }}> disponíveis</span>
-            </span>
-          ) : adminMode && snapshot ? (
-            <>
-              <span style={{ color: spent > snapshot.budget ? '#dc2626' : '#888' }}>
-                {spent}/{snapshot.budget} usados
-              </span>
-              {pending > 0 && <span style={{ color: '#d97706' }}>{pending} pend.</span>}
-            </>
-          ) : pending > 0 ? (
-            <span style={{ color: '#d97706' }}>{pending} pend.</span>
-          ) : null}
-        </div>
-      </div>
-      {adminMode && validation && !validation.valid && (
-        <div style={{
-          fontSize: '0.7rem',
-          color: '#dc2626',
-          background: 'rgba(220,38,38,0.08)',
-          border: '1px solid rgba(220,38,38,0.2)',
-          borderRadius: '3px',
-          padding: '0.5rem 0.75rem',
-          marginBottom: '0.5rem',
-        }}>
-          {validation.errors[0]?.message}
-        </div>
-      )}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.5rem', marginBottom: '1.25rem' }}>
-        {attrList.map(attr => {
-          const value = entity.attributes?.[attr.key] || 0
-          const max = isCreation ? getInitialAttributeMax() : getAttributeMax(attr.key)
-          const baseVal = entity.attributes?.[attr.key] || 0
-          const effectiveValue = effectiveAttrs[attr.key] !== baseVal ? effectiveAttrs[attr.key] : null
-          return (
-            <AttributeInput
-              key={attr.key}
-              attr={attr}
-              value={value}
-              effectiveValue={effectiveValue}
-              max={max}
-              showMax={!isCreation}
-              canIncrease={canIncreaseAttr(attr.key, value)}
-              canDecrease={getCanDecrease(attr.key, value)}
-              onChange={v => {
-                const floor = isCreation ? 0 : getCreationAttributeFloor(entity, attr.key)
-                handleChange(attr.key, Math.max(floor, Math.min(max, v)))
-              }}
-            />
-          )
-        })}
-      </div>
+  const physicalMeta = isCreation ? (
+    <MetaChip color={pool > 0 ? '#eab308' : '#4ade80'} tone="solid">{pool} disponíveis</MetaChip>
+  ) : adminMode && snapshot ? (
+    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+      <MetaChip color={spent > snapshot.budget ? '#f87171' : '#8a8a8a'}>
+        {spent}/{snapshot.budget} usados
+      </MetaChip>
+      {pending > 0 && <MetaChip color="#d97706" tone="solid">{pending} pend.</MetaChip>}
+    </div>
+  ) : pending > 0 ? (
+    <MetaChip color="#d97706" tone="solid">{pending} pend.</MetaChip>
+  ) : null
 
-      {/* ATRIBUTOS DE CENA */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <div style={{ fontSize: '0.65rem', color: '#444', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-          ATRIBUTOS DE CENA
+  const socialMeta = isCreation ? (
+    <MetaChip color={socialPool > 0 ? '#e879f9' : '#4ade80'} tone="solid">{socialPool} disponíveis</MetaChip>
+  ) : adminMode && socialBudget != null ? (
+    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+      <MetaChip color={socialSpent > socialBudget ? '#f87171' : '#8a8a8a'}>
+        {socialSpent}/{socialBudget} usados
+      </MetaChip>
+      {pendingSocial > 0 && <MetaChip color="#e879f9" tone="solid">{pendingSocial} pend.</MetaChip>}
+    </div>
+  ) : pendingSocial > 0 ? (
+    <MetaChip color="#e879f9" tone="solid">{pendingSocial} pend.</MetaChip>
+  ) : null
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <PanelSection icon={Dumbbell} title="Atributos físicos" accent="#dc2626" meta={physicalMeta}>
+        {adminMode && validation && !validation.valid && (
+          <div style={{
+            fontSize: '0.7rem',
+            color: '#f87171',
+            background: 'rgba(220,38,38,0.07)',
+            border: '1px solid rgba(220,38,38,0.22)',
+            borderRadius: 10,
+            padding: '0.5rem 0.7rem',
+          }}>
+            {validation.errors[0]?.message}
+          </div>
+        )}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(132px, 1fr))', gap: '0.45rem' }}>
+          {attrList.map(attr => {
+            const value = entity.attributes?.[attr.key] || 0
+            const max = isCreation ? getInitialAttributeMax() : getAttributeMax(attr.key)
+            const baseVal = entity.attributes?.[attr.key] || 0
+            const effectiveValue = effectiveAttrs[attr.key] !== baseVal ? effectiveAttrs[attr.key] : null
+            return (
+              <AttributeInput
+                key={attr.key}
+                attr={attr}
+                value={value}
+                effectiveValue={effectiveValue}
+                max={max}
+                showMax={!isCreation}
+                canIncrease={canIncreaseAttr(attr.key, value)}
+                canDecrease={getCanDecrease(attr.key, value)}
+                onChange={v => {
+                  const floor = isCreation ? 0 : getCreationAttributeFloor(entity, attr.key)
+                  handleChange(attr.key, Math.max(floor, Math.min(max, v)))
+                }}
+              />
+            )
+          })}
         </div>
-        <div style={{ fontSize: '0.65rem', fontFamily: 'monospace', textAlign: 'right' }}>
-          {isCreation ? (
-            <>
-              <span style={{ color: socialPool > 0 ? '#e879f9' : '#16a34a' }}>{socialPool}</span>
-              <span style={{ color: '#444' }}> disponíveis</span>
-            </>
-          ) : adminMode && socialBudget != null ? (
-            <>
-              <span style={{ color: socialSpent > socialBudget ? '#dc2626' : '#888' }}>
-                {socialSpent}/{socialBudget} usados
-              </span>
-              {pendingSocial > 0 && <span style={{ color: '#e879f9' }}> · {pendingSocial} pend.</span>}
-            </>
-          ) : pendingSocial > 0 ? (
-            <span style={{ color: '#e879f9' }}>{pendingSocial} pend.</span>
-          ) : null}
+      </PanelSection>
+
+      <PanelSection icon={Users} title="Atributos de cena" accent="#e879f9" meta={socialMeta}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(132px, 1fr))', gap: '0.45rem' }}>
+          {SOCIAL_ATTRIBUTES.map(attr => {
+            const value = entity.socialAttributes?.[attr.key] || 0
+            const max = isCreation ? getInitialSocialMax() : getSocialAttributeMax(attr.key)
+            const eff = effectiveSocial[attr.key]
+            const effectiveValue = eff !== value ? eff : null
+            return (
+              <AttributeInput
+                key={attr.key}
+                attr={attr}
+                value={value}
+                effectiveValue={effectiveValue}
+                max={max}
+                showMax={!isCreation}
+                canIncrease={canIncreaseSocialAttr(attr.key, value)}
+                canDecrease={getCanDecreaseSocial(attr.key, value)}
+                onChange={v => {
+                  const floor = isCreation ? 0 : getCreationSocialFloor(entity, attr.key)
+                  handleSocialChange(attr.key, Math.max(floor, Math.min(max, v)))
+                }}
+              />
+            )
+          })}
         </div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.5rem' }}>
-        {SOCIAL_ATTRIBUTES.map(attr => {
-          const value = entity.socialAttributes?.[attr.key] || 0
-          const max = isCreation ? getInitialSocialMax() : getSocialAttributeMax(attr.key)
-          const eff = effectiveSocial[attr.key]
-          const effectiveValue = eff !== value ? eff : null
-          return (
-            <AttributeInput
-              key={attr.key}
-              attr={attr}
-              value={value}
-              effectiveValue={effectiveValue}
-              max={max}
-              showMax={!isCreation}
-              canIncrease={canIncreaseSocialAttr(attr.key, value)}
-              canDecrease={getCanDecreaseSocial(attr.key, value)}
-              onChange={v => {
-                const floor = isCreation ? 0 : getCreationSocialFloor(entity, attr.key)
-                handleSocialChange(attr.key, Math.max(floor, Math.min(max, v)))
-              }}
-            />
-          )
-        })}
-      </div>
+      </PanelSection>
     </div>
   )
 }
