@@ -1,33 +1,41 @@
 import React from 'react'
+import { BookOpen } from 'lucide-react'
+import GlassSurface from '../react-bits/GlassSurface'
 
-function NarrativeBlock({ label, text, color = '#666', borderColor }) {
+function NarrativeBlock({ label, text, color = '#888' }) {
   if (!text?.trim()) return null
   return (
-    <div style={{
-      background: '#0d0d0d',
-      border: `1px solid ${borderColor || '#1a1a1a'}`,
-      borderRadius: '4px',
-      padding: '0.85rem 1rem',
-    }}>
+    <GlassSurface borderRadius={12} padding="0.8rem 0.9rem">
       <div style={{
-        fontSize: '0.6rem',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        fontSize: '0.55rem',
         color,
         fontFamily: 'monospace',
         letterSpacing: '0.1em',
-        marginBottom: '6px',
+        marginBottom: 8,
+        textTransform: 'uppercase',
       }}>
+        <span style={{
+          width: 5,
+          height: 5,
+          borderRadius: 999,
+          background: color,
+          boxShadow: `0 0 8px ${color}`,
+        }} />
         {label}
       </div>
       <p style={{
         fontSize: '0.8rem',
-        color: '#aaa',
+        color: '#c4c4c4',
         lineHeight: 1.65,
         margin: 0,
         whiteSpace: 'pre-wrap',
       }}>
         {text}
       </p>
-    </div>
+    </GlassSurface>
   )
 }
 
@@ -37,34 +45,39 @@ export function NarrativeProfileView({ narrative, variant = 'character' }) {
 
   if (!hasContent) {
     return (
-      <p style={{ fontSize: '0.8rem', color: '#555', textAlign: 'center', margin: '1.5rem 0', lineHeight: 1.6 }}>
-        Nenhum texto de perfil narrativo preenchido.
-        <br />
-        Use <strong style={{ color: '#888', fontWeight: 600 }}>Editar ficha</strong> para adicionar.
-      </p>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.55rem',
+        padding: '2rem 1.25rem',
+        borderRadius: 12,
+        border: '1px solid rgba(255,255,255,0.06)',
+        background: 'rgba(255,255,255,0.018)',
+        textAlign: 'center',
+      }}>
+        <BookOpen size={22} style={{ color: '#555' }} />
+        <div style={{ fontSize: '0.82rem', color: '#b0b0b0', fontWeight: 600 }}>
+          Perfil vazio
+        </div>
+        <div style={{ fontSize: '0.72rem', color: '#666', lineHeight: 1.55, maxWidth: 280 }}>
+          Use <span style={{ color: '#999' }}>Editar ficha</span> para preencher aparência, história e motivações.
+        </div>
+      </div>
     )
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
-        <NarrativeBlock label="APARÊNCIA" text={narrative.appearance} color="#a78bfa" />
-        <NarrativeBlock label="PERSONALIDADE" text={narrative.personality} color="#eab308" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+        <NarrativeBlock label="Aparência" text={narrative.appearance} color="#a78bfa" />
+        <NarrativeBlock label="Personalidade" text={narrative.personality} color="#eab308" />
       </div>
-      <NarrativeBlock label="HISTÓRIA" text={narrative.history} />
-      <NarrativeBlock
-        label="MOTIVAÇÕES"
-        text={narrative.motivation}
-        color="#06b6d4"
-        borderColor="rgba(6,182,212,0.15)"
-      />
+      <NarrativeBlock label="História" text={narrative.history} color="#94a3b8" />
+      <NarrativeBlock label="Motivações" text={narrative.motivation} color="#06b6d4" />
       {isNpc && (
-        <NarrativeBlock
-          label="SEGREDOS"
-          text={narrative.secret}
-          color="#dc2626"
-          borderColor="rgba(220,38,38,0.15)"
-        />
+        <NarrativeBlock label="Segredos" text={narrative.secret} color="#f87171" />
       )}
     </div>
   )

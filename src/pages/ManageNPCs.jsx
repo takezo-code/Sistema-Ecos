@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Skull, Settings2, Package } from 'lucide-react'
+import { Skull, Package } from 'lucide-react'
 import { EntityThumb } from '../components/ui/EntityThumb'
 import { useNPCStore } from '../store/useNPCStore'
 import { useCampaignStore } from '../store/useCampaignStore'
@@ -11,7 +11,6 @@ import { EntityManagePanel } from '../components/management/EntityManagePanel'
 import { getAttributesForEntity, entityHasEcoPowers } from '../constants/entityProgression'
 import { getEntityEffectiveAttributes } from '../services/stateModifiers'
 import SpotlightCard from '../components/react-bits/SpotlightCard'
-import { FloatingTooltip } from '../components/ui/FloatingTooltip'
 import GlassSurface from '../components/react-bits/GlassSurface'
 
 const ACCENT = '#06b6d4'
@@ -34,7 +33,6 @@ function NPCManageCard({ npc, onManage }) {
       <div style={{
         display: 'flex',
         alignItems: 'flex-start',
-        justifyContent: 'space-between',
         gap: '1rem',
         padding: '1.1rem 1.2rem 0.85rem',
       }}>
@@ -57,40 +55,6 @@ function NPCManageCard({ npc, onManage }) {
             </div>
           </div>
         </div>
-
-        <FloatingTooltip.Provider>
-          <div
-            style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flexShrink: 0 }}
-            onClick={e => e.stopPropagation()}
-          >
-            <FloatingTooltip.Trigger content="Gerenciar ficha">
-              <button
-                type="button"
-                onClick={onManage}
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 8,
-                  color: '#888',
-                  cursor: 'pointer',
-                  padding: '6px',
-                  display: 'flex',
-                  transition: 'color 0.15s, border-color 0.15s',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.color = '#e5e5e5'
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.color = '#888'
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
-                }}
-              >
-                <Settings2 size={14} />
-              </button>
-            </FloatingTooltip.Trigger>
-          </div>
-        </FloatingTooltip.Provider>
       </div>
 
       <div style={{

@@ -275,6 +275,77 @@ function MemberRow({ character, selected, onManage, onRemove }) {
   )
 }
 
+function PendingCharacterCard({ character, onAdd }) {
+  const charClass = getCharacterClass(character)
+  const classColor = charClass?.color || '#a855f7'
+
+  return (
+    <SpotlightCard
+      onClick={onAdd}
+      spotlightColor={`${classColor}33`}
+      style={{
+        padding: '0.7rem 0.8rem',
+        cursor: 'pointer',
+        borderColor: `${classColor}28`,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+        <div style={{
+          padding: 1.5,
+          borderRadius: 11,
+          flexShrink: 0,
+          background: `linear-gradient(145deg, ${classColor}88, transparent)`,
+        }}>
+          <EntityThumb src={character.image} alt={character.name} size={38} borderRadius="9px" />
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            color: '#f2f2f2',
+            letterSpacing: '-0.02em',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}>
+            {character.name}
+          </div>
+          <div style={{
+            marginTop: 3,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            flexWrap: 'wrap',
+          }}>
+            <span style={{
+              fontSize: '0.55rem',
+              fontFamily: 'monospace',
+              color: '#777',
+              letterSpacing: '0.04em',
+            }}>
+              Nv.{character.level || 1}
+            </span>
+            {charClass && (
+              <span style={{
+                fontSize: '0.55rem',
+                fontFamily: 'monospace',
+                color: classColor,
+                background: `${classColor}14`,
+                border: `1px solid ${classColor}33`,
+                borderRadius: 999,
+                padding: '0.1rem 0.4rem',
+              }}>
+                {charClass.label}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </SpotlightCard>
+  )
+}
+
 export function ManageGroups() {
   const { activeCampaignId } = useCampaignStore()
   const { groups, addGroup, updateGroup, deleteGroup, addMember, removeMember } = useGroupStore()
@@ -577,36 +648,21 @@ export function ManageGroups() {
         <GroupForm initial={groupModal?.group} onSave={handleSaveGroup} onCancel={() => setGroupModal(null)} />
       </Modal>
 
-      <Modal open={addMemberOpen} onClose={() => setAddMemberOpen(false)} title="Adicionar ao grupo" maxWidth="400px">
-        <p style={{ fontSize: '0.75rem', color: '#666', margin: '0 0 0.75rem', lineHeight: 1.5 }}>
-          Personagens em espera (criados e ainda não designados para o grupo).
-        </p>
+      <Modal open={addMemberOpen} onClose={() => setAddMemberOpen(false)} title="Adicionar ao grupo" maxWidth="440px">
         {availableToAdd.length === 0 ? (
-          <p style={{ fontSize: '0.8rem', color: '#666' }}>Nenhum personagem em espera nesta campanha.</p>
+          <EmptyState
+            icon={UsersRound}
+            title="Nenhum em espera"
+            description="Crie personagens nesta campanha para designá-los ao grupo."
+          />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '320px', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '360px', overflowY: 'auto' }}>
             {availableToAdd.map(c => (
-              <button
+              <PendingCharacterCard
                 key={c.id}
-                type="button"
-                onClick={() => { addMember(activeGroup.id, c.id); setAddMemberOpen(false) }}
-                style={{
-                  textAlign: 'left', padding: '0.7rem 0.85rem',
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 10,
-                  color: '#ccc',
-                  cursor: 'pointer',
-                  fontSize: '0.8rem',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.16)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                  <EntityThumb src={c.image} alt={c.name} size={32} borderRadius="8px" />
-                  {c.name}
-                </span>
-              </button>
+                character={c}
+                onAdd={() => { addMember(activeGroup.id, c.id); setAddMemberOpen(false) }}
+              />
             ))}
           </div>
         )}

@@ -69,24 +69,6 @@ export function EcoOverloadSection({
         }} />
       </div>
 
-      {snapshot.activeMentalStatuses.length > 0 && (
-        <GlassSurface borderRadius={10} padding="0.65rem 0.75rem">
-          <div style={{ fontSize: '0.55rem', color: '#eab308', fontFamily: 'monospace', marginBottom: '0.35rem', letterSpacing: '0.08em' }}>
-            ESTADOS MENTAIS ATIVOS
-          </div>
-          {snapshot.activeMentalStatuses.map(status => (
-            <div key={status.id} style={{ marginBottom: '0.35rem' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: status.definition?.color || '#eab308' }}>
-                {status.definition?.label || status.effectId}
-              </div>
-              {(status.definition?.narrativeConsequences || []).map((line, i) => (
-                <div key={i} style={{ fontSize: '0.65rem', color: '#888', marginLeft: '0.5rem' }}>· {line}</div>
-              ))}
-            </div>
-          ))}
-        </GlassSurface>
-      )}
-
       {onSetOverload && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
           <Button

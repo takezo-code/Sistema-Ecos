@@ -28,10 +28,8 @@ import { catalogSkillAllowedForEntity, getCatalogSkill } from '../services/skill
 import { enforceProgressionCaps } from '../services/progressionBudget'
 import {
   applyDamageMarks as applyDamageMarksEngine,
-  applyMarksAmount as applyMarksAmountEngine,
   clearDamageMarks as clearDamageMarksEngine,
   healDamageMarks as healDamageMarksEngine,
-  DAMAGE_MARK_VALUES,
 } from '../mechanics/combat/damageMarksEngine'
 import { buildGearItem, getGearItem, GEAR_CATEGORIES, normalizeEquippedGear } from '../mechanics/equipment/characterGear'
 import { upsertPassive } from '../mechanics/equipment/gearPassiveEngine'
@@ -67,30 +65,6 @@ export const useNPCStore = create((set, get) => ({
   clearLevelUps: () => set({ lastLevelUps: [] }),
   clearOverloadEvents: () => set({ lastOverloadEvents: [] }),
   clearMasterError: () => set({ lastMasterError: null }),
-
-  /**
-   * Aplica dano a um NPC/boss respeitando resistência física ou mental.
-   * Retorna { patch, stateChanged, narratives, damageReduced, effectiveDamage }
-   */
-  applyDamageWithResistance(npcId, markType, { mental = false } = {}) {
-    const n = get().npcs.find(npc => npc.id === npcId)
-    if (!n) return null
-    const resistance = mental ? (n.resistenciaMental ?? 0) : (n.resistenciaFisica ?? 0)
-    const rawDamage = DAMAGE_MARK_VALUES[markType] ?? 1
-    const effectiveDamage = Math.max(0, rawDamage - resistance)
-    const damageReduced = rawDamage - effectiveDamage
-
-    if (effectiveDamage <= 0) {
-      return { stateChanged: false, narratives: [`Dano absorvido pela resistência (${resistance})`], effectiveDamage: 0, damageReduced }
-    }
-
-    const result = applyMarksAmountEngine(n, effectiveDamage)
-    if (!result.patch || Object.keys(result.patch).length === 0) {
-      return { stateChanged: false, narratives: [], effectiveDamage: 0, damageReduced }
-    }
-    patchNPC(get, set, npcId, npc => ({ ...npc, ...result.patch }))
-    return { ...result, effectiveDamage, damageReduced }
-  },
 
   applyDamageMarks(npcId, markType) {
     const n = get().npcs.find(npc => npc.id === npcId)

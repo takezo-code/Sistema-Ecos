@@ -130,19 +130,3 @@ export function toD20Equivalent(dice, sides) {
   if (dice >= sides) return 20
   return Math.round(1 + ((dice - 1) * 19) / (sides - 1))
 }
-
-/** Dano automático do ataque do boss conforme o resultado da rolagem. */
-export function getBossAttackDamage(outcomeKey) {
-  switch (outcomeKey) {
-    case 'partial':
-      return { markType: 'leve', label: 'Leve', value: 1 }
-    case 'success':
-      return { markType: 'medio', label: 'Médio', value: 2 }
-    case 'crit':
-      return { markType: 'grave', label: 'Grave', value: 3 }
-    case 'crit_fail':
-      return { markType: null, label: null, value: 0, bossExpose: true }
-    default:
-      return { markType: null, label: null, value: 0 }
-  }
-}

@@ -23,6 +23,11 @@
     0 14px 36px rgba(0, 0, 0, 0.35);
 }
 
+.card-spotlight:focus,
+.card-spotlight:focus-visible {
+  outline: none;
+}
+
 .card-spotlight::before {
   content: '';
   position: absolute;

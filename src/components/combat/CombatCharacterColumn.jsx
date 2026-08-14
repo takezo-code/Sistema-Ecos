@@ -10,7 +10,6 @@ import { mergeMentalStateWithOverload, getMentalStateOption } from '../../consta
 import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
 import { getRupturaPool, getOverloadPhase, ECO_OVERLOAD_PHASES } from '../../constants/ecoOverload'
 import { getEffectiveAttributeValue, getEffectiveSocialAttributeValue } from '../../services/stateModifiers'
-import { listActiveMentalStatusDetails } from '../../services/mentalStatusService'
 import { getCharacterClass } from '../../constants/classes'
 import { getClassAttributeBonus } from '../../mechanics/classes/classBonusEngine'
 import { getArmorDestrezaPenalty, getArmorMarkBonus } from '../../mechanics/equipment/armorEffectsEngine'
@@ -212,7 +211,6 @@ export function CombatCharacterColumn({
   const overload = rupturaPool.spent
   const mental = mergeMentalStateWithOverload(character.mentalState, overload, safeLimit)
   const mentalOpt = getMentalStateOption(mental)
-  const mentalStatuses = listActiveMentalStatusDetails(character.activeMentalStatuses)
   const skills = character._skillRuntimes || []
   const characterClass = getCharacterClass(character)
   const armorDexPenalty = getArmorDestrezaPenalty(character)
@@ -523,18 +521,6 @@ export function CombatCharacterColumn({
             )}
           </IconChip>
         </div>
-
-        {mentalStatuses.length > 0 && (
-          <div style={{
-            marginTop: '0.3rem',
-            fontSize: '0.48rem',
-            color: '#c4b5fd',
-            fontFamily: 'monospace',
-            textAlign: 'center',
-          }}>
-            {mentalStatuses.map(s => s.definition?.label).join(' · ')}
-          </div>
-        )}
       </header>
 
       <section style={{ padding: '0.45rem 0.65rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>

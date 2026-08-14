@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { Swords, Skull, X, AlertTriangle, Target } from 'lucide-react'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useNPCStore } from '../store/useNPCStore'
@@ -372,41 +372,6 @@ export function ManageCombat() {
     })
   }, [dcPreset])
 
-  const handleBossAttackRoll = useCallback((result) => {
-    setRollResult({
-      dice: result.dice,
-      sides: result.sides,
-      bonus: result.bonus,
-      total: result.total,
-      dc: result.dc ?? getDcForPreset(dcPreset, result.sides || 20),
-      characterName: result.characterName,
-      attrLabel: result.attrLabel,
-    })
-    if (result.hit && result.damage) {
-      setCombatNotice(
-        `${result.characterName} → ${result.targetName}: ${result.outcome.label} · ${result.damage.label} (+${result.damage.value})`
-      )
-    } else if (result.bossExpose) {
-      setCombatNotice(`${result.characterName} falhou criticamente e se expôs! (+1 marca no boss)`)
-    } else {
-      setCombatNotice(`${result.characterName} errou o ataque contra ${result.targetName}.`)
-    }
-  }, [dcPreset])
-
-  const handleApplyMarksToTarget = useCallback((targetId, markType) => {
-    const target = combatCharacters.find(c => c.id === targetId)
-    if (!target) return
-    const result = applyDamageMarks(targetId, markType)
-    if (result?.stateChanged) {
-      setCombatNotice(`${target.name}: ${result.narratives?.join(' · ') || 'Estado alterado.'}`)
-    }
-  }, [combatCharacters, applyDamageMarks])
-
-  const handleBossExpose = useCallback((markType = 'leve') => {
-    if (!activeEnemyId) return
-    applyNPCDamageMarks(activeEnemyId, markType)
-  }, [activeEnemyId, applyNPCDamageMarks])
-
   const handleEnemyApplyMarks = useCallback((markType) => {
     if (!activeEnemyId) return
     const result = applyNPCDamageMarks(activeEnemyId, markType)
@@ -560,17 +525,12 @@ export function ManageCombat() {
             {activeEnemy ? (
               <CombatEnemyCard
                 enemy={activeEnemy}
-                targets={combatCharacters}
-                getRollDc={(sides) => getDcForPreset(dcPreset, sides)}
                 onUpdate={data => updateNPC(activeEnemy.id, data)}
                 onApplyMarks={handleEnemyApplyMarks}
                 onHealMarks={(amount) => healNPCMarks(activeEnemy.id, amount)}
                 onClearMarks={() => { clearNPCMarks(activeEnemy.id); setCombatNotice(`${activeEnemy.name}: marcas limpas.`) }}
                 onNotice={msg => setCombatNotice(msg)}
                 onRollAttribute={handleEnemyRollAttribute}
-                onBossAttackRoll={handleBossAttackRoll}
-                onApplyMarksToTarget={handleApplyMarksToTarget}
-                onBossExpose={handleBossExpose}
               />
             ) : (
               <div style={{

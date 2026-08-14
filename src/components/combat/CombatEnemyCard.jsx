@@ -1,6 +1,5 @@
-import React, { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { CombatCharacterColumn } from './CombatCharacterColumn'
-import { BossTargetPanel } from './BossTargetPanel'
 import { ATTRIBUTES } from '../../constants/attributes'
 
 const PAPEL_META = {
@@ -11,7 +10,7 @@ const PAPEL_META = {
 }
 
 /**
- * Card de inimigo/boss — mesmo visual do player, com painel de ataque.
+ * Card de inimigo/boss — mesmo visual do player, com vida gerenciada manualmente.
  */
 export function CombatEnemyCard({
   enemy,
@@ -21,11 +20,6 @@ export function CombatEnemyCard({
   onClearMarks,
   onNotice,
   onRollAttribute,
-  targets = [],
-  onBossAttackRoll,
-  onApplyMarksToTarget,
-  onBossExpose,
-  getRollDc,
 }) {
   const [diceSides, setDiceSides] = useState(20)
 
@@ -54,18 +48,6 @@ export function CombatEnemyCard({
       onHealMarks={onHealMarks}
       onClearMarks={onClearMarks}
       onNotice={onNotice}
-      extraBeforeMarks={(
-        <BossTargetPanel
-          enemy={enemy}
-          targets={targets}
-          diceSides={diceSides}
-          onDiceSidesChange={setDiceSides}
-          getRollDc={getRollDc}
-          onRollResult={onBossAttackRoll}
-          onApplyMarksToTarget={onApplyMarksToTarget}
-          onBossExpose={onBossExpose}
-        />
-      )}
     />
   )
 }
