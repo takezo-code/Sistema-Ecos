@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Pencil, Sparkles, BookOpen, Sword } from 'lucide-react'
+import { ExportFichaButton } from '../character/ExportFichaButton'
 import { NarrativeProfileModal } from './NarrativeProfileModal'
 import { EntityThumb } from '../ui/EntityThumb'
 import { Modal } from '../ui/Modal'
@@ -112,6 +113,7 @@ export function EntityManagePanel({
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {!isNpcEntity(entity) && <ExportFichaButton entity={entity} />}
           <Button
             type="button"
             variant="secondary"
