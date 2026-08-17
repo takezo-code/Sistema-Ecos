@@ -20,6 +20,7 @@ import {
 } from '../mechanics/ecoOverload/overloadPenalties'
 import { getArmorDestrezaPenalty } from '../mechanics/equipment/armorEffectsEngine'
 import { sumAttrBonus } from '../mechanics/equipment/gearPassiveEngine'
+import { getEcoSafeLimitFromEntity } from '../constants/ecoOverload'
 
 /** Penalidade flat em FOR/DES/VIT pelo estado físico (0–3). */
 export function getPhysicalAttrPenalty(physicalState) {
@@ -50,7 +51,7 @@ export function getEntityEffectiveAttributes(entity = {}) {
     ecoOverload: entity.ecoOverload ?? 0,
     mentalState: entity.mentalState ?? 'estavel',
     destrezaPenalty: getArmorDestrezaPenalty(entity),
-    ruptura: entity.attributes?.ruptura,
+    safeLimit: getEcoSafeLimitFromEntity(entity),
   })
   const effective = { ...result.effective }
   for (const key of Object.keys(effective)) {
@@ -63,7 +64,7 @@ export function getEntityEffectiveSocialAttributes(entity = {}) {
   const result = calculateEffectiveSocialAttributes(entity.socialAttributes || {}, {
     ecoOverload: entity.ecoOverload ?? 0,
     mentalState: entity.mentalState ?? 'estavel',
-    ruptura: entity.attributes?.ruptura,
+    safeLimit: getEcoSafeLimitFromEntity(entity),
   })
   const effective = { ...result.effective }
   for (const key of Object.keys(effective)) {
@@ -131,7 +132,7 @@ export function getEffectiveAttributeValue(attributes, attrKey, physicalState, e
       }
     : {
         physicalState,
-        ecoOverload: arguments[3] ?? 0,
+        ecoOverload,
         mentalState: arguments[4] ?? 'estavel',
         destrezaPenalty: arguments[5] ?? 0,
       }

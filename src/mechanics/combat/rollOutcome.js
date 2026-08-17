@@ -49,39 +49,33 @@ const OUTCOMES = {
 /** Quantos pontos abaixo da CD ainda contam como parcial. */
 export const PARTIAL_MARGIN = 3
 
-/** CD padrão por tipo de dado (dificuldade média). */
-export const DEFAULT_DC_BY_SIDES = Object.freeze({
-  8: 6,
-  20: 15,
-})
+/** CD padrão do sistema d20 (dificuldade média). */
+export const DEFAULT_DC = 15
 
 /**
- * Presets de dificuldade — mesa tradicional.
- * d20: escala clássica · d8: ~40% da escala d20 (mesmo “nível” de desafio).
+ * Presets de dificuldade — escala clássica d20.
  */
 export const DIFFICULTY_PRESETS = Object.freeze([
-  { id: 'trivial', label: 'Trivial', dc20: 5, dc8: 3 },
-  { id: 'easy', label: 'Fácil', dc20: 10, dc8: 4 },
-  { id: 'medium', label: 'Médio', dc20: 15, dc8: 6 },
-  { id: 'hard', label: 'Difícil', dc20: 20, dc8: 8 },
-  { id: 'very_hard', label: 'Muito difícil', dc20: 25, dc8: 10 },
-  { id: 'extreme', label: 'Extremo', dc20: 30, dc8: 12 },
+  { id: 'trivial', label: 'Trivial', dc: 5 },
+  { id: 'easy', label: 'Fácil', dc: 10 },
+  { id: 'medium', label: 'Médio', dc: 15 },
+  { id: 'hard', label: 'Difícil', dc: 20 },
+  { id: 'very_hard', label: 'Muito difícil', dc: 25 },
+  { id: 'extreme', label: 'Extremo', dc: 30 },
 ])
 
-export function getDefaultDc(sides = 20) {
-  return DEFAULT_DC_BY_SIDES[sides] ?? DEFAULT_DC_BY_SIDES[20]
+export function getDefaultDc() {
+  return DEFAULT_DC
 }
 
-export function getDcForPreset(presetId, sides = 20) {
+export function getDcForPreset(presetId) {
   const preset = DIFFICULTY_PRESETS.find(p => p.id === presetId)
-  if (!preset) return getDefaultDc(sides)
-  return sides === 8 ? preset.dc8 : preset.dc20
+  return preset?.dc ?? getDefaultDc()
 }
 
-export function clampDc(dc, sides = 20) {
-  const n = Math.max(1, Math.floor(Number(dc) || getDefaultDc(sides)))
-  const max = sides === 8 ? 16 : 40
-  return Math.min(max, n)
+export function clampDc(dc) {
+  const n = Math.max(1, Math.floor(Number(dc) || getDefaultDc()))
+  return Math.min(40, n)
 }
 
 /**
@@ -100,7 +94,7 @@ export function clampDc(dc, sides = 20) {
  */
 export function getRollOutcome(dice, bonus, sides = 20, dc) {
   const total = dice + bonus
-  const target = clampDc(dc ?? getDefaultDc(sides), sides)
+  const target = clampDc(dc ?? getDefaultDc())
 
   let outcome
   if (dice === 1) {

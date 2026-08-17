@@ -1,4 +1,3 @@
-import React from 'react'
 import { ChevronUp, ChevronDown, Dumbbell, Users } from 'lucide-react'
 import { PanelSection, MetaChip } from './PanelSection'
 import {
@@ -11,8 +10,6 @@ import {
   getInitialSocialMax,
   getCreationAttributeFloor,
   getCreationSocialFloor,
-  isInCreationPhase,
-  isInSocialCreationPhase,
 } from '../../constants/attributes'
 import { getAttributesForEntity } from '../../constants/entityProgression'
 import {
@@ -22,7 +19,7 @@ import {
 import { getArmorDestrezaPenalty } from '../../mechanics/equipment/armorEffectsEngine'
 import { sumAttrBonus } from '../../mechanics/equipment/gearPassiveEngine'
 import { getProgressionSnapshot, validateProgression, getSocialBudget } from '../../services/progressionBudget'
-import { getSocialPointsFromLevel } from '../../constants/progression'
+import { getEcoSafeLimitFromEntity } from '../../constants/ecoOverload'
 
 function AttributeInput({ attr, value, effectiveValue, max, showMax, onChange, canIncrease, canDecrease }) {
   const modified = effectiveValue != null && effectiveValue !== value
@@ -121,12 +118,13 @@ export function AttributeGrid({
   const physicalState = entity.physicalState ?? 'bem'
   const mentalState = entity.mentalState ?? 'estavel'
   const ecoOverload = entity.ecoOverload ?? 0
+  const safeLimit = getEcoSafeLimitFromEntity(entity)
   const { effective: effectiveAttrs } = calculateEffectiveAttributes(entity.attributes, {
     physicalState,
     ecoOverload,
     mentalState,
     destrezaPenalty: getArmorDestrezaPenalty(entity),
-    ruptura: entity.attributes?.ruptura,
+    safeLimit,
   })
   for (const key of Object.keys(effectiveAttrs)) {
     effectiveAttrs[key] = (Number(effectiveAttrs[key]) || 0) + sumAttrBonus(entity, key)
@@ -134,7 +132,7 @@ export function AttributeGrid({
   const { effective: effectiveSocial } = calculateEffectiveSocialAttributes(entity.socialAttributes || {}, {
     ecoOverload,
     mentalState,
-    ruptura: entity.attributes?.ruptura,
+    safeLimit,
   })
   for (const key of Object.keys(effectiveSocial)) {
     effectiveSocial[key] = (Number(effectiveSocial[key]) || 0) + sumAttrBonus(entity, key)

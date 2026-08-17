@@ -12,9 +12,8 @@ export function getXpRequiredForLevel(currentLevel) {
  * Recompensa de atributo ao subir de nível.
  * Eco é concedido à parte — ver applyXpGain / getEcoPointsFromLevel.
  */
-export function getLevelRewardType(newLevel, { hasEcoPowers = true } = {}) {
+export function getLevelRewardType(newLevel) {
   if (newLevel <= 1) return null
-  if (!hasEcoPowers) return 'attribute'
   return newLevel % 2 === 0 ? 'attribute' : null
 }
 
@@ -65,8 +64,7 @@ export const ECO_COMPLETE_LEVEL = 15
  *   nv.15         → +1 marco
  *   total no 15   → 9 (congela depois)
  */
-export function getEcoPointsFromLevel(level, entity = null) {
-  // entityHasEcoPowers fica em progressionBudget para evitar ciclo; lá envolve esta fn.
+export function getEcoPointsFromLevel(level) {
   const l = Math.max(1, Math.min(MAX_LEVEL, Number(level) || 1))
   if (l <= 1) return 1
   const fromEvens = Math.floor(Math.min(l, ECO_COMPLETE_LEVEL - 1) / 2)

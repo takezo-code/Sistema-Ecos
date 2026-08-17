@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Zap, Play, ChevronDown, ChevronUp, Star, Info, Sword, Shield as ShieldIcon,
-  Dices, Sparkles, Brain,
+  Sparkles, Brain,
 } from 'lucide-react'
 import { COMBAT_HIGHLIGHT_XP } from '../../constants/progression'
 import { DamageMarksPanel, PLAYER_MARK_TYPES } from './DamageMarksPanel'
@@ -179,7 +179,6 @@ function AccordionHeader({ open, onToggle, icon: Icon, label, accent = '#777' })
 
 export function CombatCharacterColumn({
   character,
-  onUpdate,
   onRollAttribute,
   onActivateSkill,
   onGrantHighlightXp,
@@ -193,17 +192,13 @@ export function CombatCharacterColumn({
   defeated = false,
   badge = null,
   extraBeforeMarks = null,
-  diceSides: controlledDiceSides,
-  onDiceSidesChange,
 }) {
   const [skillsOpen, setSkillsOpen] = useState(false)
   const [xpFlash, setXpFlash] = useState(false)
-  const [internalDiceSides, setInternalDiceSides] = useState(20)
   const [infoOpen, setInfoOpen] = useState(false)
   const [gearView, setGearView] = useState(null)
 
-  const diceSides = controlledDiceSides ?? internalDiceSides
-  const setDiceSides = onDiceSidesChange ?? setInternalDiceSides
+  const diceSides = 20
 
   const physical = character.physicalState ?? 'bem'
   const rupturaPool = getRupturaPool(character)
@@ -550,53 +545,6 @@ export function CombatCharacterColumn({
       </section>
 
       <section style={{ padding: '0.1rem 0.65rem 0.5rem' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '0.35rem',
-        }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 4,
-            color: '#777',
-            fontSize: '0.48rem',
-            fontFamily: 'monospace',
-            fontWeight: 600,
-            letterSpacing: '0.08em',
-          }}>
-            <Dices size={10} strokeWidth={2.2} />
-            DADO
-          </div>
-          <div style={{ display: 'inline-flex', gap: 3 }}>
-            {[8, 20].map(sides => {
-              const active = diceSides === sides
-              return (
-                <button
-                  key={sides}
-                  type="button"
-                  onClick={() => setDiceSides(sides)}
-                  title={`d${sides}`}
-                  style={{
-                    padding: '2px 7px',
-                    fontSize: '0.5rem',
-                    fontFamily: 'monospace',
-                    fontWeight: 700,
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    border: `1px solid ${active ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.08)'}`,
-                    background: active ? 'rgba(255,255,255,0.08)' : 'transparent',
-                    color: active ? '#e5e5e5' : '#666',
-                  }}
-                >
-                  d{sides}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
         {(() => {
           const physicalList = attributeList ?? ATTRIBUTES
 

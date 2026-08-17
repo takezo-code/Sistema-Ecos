@@ -7,9 +7,10 @@ export function isNpcEntity(entity) {
 }
 
 /**
- * Personagens (sem flag): progressão alternada atributo/eco.
+ * Toda entidade recebe atributo físico nos níveis pares.
+ * Entidades com Eco também recebem Eco nos marcos próprios (incluindo pares).
  * Boss: sempre tem Eco (skills criadas na ficha / criação).
- * NPC: só com hasEcoPowers === true; caso contrário só atributos (sem Ruptura).
+ * NPC: só com hasEcoPowers === true; caso contrário não usa Ruptura/Eco.
  */
 export function entityHasEcoPowers(entity) {
   if (entity?.papelCombate === 'boss') return true

@@ -79,9 +79,11 @@ export function getDefaultMarkPoolMax(entityOrAttributes = {}) {
 }
 
 /**
- * Vida máxima: `marcasMaximas` do inimigo/boss, ou pool derivado da VIT para jogadores.
+ * Vida máxima: boss e jogador usam pool derivado da VIT/armadura/skills.
+ * `marcasMaximas` continua disponível apenas para capangas/elites customizados.
  */
 export function getMarkPoolMax(entity = {}) {
+  if (entity.papelCombate === 'boss') return getDefaultMarkPoolMax(entity)
   const explicit = Math.max(0, Number(entity.marcasMaximas) || 0)
   if (explicit > 0) return explicit
   return getDefaultMarkPoolMax(entity)

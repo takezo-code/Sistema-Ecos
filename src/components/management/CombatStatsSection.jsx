@@ -1,5 +1,5 @@
-import React from 'react'
-import { Field, Input, Select } from '../ui/Field'
+import { Field, Select } from '../ui/Field'
+import { getRemainingLife } from '../../mechanics/combat/damageMarksEngine'
 
 const PAPEL_OPTIONS = [
   { value: 'capanga', label: 'Capanga' },
@@ -9,9 +9,7 @@ const PAPEL_OPTIONS = [
 
 export function CombatStatsSection({ entity, onUpdate }) {
   const set = (field, value) => onUpdate?.({ [field]: value })
-  const vida = entity.marcasMaximas ?? 0
-  const marks = entity.damageMarks ?? 0
-  const remaining = Math.max(0, vida - marks)
+  const life = getRemainingLife(entity)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -30,23 +28,22 @@ export function CombatStatsSection({ entity, onUpdate }) {
             ))}
           </Select>
         </Field>
-        <Field label="Vida" required>
-          <Input
-            type="number"
-            min={1}
-            value={vida || ''}
-            onChange={e => set('marcasMaximas', Math.max(1, parseInt(e.target.value, 10) || 1))}
-            title="Pontos de vida (marcas até derrotar)"
-          />
-        </Field>
+        <div style={{
+          alignSelf: 'end',
+          padding: '0.7rem 0.8rem',
+          borderRadius: 10,
+          border: '1px solid rgba(22,163,74,0.25)',
+          background: 'rgba(22,163,74,0.07)',
+          fontFamily: 'monospace',
+        }}>
+          <div style={{ fontSize: '0.55rem', color: '#6b8f75', marginBottom: 3 }}>VIDA POR VITALIDADE</div>
+          <strong style={{ color: '#4ade80', fontSize: '0.9rem' }}>{life.current} / {life.max}</strong>
+        </div>
       </div>
 
-      {vida > 0 && (
-        <div style={{ fontSize: '0.55rem', color: '#333', fontFamily: 'monospace' }}>
-          Vida atual: {remaining} / {vida}
-          {marks > 0 && ` · ${marks} marca(s) recebida(s)`}
-        </div>
-      )}
+      <div style={{ fontSize: '0.55rem', color: '#444', fontFamily: 'monospace' }}>
+        Mesmo cálculo dos players: Vitalidade + armadura + buffs de vida.
+      </div>
     </div>
   )
 }

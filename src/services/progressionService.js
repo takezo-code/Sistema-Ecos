@@ -93,7 +93,7 @@ export function applyXpGain(character, amount) {
       }
     }
 
-    const rewardType = getLevelRewardType(level, { hasEcoPowers: hasEco })
+    const rewardType = getLevelRewardType(level)
     if (rewardType === 'attribute') {
       pendingAttributePoints += 1
       levelUps.push({ level, type: 'attribute', message: `Nível ${level}: +1 ponto de atributo` })

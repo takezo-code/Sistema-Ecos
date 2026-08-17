@@ -6,6 +6,7 @@ import { normalizeSkillType, getSkillTypeMeta } from '../constants/skillTypes'
 import { getEffectiveSkillPower } from './ruptureBonus'
 import { getMentalMultiplier, getEcoFailureChance } from './stateModifiers'
 import { getMentalAttributeFlatPenalty } from '../mechanics/ecoOverload/overloadPenalties'
+import { genId } from '../utils/id'
 
 export function createSkillFromTemplate(template, tier = 1) {
   const skillType = normalizeSkillType(template.skillType)
@@ -50,7 +51,13 @@ export function unlockRandomSkill(character) {
   }
 }
 
-export function getSkillDisplay(skill, rupturePoints = 0, mentalState = 'estavel', ecoOverload = 0) {
+export function getSkillDisplay(
+  skill,
+  rupturePoints = 0,
+  mentalState = 'estavel',
+  ecoOverload = 0,
+  safeLimit = null,
+) {
   const mentalMult = getMentalMultiplier(mentalState)
   const skillType = normalizeSkillType(skill?.skillType)
   return {
@@ -67,7 +74,10 @@ export function getSkillDisplay(skill, rupturePoints = 0, mentalState = 'estavel
     ruptureBonus: rupturePoints,
     mentalMultiplier: mentalMult,
     overloadPenaltyPercent: 0,
-    overloadAttrPenalty: getMentalAttributeFlatPenalty(ecoOverload, { ruptura: rupturePoints }),
+    overloadAttrPenalty: getMentalAttributeFlatPenalty(
+      ecoOverload,
+      safeLimit == null ? { ruptura: rupturePoints } : { safeLimit },
+    ),
     ecoFailureChance: getEcoFailureChance(mentalState),
   }
 }

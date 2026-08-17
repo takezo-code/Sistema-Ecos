@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { CombatCharacterColumn } from './CombatCharacterColumn'
 import { ATTRIBUTES } from '../../constants/attributes'
+import { getRemainingLife } from '../../mechanics/combat/damageMarksEngine'
 
 const PAPEL_META = {
   capanga: { label: 'Capanga', color: '#6b7280' },
@@ -14,18 +15,16 @@ const PAPEL_META = {
  */
 export function CombatEnemyCard({
   enemy,
-  onUpdate,
   onApplyMarks,
   onHealMarks,
   onClearMarks,
   onNotice,
   onRollAttribute,
 }) {
-  const [diceSides, setDiceSides] = useState(20)
-
-  const marks = enemy.damageMarks ?? 0
-  const maxMarks = enemy.marcasMaximas ?? 0
-  const isDefeated = maxMarks > 0 && marks >= maxMarks
+  const isBoss = enemy.papelCombate === 'boss'
+  const maxMarks = isBoss ? 0 : (enemy.marcasMaximas ?? 0)
+  const life = getRemainingLife(enemy)
+  const isDefeated = life.max > 0 && life.current <= 0
   const papel = PAPEL_META[enemy.papelCombate ?? 'nenhum'] ?? PAPEL_META.nenhum
 
   const attributeList = useMemo(
@@ -40,9 +39,6 @@ export function CombatEnemyCard({
       maxMarks={maxMarks}
       defeated={isDefeated}
       badge={papel}
-      diceSides={diceSides}
-      onDiceSidesChange={setDiceSides}
-      onUpdate={onUpdate}
       onRollAttribute={onRollAttribute}
       onApplyMarks={onApplyMarks}
       onHealMarks={onHealMarks}

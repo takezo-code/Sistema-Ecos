@@ -3,7 +3,6 @@ import {
   getXpRequiredForLevel,
   getSocialPointsFromLevel,
   ECO_SKILL_MAX_LEVEL,
-  MAX_ECO_POINTS,
   getEcoPointsFromLevel as getEcoPointsFromLevelRaw,
 } from '../constants/progression'
 import {
@@ -16,11 +15,10 @@ import {
 } from '../constants/attributes'
 import { entityHasEcoPowers } from '../constants/entityProgression'
 
-/** Pontos de atributo de nível: pares; sem Eco, todos os níveis 2+. */
-export function getAttributePointsFromLevel(level, entity = null) {
+/** Pontos físicos de nível: +1 nos níveis pares para toda entidade (máx. 20 no nv.20). */
+export function getAttributePointsFromLevel(level) {
   const l = Math.max(1, level)
-  if (!entity || entityHasEcoPowers(entity)) return Math.floor(l / 2)
-  return Math.max(0, l - 1)
+  return Math.floor(l / 2)
 }
 
 /** Total de pontos de status permitidos (criação + nível) */

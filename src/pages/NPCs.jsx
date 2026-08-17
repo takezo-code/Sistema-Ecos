@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Skull, Plus, Pencil, Trash2, Search, Eye } from 'lucide-react'
 import { useNPCStore } from '../store/useNPCStore'
 import { useCampaignStore } from '../store/useCampaignStore'
@@ -26,7 +26,7 @@ import {
 import { MAX_LEVEL } from '../constants/progression'
 import { finalizeCreationAttributes, buildMasterProgressionPatch } from '../services/progressionService'
 import { normalizeGameEntity } from '../constants/attributes'
-import { entityHasEcoPowers, getAttributesForEntity } from '../constants/entityProgression'
+import { entityHasEcoPowers } from '../constants/entityProgression'
 import { isNarrativeNpc } from '../utils/npcScope'
 import { Button } from '../components/ui/Button'
 import SpotlightCard from '../components/react-bits/SpotlightCard'
@@ -38,7 +38,7 @@ export const BOSS_DEFAULTS = {
   hasEcoPowers: true,
   resistenciaFisica: 0,
   resistenciaMental: 0,
-  marcasMaximas: 15,
+  marcasMaximas: 0,
 }
 
 const EMPTY_FORM = {
@@ -76,12 +76,11 @@ const PAPEL_OPTIONS = [
 ]
 
 export function buildNpcPayloadForSave(data, isNewEntity) {
-  const {
-    description: _legacy,
-    starterWeapon,
-    starterArmor,
-    ...npcData
-  } = data
+  const { starterWeapon, starterArmor } = data
+  const npcData = { ...data }
+  delete npcData.description
+  delete npcData.starterWeapon
+  delete npcData.starterArmor
   const isBoss = data.papelCombate === 'boss'
   let payload = {
     ...npcData,
@@ -158,7 +157,7 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
     papelCombate: isBoss ? (initial?.papelCombate ?? 'boss') : (initial?.papelCombate === 'boss' ? 'capanga' : (initial?.papelCombate ?? 'capanga')),
     resistenciaFisica: isBoss ? 0 : (initial?.resistenciaFisica ?? 0),
     resistenciaMental: isBoss ? 0 : (initial?.resistenciaMental ?? 0),
-    marcasMaximas: initial?.marcasMaximas ?? (isBoss && isNew ? BOSS_DEFAULTS.marcasMaximas : 0),
+    marcasMaximas: isBoss ? 0 : (initial?.marcasMaximas ?? 0),
     skills: Array.isArray(initial?.skills) ? initial.skills : [],
     starterWeapon: { ...EMPTY_FORM.starterWeapon },
     starterArmor: { ...EMPTY_FORM.starterArmor },
@@ -205,7 +204,6 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
       onSubmit={e => {
         e.preventDefault()
         if (!form.name.trim()) return
-        if (isBoss && !(form.marcasMaximas > 0)) return
         onSave(isBoss
           ? {
               ...form,
@@ -213,7 +211,7 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
               papelCombate: form.papelCombate || 'boss',
               resistenciaFisica: 0,
               resistenciaMental: 0,
-              marcasMaximas: Math.max(1, form.marcasMaximas || 1),
+              marcasMaximas: 0,
             }
           : form)
       }}
@@ -327,23 +325,13 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
       )}
 
       {isBoss && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+        <div>
           <Field label="Papel no Combate">
             <Select value={form.papelCombate} onChange={e => set('papelCombate', e.target.value)}>
               {PAPEL_OPTIONS.filter(o => o.value !== 'nenhum').map(o => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
             </Select>
-          </Field>
-          <Field label="Vida" required>
-            <Input
-              type="number"
-              min={1}
-              value={form.marcasMaximas || ''}
-              onChange={e => set('marcasMaximas', Math.max(1, parseInt(e.target.value, 10) || 1))}
-              placeholder="Ex: 15"
-              title="Pontos de vida do boss (marcas até derrotar)"
-            />
           </Field>
         </div>
       )}

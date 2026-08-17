@@ -1,4 +1,3 @@
-import React from 'react'
 import { Pencil, Trash2, Sparkles, Timer, Zap } from 'lucide-react'
 import { ClassSkillBook } from '../skills/ClassSkillBook'
 import { getSkillDisplay } from '../../services/skillService'
@@ -7,6 +6,7 @@ import { getCharacterClass } from '../../constants/classes'
 import SpotlightCard from '../react-bits/SpotlightCard'
 import GlassSurface from '../react-bits/GlassSurface'
 import { FloatingTooltip } from '../ui/FloatingTooltip'
+import { getEcoSafeLimitFromEntity } from '../../constants/ecoOverload'
 
 function Chip({ icon: Icon, color = '#8a8a8a', children }) {
   return (
@@ -110,6 +110,7 @@ export function EcoSkillsSection({
   const rupture = entity.attributes?.ruptura ?? 0
   const mentalState = entity.mentalState ?? 'estavel'
   const ecoOverload = entity.ecoOverload ?? 0
+  const safeLimit = getEcoSafeLimitFromEntity(entity)
 
   // Personagem com classe → livro de skills
   if (!manualSkillPick && classMeta) {
@@ -181,7 +182,7 @@ export function EcoSkillsSection({
         <FloatingTooltip.Provider>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             {skills.map(skill => {
-              const display = getSkillDisplay(skill, rupture, mentalState, ecoOverload)
+              const display = getSkillDisplay(skill, rupture, mentalState, ecoOverload, safeLimit)
               const atMaxTier = skill.tier >= MAX_CLASS_SKILL_LEVEL
               const typeColor = display.typeMeta?.color || '#a855f7'
               return (

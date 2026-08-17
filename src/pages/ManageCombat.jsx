@@ -54,7 +54,7 @@ function DifficultyBar({ value, onChange }) {
               key={p.id}
               type="button"
               onClick={() => onChange(p.id)}
-              title={`d20 ${p.dc20} · d8 ${p.dc8}`}
+              title={`CD ${p.dc}`}
               style={{
                 border: isActive ? '1px solid rgba(217,119,6,0.5)' : '1px solid transparent',
                 borderRadius: 999,
@@ -83,11 +83,7 @@ function DifficultyBar({ value, onChange }) {
         color: '#8a8a8a',
         whiteSpace: 'nowrap',
       }}>
-        CD <strong style={{ color: '#e5e5e5' }}>{active.dc20}</strong>
-        <span style={{ color: '#5a5a5a' }}> d20</span>
-        <span style={{ color: '#3f3f3f' }}> · </span>
-        <strong style={{ color: '#e5e5e5' }}>{active.dc8}</strong>
-        <span style={{ color: '#5a5a5a' }}> d8</span>
+        CD <strong style={{ color: '#e5e5e5' }}>{active.dc}</strong>
       </span>
     </div>
   )
@@ -247,11 +243,11 @@ function RollResultBanner({ result, onDismiss }) {
 // ──────────────────────────────────────────────
 export function ManageCombat() {
   const {
-    characters, updateCharacter, activateSkill, advanceTurn,
+    characters, activateSkill, advanceTurn,
     applyDamageMarks, healDamageMarks, clearDamageMarks,
   } = useCharacterStore()
   const {
-    npcs, updateNPC,
+    npcs,
     applyDamageMarks: applyNPCDamageMarks,
     healDamageMarks: healNPCMarks, clearDamageMarks: clearNPCMarks,
   } = useNPCStore()
@@ -334,7 +330,7 @@ export function ManageCombat() {
   const handleRollAttribute = useCallback((character, _attrKey, attrLabel, eff, sides = 20, breakdown = null) => {
     const dice = Math.floor(Math.random() * sides) + 1
     const total = dice + eff
-    const dc = getDcForPreset(dcPreset, sides)
+    const dc = getDcForPreset(dcPreset)
     recordRoll({
       dice,
       sides,
@@ -373,7 +369,7 @@ export function ManageCombat() {
   const handleEnemyRollAttribute = useCallback((enemy, _attrKey, attrLabel, eff, sides = 20, breakdown = null) => {
     const dice = Math.floor(Math.random() * sides) + 1
     const total = dice + eff
-    const dc = getDcForPreset(dcPreset, sides)
+    const dc = getDcForPreset(dcPreset)
     recordRoll({
       dice,
       sides,
@@ -507,7 +503,6 @@ export function ManageCombat() {
               <CombatCharacterColumn
                 key={c.id}
                 character={c}
-                onUpdate={data => updateCharacter(c.id, data)}
                 onRollAttribute={handleRollAttribute}
                 onActivateSkill={handleActivateSkill}
                 onSelectSkill={handleSelectSkill}
@@ -562,7 +557,6 @@ export function ManageCombat() {
             {activeEnemy ? (
               <CombatEnemyCard
                 enemy={activeEnemy}
-                onUpdate={data => updateNPC(activeEnemy.id, data)}
                 onApplyMarks={handleEnemyApplyMarks}
                 onHealMarks={(amount) => healNPCMarks(activeEnemy.id, amount)}
                 onClearMarks={() => { clearNPCMarks(activeEnemy.id); setCombatNotice(`${activeEnemy.name}: marcas limpas.`) }}

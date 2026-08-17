@@ -12,10 +12,10 @@ export const ATTRIBUTES = [
 ]
 
 export const SOCIAL_ATTRIBUTES = [
-  { key: 'carisma', label: 'Carisma', color: '#e879f9', max: 8 },
-  { key: 'percepcao', label: 'Percepção', color: '#fbbf24', max: 8 },
-  { key: 'vontade', label: 'Vontade', color: '#60a5fa', max: 8 },
-  { key: 'sabedoria', label: 'Sabedoria', color: '#34d399', max: 8 },
+  { key: 'carisma', label: 'Carisma', color: '#e879f9', max: 9 },
+  { key: 'percepcao', label: 'Percepção', color: '#fbbf24', max: 9 },
+  { key: 'vontade', label: 'Vontade', color: '#60a5fa', max: 9 },
+  { key: 'sabedoria', label: 'Sabedoria', color: '#34d399', max: 9 },
 ]
 
 export const STARTING_ATTRIBUTE_POINTS = 10
@@ -43,7 +43,7 @@ export function getAttributeMax(key) {
 }
 
 export function getSocialAttributeMax(key) {
-  return SOCIAL_ATTRIBUTES.find(a => a.key === key)?.max ?? 8
+  return SOCIAL_ATTRIBUTES.find(a => a.key === key)?.max ?? 9
 }
 
 export function getInitialAttributeMax() {
