@@ -228,8 +228,9 @@ function SkillBlock({ skill }) {
   )
 }
 
-export function CharacterExportSheet({ entity }) {
-  const sheet = buildCharacterSheetSnapshot(entity)
+export function CharacterExportSheet({ entity, kind }) {
+  const sheet = buildCharacterSheetSnapshot(entity, kind)
+  const accent = sheet.identity?.color || '#a855f7'
   const xpLabel = sheet.xpToNext == null
     ? String(sheet.xp)
     : `${sheet.xp} / ${sheet.xpToNext}`
@@ -242,7 +243,7 @@ export function CharacterExportSheet({ entity }) {
         alignItems: 'center',
         paddingBottom: 18,
         marginBottom: 16,
-        borderBottom: `1px solid ${sheet.classColor}44`,
+        borderBottom: `1px solid ${accent}44`,
       }}>
         <div style={{
           width: 84,
@@ -250,7 +251,7 @@ export function CharacterExportSheet({ entity }) {
           borderRadius: 14,
           overflow: 'hidden',
           background: '#141418',
-          border: `1px solid ${sheet.classColor}55`,
+          border: `1px solid ${accent}55`,
           flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
@@ -267,9 +268,10 @@ export function CharacterExportSheet({ entity }) {
           <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', color: '#f7f7f7', lineHeight: 1.1 }}>
             {sheet.name}
           </div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-            <Chip color={sheet.classColor}>{sheet.classLabel}</Chip>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6, marginTop: 8 }}>
+            <Chip color={accent}>{sheet.identity?.label}</Chip>
             <Chip color="#c084fc">NVL {sheet.level}</Chip>
+            {sheet.organization ? <Chip color="#d97706">{sheet.organization}</Chip> : null}
           </div>
         </div>
       </header>
@@ -331,18 +333,20 @@ export function CharacterExportSheet({ entity }) {
         />
       </div>
 
-      <section>
-        <Label color="#a855f7">Habilidades</Label>
-        {sheet.skills.length === 0 ? (
-          <div style={{ fontSize: 12, color: '#555' }}>Nenhuma skill aprendida</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {sheet.skills.map(skill => (
-              <SkillBlock key={skill.id} skill={skill} />
-            ))}
-          </div>
-        )}
-      </section>
+      {(sheet.hasEco || sheet.skills.length > 0) && (
+        <section>
+          <Label color="#a855f7">Habilidades</Label>
+          {sheet.skills.length === 0 ? (
+            <div style={{ fontSize: 12, color: '#555' }}>Nenhuma skill aprendida</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {sheet.skills.map(skill => (
+                <SkillBlock key={skill.id} skill={skill} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   )
 }

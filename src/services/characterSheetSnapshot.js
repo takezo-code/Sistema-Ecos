@@ -1,6 +1,6 @@
 import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../constants/attributes'
 import { getCharacterClass } from '../constants/classes'
-import { entityHasEcoPowers } from '../constants/entityProgression'
+import { entityHasEcoPowers, isNpcEntity } from '../constants/entityProgression'
 import { getXpRequiredForLevel, isSkillGradeLevel } from '../constants/progression'
 import { getRupturaPool, formatRupturaPoolSources } from '../constants/ecoOverload'
 import { getSkillTypeMeta } from '../constants/skillTypes'
@@ -18,6 +18,31 @@ import { getProgressionSnapshot } from './progressionBudget'
 import { getClassSkillDef } from '../data/classSkillsCatalog'
 import { getCatalogSkill } from './skillsCatalogService'
 import { WEAPON_SKILL_TEMPLATE_ID } from './ecoSkillRuntimeService'
+
+const PAPEL_META = {
+  capanga: { label: 'Capanga', color: '#9ca3af' },
+  elite: { label: 'Elite', color: '#d97706' },
+  boss: { label: 'Boss', color: '#dc2626' },
+  nenhum: { label: 'NPC', color: '#06b6d4' },
+}
+
+export function resolveSheetKind(entity, kind) {
+  if (kind) return kind
+  if (!entity) return 'character'
+  if (entity.papelCombate === 'boss') return 'boss'
+  if (isNpcEntity(entity)) return 'npc'
+  if ('ideology' in (entity || {}) || 'allies' in (entity || {})) return 'organization'
+  return 'character'
+}
+
+function slugName(value, fallback) {
+  return String(value || fallback)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase() || fallback
+}
 
 function attrRow(entity, attr) {
   const source = SOCIAL_ATTRIBUTES.some(a => a.key === attr.key)
@@ -105,7 +130,8 @@ function mapArmor(entity) {
   }
 }
 
-export function buildCharacterSheetSnapshot(entity = {}) {
+export function buildCharacterSheetSnapshot(entity = {}, kind) {
+  const resolvedKind = resolveSheetKind(entity, kind)
   const charClass = getCharacterClass(entity)
   const progression = getProgressionSnapshot(entity)
   const life = getRemainingLife(entity)
@@ -113,13 +139,20 @@ export function buildCharacterSheetSnapshot(entity = {}) {
   const level = entity.level ?? 1
   const xpToNext = getXpRequiredForLevel(level)
   const hasEco = entityHasEcoPowers(entity)
+  const papel = PAPEL_META[entity.papelCombate] || PAPEL_META.nenhum
+
+  let identity
+  if (resolvedKind === 'boss') identity = { label: 'Boss', color: '#dc2626' }
+  else if (resolvedKind === 'npc') identity = papel
+  else identity = { label: charClass?.label || 'Sem classe', color: charClass?.color || '#a855f7' }
 
   return {
+    kind: resolvedKind,
     name: entity.name || 'Sem nome',
     image: entity.image || '',
     level,
-    classLabel: charClass?.label || 'Sem classe',
-    classColor: charClass?.color || '#a855f7',
+    identity,
+    organization: String(entity.organization || '').trim(),
     xp: Math.max(0, Number(entity.xp) || 0),
     xpToNext,
     ecoAvailable: hasEco ? Math.max(0, Number(progression.ecoFree) || 0) : null,
@@ -131,7 +164,8 @@ export function buildCharacterSheetSnapshot(entity = {}) {
       .map(attr => attrRow(entity, attr)),
     social: SOCIAL_ATTRIBUTES.map(attr => attrRow(entity, attr)),
     skills: (entity.skills || [])
-      .filter(skill => !isWeaponSkillEntry(skill) && (Number(skill.tier) || 0) > 0)
+      .filter(skill => !isWeaponSkillEntry(skill))
+      .filter(skill => (Number(skill.tier) || 0) > 0 || skill.fromCatalog === false)
       .map(mapLearnedSkill),
     weapon: mapWeapon(entity),
     armor: mapArmor(entity),
@@ -139,12 +173,29 @@ export function buildCharacterSheetSnapshot(entity = {}) {
   }
 }
 
-export function characterSheetFilename(entity, ext) {
-  const slug = String(entity?.name || 'personagem')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .toLowerCase() || 'personagem'
+export function buildOrganizationSheetSnapshot(org = {}) {
+  return {
+    kind: 'organization',
+    name: org.name || 'Sem nome',
+    image: org.image || '',
+    symbol: org.symbol || '',
+    description: String(org.description || '').trim(),
+    ideology: String(org.ideology || '').trim(),
+    allies: String(org.allies || '').trim(),
+    enemies: String(org.enemies || '').trim(),
+  }
+}
+
+export function sheetFilename(entity, ext, kind) {
+  const resolvedKind = resolveSheetKind(entity, kind)
+  const slug = slugName(entity?.name, resolvedKind === 'organization' ? 'organizacao' : 'ficha')
+  if (resolvedKind === 'organization') return `organizacao-${slug}.${ext}`
+  if (resolvedKind === 'boss') return `boss-${slug}-nv${entity?.level || 1}.${ext}`
+  if (resolvedKind === 'npc') return `npc-${slug}-nv${entity?.level || 1}.${ext}`
   return `ficha-${slug}-nv${entity?.level || 1}.${ext}`
+}
+
+/** @deprecated use sheetFilename */
+export function characterSheetFilename(entity, ext) {
+  return sheetFilename(entity, ext, 'character')
 }

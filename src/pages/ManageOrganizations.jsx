@@ -12,6 +12,7 @@ import { Button } from '../components/ui/Button'
 import SpotlightCard from '../components/react-bits/SpotlightCard'
 import { FloatingTooltip } from '../components/ui/FloatingTooltip'
 import GlassSurface from '../components/react-bits/GlassSurface'
+import { ExportFichaButton } from '../components/character/ExportFichaButton'
 
 const ACCENT = '#d97706'
 
@@ -136,6 +137,11 @@ function OrgCard({ org, onEdit, onDelete }) {
             style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flexShrink: 0 }}
             onClick={e => e.stopPropagation()}
           >
+            <FloatingTooltip.Trigger content="Exportar">
+              <span>
+                <ExportFichaButton entity={org} kind="organization" compact />
+              </span>
+            </FloatingTooltip.Trigger>
             <FloatingTooltip.Trigger content="Editar">
               <button
                 type="button"
