@@ -1,6 +1,5 @@
 import React, { useRef } from 'react'
-import { Settings, Save, Upload, RotateCcw, HardDrive, Home } from 'lucide-react'
-import { PageHeader } from '../components/ui/PageHeader'
+import { Save, Upload, RotateCcw, HardDrive, Home } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import SpotlightCard from '../components/react-bits/SpotlightCard'
 import { exportCampaign, importCampaign, resetAllTestData } from '../services/saveService'
@@ -81,12 +80,6 @@ export function Config({ onBackToWelcome }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <PageHeader
-        icon={Settings}
-        title="Configuração"
-        subtitle="CAMPANHA · DADOS · SISTEMA"
-      />
-
       <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
         <div style={{ maxWidth: 560, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <SpotlightCard spotlightColor="rgba(168, 85, 247, 0.14)" style={{ padding: '1.25rem' }}>

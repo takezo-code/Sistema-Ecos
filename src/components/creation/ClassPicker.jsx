@@ -2,6 +2,7 @@ import React from 'react'
 import { Crosshair, Shield, Axe, Sparkles, HeartPulse } from 'lucide-react'
 import { CHARACTER_CLASSES, getAttributeLabel } from '../../constants/classes'
 import MagicBento from '../react-bits/MagicBento'
+import { ExportClassHandbookButton } from '../character/ExportClassHandbookButton'
 
 const CLASS_ICONS = {
   atirador: Crosshair,
@@ -40,6 +41,11 @@ export function ClassPicker({ value, onChange }) {
         compact
         onCardClick={card => onChange(value === card.id ? null : card.id)}
       />
+      {value === 'atirador' && (
+        <div style={{ marginTop: '0.65rem' }}>
+          <ExportClassHandbookButton classId="atirador" />
+        </div>
+      )}
     </div>
   )
 }

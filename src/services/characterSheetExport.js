@@ -2,8 +2,10 @@ import { createElement } from 'react'
 import { createRoot } from 'react-dom/client'
 import { flushSync } from 'react-dom'
 import { CharacterExportSheet, EXPORT_SHEET_WIDTH } from '../components/character/CharacterExportSheet'
+import { ClassHandbookSheet, HANDBOOK_SHEET_WIDTH } from '../components/character/ClassHandbookSheet'
 import { OrganizationExportSheet } from '../components/character/OrganizationExportSheet'
 import { sheetFilename, resolveSheetKind } from './characterSheetSnapshot'
+import { getClassHandbook } from '../data/classHandbooks'
 
 function waitForImages(root) {
   const images = [...root.querySelectorAll('img')]
@@ -135,4 +137,57 @@ export async function downloadCharacterSheetPng(entity, kind) {
 
 export async function downloadCharacterSheetPdf(entity, kind) {
   return downloadEntitySheet(entity, 'pdf', kind)
+}
+
+async function mountHandbook(classId) {
+  const host = document.createElement('div')
+  host.setAttribute('data-class-handbook-host', 'true')
+  host.style.cssText = [
+    'position:fixed',
+    'left:0',
+    'top:0',
+    `width:${HANDBOOK_SHEET_WIDTH}px`,
+    'z-index:-1',
+    'pointer-events:none',
+    'opacity:1',
+  ].join(';')
+  document.body.appendChild(host)
+
+  const root = createRoot(host)
+  flushSync(() => {
+    root.render(createElement(ClassHandbookSheet, { classId }))
+  })
+
+  await document.fonts?.ready
+  await waitForImages(host)
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+
+  const node = host.querySelector('[data-class-handbook-sheet="true"]')
+  if (!node) {
+    root.unmount()
+    host.remove()
+    throw new Error('Não foi possível montar o guia da classe.')
+  }
+
+  return { host, root, node }
+}
+
+export async function downloadClassHandbookPdf(classId) {
+  const book = getClassHandbook(classId)
+  if (!book) throw new Error('Esta classe ainda não tem guia em PDF.')
+
+  const mounted = await mountHandbook(classId)
+  try {
+    const { toCanvas } = await import('html-to-image')
+    const canvas = await toCanvas(mounted.node, {
+      pixelRatio: 2,
+      backgroundColor: '#0c0c10',
+      cacheBust: true,
+      width: HANDBOOK_SHEET_WIDTH,
+    })
+    await canvasToPdf(canvas, `Guia da classe ${book.label}.pdf`)
+  } finally {
+    mounted.root.unmount()
+    mounted.host.remove()
+  }
 }

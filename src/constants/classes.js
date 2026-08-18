@@ -10,10 +10,14 @@ export const CHARACTER_CLASSES = [
   {
     id: 'atirador',
     label: 'Traçado',
-    description: 'Desenha a trajetória no Eco — precisão, leitura e disparos que cortam o tempo.',
+    description: 'Desenha a trajetória no Eco. A precisão vem cedo; o olhar já mede o campo quando os outros ainda se posicionam.',
     color: '#06b6d4',
     attributes: ['destreza', 'carisma'],
     weapons: ['arma_distancia'],
+    passive: {
+      name: 'Olho do Traçado',
+      description: 'A mira nasce pronta. A precisão vem por natureza, e a percepção acompanha o olhar — o Traçado vê mais, e vê antes.',
+    },
   },
   {
     id: 'tank',

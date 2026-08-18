@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react'
 import { Gem } from 'lucide-react'
 import { getCharacterClass } from '../../constants/classes'
+import { getClassPassive } from '../../mechanics/classes/classPassiveEngine'
+import { ExportClassHandbookButton } from '../character/ExportClassHandbookButton'
 import {
   ECO_SKILL_POINT_COST,
   ECO_SKILL_MAX_LEVEL,
@@ -200,6 +202,7 @@ export function ClassSkillBook({
   const needsGrade = selected && selected.level >= ECO_SKILL_MAX_LEVEL && selected.level < MAX_CLASS_SKILL_LEVEL
   const classColor = classMeta.color
   const rgb = hexToRgb(classColor)
+  const classPassive = getClassPassive(entity)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
@@ -213,7 +216,8 @@ export function ClassSkillBook({
         <div style={{ fontSize: '0.65rem', color: '#888', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
           Habilidades
         </div>
-        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <ExportClassHandbookButton classId={classMeta.id} />
           <GlowingBadge variant={eco > 0 ? 'cyan' : 'gray'} pulse={eco > 0} dot>
             {eco} · Ecos disponíveis
           </GlowingBadge>
@@ -226,6 +230,26 @@ export function ClassSkillBook({
           )}
         </div>
       </div>
+
+      {classPassive && (
+        <SpotlightCard
+          spotlightColor={`rgba(${rgb}, 0.18)`}
+          style={{
+            padding: '0.85rem 1rem',
+            borderColor: `rgba(${rgb}, 0.22)`,
+          }}
+        >
+          <div style={{ fontSize: '0.55rem', color: classColor, fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: 6 }}>
+            PASSIVA · {classPassive.name.toUpperCase()}
+          </div>
+          <p style={{ margin: 0, fontSize: '0.8rem', color: '#b8b8b8', lineHeight: 1.55 }}>
+            {classPassive.description}
+          </p>
+          <p style={{ margin: '0.45rem 0 0', fontSize: '0.7rem', color: '#6b7280', lineHeight: 1.45 }}>
+            Narrativa — o mestre interpreta na cena.
+          </p>
+        </SpotlightCard>
+      )}
 
       <SpotlightCard
         spotlightColor={`rgba(${rgb}, 0.22)`}

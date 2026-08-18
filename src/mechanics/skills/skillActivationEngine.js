@@ -6,6 +6,7 @@ import { applyOverloadSideEffects } from '../ecoOverload/overloadEngine'
 import { healDamageMarks } from '../combat/damageMarksEngine'
 import {
   applyBuffsToEntity,
+  buildSkillAftereffects,
   buildSkillBuffs,
   BUFF_TARGETS,
   resolveBuffValue,
@@ -47,17 +48,23 @@ export function activateActiveSkill(entity, skillInstance, catalogDef) {
   )
 
   const skillTier = Math.max(1, Number(skillInstance.tier) || 1)
-  const allBuffs = buildSkillBuffs(catalogDef, skillTier)
+  const allBuffs = [
+    ...buildSkillBuffs(catalogDef, skillTier),
+    ...buildSkillAftereffects(catalogDef, skillTier),
+  ]
   const selfBuffs = allBuffs.filter(b => b.target !== BUFF_TARGETS.PARTY)
   const partyBuffs = allBuffs.filter(b => b.target === BUFF_TARGETS.PARTY)
 
   const buffResult = applyBuffsToEntity({ ...entity, ...patch }, selfBuffs)
   if (buffResult.applied) {
     patch = { ...patch, ...buffResult.patch }
-    events.push({
-      type: 'skill_buff',
-      message: selfBuffs.map(b => `${b.sourceName}: ${b.kind === 'mark_bonus' ? `+${b.value} marcas` : `${b.value > 0 ? '+' : ''}${b.value}`}`).join(' · '),
-    })
+    const visible = selfBuffs.filter(b => (Number(b.delayTurns) || 0) === 0)
+    if (visible.length) {
+      events.push({
+        type: 'skill_buff',
+        message: visible.map(b => `${b.sourceName}: ${b.kind === 'mark_bonus' ? `+${b.value} marcas` : `${b.value > 0 ? '+' : ''}${b.value}`}`).join(' · '),
+      })
+    }
   }
 
   const healAmount = catalogDef.heal ? resolveBuffValue(catalogDef.heal, skillTier) : 0

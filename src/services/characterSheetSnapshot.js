@@ -35,13 +35,24 @@ export function resolveSheetKind(entity, kind) {
   return 'character'
 }
 
-function slugName(value, fallback) {
-  return String(value || fallback)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .toLowerCase() || fallback
+function fileSafeName(value, fallback) {
+  const cleaned = String(value || fallback)
+    .replace(/[\\/:*?"<>|]+/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return cleaned || fallback
+}
+
+export function sheetFilename(entity, ext, kind) {
+  const resolvedKind = resolveSheetKind(entity, kind)
+  const name = fileSafeName(entity?.name, 'Sem nome')
+  const prefix = {
+    organization: 'Ficha da Organização',
+    npc: 'Ficha do NPC',
+    boss: 'Ficha do Boss',
+    character: 'Ficha do personagem',
+  }[resolvedKind] || 'Ficha do personagem'
+  return `${prefix} ${name}.${ext}`
 }
 
 function attrRow(entity, attr) {
@@ -184,15 +195,6 @@ export function buildOrganizationSheetSnapshot(org = {}) {
     allies: String(org.allies || '').trim(),
     enemies: String(org.enemies || '').trim(),
   }
-}
-
-export function sheetFilename(entity, ext, kind) {
-  const resolvedKind = resolveSheetKind(entity, kind)
-  const slug = slugName(entity?.name, resolvedKind === 'organization' ? 'organizacao' : 'ficha')
-  if (resolvedKind === 'organization') return `organizacao-${slug}.${ext}`
-  if (resolvedKind === 'boss') return `boss-${slug}-nv${entity?.level || 1}.${ext}`
-  if (resolvedKind === 'npc') return `npc-${slug}-nv${entity?.level || 1}.${ext}`
-  return `ficha-${slug}-nv${entity?.level || 1}.${ext}`
 }
 
 /** @deprecated use sheetFilename */

@@ -45,22 +45,43 @@ function listBuffDefs(catalogDef) {
   return []
 }
 
+function attachHangover(buff, buffDef, skillTier) {
+  if (!buffDef?.hangover || buff.kind !== BUFF_KINDS.ATTR_BONUS || buff.value <= 0) return buff
+  const spec = typeof buffDef.hangover === 'object' ? buffDef.hangover : {}
+  const hangoverValue = Array.isArray(spec.values) || spec.value != null
+    ? resolveBuffValue(spec, skillTier)
+    : -buff.value
+  if (!hangoverValue) return buff
+  return {
+    ...buff,
+    hangover: {
+      kind: spec.kind || BUFF_KINDS.ATTR_BONUS,
+      attrKey: spec.attrKey || buff.attrKey,
+      value: hangoverValue,
+      durationTurns: Math.max(1, Number(spec.durationTurns) || 1),
+    },
+  }
+}
+
 function buildOneBuff(catalogDef, buffDef, skillTier = 1) {
   if (!buffDef?.kind) return null
   const value = resolveBuffValue(buffDef, skillTier)
   if (buffDef.kind === BUFF_KINDS.MARK_BONUS && value <= 0) return null
   if (buffDef.kind === BUFF_KINDS.ATTR_BONUS && (!buffDef.attrKey || value === 0)) return null
   if (value === 0) return null
-  return {
+  const buff = {
     id: genId(),
     kind: buffDef.kind,
     value,
     attrKey: buffDef.attrKey || null,
     turnsRemaining: Math.max(1, Number(buffDef.durationTurns) || 1),
+    delayTurns: Math.max(0, Number(buffDef.delayTurns) || 0),
     sourceName: catalogDef.name || 'Skill',
     sourceTemplateId: catalogDef.templateId,
     target: buffDef.target || BUFF_TARGETS.SELF,
+    isHangover: value < 0 || Boolean(buffDef.isHangover),
   }
+  return attachHangover(buff, buffDef, skillTier)
 }
 
 /** Monta o buff a partir da def do catálogo + nível da skill. */
@@ -74,6 +95,13 @@ export function buildSkillBuffs(catalogDef, skillTier = 1) {
     .filter(Boolean)
 }
 
+export function buildSkillAftereffects(catalogDef, skillTier = 1) {
+  const def = catalogDef?.aftereffect
+  if (!def) return []
+  const built = buildOneBuff(catalogDef, def, skillTier)
+  return built ? [built] : []
+}
+
 export function listActiveBuffs(entity = {}) {
   return Array.isArray(entity.activeBuffs) ? entity.activeBuffs.filter(Boolean) : []
 }
@@ -82,6 +110,7 @@ export function listActiveBuffs(entity = {}) {
 export function sumMarkBuffBonus(entity = {}) {
   return listActiveBuffs(entity).reduce((sum, b) => {
     if (b.kind !== BUFF_KINDS.MARK_BONUS) return sum
+    if ((Number(b.delayTurns) || 0) > 0) return sum
     return sum + Math.max(0, Number(b.value) || 0)
   }, 0)
 }
@@ -91,6 +120,7 @@ export function sumAttrBuffBonus(entity = {}, attrKey) {
   if (!attrKey) return 0
   return listActiveBuffs(entity).reduce((sum, b) => {
     if (b.kind !== BUFF_KINDS.ATTR_BONUS || b.attrKey !== attrKey) return sum
+    if ((Number(b.delayTurns) || 0) > 0) return sum
     return sum + (Number(b.value) || 0)
   }, 0)
 }
@@ -125,20 +155,44 @@ export function applyBuffsToEntity(entity = {}, buffs = []) {
   return { patch: applied ? { activeBuffs: next.activeBuffs } : {}, applied }
 }
 
-/** Reduz 1 turno em todos; remove expirados. */
+/** Reduz 1 turno em todos; remove expirados e aplica recuo quando houver. */
 export function tickActiveBuffs(entity = {}) {
-  const next = listActiveBuffs(entity)
-    .map(b => ({
-      ...b,
-      turnsRemaining: Math.max(0, (Number(b.turnsRemaining) || 0) - 1),
-    }))
-    .filter(b => b.turnsRemaining > 0)
+  const next = []
+  for (const buff of listActiveBuffs(entity)) {
+    const delay = Math.max(0, Number(buff.delayTurns) || 0)
+    if (delay > 0) {
+      next.push({ ...buff, delayTurns: delay - 1 })
+      continue
+    }
+
+    const remaining = Math.max(0, (Number(buff.turnsRemaining) || 0) - 1)
+    if (remaining > 0) {
+      next.push({ ...buff, turnsRemaining: remaining, delayTurns: 0 })
+      continue
+    }
+
+    if (buff.hangover && !buff.isHangover) {
+      next.push({
+        id: genId(),
+        kind: buff.hangover.kind || buff.kind,
+        value: buff.hangover.value,
+        attrKey: buff.hangover.attrKey || buff.attrKey,
+        turnsRemaining: Math.max(1, Number(buff.hangover.durationTurns) || 1),
+        delayTurns: 0,
+        sourceName: `${buff.sourceName} · recuo`,
+        sourceTemplateId: buff.sourceTemplateId,
+        target: buff.target,
+        isHangover: true,
+      })
+    }
+  }
   return { patch: { activeBuffs: next } }
 }
 
 export function formatBuff(buff) {
   if (!buff) return ''
-  const turns = `${buff.turnsRemaining}t`
+  const delay = Math.max(0, Number(buff.delayTurns) || 0)
+  const turns = delay > 0 ? `em ${delay}t` : `${buff.turnsRemaining}t`
   if (buff.kind === BUFF_KINDS.MARK_BONUS) {
     return `+${buff.value} marcas (${turns}) · ${buff.sourceName}`
   }

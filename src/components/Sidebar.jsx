@@ -143,7 +143,7 @@ export function Sidebar({
             />
           ))}
         </nav>
-        <div className="shrink-0 border-t border-white/[0.06] pt-5">
+        <div className="shrink-0">
           {footer ?? (
             <ConfigFooterLink
               active={activePage === 'config'}

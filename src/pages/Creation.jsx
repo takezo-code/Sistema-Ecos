@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import {
-  ArrowLeft, Sword, Skull, Building2, ShieldAlert, Sparkles,
+  ArrowLeft, Sword, Skull, Building2, ShieldAlert,
 } from 'lucide-react'
-import { PageHeader } from '../components/ui/PageHeader'
 import { CreationChoiceGrid } from '../components/creation/CreationChoiceCard'
 import { Characters } from './Characters'
 import { NPCs } from './NPCs'
@@ -140,7 +139,6 @@ export function Creation({
     }
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-        <PageHeader icon={Sparkles} title="Criação" subtitle="ARTEFATO" />
         <BackBar onBack={backToHome} label="Voltar" />
         <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           {selected === 'characters' && <Characters {...flowProps} />}
@@ -154,11 +152,6 @@ export function Creation({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <PageHeader
-        icon={Sparkles}
-        title="Criação"
-        subtitle="ARTEFATO"
-      />
       <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
           <div style={{ marginBottom: '1.75rem' }}>
