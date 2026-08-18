@@ -20,6 +20,7 @@ function skill(classId, slot, partial) {
     basePower: partial.basePower ?? 1,
     slot,
     icon: partial.icon ?? partial.name.slice(0, 2).toUpperCase(),
+    iconSrc: partial.iconSrc ?? null,
     name: partial.name,
     description: partial.description,
     mechanicalEffect: partial.mechanicalEffect,
@@ -37,6 +38,7 @@ const BY_CLASS = {
   atirador: [
     skill('atirador', 1, {
       icon: 'PC',
+      iconSrc: '/skills/atirador/pulso-certeiro.png',
       name: 'Pulso Certeiro',
       description: 'Ancora pulso, ombro e respiração na trajetória. O disparo fica firme e o corpo inteiro acompanha o ponto de impacto.',
       mechanicalEffect: 'Aumenta Destreza neste turno.',
@@ -54,6 +56,7 @@ const BY_CLASS = {
     }),
     skill('atirador', 2, {
       icon: 'OL',
+      iconSrc: '/skills/atirador/olhar-longinquo.png',
       name: 'Olhar Longínquo',
       description: 'Estende o foco até o ponto certo. Distância, cobertura e movimento deixam de competir com o alvo.',
       mechanicalEffect: 'Aumenta Percepção neste turno.',
@@ -71,6 +74,7 @@ const BY_CLASS = {
     }),
     skill('atirador', 3, {
       icon: 'SR',
+      iconSrc: '/skills/atirador/snipe-de-ruptura.png',
       name: 'Snipe de Ruptura',
       description: 'Um disparo de precisão atravessa o campo. A bala carrega Ruptura: quanto mais Eco na skill, mais ela penetra e puxa o entorno para si.',
       mechanicalEffect: 'Snipe de precisão. Com mais Eco, a bala atravessa blindados e passa a sugar o que está ao redor.',

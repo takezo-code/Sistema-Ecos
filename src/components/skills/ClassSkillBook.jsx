@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react'
 import { Gem } from 'lucide-react'
 import { getCharacterClass } from '../../constants/classes'
 import { getClassPassive } from '../../mechanics/classes/classPassiveEngine'
-import { ExportClassHandbookButton } from '../character/ExportClassHandbookButton'
 import {
   ECO_SKILL_POINT_COST,
   ECO_SKILL_MAX_LEVEL,
@@ -117,25 +116,39 @@ function SkillIconCell({ entry, selected, classColor, onSelect }) {
           height: 54,
           clipPath: 'polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)',
           background: unlocked
-            ? `linear-gradient(145deg, rgba(${rgb},${intensity + 0.2}), rgba(${rgb},${intensity * 0.35}))`
+            ? (def.iconSrc ? '#050508' : `linear-gradient(145deg, rgba(${rgb},${intensity + 0.2}), rgba(${rgb},${intensity * 0.35}))`)
             : 'rgba(255,255,255,0.04)',
           border: `2px solid ${isGrade ? '#a855f7' : unlocked ? classColor : '#2a2a2a'}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
+          overflow: 'hidden',
           filter: unlocked ? 'none' : 'grayscale(1)',
           boxShadow: unlocked ? `inset 0 0 14px rgba(${rgb}, 0.3), 0 0 12px rgba(${rgb}, 0.15)` : 'none',
         }}>
-          <span style={{
-            fontSize: '0.85rem',
-            fontWeight: 800,
-            fontFamily: 'monospace',
-            color: unlocked ? '#f5f5f5' : '#555',
-            letterSpacing: '0.02em',
-          }}>
-            {def.icon}
-          </span>
+          {def.iconSrc ? (
+            <img
+              src={def.iconSrc}
+              alt=""
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+          ) : (
+            <span style={{
+              fontSize: '0.85rem',
+              fontWeight: 800,
+              fontFamily: 'monospace',
+              color: unlocked ? '#f5f5f5' : '#555',
+              letterSpacing: '0.02em',
+            }}>
+              {def.icon}
+            </span>
+          )}
           <span style={{
             position: 'absolute',
             right: 2,
@@ -216,8 +229,7 @@ export function ClassSkillBook({
         <div style={{ fontSize: '0.65rem', color: '#888', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
           Habilidades
         </div>
-        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <ExportClassHandbookButton classId={classMeta.id} />
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
           <GlowingBadge variant={eco > 0 ? 'cyan' : 'gray'} pulse={eco > 0} dot>
             {eco} · Ecos disponíveis
           </GlowingBadge>
@@ -288,7 +300,23 @@ export function ClassSkillBook({
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '0.65rem' }}>
-            <div>
+            <div style={{ display: 'flex', gap: '0.7rem', minWidth: 0 }}>
+              {selected.def.iconSrc && (
+                <img
+                  src={selected.def.iconSrc}
+                  alt=""
+                  style={{
+                    width: 52,
+                    height: 52,
+                    objectFit: 'cover',
+                    borderRadius: 10,
+                    border: `1px solid rgba(${rgb}, 0.35)`,
+                    flexShrink: 0,
+                    background: '#050508',
+                  }}
+                />
+              )}
+              <div>
               <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#f5f5f5', letterSpacing: '-0.02em' }}>
                 {selected.def.name}
               </div>
@@ -306,6 +334,7 @@ export function ClassSkillBook({
                   </GlowingBadge>
                 )}
               </div>
+            </div>
             </div>
             <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
               {selected.unlocked && onActivate && selected.instance && (

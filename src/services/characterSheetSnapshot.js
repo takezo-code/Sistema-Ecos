@@ -100,6 +100,7 @@ function mapLearnedSkill(skill) {
     description: skill.description || def?.description || '',
     mechanicalEffect: skill.mechanicalEffect || skill.effect || def?.mechanicalEffect || '',
     narrativeConsequence: skill.narrativeConsequence || skill.sideEffect || def?.narrativeConsequence || '',
+    iconSrc: def?.iconSrc || '',
   }
 }
 

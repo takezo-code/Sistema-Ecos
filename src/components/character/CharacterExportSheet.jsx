@@ -203,7 +203,23 @@ function SkillBlock({ skill }) {
       background: 'rgba(255,255,255,0.025)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-        <strong style={{ fontSize: 13, color: '#f3f3f3' }}>{skill.name}</strong>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          {skill.iconSrc ? (
+            <img
+              src={skill.iconSrc}
+              alt=""
+              style={{
+                width: 28,
+                height: 28,
+                objectFit: 'cover',
+                borderRadius: 6,
+                flexShrink: 0,
+                background: '#111',
+              }}
+            />
+          ) : null}
+          <strong style={{ fontSize: 13, color: '#f3f3f3' }}>{skill.name}</strong>
+        </div>
         <div style={{ display: 'flex', gap: 4 }}>
           <Chip color={skill.typeColor}>{skill.typeLabel}</Chip>
           <Chip color="#a855f7">{skill.levelLabel}</Chip>

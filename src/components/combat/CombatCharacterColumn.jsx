@@ -699,6 +699,20 @@ export function CombatCharacterColumn({
                     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
                   }}
                 >
+                  {rt.catalog.iconSrc ? (
+                    <img
+                      src={rt.catalog.iconSrc}
+                      alt=""
+                      style={{
+                        width: 28,
+                        height: 28,
+                        objectFit: 'cover',
+                        borderRadius: 6,
+                        flexShrink: 0,
+                        background: '#050508',
+                      }}
+                    />
+                  ) : null}
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{
                       fontSize: '0.65rem',
