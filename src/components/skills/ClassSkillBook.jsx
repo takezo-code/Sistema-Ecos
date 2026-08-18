@@ -257,9 +257,11 @@ export function ClassSkillBook({
           <p style={{ margin: 0, fontSize: '0.8rem', color: '#b8b8b8', lineHeight: 1.55 }}>
             {classPassive.description}
           </p>
-          <p style={{ margin: '0.45rem 0 0', fontSize: '0.7rem', color: '#6b7280', lineHeight: 1.45 }}>
-            Narrativa — o mestre interpreta na cena.
-          </p>
+          {classPassive.narrative !== false && (
+            <p style={{ margin: '0.45rem 0 0', fontSize: '0.7rem', color: '#6b7280', lineHeight: 1.45 }}>
+              Narrativa — o mestre interpreta na cena.
+            </p>
+          )}
         </SpotlightCard>
       )}
 

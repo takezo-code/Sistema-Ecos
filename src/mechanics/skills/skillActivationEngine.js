@@ -12,6 +12,7 @@ import {
   resolveBuffValue,
   tickActiveBuffs,
 } from './skillBuffEngine'
+import { buildClassPassiveBuffs } from '../classes/classPassiveEngine'
 
 /**
  * Ativa habilidade ativa: sobe o contador de usos de Ruptura pelo custo da skill
@@ -51,6 +52,7 @@ export function activateActiveSkill(entity, skillInstance, catalogDef) {
   const allBuffs = [
     ...buildSkillBuffs(catalogDef, skillTier),
     ...buildSkillAftereffects(catalogDef, skillTier),
+    ...buildClassPassiveBuffs({ ...entity, ...patch }, catalogDef),
   ]
   const selfBuffs = allBuffs.filter(b => b.target !== BUFF_TARGETS.PARTY)
   const partyBuffs = allBuffs.filter(b => b.target === BUFF_TARGETS.PARTY)

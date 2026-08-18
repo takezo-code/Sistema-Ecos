@@ -17,6 +17,7 @@ export const CHARACTER_CLASSES = [
     passive: {
       name: 'Olho do Traçado',
       description: 'A mira nasce pronta. A precisão vem por natureza, e a percepção acompanha o olhar — o Traçado vê mais, e vê antes.',
+      narrative: true,
     },
   },
   {
@@ -29,15 +30,21 @@ export const CHARACTER_CLASSES = [
     passive: {
       name: 'Peso da Linha',
       description: 'O Baluarte já está no caminho. O golpe procura o corpo dele primeiro; o grupo fica atrás da parede.',
+      narrative: true,
     },
   },
   {
     id: 'porradeiro',
     label: 'Fratura',
-    description: 'Força bruta que parte o corpo e o instante — o Eco estilhaça no impacto.',
+    description: 'Força bruta que parte o corpo e o instante. Quando a vida aperta, o golpe pesa mais.',
     color: '#dc2626',
     attributes: ['forca', 'vontade'],
     weapons: ['arma_duas_maos', 'manoplas'],
+    passive: {
+      name: 'Fúria da Queda',
+      description: 'Quando restam 5 marcas de vida ou menos, Fúria Cega ganha +2 de Força extra — em qualquer nível. O recuo da skill continua só o do nível.',
+      narrative: false,
+    },
   },
   {
     id: 'magica',
