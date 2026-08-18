@@ -49,7 +49,7 @@ export const CHARACTER_CLASSES = [
   {
     id: 'magica',
     label: 'Fenda',
-    description: 'Abre rachaduras no Eco e no tempo — canaliza Ruptura e distorce o instante.',
+    description: 'Abre rachaduras no Eco. Dobra o que se vê, prende a mente e amplia o canal da Ruptura.',
     color: '#a855f7',
     attributes: ['ruptura', 'sabedoria'],
     weapons: ['orbe', 'varinha', 'cajado', 'livro'],
