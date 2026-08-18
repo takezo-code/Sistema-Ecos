@@ -22,10 +22,14 @@ export const CHARACTER_CLASSES = [
   {
     id: 'tank',
     label: 'Baluarte',
-    description: 'Segura a linha no Eco — atrai o impacto e endurece o corpo e o grupo.',
+    description: 'Segura a linha no Eco. O corpo entra na frente; o impacto encontra ele antes de encontrar o grupo.',
     color: '#16a34a',
     attributes: ['vitalidade', 'vontade'],
     weapons: ['escudo_medio', 'escudo_grande', 'arma_duas_maos', 'arma_uma_mao'],
+    passive: {
+      name: 'Peso da Linha',
+      description: 'O Baluarte já está no caminho. O golpe procura o corpo dele primeiro; o grupo fica atrás da parede.',
+    },
   },
   {
     id: 'porradeiro',
