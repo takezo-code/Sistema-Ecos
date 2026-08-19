@@ -302,6 +302,86 @@ html, body {
     0 24px 64px rgba(0, 0, 0, 0.45);
 }
 
+@keyframes ecoD20Spin {
+  from { transform: rotate(0deg) scale(1); }
+  to { transform: rotate(360deg) scale(1.03); }
+}
+
+@keyframes ecoAuraPulse {
+  0% { opacity: 0.45; transform: scale(0.95); }
+  50% { opacity: 0.9; transform: scale(1.05); }
+  100% { opacity: 0.45; transform: scale(0.95); }
+}
+
+.eco-d20-shell {
+  position: relative;
+  width: 180px;
+  margin: 0 auto 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.eco-d20-aura {
+  position: absolute;
+  width: 168px;
+  height: 168px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, rgba(37, 99, 235, 0.08) 52%, rgba(0, 0, 0, 0) 72%);
+  filter: blur(1px);
+}
+
+.eco-d20-aura.is-rolling {
+  animation: ecoAuraPulse 850ms ease-in-out infinite;
+}
+
+.eco-d20-core {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  display: grid;
+  place-items: center;
+}
+
+.eco-d20-core.is-rolling {
+  animation: ecoD20Spin 900ms linear infinite;
+}
+
+.eco-d20-facet {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(50% 0%, 92% 28%, 92% 72%, 50% 100%, 8% 72%, 8% 28%);
+  background:
+    linear-gradient(145deg, rgba(7, 14, 30, 0.98), rgba(20, 46, 84, 0.95));
+  border: 1px solid rgba(125, 211, 252, 0.65);
+  box-shadow:
+    inset 0 0 24px rgba(56, 189, 248, 0.2),
+    0 0 20px rgba(37, 99, 235, 0.25);
+}
+
+.eco-d20-value {
+  position: relative;
+  z-index: 1;
+  font-family: monospace;
+  font-size: 2.3rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #dbeafe;
+  text-shadow:
+    0 0 8px rgba(125, 211, 252, 0.6),
+    0 0 18px rgba(37, 99, 235, 0.35);
+}
+
+.eco-d20-subtitle {
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  color: #7dd3fc;
+  font-family: monospace;
+}
+
 .section-header {
   display: flex;
   align-items: center;

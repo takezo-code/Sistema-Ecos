@@ -13,6 +13,7 @@ import { getArmorDestrezaPenalty } from '../mechanics/equipment/armorEffectsEngi
 import { sumGearRollBonus } from '../mechanics/equipment/gearPassiveEngine'
 import { sumAttrBuffBonus } from '../mechanics/skills/skillBuffEngine'
 import { Button } from '../components/ui/Button'
+import { EcoD20Display } from '../components/dice/EcoD20Display'
 
 const SOCIAL_ATTR_KEYS = new Set(SOCIAL_ATTRIBUTES.map(a => a.key))
 
@@ -87,7 +88,8 @@ function DiceButton({ dice, onClick, rolling }) {
   )
 }
 
-function ResultDisplay({ result, rolling }) {
+function ResultDisplay({ result, rolling, rollingSides }) {
+  const showEcoD20 = (rolling && rollingSides === 20) || result?.sides === 20
   return (
     <div
       style={{
@@ -105,6 +107,12 @@ function ResultDisplay({ result, rolling }) {
     >
       {result ? (
         <>
+          {showEcoD20 && (
+            <EcoD20Display
+              value={rolling ? null : (result.total !== undefined ? result.total : result.result)}
+              isRolling={rolling}
+            />
+          )}
           <div style={{ fontSize: '0.6rem', color: '#333', fontFamily: 'monospace', letterSpacing: '0.15em' }}>
             {result.label?.toUpperCase()}
           </div>
@@ -166,6 +174,7 @@ export function Dice() {
   const { characters } = useCharacterStore()
   const [lastResult, setLastResult] = useState(null)
   const [rolling, setRolling] = useState(false)
+  const [rollingSides, setRollingSides] = useState(20)
   const [contextDice, setContextDice] = useState('20')
   const [contextChar, setContextChar] = useState('')
   const [contextAttr, setContextAttr] = useState('inteligencia')
@@ -176,6 +185,7 @@ export function Dice() {
 
   const handleRoll = (sides) => {
     if (rolling) return
+    setRollingSides(sides)
     setRolling(true)
     setTimeout(() => {
       const r = roll(sides)
@@ -197,6 +207,7 @@ export function Dice() {
       ? `d${sides} + ${ATTRIBUTE_LABELS[contextAttr]} (${charName})`
       : `d${sides} + ${ATTRIBUTE_LABELS[contextAttr]}`
     if (rolling) return
+    setRollingSides(sides)
     setRolling(true)
     setTimeout(() => {
       const { diceResult, total } = rollWithAttribute(sides, attrVal, label, classBonus, gearBonus, skillBonus)
@@ -240,7 +251,7 @@ export function Dice() {
             </div>
 
             {/* Result */}
-            <ResultDisplay result={lastResult} rolling={rolling} />
+            <ResultDisplay result={lastResult} rolling={rolling} rollingSides={rollingSides} />
 
             {/* Contextual roll */}
             <div style={{ background: '#111', border: '1px solid #1a1a1a', borderRadius: '4px', padding: '1rem' }}>

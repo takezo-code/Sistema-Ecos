@@ -28,8 +28,8 @@ export const CHARACTER_CLASSES = [
     attributes: ['vitalidade', 'vontade'],
     weapons: ['escudo_medio', 'escudo_grande', 'arma_duas_maos', 'arma_uma_mao'],
     passive: {
-      name: 'Peso da Linha',
-      description: 'O Baluarte já está no caminho. O golpe procura o corpo dele primeiro; o grupo fica atrás da parede.',
+      name: 'Muralha Viva',
+      description: 'Onde o Baluarte pisa, a linha para de ceder. O impacto o escolhe primeiro e o grupo respira atrás da muralha.',
       narrative: true,
     },
   },
