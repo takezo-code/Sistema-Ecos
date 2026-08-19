@@ -83,6 +83,14 @@ export function activateActiveSkill(entity, skillInstance, catalogDef) {
     })
   }
 
+  let partyOverloadReduce = null
+  if (catalogDef.partyOverloadReduce) {
+    const reduceAmount = resolveBuffValue(catalogDef.partyOverloadReduce, skillTier)
+    if (reduceAmount > 0) {
+      partyOverloadReduce = { amount: reduceAmount, sourceName: catalogDef.name }
+    }
+  }
+
   const historyEntry = {
     id: genId(),
     templateId,
@@ -108,6 +116,7 @@ export function activateActiveSkill(entity, skillInstance, catalogDef) {
     historyEntry,
     partyBuffs,
     partyHeal,
+    partyOverloadReduce,
   }
 }
 

@@ -57,10 +57,15 @@ export const CHARACTER_CLASSES = [
   {
     id: 'suporte',
     label: 'Sutura',
-    description: 'Cose o Eco no corpo — lê a ferida no tempo e puxa o instante de volta.',
+    description: 'Cose o Eco no corpo e na mente. A Sutura lê o que está partido e puxa de volta ao lugar.',
     color: '#fbbf24',
     attributes: ['inteligencia', 'sabedoria'],
     weapons: ['orbe', 'varinha', 'cajado', 'livro'],
+    passive: {
+      name: 'Descanso no Void',
+      description: 'Quando a Sutura descansa no Void, os usos de Eco resetam completamente. O corpo volta limpo.',
+      narrative: true,
+    },
   },
 ]
 

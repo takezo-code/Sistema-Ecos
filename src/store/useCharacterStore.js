@@ -413,6 +413,16 @@ export const useCharacterStore = create((set, get) => ({
         })
       }
     }
+    if (result.partyOverloadReduce?.amount) {
+      const targets = (allyIds?.length ? allyIds : [characterId]).filter(Boolean)
+      for (const id of targets) {
+        patchCharacter(get, set, id, ch => {
+          const cur = ch.ecoOverload ?? 0
+          const next = Math.max(0, cur - result.partyOverloadReduce.amount)
+          return { ...ch, ecoOverload: next }
+        })
+      }
+    }
     if (result.events?.length) set({ lastOverloadEvents: result.events })
     set({ lastSkillError: null })
     const partyNote = result.partyBuffs?.length
@@ -423,7 +433,11 @@ export const useCharacterStore = create((set, get) => ({
         ? (allyIds?.length > 1
           ? `Refluxo curou ${allyIds.length} personagens (−${result.partyHeal.amount} marca(s) cada).`
           : `Cura: −${result.partyHeal.amount} marca(s).`)
-        : null
+        : result.partyOverloadReduce?.amount
+          ? (allyIds?.length > 1
+            ? `Purga reduziu sobrecarga de ${allyIds.length} personagens (−${result.partyOverloadReduce.amount} cada).`
+            : `Purga: −${result.partyOverloadReduce.amount} sobrecarga.`)
+          : null
     return {
       ok: true,
       warnings: [ ...(result.warnings || []), partyNote ].filter(Boolean),
