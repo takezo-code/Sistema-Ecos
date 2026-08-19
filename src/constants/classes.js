@@ -28,9 +28,9 @@ export const CHARACTER_CLASSES = [
     attributes: ['vitalidade', 'vontade'],
     weapons: ['escudo_medio', 'escudo_grande', 'arma_duas_maos', 'arma_uma_mao'],
     passive: {
-      name: 'Peso da Linha',
-      description: 'O Baluarte já está no caminho. O golpe procura o corpo dele primeiro; o grupo fica atrás da parede.',
-      narrative: true,
+      name: 'Muralha Inquebrável',
+      description: 'Enquanto estiver abaixo de 10 de vida, o Baluarte regenera 1 de vida por turno, até voltar ao teto 10.',
+      narrative: false,
     },
   },
   {

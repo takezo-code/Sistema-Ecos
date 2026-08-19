@@ -6,6 +6,7 @@ import { getEcoSafeLimitFromEntity } from '../constants/ecoOverload'
 import { getCooldownRemaining } from '../mechanics/skills/cooldownEngine'
 import { resolveSkillVisualState, canActivateActiveSkill } from '../mechanics/skills/skillVisualState'
 import { activateActiveSkill, advanceTurnForEntity } from '../mechanics/skills/skillActivationEngine'
+import { buildClassPassiveTurnPatch } from '../mechanics/classes/classPassiveEngine'
 import { genId } from '../utils/id'
 import { getCharacterWeapon } from '../mechanics/equipment/characterGear'
 import { getWeaponSkill } from '../mechanics/equipment/weaponProgressionEngine'
@@ -243,5 +244,16 @@ export function advanceCharacterTurn(entity) {
     catalogMap[WEAPON_SKILL_TEMPLATE_ID] = buildWeaponSkillCatalog(weaponSkill)
   }
   const { patch, passiveWarnings } = advanceTurnForEntity(entity, catalogMap)
-  return { ok: true, patch, warnings: passiveWarnings }
+  let fullPatch = { ...patch }
+  const warnings = [...(passiveWarnings || [])]
+
+  const passiveTurn = buildClassPassiveTurnPatch({ ...entity, ...fullPatch })
+  if (passiveTurn.patch) {
+    fullPatch = { ...fullPatch, ...passiveTurn.patch }
+  }
+  if (passiveTurn.warning) {
+    warnings.push(passiveTurn.warning)
+  }
+
+  return { ok: true, patch: fullPatch, warnings }
 }
