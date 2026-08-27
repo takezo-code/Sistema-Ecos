@@ -275,12 +275,19 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
       narrativeStatus: _s,
       starterWeapon,
       starterArmor,
-      ...payload
+      ...rest
     } = form
+    const payload = { ...rest }
     if (isNew) {
+      // Mantém starter* só para validação no save; o store persiste `equipped`.
+      payload.starterWeapon = starterWeapon
+      payload.starterArmor = starterArmor
       payload.equipped = buildInitialGear({ weapon: starterWeapon, armor: starterArmor })
     }
-    onSave(payload)
+    const result = onSave(payload)
+    if (result && result.ok === false) {
+      setAttrError(result.message || 'Não foi possível salvar o personagem.')
+    }
   }
 
   const profileBlock = (
@@ -463,10 +470,7 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
                 Continuar
               </Button>
             ) : (
-              <>
-                <button type="button" className="btn-ghost" onClick={onCancel}>Cancelar</button>
-                {saveButton}
-              </>
+              saveButton
             )}
           </div>
         </>
@@ -736,30 +740,38 @@ export function Characters({
     const isNew = !editing
     if (isNew) {
       const name = validateStartingCharacterName(data)
-      if (!name.ok) return
+      if (!name.ok) return name
       const cls = validateStartingClassSelected(data)
-      if (!cls.ok) return
+      if (!cls.ok) return cls
       const check = validateStartingAttributesDistributed(data)
-      if (!check.ok) return
+      if (!check.ok) return check
       const social = validateStartingSocialDistributed(data)
-      if (!social.ok) return
+      if (!social.ok) return social
       const eco = validateStartingEcoSkillSelected(data)
-      if (!eco.ok) return
+      if (!eco.ok) return eco
       const gear = validateStartingStarterGear(data)
-      if (!gear.ok) return
+      if (!gear.ok) return gear
     }
+    const {
+      starterWeapon: _sw,
+      starterArmor: _sa,
+      ...clean
+    } = data
     const payload = {
-      ...data,
-      ...finalizeCreationAttributes(data, { isNew }),
+      ...clean,
+      ...finalizeCreationAttributes(clean, { isNew }),
     }
     if (editing) {
       updateCharacter(editing.id, payload)
     } else {
       const created = addCharacter(withActiveCampaign(payload, activeCampaignId))
-      if (!created) return
+      if (!created) {
+        return { ok: false, message: 'Não foi possível criar o personagem. Confira nome, classe, pontos, skill e equipamento.' }
+      }
     }
     closeModal()
     if (autoOpenCreate && isNew) onCreateFlowSuccess?.()
+    return { ok: true }
   }
 
   const currentInventoryChar = inventoryChar ? characters.find(c => c.id === inventoryChar.id) : null

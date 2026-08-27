@@ -17,7 +17,6 @@ import {
   validateStartingAttributesDistributed,
   validateStartingSocialDistributed,
   validateStartingEcoSkillSelected,
-  validateStartingStarterGear,
   validateStartingCharacterName,
   validateStartingClassSelected,
   applyMasterAttributeChange,
@@ -105,13 +104,20 @@ export const useCharacterStore = create((set, get) => ({
     if (!socialCheck.ok) return null
     const ecoCheck = validateStartingEcoSkillSelected(data)
     if (!ecoCheck.ok) return null
-    const gearCheck = validateStartingStarterGear(data)
-    if (!gearCheck.ok) return null
+    // starterWeapon/starterArmor são validados no formulário antes do save;
+    // aqui só garantimos que o equipamento inicial foi montado.
+    const equipped = Array.isArray(data.equipped) ? data.equipped : []
+    if (equipped.length < 2) return null
+    const {
+      starterWeapon: _sw,
+      starterArmor: _sa,
+      ...persistable
+    } = data
     const character = withNormalizedGear(normalizeGameEntity({
-      ...data,
+      ...persistable,
       id: genId(),
       campaignId: data.campaignId || null,
-      name: data.name.trim(),
+      name: String(data.name || '').trim(),
       image: data.image || '',
       appearance: data.appearance || '',
       personality: data.personality || '',
@@ -132,7 +138,7 @@ export const useCharacterStore = create((set, get) => ({
       physicalState: data.physicalState || 'bem',
       mentalState: data.mentalState || 'estavel',
       inventory: data.inventory || [],
-      equipped: data.equipped || [],
+      equipped,
       backpackCapacity: data.backpackCapacity ?? null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
