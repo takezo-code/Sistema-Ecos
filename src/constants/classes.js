@@ -68,8 +68,8 @@ export const CHARACTER_CLASSES = [
     weapons: ['orbe', 'varinha', 'cajado', 'livro'],
     passive: {
       name: 'Descanso no Void',
-      description: 'Quando a Sutura descansa no Void, os usos de Eco resetam completamente. O corpo volta limpo.',
-      narrative: true,
+      description: 'Só a Sutura consegue limpar os usos de Eco no descanso do Void. As demais classes só resetam Eco ao encerrar a sessão.',
+      narrative: false,
     },
   },
 ]

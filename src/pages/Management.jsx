@@ -12,8 +12,8 @@ export { MANAGEMENT_VIEWS, skillAudienceToManagementView } from '../constants/ma
 
 export function Management({
   initialView = MANAGEMENT_VIEWS.CHARACTERS,
-  onViewChange,
-  onNavigate,
+  onViewChange: _onViewChange,
+  onNavigate: _onNavigate,
 }) {
   const [activeView, setActiveView] = useState(() => normalizeManagementView(initialView))
 

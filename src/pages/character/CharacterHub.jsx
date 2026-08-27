@@ -15,6 +15,8 @@ import { CharacterStatus } from './CharacterStatus'
 import { CharacterEcos } from './CharacterEcos'
 import { CharacterHistory } from './CharacterHistory'
 import { CharacterSettings } from './CharacterSettings'
+import { canRestEcoInVoid } from '../../mechanics/classes/classPassiveEngine'
+import { useSaveStore } from '../../store/useSaveStore'
 
 export function CharacterHub() {
   const { activeCampaignId } = useCampaignStore()
@@ -36,6 +38,7 @@ export function CharacterHub() {
   const addInventoryItem = useCharacterStore(s => s.addInventoryItem)
   const updateInventoryItem = useCharacterStore(s => s.updateInventoryItem)
   const removeInventoryItem = useCharacterStore(s => s.removeInventoryItem)
+  const showToast = useSaveStore(s => s.showToast)
   const { selectedCharacterId, activeTab, selectCharacter, setActiveTab } = useCharacterPanelStore()
 
   const filtered = useMemo(
@@ -44,6 +47,15 @@ export function CharacterHub() {
   )
 
   const character = filtered.find(c => c.id === selectedCharacterId) || filtered[0] || null
+
+  const handleRestEco = (id) => {
+    const result = restEcoOverload(id)
+    if (result?.ok === false) {
+      showToast(result.message || 'Não foi possível descansar Eco.', 'error')
+      return
+    }
+    showToast('Eco zerado no Void (Sutura).', 'success')
+  }
 
   useEffect(() => {
     if (filtered.length === 0) return
@@ -54,6 +66,7 @@ export function CharacterHub() {
   const renderTab = () => {
     if (!character) return null
     const id = character.id
+    const canVoidRest = canRestEcoInVoid(character)
   const props = {
       character,
       onUpdate: data => updateCharacter(id, data),
@@ -85,7 +98,7 @@ export function CharacterHub() {
             character={character}
             onActivate={skillId => activateSkill(id, skillId)}
             onAdvanceTurn={() => advanceTurn(id)}
-            onRestEco={() => restEcoOverload(id)}
+            onRestEco={canVoidRest ? () => handleRestEco(id) : undefined}
             onInvestSkillPoint={templateId => investSkillPoint(id, templateId)}
             onUpgradeSkillGrade={templateId => upgradeSkillGrade(id, templateId)}
             lastSkillError={lastSkillError}
@@ -97,7 +110,7 @@ export function CharacterHub() {
         return (
           <CharacterEcos
             {...props}
-            onRestOverload={() => restEcoOverload(id)}
+            onRestOverload={canVoidRest ? () => handleRestEco(id) : undefined}
             onSetOverload={level => setEcoOverloadLevel(id, level)}
             lastOverloadEvents={lastOverloadEvents}
             onClearOverloadEvents={clearOverloadEvents}
@@ -111,7 +124,7 @@ export function CharacterHub() {
             character={character}
             onUpdate={data => updateCharacter(id, data)}
             onAdvanceTurn={() => advanceTurn(id)}
-            onRestEco={() => restEcoOverload(id)}
+            onRestEco={canVoidRest ? () => handleRestEco(id) : undefined}
             onRemoveSkill={skillId => removeSkill(id, skillId)}
           />
         )

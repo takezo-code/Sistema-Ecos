@@ -3,8 +3,6 @@ import { storage, KEYS } from '../services/storage'
 import { genId } from '../utils/id'
 import {
   normalizeGameEntity,
-  STARTING_ATTRIBUTE_POINTS,
-  STARTING_SOCIAL_POINTS,
   defaultAttributes,
   defaultSocialAttributes,
 } from '../constants/attributes'
@@ -22,7 +20,7 @@ import {
   scaleAttributesToBudget,
 } from '../services/progressionService'
 import { unlockRandomSkill } from '../services/skillService'
-import { useEcoSkill, restEcoOverload, masterSetEcoOverload } from '../services/ecoOverloadService'
+import { useEcoSkill as runEcoSkillUse, restEcoOverload, masterSetEcoOverload } from '../services/ecoOverloadService'
 import { buildSkillInstanceFromCatalog, buildInlineSkillInstance } from '../services/ecoSkillRuntimeService'
 import { catalogSkillAllowedForEntity, getCatalogSkill } from '../services/skillsCatalogService'
 import { enforceProgressionCaps } from '../services/progressionBudget'
@@ -265,7 +263,7 @@ export const useNPCStore = create((set, get) => ({
     return patch.skills[patch.skills.length - 1]
   },
 
-  learnCatalogSkill(npcId, templateId, { free = false } = {}) {
+  learnCatalogSkill(npcId, templateId) {
     const n = get().npcs.find(npc => npc.id === npcId)
     if (!n) return { ok: false, message: 'NPC não encontrado' }
     if (!getCatalogSkill(templateId)) {
@@ -336,7 +334,7 @@ export const useNPCStore = create((set, get) => ({
   useEcoSkill(npcId, skillId, options = {}) {
     const n = get().npcs.find(npc => npc.id === npcId)
     if (!n) return { ok: false }
-    const result = useEcoSkill(n, skillId, options)
+    const result = runEcoSkillUse(n, skillId, options)
     if (!result.ok) return result
     if (result.patch && Object.keys(result.patch).length > 0) {
       patchNPC(get, set, npcId, npc => ({ ...npc, ...result.patch }))

@@ -308,7 +308,7 @@ function WeaponSkillEditor({ skill, onSave }) {
   )
 }
 
-function WeaponDetails({ character, weapon, onSetPassive, onSetWeaponSkill, manualValues = false }) {
+function WeaponDetails({ character: _character, weapon, onSetPassive, onSetWeaponSkill, manualValues = false }) {
   const kindLabel = getWeaponKindLabel(weapon)
   const weaponSkill = getWeaponSkill(weapon)
   const [editingSkill, setEditingSkill] = useState(false)

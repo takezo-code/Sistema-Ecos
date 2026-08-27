@@ -9,7 +9,6 @@ import {
   getMentalAttributePenaltyPercent,
 } from '../mechanics/ecoOverload/overloadPenalties'
 import { processEcoSkillUse, resetEcoOverload, setEcoOverloadLevel } from '../mechanics/ecoOverload/overloadEngine'
-import { buildRuptureTotalEvent, RUPTURE_TOTAL_OUTCOMES } from '../mechanics/ecoOverload/ruptureEvents'
 import { listActiveMentalStatusDetails } from './mentalStatusService'
 import { getCatalogSkill } from './skillsCatalogService'
 import { skillTypeIncrementsOverload } from '../constants/skillTypes'

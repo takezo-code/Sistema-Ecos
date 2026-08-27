@@ -6,7 +6,7 @@ import { filterByActiveCampaign, withActiveCampaign } from '../utils/campaignSco
 import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Modal } from '../components/ui/Modal'
-import { Field, Input, Textarea, Select } from '../components/ui/Field'
+import { Field, Input, Textarea } from '../components/ui/Field'
 import { ImageUpload } from '../components/ui/ImageUpload'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Button } from '../components/ui/Button'

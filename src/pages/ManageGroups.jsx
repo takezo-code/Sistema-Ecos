@@ -349,7 +349,7 @@ function PendingCharacterCard({ character, onAdd }) {
 export function ManageGroups() {
   const { activeCampaignId } = useCampaignStore()
   const { groups, addGroup, updateGroup, deleteGroup, addMember, removeMember } = useGroupStore()
-  const { characters, addXpToMany, recoverGroupMembers } = useCharacterStore()
+  const { characters, addXpToMany, recoverGroupMembers, endSessionRestEco } = useCharacterStore()
   const showToast = useSaveStore(s => s.showToast)
   const selectCharacter = useCharacterPanelStore(s => s.selectCharacter)
 
@@ -560,7 +560,7 @@ export function ManageGroups() {
         )}
 
         <FloatingTooltip.Provider>
-          <FloatingTooltip.Trigger content="Zera sobrecarga, marcas e estados">
+          <FloatingTooltip.Trigger content="Limpa marcas de todos. Eco só zera na Sutura (Void).">
             <Button
               type="button"
               variant="secondary"
@@ -568,10 +568,10 @@ export function ManageGroups() {
               disabled={members.length === 0}
               onClick={() => {
                 const ids = members.map(m => m.id)
-                const { recovered, missing } = recoverGroupMembers(ids)
+                const { recovered, missing, ecoReset } = recoverGroupMembers(ids)
                 if (recovered > 0) {
                   showToast(
-                    `Descanso aplicado a ${recovered} personagem${recovered > 1 ? 's' : ''} — marcas e sobrecarga zeradas.`,
+                    `Descanso: ${recovered} personagem${recovered > 1 ? 's' : ''} (marcas limpas${ecoReset > 0 ? ` · Eco da Sutura: ${ecoReset}` : ''}).`,
                     'success',
                   )
                 } else if (missing > 0) {
@@ -583,6 +583,29 @@ export function ManageGroups() {
               style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
             >
               <RotateCcw size={12} /> Descansar
+            </Button>
+          </FloatingTooltip.Trigger>
+          <FloatingTooltip.Trigger content="Fim de sessão: zera Eco de todas as classes do grupo">
+            <Button
+              type="button"
+              variant="secondary"
+              size="xs"
+              disabled={members.length === 0}
+              onClick={() => {
+                const ids = members.map(m => m.id)
+                const { reset } = endSessionRestEco(ids)
+                if (reset > 0) {
+                  showToast(
+                    `Sessão encerrada: Eco resetado em ${reset} personagem${reset > 1 ? 's' : ''}.`,
+                    'success',
+                  )
+                } else {
+                  showToast('Adicione membros ao grupo para encerrar a sessão.', 'info')
+                }
+              }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              Encerrar sessão
             </Button>
           </FloatingTooltip.Trigger>
         </FloatingTooltip.Provider>

@@ -7,7 +7,7 @@ import { getItemPassivesAligned } from './gearPassiveEngine'
 import { GEAR_CATEGORIES } from './characterGear'
 
 /** Atributos de item da arma alinhados aos 3 slots (null = vazio). */
-export function getWeaponPassives(entity = {}, weapon = null) {
+export function getWeaponPassives(_entity = {}, weapon = null) {
   return getItemPassivesAligned(GEAR_CATEGORIES.WEAPON, weapon)
 }
 

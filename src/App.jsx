@@ -48,9 +48,6 @@ function migrateUiState(savedUi) {
   } else if (page === 'sessions') {
     page = 'campanha'
     campanhaView = 'historia'
-  } else if (page === 'trash') {
-    page = 'campanha'
-    campanhaView = 'historia'
   }
 
   if (campanhaView === 'sessoes') {
@@ -97,7 +94,7 @@ export default function App() {
   const [creationType, setCreationType] = useState(null)
   const [emjogoView, setEmjogoView] = useState(migrated.emjogoView)
   const [campanhaView, setCampanhaView] = useState(migrated.campanhaView)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(savedUi.sidebarCollapsed ?? false)
+  const [sidebarCollapsed] = useState(savedUi.sidebarCollapsed ?? false)
 
   useEffect(() => {
     if (!inApp) return

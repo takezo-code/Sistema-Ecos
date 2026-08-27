@@ -114,7 +114,7 @@ function CharacterManageCard({ character, onManage }) {
   )
 }
 
-export function ManageCharacters({ embedded = false }) {
+export function ManageCharacters({ embedded: _embedded = false }) {
   const { activeCampaignId } = useCampaignStore()
   const { characters } = useCharacterStore()
   const [managingId, setManagingId] = useState(null)

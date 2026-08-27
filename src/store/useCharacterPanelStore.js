@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { storage, KEYS } from '../services/storage'
+import { storage } from '../services/storage'
 
 const UI_KEY = 'character_panel'
 

@@ -129,6 +129,12 @@ src/
 
 ---
 
+## Documentação
+
+- [Manual do Jogador](docs/MANUAL_JOGADOR.md) — criação, classes, vida, Eco, descanso e rolagem
+
+---
+
 ## Status
 
 Projeto em evolução (MVP funcional). Novas mecânicas de classe, combate e polish visual continuam sendo iteradas.

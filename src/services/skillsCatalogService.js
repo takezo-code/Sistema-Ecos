@@ -100,7 +100,7 @@ export function buildSkillFromDraft(draft, existingId = null) {
     skillType: ECO_SKILL_TYPES.ATIVA,
     classId: null,
     cooldownTurns: Math.max(0, Number(draft.cooldownTurns) || 0),
-    overloadCost: Math.max(0, Number(draft.overloadCost) ?? 1),
+    overloadCost: Math.max(0, Number(draft.overloadCost) || 1),
     description: String(draft.description || '').trim(),
     narrativeConsequence: String(draft.narrativeConsequence || '').trim(),
     mechanicalEffect: String(draft.mechanicalEffect || '').trim(),

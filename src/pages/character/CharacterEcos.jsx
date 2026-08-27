@@ -5,7 +5,7 @@ import { ProgressionSection } from '../../components/management/ProgressionSecti
 
 export function CharacterEcos({
   character,
-  onUpdate,
+  onUpdate: _onUpdate,
   onRestOverload,
   onSetOverload,
   lastOverloadEvents,

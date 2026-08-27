@@ -19,7 +19,6 @@ const HANDLE_HIT = 22
 const EDGE_HIT = 14
 
 const CORNERS = ['nw', 'ne', 'sw', 'se']
-const EDGES = ['n', 's', 'e', 'w']
 
 const CURSOR_BY_HANDLE = {
   nw: 'nwse-resize',

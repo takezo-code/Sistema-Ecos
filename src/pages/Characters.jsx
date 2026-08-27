@@ -753,10 +753,12 @@ export function Characters({
       if (!gear.ok) return gear
     }
     const {
-      starterWeapon: _sw,
-      starterArmor: _sa,
+      starterWeapon,
+      starterArmor,
       ...clean
     } = data
+    void starterWeapon
+    void starterArmor
     const payload = {
       ...clean,
       ...finalizeCreationAttributes(clean, { isNew }),

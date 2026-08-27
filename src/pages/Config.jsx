@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { Save, Upload, RotateCcw, HardDrive, Home } from 'lucide-react'
+import { Save, Upload, RotateCcw, HardDrive, Home, Dices, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import SpotlightCard from '../components/react-bits/SpotlightCard'
 import { exportCampaign, importCampaign, resetAllTestData } from '../services/saveService'
@@ -24,7 +24,7 @@ const ACTION_BTN = {
   },
 }
 
-export function Config({ onBackToWelcome }) {
+export function Config({ onBackToWelcome, onNavigate }) {
   const fileRef = useRef(null)
   const { showToast, setSaving } = useSaveStore()
   const { settings } = useSettingsStore()
@@ -116,6 +116,62 @@ export function Config({ onBackToWelcome }) {
               <Home size={15} />
               Ir para o início
             </Button>
+          </SpotlightCard>
+
+          <SpotlightCard spotlightColor="rgba(56, 189, 248, 0.12)" style={{ padding: '1.25rem' }}>
+            <div style={{
+              fontSize: '0.65rem',
+              color: '#38bdf8',
+              fontFamily: 'monospace',
+              letterSpacing: '0.12em',
+              marginBottom: '0.5rem',
+            }}>
+              FERRAMENTAS
+            </div>
+            <div style={{ fontSize: '0.85rem', color: '#e5e5e5', fontWeight: 600, marginBottom: '0.35rem' }}>
+              Dados e lixeira
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#888', lineHeight: 1.5, marginBottom: '1rem' }}>
+              Rolagem avulsa e recuperação de entidades arquivadas ficam aqui — fora da sidebar principal.
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              <Button
+                type="button"
+                variant="secondary"
+                block
+                onClick={() => onNavigate?.('dice')}
+                style={{
+                  ...ACTION_BTN.style,
+                  minWidth: undefined,
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <Dices size={15} />
+                Abrir Dados
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                block
+                onClick={() => onNavigate?.('trash')}
+                style={{
+                  ...ACTION_BTN.style,
+                  minWidth: undefined,
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <Trash2 size={15} />
+                Abrir Lixeira
+              </Button>
+            </div>
           </SpotlightCard>
 
           <SpotlightCard spotlightColor="rgba(37, 99, 235, 0.14)" style={{ padding: '1.25rem' }}>

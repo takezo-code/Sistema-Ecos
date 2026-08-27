@@ -26,7 +26,7 @@ export function TurnControlBar({ currentTurn, ecoOverload, entity, onAdvanceTurn
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         {onRestEco && (
           <button type="button" className="btn-ghost" onClick={onRestEco} style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <RotateCcw size={12} /> Descansar Eco
+            <RotateCcw size={12} /> Descansar Eco (Void)
           </button>
         )}
         {onAdvanceTurn && (

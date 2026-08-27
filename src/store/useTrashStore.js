@@ -7,7 +7,7 @@ import {
   emptyTrash,
 } from '../services/trashService'
 
-export const useTrashStore = create((set, get) => ({
+export const useTrashStore = create((set) => ({
   items: listTrash(),
 
   refresh() {

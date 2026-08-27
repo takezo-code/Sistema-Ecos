@@ -3,8 +3,6 @@ import { storage, KEYS } from '../services/storage'
 import { genId } from '../utils/id'
 import {
   normalizeGameEntity,
-  STARTING_ATTRIBUTE_POINTS,
-  STARTING_SOCIAL_POINTS,
   defaultAttributes,
   defaultSocialAttributes,
 } from '../constants/attributes'
@@ -27,7 +25,7 @@ import {
 } from '../services/progressionService'
 import { investSkillPoint as investSkillPointEngine, upgradeSkillGrade as upgradeSkillGradeEngine } from '../mechanics/skills/classSkillProgressionEngine'
 
-import { useEcoSkill, restEcoOverload, masterSetEcoOverload } from '../services/ecoOverloadService'
+import { useEcoSkill as runEcoSkillUse, restEcoOverload, masterSetEcoOverload } from '../services/ecoOverloadService'
 import {
   activateCharacterSkill,
   advanceCharacterTurn,
@@ -43,6 +41,7 @@ import {
 } from '../mechanics/combat/damageMarksEngine'
 import { buildGearItem, getGearItem, GEAR_CATEGORIES, normalizeEquippedGear } from '../mechanics/equipment/characterGear'
 import { upsertPassive } from '../mechanics/equipment/gearPassiveEngine'
+import { canRestEcoInVoid } from '../mechanics/classes/classPassiveEngine'
 import { applyBuffsToEntity } from '../mechanics/skills/skillBuffEngine'
 
 const withNormalizedGear = (entity) => ({
@@ -54,8 +53,9 @@ const load = () => (storage.get(KEYS.characters) || []).map(c => withNormalizedG
 
 const persist = (characters) => storage.set(KEYS.characters, characters)
 
-function buildRecoverPatch(character) {
-  const ecoPatch = restEcoOverload(character).patch
+function buildRecoverPatch(character, { resetEco = null } = {}) {
+  const shouldResetEco = resetEco == null ? canRestEcoInVoid(character) : !!resetEco
+  const ecoPatch = shouldResetEco ? restEcoOverload(character).patch : {}
   const merged = { ...character, ...ecoPatch }
   const marksPatch = clearDamageMarksEngine(merged).patch
   return { ...ecoPatch, ...marksPatch }
@@ -108,11 +108,9 @@ export const useCharacterStore = create((set, get) => ({
     // aqui só garantimos que o equipamento inicial foi montado.
     const equipped = Array.isArray(data.equipped) ? data.equipped : []
     if (equipped.length < 2) return null
-    const {
-      starterWeapon: _sw,
-      starterArmor: _sa,
-      ...persistable
-    } = data
+    const persistable = { ...data }
+    delete persistable.starterWeapon
+    delete persistable.starterArmor
     const character = withNormalizedGear(normalizeGameEntity({
       ...persistable,
       id: genId(),
@@ -188,7 +186,7 @@ export const useCharacterStore = create((set, get) => ({
     patchCharacter(get, set, characterId, ch => ({ ...ch, ...result.patch }))
   },
 
-  /** Descanso completo: zera sobrecarga Eco + limpa marcas + estados estáveis */
+  /** Descanso: limpa marcas. Eco só zera se for Sutura (Void). */
   recoverCharacter(characterId) {
     const c = get().characters.find(ch => ch.id === characterId)
     if (!c) return false
@@ -197,15 +195,17 @@ export const useCharacterStore = create((set, get) => ({
     return true
   },
 
-  /** Descanso do grupo em uma única gravação (todos os memberIds). */
+  /** Descanso do grupo: limpa marcas; Eco só da Sutura. */
   recoverGroupMembers(memberIds = []) {
     const idSet = new Set((memberIds || []).filter(Boolean))
-    if (idSet.size === 0) return { recovered: 0, missing: 0 }
+    if (idSet.size === 0) return { recovered: 0, missing: 0, ecoReset: 0 }
 
     let recovered = 0
+    let ecoReset = 0
     const characters = get().characters.map(c => {
       if (!idSet.has(c.id)) return c
       recovered++
+      if (canRestEcoInVoid(c)) ecoReset++
       let next = withNormalizedGear(normalizeGameEntity({
         ...c,
         ...buildRecoverPatch(c),
@@ -218,7 +218,32 @@ export const useCharacterStore = create((set, get) => ({
 
     persist(characters)
     set({ characters, lastOverloadEvents: [] })
-    return { recovered, missing: idSet.size - recovered }
+    return { recovered, missing: idSet.size - recovered, ecoReset }
+  },
+
+  /** Fim de sessão: zera Eco de todos os personagens listados (qualquer classe). */
+  endSessionRestEco(memberIds = []) {
+    const idSet = new Set((memberIds || []).filter(Boolean))
+    if (idSet.size === 0) return { reset: 0 }
+
+    let reset = 0
+    const characters = get().characters.map(c => {
+      if (!idSet.has(c.id)) return c
+      reset++
+      const { patch } = restEcoOverload(c)
+      let next = withNormalizedGear(normalizeGameEntity({
+        ...c,
+        ...patch,
+        updatedAt: new Date().toISOString(),
+      }))
+      const { patch: caps } = enforceProgressionCaps(next)
+      if (caps) next = { ...next, ...caps }
+      return next
+    })
+
+    persist(characters)
+    set({ characters, lastOverloadEvents: [] })
+    return { reset }
   },
 
   addXp(characterId, amount) {
@@ -372,7 +397,7 @@ export const useCharacterStore = create((set, get) => ({
   useEcoSkill(characterId, skillId, options = {}) {
     const c = get().characters.find(ch => ch.id === characterId)
     if (!c) return { ok: false }
-    const result = useEcoSkill(c, skillId, options)
+    const result = runEcoSkillUse(c, skillId, options)
     if (!result.ok) return result
     if (result.patch && Object.keys(result.patch).length > 0) {
       patchCharacter(get, set, characterId, ch => ({ ...ch, ...result.patch }))
@@ -385,11 +410,17 @@ export const useCharacterStore = create((set, get) => ({
 
   restEcoOverload(characterId) {
     const c = get().characters.find(ch => ch.id === characterId)
-    if (!c) return false
+    if (!c) return { ok: false, message: 'Personagem não encontrado.' }
+    if (!canRestEcoInVoid(c)) {
+      return {
+        ok: false,
+        message: 'Só a Sutura consegue limpar Eco no Void. As demais classes resetam Eco ao encerrar a sessão.',
+      }
+    }
     const { patch } = restEcoOverload(c)
     patchCharacter(get, set, characterId, ch => ({ ...ch, ...patch }))
     set({ lastOverloadEvents: [] })
-    return true
+    return { ok: true }
   },
 
   setEcoOverloadLevel(characterId, level) {

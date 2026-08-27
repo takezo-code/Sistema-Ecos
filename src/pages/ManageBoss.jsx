@@ -116,7 +116,7 @@ function BossManageCard({ npc, onManage }) {
   )
 }
 
-export function ManageBoss({ embedded = false }) {
+export function ManageBoss({ embedded: _embedded = false }) {
   const { activeCampaignId } = useCampaignStore()
   const {
     npcs,
@@ -143,7 +143,6 @@ export function ManageBoss({ embedded = false }) {
     setEcoOverloadLevel,
     lastOverloadEvents,
     clearOverloadEvents,
-    lastLevelUps,
     clearLevelUps,
     addInventoryItem,
     updateInventoryItem,

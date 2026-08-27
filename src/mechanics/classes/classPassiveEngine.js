@@ -4,6 +4,7 @@
  * Baluarte: regeneração mecânica abaixo de 10 de vida.
  * Fratura: bônus mecânico na Fúria Cega quando a vida restante está baixa.
  * Fenda: base de usos de Eco em 8 (Canal Amplo) — ver ecoOverload.getEcoBaseLimitForEntity.
+ * Sutura: único que zera Eco no descanso do Void; demais só no fim da sessão.
  */
 import { getCharacterClass, normalizeClassId } from '../../constants/classes'
 import { getRemainingLife, healDamageMarks } from '../combat/damageMarksEngine'
@@ -15,9 +16,19 @@ export const FRATURA_FURY_LIFE_THRESHOLD = 5
 export const FRATURA_FURY_PASSIVE_BONUS = 2
 export const BALUARTE_REGEN_LIFE_THRESHOLD = 10
 export const BALUARTE_REGEN_PER_TURN = 1
+export const SUTURA_CLASS_ID = 'suporte'
 
 export function getClassPassive(entityOrClassId) {
   return getCharacterClass(entityOrClassId)?.passive ?? null
+}
+
+/** Só a Sutura pode zerar usos de Eco no descanso do Void. */
+export function canRestEcoInVoid(entityOrClassId) {
+  return normalizeClassId(
+    typeof entityOrClassId === 'object' && entityOrClassId !== null
+      ? entityOrClassId.classId
+      : entityOrClassId,
+  ) === SUTURA_CLASS_ID
 }
 
 export function isFraturaFuryPassiveActive(entity = {}) {

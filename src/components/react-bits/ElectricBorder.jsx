@@ -153,7 +153,6 @@ const ElectricBorder = ({
     const amplitude = chaos;
     const frequency = 10;
     const baseFlatness = 0;
-    const scale = displacement;
     const offset = borderOffset;
 
     const updateSize = () => {

@@ -116,7 +116,7 @@ function NPCManageCard({ npc, onManage }) {
   )
 }
 
-export function ManageNPCs({ embedded = false }) {
+export function ManageNPCs({ embedded: _embedded = false }) {
   const { activeCampaignId } = useCampaignStore()
   const {
     npcs,
@@ -142,7 +142,6 @@ export function ManageNPCs({ embedded = false }) {
     setEcoOverloadLevel,
     lastOverloadEvents,
     clearOverloadEvents,
-    lastLevelUps,
     clearLevelUps,
     addInventoryItem,
     updateInventoryItem,

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { ManageGroups } from './ManageGroups'
 import { ManageCombat } from './ManageCombat'
 
-export function EmJogo({ initialView = 'ficha', onViewChange }) {
+export function EmJogo({ initialView = 'ficha', onViewChange: _onViewChange }) {
   const [activeView, setActiveView] = useState(initialView)
 
   useEffect(() => {

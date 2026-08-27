@@ -38,7 +38,7 @@ function buildSeedSkill(draft) {
       ? draft.category
       : SKILL_CATEGORIES.PERCEPCAO,
     cooldownTurns: isPassiva ? 0 : Math.max(0, Number(draft.cooldownTurns) || 0),
-    overloadCost: isPassiva ? 0 : Math.max(0, Number(draft.overloadCost) ?? 1),
+    overloadCost: isPassiva ? 0 : Math.max(0, Number(draft.overloadCost) || 1),
     passiveOverloadRisk: Boolean(draft.passiveOverloadRisk),
     description: String(draft.description || '').trim(),
     narrativeConsequence: String(draft.narrativeConsequence || '').trim(),

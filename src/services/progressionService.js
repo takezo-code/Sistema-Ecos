@@ -7,7 +7,6 @@ import {
 import {
   STARTING_ATTRIBUTE_POINTS,
   STARTING_SOCIAL_POINTS,
-  INITIAL_SOCIAL_MAX,
   defaultAttributes,
   defaultSocialAttributes,
   getAttributeMax,
@@ -17,22 +16,17 @@ import {
   getTotalAttributePoints,
   getTotalSocialPoints,
   getCreationAttributeFloor,
-  getCreationSocialFloor,
   isInCreationPhase,
 } from '../constants/attributes'
 import { entityHasEcoPowers } from '../constants/entityProgression'
 import { normalizeClassId } from '../constants/classes'
 import {
   getAttributeBudget,
-  getSocialBudget,
   getEcoPointsFromLevel,
   getEcoSpentOnSkills,
-  getProgressionSnapshot,
   validateProgression,
   enforceProgressionCaps,
   syncProgressionToLevel,
-  clampMasterAuxiliary,
-  scaleAttributesToBudget,
 } from './progressionBudget'
 
 export {

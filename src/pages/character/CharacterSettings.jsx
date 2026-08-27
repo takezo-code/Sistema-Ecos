@@ -13,9 +13,15 @@ export function CharacterSettings({ character, onUpdate, onAdvanceTurn, onRestEc
           <Button type="button" variant="secondary" size="xs" onClick={onAdvanceTurn}>
             Avançar turno (reduz cooldowns)
           </Button>
-          <button type="button" className="btn-ghost" style={{ fontSize: '0.75rem' }} onClick={onRestEco}>
-            Descansar Eco (zerar sobrecarga)
-          </button>
+          {onRestEco ? (
+            <button type="button" className="btn-ghost" style={{ fontSize: '0.75rem' }} onClick={onRestEco}>
+              Descansar Eco no Void (Sutura)
+            </button>
+          ) : (
+            <p style={{ fontSize: '0.72rem', color: '#666', margin: 0, lineHeight: 1.45 }}>
+              Eco no Void é exclusivo da Sutura. As demais classes resetam Eco ao encerrar a sessão.
+            </p>
+          )}
           <button
             type="button"
             className="btn-ghost"

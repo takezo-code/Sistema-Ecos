@@ -3,7 +3,6 @@ import { ChevronUp, ChevronDown } from 'lucide-react'
 import {
   INITIAL_ATTRIBUTE_MAX,
   SOCIAL_ATTRIBUTES,
-  STARTING_SOCIAL_POINTS,
   INITIAL_SOCIAL_MAX,
 } from '../../constants/attributes'
 import { getAttributesForEntity } from '../../constants/entityProgression'

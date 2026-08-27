@@ -14,7 +14,7 @@ import { Button } from '../ui/Button'
 
 export function EntityManagePanel({
   entity,
-  onUpdate,
+  onUpdate: _onUpdate,
   onChangeAttribute,
   onChangeSocialAttribute,
   onSpendPendingAttribute,
@@ -33,7 +33,7 @@ export function EntityManagePanel({
   onAddInlineSkill,
   onUpdateInlineSkill,
   onRemoveSkill,
-  onUseSkill,
+  onUseSkill: _onUseSkill,
   onRestOverload,
   onSetOverload,
   lastOverloadEvents,

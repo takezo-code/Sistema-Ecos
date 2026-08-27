@@ -1,5 +1,6 @@
 import { useMemo, useCallback } from 'react'
 import { useCharacterStore } from '../store/useCharacterStore'
+import { canRestEcoInVoid } from '../mechanics/classes/classPassiveEngine'
 
 /** Personagem sempre lido do store (reativo a alterações em Gerenciamento). */
 export function useCharacterEntity(characterId) {
@@ -30,13 +31,12 @@ export function useCharacterManagementPanel(characterId, { adminMode = false } =
   const lastMasterError = useCharacterStore(s => s.lastMasterError)
   const investSkillPoint = useCharacterStore(s => s.investSkillPoint)
   const upgradeSkillGrade = useCharacterStore(s => s.upgradeSkillGrade)
-  const useEcoSkill = useCharacterStore(s => s.useEcoSkill)
+  const runEcoSkill = useCharacterStore(s => s.useEcoSkill)
   const learnCatalogSkill = useCharacterStore(s => s.learnCatalogSkill)
   const removeSkill = useCharacterStore(s => s.removeSkill)
   const restEcoOverload = useCharacterStore(s => s.restEcoOverload)
   const setEcoOverloadLevel = useCharacterStore(s => s.setEcoOverloadLevel)
   const lastOverloadEvents = useCharacterStore(s => s.lastOverloadEvents)
-  const lastLevelUps = useCharacterStore(s => s.lastLevelUps)
   const clearLevelUps = useCharacterStore(s => s.clearLevelUps)
   const clearOverloadEvents = useCharacterStore(s => s.clearOverloadEvents)
   const clearMasterError = useCharacterStore(s => s.clearMasterError)
@@ -68,16 +68,17 @@ export function useCharacterManagementPanel(characterId, { adminMode = false } =
       onSpendPendingAttribute: key => spendPendingAttribute(id, key),
       onInvestSkillPoint: templateId => investSkillPoint(id, templateId),
       onUpgradeSkillGrade: templateId => upgradeSkillGrade(id, templateId),
-      onUseSkill: (skillId, opts) => useEcoSkill(id, skillId, opts),
+      onUseSkill: (skillId, opts) => runEcoSkill(id, skillId, opts),
       onLearnCatalogSkill: templateId => learnCatalogSkill(id, templateId),
       onRemoveSkill: skillId => removeSkill(id, skillId),
-      onRestOverload: () => restEcoOverload(id),
+      onRestOverload: canRestEcoInVoid(entity) ? () => restEcoOverload(id) : undefined,
       onSetOverload: level => setEcoOverloadLevel(id, level),
       lastOverloadEvents,
       onClearOverloadEvents: clearOverloadEvents,
     }
   }, [
     characterId,
+    entity,
     adminMode,
     lastMasterError,
     lastOverloadEvents,
@@ -93,7 +94,7 @@ export function useCharacterManagementPanel(characterId, { adminMode = false } =
     spendPendingAttribute,
     investSkillPoint,
     upgradeSkillGrade,
-    useEcoSkill,
+    runEcoSkill,
     learnCatalogSkill,
     removeSkill,
     restEcoOverload,
