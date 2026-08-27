@@ -187,7 +187,7 @@ export function StarterGearSection({
         <div style={{ fontSize: '0.55rem', color: '#94a3b8', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
           ARMADURA
         </div>
-        <Field label="Nome">
+        <Field label="Nome" required>
           <Input
             value={armorDraft.name}
             onChange={e => onChangeArmor({ ...armorDraft, name: e.target.value })}

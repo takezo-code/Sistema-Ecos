@@ -27,6 +27,9 @@ import {
   validateStartingAttributesDistributed,
   validateStartingSocialDistributed,
   validateStartingEcoSkillSelected,
+  validateStartingStarterGear,
+  validateStartingCharacterName,
+  validateStartingClassSelected,
 } from '../services/progressionService'
 import { resolveCharacterNarrative } from '../utils/entityNarrative'
 import { getEntityEffectiveAttributes } from '../services/stateModifiers'
@@ -174,19 +177,76 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
   const classAttrKeys = getCharacterClass(form.classId)?.attributes ?? []
   const pool = form.unspentAttributePoints ?? 0
   const socialPool = form.unspentSocialPoints ?? 0
+  const nameCheck = validateStartingCharacterName(form)
+  const classCheck = validateStartingClassSelected(form)
+  const physicalCheck = validateStartingAttributesDistributed(form)
+  const socialCheck = validateStartingSocialDistributed(form)
   const ecoCheck = validateStartingEcoSkillSelected(form)
+  const gearCheck = validateStartingStarterGear(form)
   const creationReady = !isNew || profileOnly
     || (
-      validateStartingAttributesDistributed(form).ok
-      && validateStartingSocialDistributed(form).ok
+      nameCheck.ok
+      && classCheck.ok
+      && physicalCheck.ok
+      && socialCheck.ok
       && ecoCheck.ok
+      && gearCheck.ok
     )
   const starterSkillPicked = (form.skills || []).some(s => (Number(s.tier) || 0) > 0)
 
+  const getStepCheck = (stepNum) => {
+    if (stepNum === 1) return nameCheck
+    if (stepNum === 2) return classCheck
+    if (stepNum === 3) {
+      if (!physicalCheck.ok) return physicalCheck
+      return socialCheck
+    }
+    if (stepNum === 4) {
+      if (!ecoCheck.ok) return ecoCheck
+      return gearCheck
+    }
+    return { ok: true }
+  }
+
+  const canEnterStep = (target) => {
+    if (target <= step) return { ok: true }
+    for (let s = 1; s < target; s += 1) {
+      const check = getStepCheck(s)
+      if (!check.ok) return check
+    }
+    return { ok: true }
+  }
+
+  const handleStepChange = (next) => {
+    const check = canEnterStep(next)
+    if (!check.ok) {
+      setAttrError(check.message)
+      return
+    }
+    setAttrError(null)
+    setStep(next)
+  }
+
+  const handleContinue = () => {
+    const check = getStepCheck(step)
+    if (!check.ok) {
+      setAttrError(check.message)
+      return
+    }
+    setAttrError(null)
+    setStep(s => Math.min(totalSteps, s + 1))
+  }
+
+  const currentStepCheck = getStepCheck(step)
+  const canContinue = currentStepCheck.ok
+
   const handleSubmit = e => {
     e.preventDefault()
-    if (!form.name.trim()) return
     if (profileOnly) {
+      if (!nameCheck.ok) {
+        setAttrError(nameCheck.message)
+        return
+      }
       const { description: _d, narrativeStatus: _s, ...profile } = form
       onSave({
         name: profile.name,
@@ -199,21 +259,15 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
       return
     }
     if (isNew) {
-      const checkPhysical = validateStartingAttributesDistributed(form)
-      if (!checkPhysical.ok) {
-        setAttrError(checkPhysical.message)
+      const checks = [nameCheck, classCheck, physicalCheck, socialCheck, ecoCheck, gearCheck]
+      const failed = checks.find(c => !c.ok)
+      if (failed) {
+        setAttrError(failed.message)
         return
       }
-      const checkSocial = validateStartingSocialDistributed(form)
-      if (!checkSocial.ok) {
-        setAttrError(checkSocial.message)
-        return
-      }
-      const checkEco = validateStartingEcoSkillSelected(form)
-      if (!checkEco.ok) {
-        setAttrError(checkEco.message)
-        return
-      }
+    } else if (!nameCheck.ok) {
+      setAttrError(nameCheck.message)
+      return
     }
     setAttrError(null)
     const {
@@ -358,9 +412,15 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
       type="submit"
       disabled={!profileOnly && isNew && !creationReady}
       title={!profileOnly && isNew && !creationReady
-        ? (!ecoCheck.ok
-          ? ecoCheck.message
-          : `Distribua todos os pontos iniciais (${STARTING_ATTRIBUTE_POINTS} físicos e ${STARTING_SOCIAL_POINTS} de cena)`)
+        ? (
+          !nameCheck.ok ? nameCheck.message
+            : !classCheck.ok ? classCheck.message
+              : !physicalCheck.ok ? physicalCheck.message
+                : !socialCheck.ok ? socialCheck.message
+                  : !ecoCheck.ok ? ecoCheck.message
+                    : !gearCheck.ok ? gearCheck.message
+                      : `Distribua todos os pontos iniciais (${STARTING_ATTRIBUTE_POINTS} físicos e ${STARTING_SOCIAL_POINTS} de cena)`
+        )
         : undefined}
     >
       Salvar
@@ -372,7 +432,7 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
       style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {useWizard ? (
         <>
-          <Stepper step={step} onStepChange={setStep} hideDefaultNav>
+          <Stepper step={step} onStepChange={handleStepChange} hideDefaultNav>
             <Step>
               {profileBlock}
             </Step>
@@ -384,17 +444,22 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
             </Step>
             <Step>
               {equipmentBlock}
-              {errorBlock}
             </Step>
           </Stepper>
+          {errorBlock}
           <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
             {step > 1 && (
-              <button type="button" className="btn-ghost" onClick={() => setStep(s => Math.max(1, s - 1))}>
+              <button type="button" className="btn-ghost" onClick={() => handleStepChange(Math.max(1, step - 1))}>
                 Voltar
               </button>
             )}
             {step < totalSteps ? (
-              <Button type="button" onClick={() => setStep(s => Math.min(totalSteps, s + 1))}>
+              <Button
+                type="button"
+                onClick={handleContinue}
+                disabled={!canContinue}
+                title={!canContinue ? currentStepCheck.message : undefined}
+              >
                 Continuar
               </Button>
             ) : (
@@ -670,12 +735,18 @@ export function Characters({
   const handleSave = (data) => {
     const isNew = !editing
     if (isNew) {
+      const name = validateStartingCharacterName(data)
+      if (!name.ok) return
+      const cls = validateStartingClassSelected(data)
+      if (!cls.ok) return
       const check = validateStartingAttributesDistributed(data)
       if (!check.ok) return
       const social = validateStartingSocialDistributed(data)
       if (!social.ok) return
       const eco = validateStartingEcoSkillSelected(data)
       if (!eco.ok) return
+      const gear = validateStartingStarterGear(data)
+      if (!gear.ok) return
     }
     const payload = {
       ...data,

@@ -199,6 +199,35 @@ export function validateStartingEcoSkillSelected(entity) {
   return { ok: true }
 }
 
+/** Criação: exige nome na arma e na armadura iniciais. */
+export function validateStartingStarterGear(entity) {
+  const weaponName = String(entity?.starterWeapon?.name || '').trim()
+  const armorName = String(entity?.starterArmor?.name || '').trim()
+  if (!weaponName) {
+    return { ok: false, message: 'Dê um nome à arma inicial para continuar.' }
+  }
+  if (!armorName) {
+    return { ok: false, message: 'Dê um nome à armadura inicial para continuar.' }
+  }
+  return { ok: true }
+}
+
+/** Criação: exige nome do personagem. */
+export function validateStartingCharacterName(entity) {
+  if (!String(entity?.name || '').trim()) {
+    return { ok: false, message: 'Digite o nome do personagem para continuar.' }
+  }
+  return { ok: true }
+}
+
+/** Criação: exige classe escolhida. */
+export function validateStartingClassSelected(entity) {
+  if (!normalizeClassId(entity?.classId)) {
+    return { ok: false, message: 'Escolha uma classe para continuar.' }
+  }
+  return { ok: true }
+}
+
 /** Valida distribuição inicial (pool de 10, máx 4 por atributo). Na criação pode subir e descer redistribuindo o pool. */
 export function applyInitialAttributeChange(entity, attrKey, newValue) {
   if (attrKey === 'ruptura' && !entityHasEcoPowers(entity)) return null

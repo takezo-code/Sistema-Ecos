@@ -17,6 +17,9 @@ import {
   validateStartingAttributesDistributed,
   validateStartingSocialDistributed,
   validateStartingEcoSkillSelected,
+  validateStartingStarterGear,
+  validateStartingCharacterName,
+  validateStartingClassSelected,
   applyMasterAttributeChange,
   buildMasterProgressionPatch,
   syncProgressionToLevel,
@@ -92,17 +95,23 @@ export const useCharacterStore = create((set, get) => ({
   },
 
   addCharacter(data) {
+    const nameCheck = validateStartingCharacterName(data)
+    if (!nameCheck.ok) return null
+    const classCheck = validateStartingClassSelected(data)
+    if (!classCheck.ok) return null
     const preCheck = validateStartingAttributesDistributed(data)
     if (!preCheck.ok) return null
     const socialCheck = validateStartingSocialDistributed(data)
     if (!socialCheck.ok) return null
     const ecoCheck = validateStartingEcoSkillSelected(data)
     if (!ecoCheck.ok) return null
+    const gearCheck = validateStartingStarterGear(data)
+    if (!gearCheck.ok) return null
     const character = withNormalizedGear(normalizeGameEntity({
       ...data,
       id: genId(),
       campaignId: data.campaignId || null,
-      name: data.name || 'Novo Personagem',
+      name: data.name.trim(),
       image: data.image || '',
       appearance: data.appearance || '',
       personality: data.personality || '',
