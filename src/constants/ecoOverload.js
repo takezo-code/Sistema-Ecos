@@ -1,6 +1,9 @@
 /** Limite base de usos de Eco sem consequência (Ruptura 0). */
 export const ECO_OVERLOAD_BASE_LIMIT = 5
 
+/** Base de usos seguros da Fenda (passiva Canal Amplo). */
+export const FENDA_ECO_BASE_LIMIT = 8
+
 /** Ruptura máxima no atributo → limite seguro sobe até 15. */
 export const ECO_OVERLOAD_MAX_RUPTURA_BONUS = 10
 
@@ -46,12 +49,22 @@ function isRupturaUsesPassive(passive, item) {
 }
 
 /**
- * Pool de usos no card: 5 de base + 1 por ponto de Ruptura da ficha
+ * Base de usos seguros: 5 para a maioria; 8 para a Fenda (Canal Amplo).
+ */
+export function getEcoBaseLimitForEntity(entity = {}) {
+  const classId = String(entity?.classId || '').toLowerCase().trim()
+  if (classId === 'magica') return FENDA_ECO_BASE_LIMIT
+  return ECO_OVERLOAD_BASE_LIMIT
+}
+
+/**
+ * Pool de usos no card: base da classe + 1 por ponto de Ruptura da ficha
  * + usos da arma + usos da armadura.
  */
 export function getRupturaPool(entity = {}) {
   const attr = Math.max(0, Number(entity?.attributes?.ruptura) || 0)
-  const base = ECO_OVERLOAD_BASE_LIMIT + attr
+  const classBase = getEcoBaseLimitForEntity(entity)
+  const base = classBase + attr
   let weapon = 0
   let armor = 0
   const list = Array.isArray(entity?.equipped) ? entity.equipped : []
@@ -67,7 +80,7 @@ export function getRupturaPool(entity = {}) {
   }
   const max = base + weapon + armor
   const spent = Math.max(0, Number(entity?.ecoOverload) || 0)
-  return { base, attr, weapon, armor, max, spent }
+  return { base, attr, weapon, armor, max, spent, classBase }
 }
 
 export function formatRupturaPoolSources(pool = {}) {

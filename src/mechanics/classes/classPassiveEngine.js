@@ -3,6 +3,7 @@
  * Traçado: texto de cena.
  * Baluarte: regeneração mecânica abaixo de 10 de vida.
  * Fratura: bônus mecânico na Fúria Cega quando a vida restante está baixa.
+ * Fenda: base de usos de Eco em 8 (Canal Amplo) — ver ecoOverload.getEcoBaseLimitForEntity.
  */
 import { getCharacterClass, normalizeClassId } from '../../constants/classes'
 import { getRemainingLife, healDamageMarks } from '../combat/damageMarksEngine'

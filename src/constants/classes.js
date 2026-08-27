@@ -53,6 +53,11 @@ export const CHARACTER_CLASSES = [
     color: '#a855f7',
     attributes: ['ruptura', 'sabedoria'],
     weapons: ['orbe', 'varinha', 'cajado', 'livro'],
+    passive: {
+      name: 'Canal Amplo',
+      description: 'A Fenda nasce com o canal aberto. Seus usos seguros de Eco começam em 8, em vez de 5 — o excesso ainda escala com Ruptura e equipamento.',
+      narrative: false,
+    },
   },
   {
     id: 'suporte',
