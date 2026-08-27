@@ -1,213 +1,520 @@
 # Manual do Jogador — Sistema Eco
 
-Guia alinhado ao que o app faz hoje. Serve para criar personagem, jogar a ficha e entender vida, Eco e descanso.
+> Guia para **quem joga**. Explica como o sistema funciona na mesa: atributos, vida, Eco, skills, equipamento e rolagens.  
+> Não é manual de mestre nem tutorial do aplicativo — é o **livro de regras do jogador**.
 
 ---
 
-## 1. O que é o Eco
+## Comece aqui — o mínimo para sentar na mesa
 
-O **Eco** é o canal de poder das skills de classe. Cada uso **ativo** gasta usos seguros e sobe a **sobrecarga**.
+1. Você tem um **personagem** com **classe**, **atributos** e **3 skills de classe**.
+2. Quando precisar fazer algo difícil, rola **d20 + bônus** contra uma **CD** que o mestre define (padrão **15**).
+3. Você não tem HP: acumula **marcas de dano**. Muitas marcas = estado **Ferido**, **Grave** ou **Incapacitado**.
+4. Usar poderes de classe (**skills ativas**) gasta **usos de Eco** (sobrecarga). Passar do limite seguro piora sua **mente**.
+5. **Descansar** limpa marcas. Só a **Sutura** limpa Eco no Void. **Encerrar sessão** limpa Eco de todos.
 
-- **Ruptura** (atributo): alarga o canal — **+1 uso seguro por ponto**.
-- **Void**: descanso do grupo. Só a **Sutura** limpa usos de Eco no Void. As outras classes só zeram Eco ao **encerrar a sessão**.
-
----
-
-## 2. Criar personagem
-
-Na tela **Personagens**, o assistente tem 4 passos. Tudo abaixo é obrigatório para salvar.
-
-1. **Nome** (foto opcional)
-2. **Classe** (uma das cinco)
-3. **Atributos** — gastar **todos** os pontos
-4. **Skill inicial** + **nome da arma** e **nome da armadura**
-
-### Pontos iniciais
-
-| Tipo | Pontos | Máximo por atributo (criação) |
-|------|--------|-------------------------------|
-| Físicos | **10** | 4 |
-| De cena | **6** | 4 |
-
-No nível 1 você recebe **1 Eco** e precisa investir em **uma** skill da classe.
-
-Arma e armadura iniciais acompanham a campanha: o sistema exige **nome** em ambas (tipo e passivas são opcionais).
+Se entendeu isso, já dá para jogar. O resto do manual aprofunda cada parte.
 
 ---
 
-## 3. Atributos
+# Parte I — O que é o Sistema Eco
 
-### Físicos (máximo 10)
+## Eco: duas coisas diferentes
 
-Força · Destreza · Inteligência · Vitalidade · Ruptura
+No jogo, **Eco** aparece em dois sentidos. Não confunda:
 
-### De cena (máximo 9)
+| | **Pontos de Eco** | **Sobrecarga de Eco** |
+|---|-------------------|------------------------|
+| **O que é** | Moeda de **progressão** | Contador de **poder usado na sessão** |
+| **Para quê** | Subir o **nível das skills** (1 Eco = +1 nível) | Medir quanto você forçou o canal nesta sessão |
+| **Onde vê** | Ficha → investir em habilidades | Ficha → aba Ecos / Status |
+| **Quando reseta** | Nunca “gasta” sozinho — você **investe** em skills | Descanso (Sutura) ou fim de sessão |
 
-Carisma · Percepção · Vontade · Sabedoria
+## Void
 
-### Atributos-chave da classe
+O **Void** é o descanso entre cenas — o “respiro” do grupo.
 
-Cada classe tem **2 atributos-chave** (1 físico + 1 de cena). Nos pontos **base**:
+- **Descansar:** todo mundo perde as **marcas de dano**.
+- **Eco:** só a classe **Sutura** zera a sobrecarga no Descansar.
+- **Demais classes:** mantêm a sobrecarga até o mestre **encerrar a sessão**.
 
-| Pontos no atributo | Bônus na rolagem |
-|--------------------|------------------|
-| 3 | +1 |
-| 6 | +2 |
-| 9 | +3 |
+## Marcas, não pontos de vida
 
-Equipamento soma à parte na rolagem e **não** sobe o degrau de classe. Estado ferido reduz valor efetivo, mas **não** remove o bônus de classe já conquistado.
+Este sistema **não usa HP tradicional**.
 
----
-
-## 4. Classes e passivas
-
-| Classe | Atributos-chave | Passiva |
-|--------|-----------------|---------|
-| **Traçado** | Destreza + Carisma | **Olho do Traçado** — narrativa (mira e percepção) |
-| **Baluarte** | Vitalidade + Vontade | **Muralha Inquebrável** — abaixo de **10** de vida, regenera **1** por turno (para no teto 10) |
-| **Fratura** | Força + Vontade | **Fúria da Queda** — com vida restante **≤ 5**, **Fúria Cega** ganha **+2 Força** extra (1 turno) |
-| **Fenda** | Ruptura + Sabedoria | **Canal Amplo** — base de usos seguros de Eco = **8** (em vez de 5) |
-| **Sutura** | Inteligência + Sabedoria | **Descanso no Void** — única que zera Eco no descanso do Void |
-
-### Skills ativas por classe (3 cada)
-
-- **Traçado:** Pulso Certeiro · Olhar Longínquo · Snipe de Ruptura  
-- **Baluarte:** Couraça Fechada · Manto Sagrado · Bramido  
-- **Fratura:** Fúria Cega · Pisada Sísmica · Talho Cego  
-- **Fenda:** Dobra Falsa · Cárcere Mental · Canal Ampliado  
-- **Sutura:** Mente Elevada · Costura Viva · Purga do Eco  
+- Você tem **vida máxima** e **marcas de dano** acumuladas.
+- **Vida restante = vida máxima − marcas.**
+- Golpes aplicam marcas **Leve (1)**, **Médio (2)** ou **Grave (3)** — o mestre escolhe conforme a cena.
 
 ---
 
-## 5. Vida e marcas
+# Parte II — Seu personagem
 
-Não há HP clássico: você acumula **marcas de dano**.
+## Criação
 
-**Vida restante** = máximo − marcas.
+Para criar um personagem válido, você precisa:
 
-| Tipo de marca | Valor |
-|---------------|-------|
-| Leve | 1 |
-| Médio | 2 |
-| Grave | 3 |
+| Passo | O que define |
+|-------|----------------|
+| 1 | **Nome** (e aparência, se quiser) |
+| 2 | **Classe** — uma das cinco abaixo |
+| 3 | **10 pontos físicos** — máximo **4** por atributo na criação |
+| 4 | **6 pontos de cena** — máximo **4** por atributo na criação |
+| 5 | **1 Eco inicial** investido em **pelo menos 1 skill** da classe |
+| 6 | **Arma** e **armadura** com **nome** (forjadas na criação) |
 
-### Estados físicos (a cada ~4 marcas, sem buffer)
+Depois de criado, os valores da criação viram **piso** — você não pode baixá-los depois. Só sobe com nível.
 
-| Marcas (efetivas) | Estado | Penalidade (FOR / DES / VIT) |
-|-------------------|--------|------------------------------|
-| 0–4 | Saudável | −0 |
-| 5–9 | Ferido | −1 |
-| 10–14 | Grave | −2 |
-| 15+ | Incapacitado | −3 |
-
-**Buffer de limiar:** `floor(Vitalidade base ÷ 2)` + armadura (leve +1 / média +2 / pesada +3) + buffs. Isso atrasa a entrada nos estados.
-
-**Pool máximo** do jogador: 15 + buffer (ex.: VIT 6 → buffer +3 → máximo 18).
+**Início padrão:** nível 1, sem marcas, estado **Saudável**, mente **Estável**.
 
 ---
 
-## 6. Sobrecarga de Eco
+## Atributos físicos (máximo 10)
 
-**Limite seguro** = base da classe + Ruptura + passivas de equipamento (`ruptura_uses`).
+| Atributo | Serve para |
+|----------|------------|
+| **Força** | Corpo a corpo, impacto, empurrões |
+| **Destreza** | Precisão, esquiva, movimento fino |
+| **Inteligência** | Magia estruturada, cajado, livro |
+| **Vitalidade** | Aguentar dano — define **buffer de marcas** |
+| **Ruptura** | Canal de Eco — **+1 uso seguro por ponto** |
 
-- Base: **5** (maioria) ou **8** (**Fenda**)
-- +1 por ponto de Ruptura
-- Arma/armadura podem somar usos extras
+**Penalidade de ferimento** afeta Força, Destreza e Vitalidade.  
+**Penalidade de sobrecarga** afeta Inteligência, Percepção, Sabedoria e Carisma — **não** afeta Ruptura nem Vontade.
 
-Usar skill **ativa** adiciona o custo de sobrecarga (em geral 1–2). Passivas **não** sobem o contador.
+## Atributos de cena (máximo 9)
 
-### Dentro do limite
-
-Estado mental **Estável** — sem penalidade de atributos mentais/sociais.
-
-### Acima do limite
-
-Penalidade flat em **INT, PER, SAB, CAR** (Ruptura **não** é penalizada):
-
-| Excessos | Estado | Penalidade |
-|----------|--------|------------|
-| 1 | Abalado | −1 |
-| 2 | Fragmentado | −2 |
-| 3–4 | Dissociado | −3 |
-| 5+ | Perdido no Tempo | −4 + **Ruptura Total** (evento narrativo crítico) |
-
-Ruptura Total dispara em `limite + 5` (ex.: limite 5 → em 10 usos).
+| Atributo | Serve para |
+|----------|------------|
+| **Carisma** | Presença, intimidação, liderança |
+| **Percepção** | Notar, mirar, detectar mentiras |
+| **Vontade** | Resistir pressão mental — **não** sofre penalidade de Eco |
+| **Sabedoria** | Leitura de situação, cura, bom senso |
 
 ---
 
-## 7. Skills e progressão
+## Bônus de classe
 
-- **3 skills** por classe
-- **1 Eco = +1 nível** na skill escolhida
-- Teto atual de nível de skill: **3**
-- Orçamento total de Eco até o nível 15 do personagem: **9**
+Cada classe tem **2 atributos-chave** (1 físico + 1 de cena). Se você investiu pontos **base** neles, ganha bônus extra nas rolagens:
 
-### Eco por nível de personagem
+| Pontos base no atributo-chave | Bônus |
+|-------------------------------|-------|
+| 3 ou mais | **+1** |
+| 6 ou mais | **+2** |
+| 9 ou mais | **+3** |
 
-- Nível 1: 1 Eco  
-- +1 nos níveis pares 2–14  
-- +1 no nível 15  
-- Congela em **9**
+Equipamento **não** conta para esse degrau — só o valor base da ficha.  
+Ferimento reduz o atributo **efetivo** na rolagem, mas **não** tira o bônus de classe que você já conquistou.
 
-Níveis pares também dão **+1 ponto de atributo físico**. Dos níveis 2–15: **+1 ponto de cena** por nível.
+### Tabela por classe
 
-### Usar skill
+| Classe | Atributos-chave |
+|--------|-----------------|
+| **Traçado** | Destreza + Carisma |
+| **Baluarte** | Vitalidade + Vontade |
+| **Fratura** | Força + Vontade |
+| **Fenda** | Ruptura + Sabedoria |
+| **Sutura** | Inteligência + Sabedoria |
 
-Ativa sobe sobrecarga, aplica cooldown, buffs/cura/recuos conforme a ficha. Cooldowns típicos: 2–3 turnos. **Avançar turno** reduz cooldowns, processa buffs e a regen do Baluarte.
+### Como montar uma rolagem
 
----
+```
+Total = d20 + atributo efetivo + bônus de classe + bônus de equipamento + bônus de skill
+```
 
-## 8. Descansar e encerrar sessão
-
-No **grupo**:
-
-| Ação | Marcas de dano | Usos de Eco |
-|------|----------------|-------------|
-| **Descansar** | Limpa de todos | Zera **só na Sutura** (Void) |
-| **Encerrar sessão** | Não limpa | Zera Eco de **todas** as classes |
-
-Na ficha, o botão de descanso de Eco no Void só aparece para a **Sutura**.
+O mestre compara o total com a **CD** da ação.
 
 ---
 
-## 9. Rolagens (básico)
+## As cinco classes
 
-Dado padrão: **d20**.
+### Traçado — precisão e distância
 
-**Total** = dado + atributo efetivo + bônus de classe + equipamento + buffs.
+- **Papel:** atirador, batedor de longo alcance.
+- **Passiva — Olho do Traçado:** vantagem narrativa de mira e percepção (sem bônus numérico fixo no sistema).
+- **Armas sugeridas:** arma à distância.
 
-Contra **CD** (padrão 15):
+### Baluarte — linha de frente
 
-| Resultado | Quando |
-|-----------|--------|
-| Falha crítica | Natural **1** |
-| Sucesso crítico | Natural **20** e total ≥ CD |
-| Sucesso | Total ≥ CD |
-| Sucesso parcial | Total ≥ CD − 3 |
-| Falha | Resto |
+- **Papel:** tank, proteção do grupo.
+- **Passiva — Muralha Inquebrável:** com **vida restante abaixo de 10**, regenera **1 vida por turno** (até voltar a 10).
+- **Armas sugeridas:** escudo, arma pesada, arma de uma mão.
+
+### Fratura — força bruta
+
+- **Papel:** dano corpo a corpo, pressão constante.
+- **Passiva — Fúria da Queda:** com **vida restante ≤ 5**, ao usar **Fúria Cega** ganha **+2 Força extra** (além do bônus da skill).
+- **Armas sugeridas:** arma pesada, manoplas.
+
+### Fenda — ruptura e ilusão
+
+- **Papel:** magia de distorção, controle mental.
+- **Passiva — Canal Amplo:** começa com **8 usos seguros de Eco** (em vez de 5).
+- **Armas sugeridas:** orbe, varinha, cajado, livro.
+
+### Sutura — suporte e cura
+
+- **Papel:** curar, purgar Eco, sustentar o grupo.
+- **Passiva — Descanso no Void:** **única classe** que zera sobrecarga de Eco no **Descansar**.
+- **Armas sugeridas:** orbe, varinha, cajado, livro.
+
+> Você **pode** usar outro tipo de arma que não o sugerido — é orientação de classe, não trava mecânica.
 
 ---
 
-## 10. Onde encontrar tudo no app
+# Parte III — Vida, marcas e estados
 
-| Área | Uso |
+## Vida máxima
+
+```
+Vida máxima = 15 + buffer
+```
+
+O **buffer** é quanto você “aguenta” antes de piorar de estado:
+
+```
+Buffer = floor(Vitalidade base ÷ 2) + bônus de armadura + bônus de skills + passivas de item
+```
+
+**Exemplo:** Vitalidade 6 → buffer +3 → vida máxima **18**.
+
+A Vitalidade **ferida** não reduz o buffer — usa sempre a VIT **base** da ficha.
+
+## Estados físicos
+
+A cada ~4 marcas (ajustado pelo buffer), seu estado piora:
+
+| Marcas (referência base) | Estado | Efeito |
+|--------------------------|--------|--------|
+| 0–4 | **Saudável** | Sem penalidade |
+| 5–9 | **Ferido** | −1 Força, Destreza, Vitalidade |
+| 10–14 | **Grave** | −2 Força, Destreza, Vitalidade |
+| 15+ | **Incapacitado** | −3 Força, Destreza, Vitalidade |
+
+Com buffer, todos esses limiares **atrasam**. Ex.: buffer 3 → Ferido só a partir de 8 marcas.
+
+## Tipos de marca
+
+| Tipo | Valor | Exemplo narrativo |
+|------|-------|-------------------|
+| Leve | 1 | Arranhão, contusão |
+| Médio | 2 | Corte, fratura menor |
+| Grave | 3 | Trauma severo, hemorragia |
+
+## Cura
+
+- Skills e efeitos podem **remover marcas**.
+- **Descansar** (Void) zera **todas** as marcas → volta a **Saudável**.
+
+---
+
+# Parte IV — Eco, skills e turnos
+
+## Limite seguro de usos
+
+Antes de forçar demais o canal, você tem um **pool seguro**:
+
+```
+Limite seguro = base da classe + Ruptura + usos da arma + usos da armadura
+```
+
+| Fonte | Valor |
+|-------|-------|
+| Base (Traçado, Baluarte, Fratura, Sutura) | **5** |
+| Base (**Fenda**) | **8** |
+| Cada ponto de **Ruptura** | **+1** |
+| Passiva “Usos de Ruptura” (arma ou armadura) | **+1 a +5** cada |
+
+**Exemplo:** Fenda com Ruptura 4, arma +2, armadura +1 → limite **8 + 4 + 2 + 1 = 15**.
+
+Na ficha aparece como `usos/limite` (ex.: `7/15`).
+
+## O que acontece ao usar uma skill ativa
+
+1. Aplica o **efeito** (buff, cura, dano narrativo, etc.).
+2. Soma o **custo de sobrecarga** ao contador.
+3. Entra em **cooldown** (turnos sem poder reusar).
+4. No turno seguinte, pode haver **recuo** — penalidade no atributo indicado.
+
+Skills com **hangover**: o bônus dura o turno, mas no seguinte o atributo **cai na mesma medida** do ganho.
+
+## Dentro do limite
+
+- Estado mental: **Estável**
+- Sem penalidade de atributos mentais/sociais por Eco
+
+## Acima do limite
+
+Cada uso além do limite seguro piora a mente (−flat em **INT, PER, SAB, CAR**):
+
+| Usos acima do limite | Estado mental | Penalidade |
+|----------------------|---------------|------------|
+| 0 (no limite inclusive) | Estável | — |
+| 1 | **Abalado** | −1 |
+| 2 | **Fragmentado** | −2 |
+| 3–4 | **Dissociado** | −3 |
+| 5+ | **Perdido no Tempo** | −4 + **Ruptura Total** |
+
+### Ruptura Total
+
+Quando a sobrecarga atinge **limite + 5**, dispara um evento crítico narrativo (sorteado). Exemplos:
+
+- Inconsciência
+- Colapso mental
+- Eco descontrolado
+- Mutação
+- Morte (salvo exceção do mestre)
+
+**Planeje seus usos de Eco.** Se não for Sutura, o contador só zera no **fim da sessão**.
+
+---
+
+## Skills de classe — as 15
+
+Cada classe tem **3 skills fixas**. A **4ª skill vem da sua arma** (criada na forja, única sua).
+
+- **Nível da skill:** 1 a 3 (cada **Eco investido** = +1 nível).
+- Efeitos escalam com o nível: valores **1 / 2 / 3** (ou **2 / 4 / 6** em curas e vida temporária).
+- **CD** = cooldown em turnos.
+- **Sobrecarga** = custo ao ativar.
+
+### Traçado
+
+| Skill | CD | Sobrecarga | O que faz |
+|-------|-----|------------|-----------|
+| **Pulso Certeiro** | 2 | 1 | +1/+2/+3 **Destreza** neste turno; recuo −DES depois |
+| **Olhar Longínquo** | 2 | 1 | +1/+2/+3 **Percepção** neste turno; recuo −PER depois |
+| **Snipe de Ruptura** | 3 | 2 | Disparo de precisão; com mais nível, perfura e distorce o entorno; recuo −DES |
+
+### Baluarte
+
+| Skill | CD | Sobrecarga | O que faz |
+|-------|-----|------------|-----------|
+| **Couraça Fechada** | 3 | 2 | +2/+4/+6 **vida temporária** (só você); recuo −DES |
+| **Manto Sagrado** | 3 | 3 | +1/+2/+3 **vida temporária** (grupo); recuo −Vontade |
+| **Bramido** | 2 | 2 | Grito atordoador; com nível alto, pode derrubar; recuo −Carisma |
+
+### Fratura
+
+| Skill | CD | Sobrecarga | O que faz |
+|-------|-----|------------|-----------|
+| **Fúria Cega** | 2 | 1 | +1/+2/+3 **Força**; +2 FOR extra se vida ≤ 5; recuo −FOR |
+| **Pisada Sísmica** | 3 | 2 | Tremor no chão; com nível alto, quebra piso; recuo −DES |
+| **Talho Cego** | 3 | 2 | Corte pesado; com nível alto, abre Ruptura no impacto; recuo −FOR |
+
+### Fenda
+
+| Skill | CD | Sobrecarga | O que faz |
+|-------|-----|------------|-----------|
+| **Dobra Falsa** | 2 | 2 | Ilusões; com nível alto, copia objetos e formas grandes; recuo −RUP |
+| **Cárcere Mental** | 3 | 2 | Prende mente do alvo; com nível alto, controle maior; recuo −SAB |
+| **Canal Ampliado** | 2 | 1 | +1/+2/+3 **Ruptura e Inteligência**; recuo em ambos |
+
+### Sutura
+
+| Skill | CD | Sobrecarga | O que faz |
+|-------|-----|------------|-----------|
+| **Mente Elevada** | 2 | 1 | +1/+2/+3 **Sabedoria e Inteligência** por **2 turnos**; recuo em ambos |
+| **Costura Viva** | 3 | 2 | Cura grupo: remove **2 / 4 / 6 marcas**; recuo −SAB |
+| **Purga do Eco** | 3 | 2 | Reduz sobrecarga dos aliados em **1 / 2 / 3**; recuo −INT |
+
+### Skill da arma (4ª)
+
+Na criação você define nome, descrição e efeito. Padrão: **CD 2**, **sobrecarga 1**. Evolui com a mesma arma ao longo da campanha.
+
+---
+
+## Turno — o que fazer
+
+1. **Agir na cena** — descreva o que faz; role se o mestre pedir.
+2. **Ativar skill** — se estiver disponível (sem cooldown) e fizer sentido narrativo.
+3. **Avançar turno** (quando o grupo avança o combate):
+   - Cooldowns das skills **−1**
+   - Buffs e recuos processam
+   - **Baluarte** com vida &lt; 10 pode regenerar +1
+
+---
+
+# Parte V — Equipamento
+
+## Regra geral
+
+- **1 arma + 1 armadura** por personagem.
+- Forjadas na **criação** e evoluem na campanha.
+- Passivas são **roladas** na forja (você pode rerollar grátis na criação).
+
+## Armaduras
+
+| Tipo | Penalidade de Destreza | +Buffer de marcas |
+|------|------------------------|-------------------|
+| **Leve** | −1 DES | +1 |
+| **Média** | −2 DES | +2 |
+| **Pesada** | −3 DES | +3 |
+
+### Raridade (sobe com seu nível)
+
+| Nível | Raridade | +Marcas de vida |
+|-------|----------|-----------------|
+| 1–5 | Latente | +0 |
+| 6–10 | Ressonante | +1 |
+| 11–15 | Fendida | +2 |
+| 16–20 | Atemporal | +3 |
+
+## Passivas de armadura (4 slots)
+
+| Slot | Tipo possível | Faixa |
+|------|---------------|-------|
+| 1 | +Atributo | +1 a +5 |
+| 2 | +Marcas de vida | +1 a +5 |
+| 3 | +Usos de Ruptura (Eco) | +1 a +5 |
+| 4 | +Bônus de rolagem | +1 a +3 em um atributo |
+
+## Passivas de arma (3 slots + skill)
+
+| Slot | Tipo possível | Faixa |
+|------|---------------|-------|
+| 1 | +Atributo | +1 a +5 |
+| 2 | +Usos de Ruptura (Eco) | +1 a +5 |
+| 3 | +Bônus de rolagem | +1 a +3 |
+| 4 | **Skill custom** da arma | única |
+
+---
+
+# Parte VI — Rolagens
+
+## O dado
+
+Quase tudo usa **d20**.
+
+## Dificuldade (CD)
+
+| Nome | CD |
 |------|-----|
-| **Criação / Personagens** | Wizard e lista de fichas |
-| **Ficha (Em jogo)** | Personagem, inventário, status, habilidades, Eco, histórico, configs |
-| **Grupos** | Descansar, Encerrar sessão, XP do grupo |
-| **Combate** | Marcas, skills, turnos, CD |
-| **Config** | Dados (rolagem avulsa), Lixeira, salvar/importar campanha |
+| Trivial | 5 |
+| Fácil | 10 |
+| **Médio (padrão)** | **15** |
+| Difícil | 20 |
+| Muito difícil | 25 |
+| Extremo | 30 |
+
+## Resultados
+
+Compare **total = d20 + bônus** com a CD:
+
+| Resultado | Quando acontece |
+|-----------|-----------------|
+| **Falha crítica** | Natural **1** |
+| **Sucesso crítico** | Natural **20** e total ≥ CD |
+| **Sucesso** | Total ≥ CD |
+| **Sucesso parcial** | Total ≥ CD − **3** (quase passou — consegue com custo) |
+| **Falha** | Qualquer outro caso |
 
 ---
 
-## Dicas rápidas
+# Parte VII — Descanso e sessão
 
-1. Na criação, gaste **todos** os pontos e nomeie arma e armadura.  
-2. A **Fenda** aguenta mais usos seguros; a **Sutura** é quem limpa Eco entre cenas no Void.  
-3. Se a sobrecarga disparar, atrase skills ativas ou espere o **fim da sessão**.  
-4. Baluarte abaixo de 10 de vida: avance o turno para regenerar.  
-5. Fratura perto da morte (≤ 5 vida): **Fúria Cega** fica mais forte.
+| Ação | Marcas | Sobrecarga de Eco |
+|------|--------|-------------------|
+| **Descansar** (Void) | Zera todas | Zera **só na Sutura** |
+| **Encerrar sessão** | Não muda | Zera **todas as classes** |
+
+**Dica de jogador:** se não é Sutura e a sobrecarga está alta, peça **Purga do Eco** a um aliado ou espere o fim da sessão antes de spammar skills.
 
 ---
 
-*Documento vivo — atualize quando as mecânicas do código mudarem.*
+# Parte VIII — Crescer (progressão)
+
+## Nível e XP
+
+- **Nível máximo:** 20
+- **XP para subir:** nível atual × **150** (ex.: nível 3 → 4 precisa de 450 XP)
+- XP vem do mestre (sessões, destaques em combate, etc.)
+
+## O que ganha ao subir
+
+| Quando | Recompensa |
+|--------|------------|
+| Níveis **pares** (2, 4, 6…) | **+1 ponto físico** (pendente para gastar) |
+| Níveis **2 a 15** | **+1 ponto de cena** (pendente) |
+| Níveis **pares** + marco **15** | **+1 Eco** para investir em skills |
+
+### Ecos acumulados por nível
+
+| Nível | Ecos totais |
+|-------|-------------|
+| 1 | 1 |
+| 2, 4, 6, 8, 10, 12, 14 | +1 cada (níveis pares) |
+| 15 | +1 marco |
+| **Total no 15** | **9** |
+
+Com **9 Ecos** você pode deixar as **3 skills no nível 3** (build completo de skills).
+
+## Orçamento de atributos (referência)
+
+| Tipo | Na criação | Cresce com nível |
+|------|------------|------------------|
+| Físicos | 10 pontos | +1 a cada nível par |
+| Cena | 6 pontos | +1 por nível (até 15) |
+
+---
+
+# Jogando uma sessão — fluxo prático
+
+1. **Abra sua ficha** e confira vida, sobrecarga e cooldowns.
+2. **Na cena:** descreva ações; role quando o mestre pedir.
+3. **No combate:** use skills com critério; avance turno quando o grupo avançar.
+4. **Entre cenas:** grupo **Descansa** se ferido; Sutura limpa Eco se precisar.
+5. **Fim da noite:** mestre **encerra sessão** → Eco zera para todos.
+
+### Onde olhar na ficha
+
+| Área | O que ver |
+|------|-----------|
+| **Status** | Marcas, estados físico e mental |
+| **Habilidades** | Skills, cooldowns, investir Eco |
+| **Ecos** | Contador `usos/limite`, fase mental |
+| **Grupo** | Descansar, Encerrar sessão |
+
+---
+
+# Referência rápida
+
+## Classes em uma linha
+
+| Classe | Uma frase | Passiva |
+|--------|-----------|---------|
+| Traçado | Atira e lê o campo | Mira narrativa |
+| Baluarte | Segura a linha | Regen abaixo de 10 vida |
+| Fratura | Bate forte ferido | Fúria Cega +2 FOR se vida ≤ 5 |
+| Fenda | Distorce e controla | 8 usos seguros de Eco |
+| Sutura | Cura e limpa Eco | Única que descansa Eco no Void |
+
+## Fórmulas essenciais
+
+```
+Vida máxima     = 15 + buffer
+Buffer           = VIT÷2 (base) + armadura + passivas
+Limite Eco       = base classe + Ruptura + gear
+Ruptura Total    = limite + 5
+Rolagem          = d20 + atributo + classe + gear + skill
+```
+
+---
+
+# Glossário
+
+| Termo | Significado |
+|-------|-------------|
+| **Eco (ponto)** | Moeda para subir nível de skill |
+| **Sobrecarga / usos de Eco** | Quanto você forçou o canal nesta sessão |
+| **Void** | Descanso entre cenas |
+| **Marca** | Unidade de dano (não é HP) |
+| **Buffer** | Colchão antes de piorar de estado |
+| **Recuo** | Penalidade no turno após usar uma skill |
+| **CD** | Cooldown — turnos até reusar a skill |
+| **Ruptura Total** | Colapso crítico por excesso de Eco |
+| **Hangover** | Bônus some e o atributo cai no turno seguinte |
+
+---
+
+*Manual alinhado às mecânicas do Sistema Eco. Se algo na mesa divergir, o mestre tem a palavra final — avise para atualizarmos o documento.*

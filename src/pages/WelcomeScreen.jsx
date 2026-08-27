@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import {
-  BookOpen,
+  Download,
   FolderGit2,
   Hexagon,
   Plus,
@@ -9,13 +9,10 @@ import {
   Upload,
 } from 'lucide-react'
 import { initializeNewCampaign, importCampaign } from '../services/saveService'
+import { downloadPlayerManualPdf } from '../services/playerManualPdf'
 import { useSaveStore } from '../store/useSaveStore'
 import { THEME_ACCENT, THEME_ACCENT_SOFT, THEME_ACCENT_BORDER } from '../constants/theme'
-import {
-  GITHUB_REPO_URL,
-  MANUAL_JOGADOR_URL,
-  MANUAL_MESTRE_URL,
-} from '../constants/welcomeIntro'
+import { GITHUB_REPO_URL } from '../constants/welcomeIntro'
 import Stepper, { Step } from '../components/react-bits/Stepper'
 import GlassSurface from '../components/react-bits/GlassSurface'
 import { Button } from '../components/ui/Button'
@@ -83,6 +80,7 @@ function StepCopy({ eyebrow, title, children }) {
 export function WelcomeScreen({ onEnter, canContinue = false }) {
   const fileRef = useRef(null)
   const [loading, setLoading] = useState(false)
+  const [manualLoading, setManualLoading] = useState(false)
   const [step, setStep] = useState(1)
   const { showToast } = useSaveStore()
 
@@ -109,6 +107,18 @@ export function WelcomeScreen({ onEnter, canContinue = false }) {
     const result = await importCampaign(file)
     setLoading(false)
     if (result.ok) onEnter?.()
+  }
+
+  const handleManualDownload = async () => {
+    setManualLoading(true)
+    try {
+      await downloadPlayerManualPdf()
+      showToast('Manual do jogador baixado em PDF.', 'success')
+    } catch (e) {
+      showToast(e.message || 'Erro ao gerar o PDF do manual.', 'error')
+    } finally {
+      setManualLoading(false)
+    }
   }
 
   const isLastStep = step === 4
@@ -222,12 +232,28 @@ export function WelcomeScreen({ onEnter, canContinue = false }) {
               </p>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginBottom: '1rem' }}>
-                <ResourceLink href={MANUAL_MESTRE_URL} icon={BookOpen}>
-                  Manual do mestre
-                </ResourceLink>
-                <ResourceLink href={MANUAL_JOGADOR_URL} icon={BookOpen}>
-                  Manual do jogador
-                </ResourceLink>
+                <button
+                  type="button"
+                  onClick={handleManualDownload}
+                  disabled={loading || manualLoading}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: 8,
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'rgba(255,255,255,0.04)',
+                    color: '#c4b5fd',
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    cursor: manualLoading ? 'wait' : 'pointer',
+                    opacity: manualLoading ? 0.7 : 1,
+                  }}
+                >
+                  <Download size={13} />
+                  {manualLoading ? 'Gerando PDF…' : 'Manual do jogador (PDF)'}
+                </button>
                 <ResourceLink href={GITHUB_REPO_URL} icon={FolderGit2}>
                   GitHub
                 </ResourceLink>
