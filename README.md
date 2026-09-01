@@ -1,85 +1,135 @@
-# Sistema RPG
+<p align="center">
+  <img src="docs/screenshots/logo.jpg" alt="ECOS" width="120" style="border-radius: 16px" />
+</p>
 
-Ferramenta web para **mestres e jogadores** gerenciarem campanhas de RPG de mesa — fichas, combate, skills, NPCs e progressão em um só lugar.
+<h1 align="center">ECOS</h1>
 
-Desenvolvido como projeto pessoal / portfólio, com foco em UX de mesa, mecânicas customizadas e interface dark temática.
+<p align="center">
+  Sistema de RPG de mesa no navegador — campanha, fichas, combate e narrativa em um só lugar.
+</p>
+
+<p align="center">
+  <a href="#-sobre">Sobre</a> ·
+  <a href="#-capturas-de-tela">Screenshots</a> ·
+  <a href="#-funcionalidades">Funcionalidades</a> ·
+  <a href="#-stack">Stack</a> ·
+  <a href="#-como-rodar">Como rodar</a>
+</p>
 
 ---
 
-## Sobre o projeto
+## Sobre
 
-O **Sistema RPG** concentra o fluxo de uma mesa:
+**ECOS** é uma ferramenta web para **mestres e jogadores** conduzirem campanhas de RPG de mesa sem depender de planilhas soltas. O foco é a **experiência na mesa**: criar entidades, acompanhar a história, rolar dados, resolver combates e evoluir personagens — tudo com persistência local no navegador.
 
-- criação e evolução de personagens
-- gestão de NPCs, bosses e organizações
-- combate por **marcas de dano** (sem HP tradicional)
-- skills de classe com cooldown, sobrecarga de Eco e buffs/recuos
-- rolagem de dados e exportação de ficha
+O sistema usa **marcas de vida** em vez de HP tradicional, **Eco** como recurso de skills (com sobrecarga e consequências), **cinco classes** com passivas e skills próprias, e um fluxo narrativo com **cenas e escolhas**.
 
-Tudo roda no navegador, com persistência local — sem backend obrigatório.
+Projeto pessoal / portfólio, em evolução contínua.
+
+<p align="center">
+  <img src="docs/screenshots/11-combate.jpg" alt="Painel de combate ECOS" width="100%" />
+  <br />
+  <em>Combate com múltiplos jogadores e inimigos, skills, marcas de vida e rolagens.</em>
+</p>
+
+---
+
+## Capturas de tela
+
+### História e decisões
+
+Fluxo narrativo da campanha com cenas, objetivos e escolhas com consequência.
+
+<p align="center">
+  <img src="docs/screenshots/02-campanha-historia.jpg" alt="Fluxo narrativo da campanha" width="100%" />
+</p>
+
+### Criação de entidades
+
+Personagens, NPCs, chefes e organizações no mesmo fluxo.
+
+<p align="center">
+  <img src="docs/screenshots/04-criacao.jpg" alt="Tela de criação" width="85%" />
+</p>
+
+### Gestão e ficha
+
+| Lista de personagens | Ficha — Traçado |
+|:---:|:---:|
+| <img src="docs/screenshots/05-personagens.jpg" alt="Lista de personagens" width="100%" /> | <img src="docs/screenshots/08-ficha-tracado.jpg" alt="Ficha do personagem" width="100%" /> |
+
+### Organizações
+
+Facções com ideologia, aliados e inimigos para o mestre consultar na mesa.
+
+<p align="center">
+  <img src="docs/screenshots/07-organizacao.jpg" alt="Organização da campanha" width="70%" />
+</p>
+
+> Screenshots da campanha demo **As Fraturas de Aethel**. Para reproduzir: `Config` → **Carregar campanha demo (README)** ou importe `public/demo/ecos-demo-screenshots.json`.
 
 ---
 
 ## Funcionalidades
 
-### Campanha e mundo
-- História / campanha ativa
-- Organizações e estrutura da mesa
-- Sessões e contexto de jogo
+### Campanha e narrativa
+- Campanha ativa com linha do tempo (passado, presente, futuro)
+- Fluxo de **história** e **escolhas** com status (não iniciado, em andamento, concluído)
+- Organizações com lore estruturado
 
 ### Personagens e entidades
-- Criação guiada de personagens
+- Criação guiada de personagens, NPCs, chefes e organizações
 - Fichas com atributos físicos e de cena
-- NPCs, elites e bosses
-- Equipamento (arma / armadura) com passivas
-- Progressão por XP, pontos de atributo e skills
+- Equipamento (arma + armadura) com skill forjada e passivos
+- Progressão por XP, pontos de atributo e investimento em **Eco** nas skills
 
-### Classes e skills
-Classes jogáveis com skills ativas e passivas:
+### Classes jogáveis
 
-| Classe   | Papel        |
-|----------|--------------|
-| Traçado  | Precisão / distância |
-| Baluarte | Tank / linha de frente |
-| Fratura  | Dano bruto |
-| Fenda    | Magia / ruptura |
-| Sutura   | Suporte / cura |
+| Classe | Papel |
+|--------|--------|
+| **Traçado** | Precisão / distância |
+| **Baluarte** | Tank / linha de frente |
+| **Fratura** | DPS corpo a corpo |
+| **Fenda** | Controle / canal Eco |
+| **Sutura** | Suporte / cura |
 
-Cada skill segue padrão de descrição, efeito mecânico e consequência (incluindo recuo proporcional de atributos).
+Cada classe traz 3 skills ativas + 1 skill da arma, passiva própria, recuos narrativos e cooldown individual.
 
 ### Combate
-- Painel de combate por personagem
-- Marcas de dano leve / médio / grave
-- Skills ativas com cooldown e custo de Eco
-- Passivas de classe (ex.: regeneração do Baluarte abaixo de 10 de vida)
-- Histórico de rolagens e dificuldade (CD)
+- Painel por personagem com borda elétrica por estado
+- Marcas de dano (leve / grave) e estados corporais
+- Múltiplos inimigos e bosses no mesmo combate
+- Skills com custo de Eco, cooldown e histórico de rolagens
+- Barra de dificuldade (CD) configurável
 
-### Outros
-- Rolagem de dados (d4–d100 e contextual com atributos)
+### Utilitários
+- Rolagem de dados contextual (atributos + bônus de classe)
 - Exportação de ficha (PNG / PDF)
-- Lixeira / arquivamento de entidades
-- Tema visual dark com animações (GSAP / OGL)
+- Import / export de campanha (JSON)
+- Manuais em PDF gerados no app
+- Lixeira para entidades arquivadas
 
 ---
 
 ## Stack
 
-| Camada        | Tecnologia                          |
-|---------------|-------------------------------------|
-| UI            | React 19                            |
-| Build         | Vite 8                              |
-| Estilo        | Tailwind CSS 4                      |
-| Componentes   | Radix UI, Lucide Icons              |
-| Estado        | Zustand                             |
-| Animação      | GSAP, Motion, OGL                   |
-| Exportação    | html-to-image, jsPDF                |
-| Persistência  | LocalStorage                        |
+| Camada | Tecnologia |
+|--------|------------|
+| UI | [React 19](https://react.dev/) |
+| Build | [Vite 8](https://vitejs.dev/) |
+| Estilo | [Tailwind CSS 4](https://tailwindcss.com/) |
+| Componentes | [Radix UI](https://www.radix-ui.com/), [Lucide](https://lucide.dev/) |
+| Estado | [Zustand](https://zustand.docs.pmnd.rs/) |
+| Animação | GSAP, Motion, OGL |
+| Exportação | html-to-image, jsPDF |
+| Persistência | LocalStorage (sem backend obrigatório) |
 
 ---
 
 ## Como rodar
 
 ### Pré-requisitos
+
 - Node.js 18+ (recomendado LTS)
 - npm
 
@@ -97,7 +147,7 @@ npm install
 npm run dev
 ```
 
-Abra o endereço indicado no terminal (geralmente `http://localhost:5173`).
+Abra `http://localhost:5173` no navegador.
 
 ### Build de produção
 
@@ -105,6 +155,15 @@ Abra o endereço indicado no terminal (geralmente `http://localhost:5173`).
 npm run build
 npm run preview
 ```
+
+### Campanha demo (screenshots / testes)
+
+```bash
+# Gera o JSON em public/demo/
+npm run demo:export
+```
+
+No app: **Config** → **Carregar campanha demo (README)**.
 
 ### Lint
 
@@ -114,30 +173,38 @@ npm run lint
 
 ---
 
-## Estrutura (resumo)
+## Estrutura do projeto
 
 ```text
 src/
-├── components/     # UI, combate, skills, equipamento
-├── constants/      # classes, atributos, estados
-├── data/           # catálogo de skills
-├── mechanics/      # motores de combate, eco, buffs, passivas
+├── components/     # UI, combate, skills, equipamento, welcome
+├── constants/      # classes, atributos, estados, equipamento
+├── data/           # catálogo de skills por classe
+├── mechanics/      # combate, eco, buffs, passivas, progressão
 ├── pages/          # telas principais
-├── services/       # storage, progressão, exportação
-└── store/          # Zustand (personagens, NPCs, combate…)
+├── services/       # storage, save/import, PDFs, demo seed
+└── store/          # Zustand (campanha, personagens, combate…)
+
+docs/
+├── MANUAL_JOGADOR.md
+├── README-SCREENSHOTS.md
+└── screenshots/    # imagens deste README
+
+public/demo/        # campanha demo exportável (JSON)
 ```
 
 ---
 
 ## Documentação
 
-- [Manual do Jogador](docs/MANUAL_JOGADOR.md) — criação, classes, vida, Eco, descanso e rolagem
+- [Manual do Jogador](docs/MANUAL_JOGADOR.md) — criação, vida, Eco, descanso e rolagem
+- [Guia de screenshots](docs/README-SCREENSHOTS.md) — como reproduzir as capturas da demo
 
 ---
 
 ## Status
 
-Projeto em evolução (MVP funcional). Novas mecânicas de classe, combate e polish visual continuam sendo iteradas.
+MVP funcional em uso ativo. Mecânicas de classe, combate, PDFs e polish visual seguem em iteração.
 
 ---
 
