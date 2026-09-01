@@ -54,7 +54,6 @@ function migrateUiState(savedUi) {
     campanhaView = 'historia'
   }
 
-  // Aba antiga Equipamentos → catálogo saiu; equipamento agora vive na ficha
   if (page === 'equipamentos') {
     page = 'management'
     managementView = MANAGEMENT_VIEWS.CHARACTERS

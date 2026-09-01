@@ -20,6 +20,7 @@ import { getCharacterClass } from '../constants/classes'
 import { getRemainingLife } from '../mechanics/combat/damageMarksEngine'
 import { filterByActiveCampaign } from '../utils/campaignScope'
 import { useSaveStore } from '../store/useSaveStore'
+import { useCombatStore } from '../store/useCombatStore'
 import { getEntityEffectiveAttributes } from '../services/stateModifiers'
 import { Button } from '../components/ui/Button'
 import SpotlightCard from '../components/react-bits/SpotlightCard'
@@ -352,6 +353,8 @@ export function ManageGroups() {
   const { characters, addXpToMany, recoverGroupMembers, endSessionRestEco } = useCharacterStore()
   const showToast = useSaveStore(s => s.showToast)
   const selectCharacter = useCharacterPanelStore(s => s.selectCharacter)
+  const combatGroupId = useCombatStore(s => s.combatGroupId)
+  const setCombatGroup = useCombatStore(s => s.setCombatGroup)
 
   const [groupModal, setGroupModal] = useState(null)
   const [addMemberOpen, setAddMemberOpen] = useState(false)
@@ -362,6 +365,16 @@ export function ManageGroups() {
 
   const filteredGroups = filterByActiveCampaign(groups, activeCampaignId)
   const activeGroup = filteredGroups[0] ?? null
+
+  useEffect(() => {
+    if (!activeCampaignId) return
+    if (!filteredGroups.length) {
+      if (combatGroupId) setCombatGroup(null)
+      return
+    }
+    const valid = filteredGroups.some(g => g.id === combatGroupId)
+    if (!valid) setCombatGroup(filteredGroups[0].id)
+  }, [activeCampaignId, filteredGroups, combatGroupId, setCombatGroup])
 
   const members = useMemo(
     () => activeGroup
@@ -397,7 +410,12 @@ export function ManageGroups() {
     if (groupModal?.mode === 'edit') {
       updateGroup(groupModal.group.id, payload)
     } else {
-      addGroup(payload)
+      const created = addGroup(payload)
+      if (!created) {
+        showToast('Esta campanha já possui um grupo.', 'error')
+        return
+      }
+      setCombatGroup(created.id)
     }
     setGroupModal(null)
   }

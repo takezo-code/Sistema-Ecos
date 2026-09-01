@@ -2,6 +2,7 @@ import { getXpRequiredForLevel } from './progression'
 import { migrateGameEntityExtras, migrateSkills } from '../models/gameEntity'
 import { entityHasEcoPowers, sanitizeEntityForEcoFlag } from './entityProgression'
 import { normalizeClassId } from './classes'
+import { normalizeDamageMarks } from '../mechanics/combat/damageMarksEngine'
 
 export const ATTRIBUTES = [
   { key: 'forca', label: 'Força', color: '#dc2626', max: 10 },
@@ -242,7 +243,7 @@ export function normalizeGameEntity(entity) {
     xpRecompensa: entity.xpRecompensa ?? 0,
     fraquezas: entity.fraquezas ?? '',
   }
-  return sanitizeEntityForEcoFlag(base)
+  return sanitizeEntityForEcoFlag({ ...base, ...normalizeDamageMarks(base) })
 }
 
 /** @deprecated use progressionService.applyInitialAttributeChange ou applyAttributePointSpend */

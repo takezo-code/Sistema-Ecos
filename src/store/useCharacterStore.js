@@ -34,6 +34,7 @@ import {
 import { catalogSkillAllowedForEntity, getCatalogSkill } from '../services/skillsCatalogService'
 import { enforceProgressionCaps } from '../services/progressionBudget'
 import { archiveEntity, TRASH_TYPES } from '../services/trashService'
+import { resolveCampaignId } from '../services/campaignScopeService'
 import {
   applyDamageMarks as applyDamageMarksEngine,
   clearDamageMarks as clearDamageMarksEngine,
@@ -104,6 +105,12 @@ export const useCharacterStore = create((set, get) => ({
     if (!socialCheck.ok) return null
     const ecoCheck = validateStartingEcoSkillSelected(data)
     if (!ecoCheck.ok) return null
+    let campaignId
+    try {
+      campaignId = resolveCampaignId(data.campaignId)
+    } catch {
+      return null
+    }
     // starterWeapon/starterArmor são validados no formulário antes do save;
     // aqui só garantimos que o equipamento inicial foi montado.
     const equipped = Array.isArray(data.equipped) ? data.equipped : []
@@ -114,7 +121,7 @@ export const useCharacterStore = create((set, get) => ({
     const character = withNormalizedGear(normalizeGameEntity({
       ...persistable,
       id: genId(),
-      campaignId: data.campaignId || null,
+      campaignId,
       name: String(data.name || '').trim(),
       image: data.image || '',
       appearance: data.appearance || '',

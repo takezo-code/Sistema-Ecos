@@ -7,6 +7,7 @@ import {
   defaultSocialAttributes,
 } from '../constants/attributes'
 import { archiveEntity, TRASH_TYPES } from '../services/trashService'
+import { resolveCampaignId } from '../services/campaignScopeService'
 import {
   applyXpGain,
   applyPendingAttributePoint,
@@ -92,10 +93,16 @@ export const useNPCStore = create((set, get) => ({
   },
 
   addNPC(data) {
+    let campaignId
+    try {
+      campaignId = resolveCampaignId(data.campaignId)
+    } catch {
+      return null
+    }
     const npc = withNormalizedGear(normalizeGameEntity({
       ...data,
       id: genId(),
-      campaignId: data.campaignId || null,
+      campaignId,
       name: data.name || 'Novo NPC',
       image: data.image || '',
       appearance: data.appearance || '',

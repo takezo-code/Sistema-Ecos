@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { storage, KEYS } from '../services/storage'
 import { genId } from '../utils/id'
 import { archiveEntity, TRASH_TYPES } from '../services/trashService'
+import { resolveCampaignId } from '../services/campaignScopeService'
 
 const load = () => storage.get(KEYS.groups) || []
 
@@ -12,10 +13,23 @@ export const useGroupStore = create((set, get) => ({
     return get().groups.filter(g => g.campaignId === campaignId)
   },
 
+  getGroupForCampaign(campaignId) {
+    return get().groups.find(g => g.campaignId === campaignId) || null
+  },
+
   addGroup(data) {
+    let campaignId
+    try {
+      campaignId = resolveCampaignId(data.campaignId)
+    } catch {
+      return null
+    }
+    if (get().groups.some(g => g.campaignId === campaignId)) {
+      return null
+    }
     const group = {
       id: genId(),
-      campaignId: data.campaignId || null,
+      campaignId,
       name: data.name || 'Novo Grupo',
       description: data.description || '',
       memberIds: data.memberIds || [],

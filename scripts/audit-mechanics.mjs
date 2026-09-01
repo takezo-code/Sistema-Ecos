@@ -12,7 +12,7 @@ import {
 } from '../src/services/ecoSkillRuntimeService.js'
 import { getCooldownRemaining } from '../src/mechanics/skills/cooldownEngine.js'
 import { buildCharacterSheetSnapshot } from '../src/services/characterSheetSnapshot.js'
-import { getRemainingLife } from '../src/mechanics/combat/damageMarksEngine.js'
+import { getRemainingLife, applyDamageMarks, getMarkPoolMax } from '../src/mechanics/combat/damageMarksEngine.js'
 import { enforceProgressionCaps } from '../src/services/progressionBudget.js'
 
 let passed = 0
@@ -96,6 +96,15 @@ console.log('\n=== Life / damage marks ===')
 const player = makePlayer()
 const life = getRemainingLife(player)
 assert(life.max > 0, `player max life > 0 (${life.max})`)
+const poolMax = getMarkPoolMax(player)
+let wounded = { ...player, damageMarks: poolMax }
+const atZero = getRemainingLife(wounded)
+assert(atZero.current === 0, 'life clamps at 0')
+const extraHit = applyDamageMarks(wounded, 'grave')
+wounded = { ...wounded, ...extraHit.patch }
+assert(wounded.damageMarks === poolMax, 'marks do not exceed life pool at 0 HP')
+const healed = getRemainingLife({ ...wounded, damageMarks: poolMax - 1 })
+assert(healed.current === 1, 'one heal from 0 returns to 1 life')
 
 console.log('\n=== Progression caps ===')
 const capped = enforceProgressionCaps(player)

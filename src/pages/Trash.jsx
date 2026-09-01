@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import {
-  Trash2, RotateCcw, Sword, Skull, Building2, X, BookOpen, ScrollText,
+  Trash2, RotateCcw, Sword, Skull, Building2, X, BookOpen,
   UsersRound, Sparkles, GitBranch,
 } from 'lucide-react'
 import { PageHeader } from '../components/ui/PageHeader'
@@ -17,7 +17,6 @@ const TYPE_ICONS = {
   npc: Skull,
   organization: Building2,
   campaign: BookOpen,
-  session: ScrollText,
   group: UsersRound,
   skill: Sparkles,
   flow: GitBranch,
@@ -28,7 +27,6 @@ const TYPE_COLORS = {
   npc: '#06b6d4',
   organization: '#d97706',
   campaign: '#dc2626',
-  session: '#16a34a',
   group: '#a855f7',
   skill: '#eab308',
   flow: '#6366f1',
@@ -40,7 +38,6 @@ const FILTER_OPTIONS = [
   { id: 'npc', label: 'NPCs' },
   { id: 'organization', label: 'Organizações' },
   { id: 'campaign', label: 'Campanhas' },
-  { id: 'session', label: 'Sessões' },
   { id: 'group', label: 'Grupos' },
   { id: 'skill', label: 'Skills' },
   { id: 'flow', label: 'Fluxo' },

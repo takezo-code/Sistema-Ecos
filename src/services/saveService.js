@@ -5,7 +5,6 @@ import { useCharacterStore } from '../store/useCharacterStore'
 import { useGroupStore } from '../store/useGroupStore'
 import { useNPCStore } from '../store/useNPCStore'
 import { useOrganizationStore } from '../store/useOrganizationStore'
-import { useSessionStore } from '../store/useSessionStore'
 import { useNarrativeStore } from '../store/useNarrativeStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { useSettingsStore } from '../store/useSettingsStore'
@@ -16,6 +15,8 @@ import { useCombatStore } from '../store/useCombatStore'
 import { useCharacterPanelStore } from '../store/useCharacterPanelStore'
 import { genId } from '../utils/id'
 import { normalizeGameEntity } from '../constants/attributes'
+import { loadCustomSkills, saveCustomSkills } from './skillsCatalogService'
+import { migrateOrphanEntitiesToActiveCampaign } from './campaignScopeService'
 
 function normalizeEvent(e) {
   return {
@@ -55,13 +56,41 @@ function collectUiState() {
 }
 
 /** Filtra entidades de uma campanha específica (exportação portátil). */
-function filterEntitiesForCampaign(items, campaignId, singleCampaignWorkspace = false) {
-  return (items || []).filter(item => {
-    if (!item) return false
-    if (item.campaignId === campaignId) return true
-    if (!item.campaignId && singleCampaignWorkspace) return true
-    return false
-  })
+function filterEntitiesForCampaign(items, campaignId) {
+  return (items || []).filter(item => item?.campaignId === campaignId)
+}
+
+function collectTemplateIds(characters, npcs) {
+  const ids = new Set()
+  const scan = (entity) => {
+    if (!entity) return
+    for (const skill of entity.skills || []) {
+      if (skill?.templateId) ids.add(skill.templateId)
+    }
+    for (const item of entity.equipped || []) {
+      if (item?.weaponSkill?.templateId) ids.add(item.weaponSkill.templateId)
+    }
+  }
+  characters.forEach(scan)
+  npcs.forEach(scan)
+  return ids
+}
+
+function exportSkillsCatalogForEntities(characters, npcs) {
+  const needed = collectTemplateIds(characters, npcs)
+  return loadCustomSkills().filter(skill => needed.has(skill.templateId))
+}
+
+function filterTrashForCampaign(campaignId) {
+  return (storage.get(KEYS.trash) || []).filter(
+    entry => entry?.campaignId === campaignId || entry?.data?.campaignId === campaignId,
+  )
+}
+
+function collectCombatSessionForCampaign(campaignId) {
+  const session = storage.get(KEYS.combatSession) || {}
+  if (session.campaignId !== campaignId) return null
+  return deepClone(session)
 }
 
 /** Pacote completo de uma campanha — pronto para outro computador. */
@@ -72,40 +101,34 @@ export function generateCampaignPackage(campaignId) {
     throw new Error('Campanha não encontrada.')
   }
 
-  const singleCampaignWorkspace = allCampaigns.length === 1
   const characters = filterEntitiesForCampaign(
     useCharacterStore.getState().characters,
     campaignId,
-    singleCampaignWorkspace,
   )
   const groups = filterEntitiesForCampaign(
     useGroupStore.getState().groups,
     campaignId,
-    singleCampaignWorkspace,
   )
   const npcs = filterEntitiesForCampaign(
     useNPCStore.getState().npcs,
     campaignId,
-    singleCampaignWorkspace,
   )
   const organizations = filterEntitiesForCampaign(
     useOrganizationStore.getState().organizations,
     campaignId,
-    singleCampaignWorkspace,
-  )
-  const sessions = filterEntitiesForCampaign(
-    useSessionStore.getState().sessions,
-    campaignId,
-    singleCampaignWorkspace,
   )
   const events = filterEntitiesForCampaign(
     useNarrativeStore.getState().events,
     campaignId,
-    singleCampaignWorkspace,
   )
-  const diceHistory = (useDiceStore.getState().history || []).filter(
-    roll => roll.campaignId === campaignId || (!roll.campaignId && singleCampaignWorkspace),
+  const diceHistory = filterEntitiesForCampaign(
+    useDiceStore.getState().history,
+    campaignId,
   )
+  const skillsCatalog = exportSkillsCatalogForEntities(characters, npcs)
+  const trash = deepClone(filterTrashForCampaign(campaignId))
+  const combatSession = collectCombatSessionForCampaign(campaignId)
+  const uiState = deepClone(collectUiState())
 
   return {
     version: SAVE_VERSION,
@@ -119,17 +142,18 @@ export function generateCampaignPackage(campaignId) {
     groups: deepClone(groups),
     npcs: deepClone(npcs),
     organizations: deepClone(organizations),
-    sessions: deepClone(sessions),
     events: deepClone(events),
     diceHistory: deepClone(diceHistory),
-    settings: { autosaveEnabled: true },
-    uiState: {},
+    skillsCatalog,
+    trash,
+    combatSession,
+    settings: deepClone(useSettingsStore.getState().settings || { autosaveEnabled: true }),
+    uiState,
     metadata: {
       totalCharacters: characters.length,
       totalNPCs: npcs.length,
       totalOrganizations: organizations.length,
       totalGroups: groups.length,
-      totalSessions: sessions.length,
       totalEvents: events.length,
       totalCampaigns: 1,
       campaignName: campaign.name,
@@ -150,9 +174,11 @@ export function generateSaveData(extra = {}) {
       groups: [],
       npcs: [],
       organizations: [],
-      sessions: [],
       events: [],
       diceHistory: [],
+      skillsCatalog: [],
+      trash: [],
+      combatSession: null,
       settings: useSettingsStore.getState().settings || {},
       uiState: deepClone({ ...collectUiState(), ...extra.uiState }),
       metadata: { totalCampaigns: 0 },
@@ -173,9 +199,9 @@ function collectExistingEntityIds() {
     groups: new Set((useGroupStore.getState().groups || []).map(g => g.id).filter(Boolean)),
     npcs: new Set((useNPCStore.getState().npcs || []).map(n => n.id).filter(Boolean)),
     organizations: new Set((useOrganizationStore.getState().organizations || []).map(o => o.id).filter(Boolean)),
-    sessions: new Set((useSessionStore.getState().sessions || []).map(s => s.id).filter(Boolean)),
     events: new Set((useNarrativeStore.getState().events || []).map(e => e.id).filter(Boolean)),
     dice: new Set((useDiceStore.getState().history || []).map(r => r.id).filter(Boolean)),
+    trash: new Set((storage.get(KEYS.trash) || []).map(t => t.id).filter(Boolean)),
   }
 }
 
@@ -194,18 +220,21 @@ function remapId(id, usedIds, idMap) {
 }
 
 function entitiesBelongingToCampaign(incoming, sourceCampaignId) {
-  const single = (incoming.campaigns || []).length === 1
-  const belongs = item => item?.campaignId === sourceCampaignId || (single && !item?.campaignId)
+  const belongs = item => item?.campaignId === sourceCampaignId
   return {
     characters: (incoming.characters || []).filter(belongs),
     groups: (incoming.groups || []).filter(belongs),
     npcs: (incoming.npcs || []).filter(belongs),
     organizations: (incoming.organizations || []).filter(belongs),
-    sessions: (incoming.sessions || []).filter(belongs),
     events: (incoming.events || []).filter(belongs),
-    diceHistory: (incoming.diceHistory || []).filter(
-      roll => roll?.campaignId === sourceCampaignId || (single && !roll?.campaignId),
+    diceHistory: (incoming.diceHistory || []).filter(belongs),
+    skillsCatalog: incoming.skillsCatalog || [],
+    trash: (incoming.trash || []).filter(
+      entry => entry?.campaignId === sourceCampaignId || entry?.data?.campaignId === sourceCampaignId,
     ),
+    combatSession: incoming.combatSession?.campaignId === sourceCampaignId
+      ? incoming.combatSession
+      : null,
   }
 }
 
@@ -231,7 +260,6 @@ function remapCampaignPackage(incoming, sourceCampaign, existingCampaignIds, use
   }))
   const npcs = remapList(bundle.npcs, 'npcs')
   const organizations = remapList(bundle.organizations, 'organizations')
-  const sessions = remapList(bundle.sessions, 'sessions')
   const events = remapList(bundle.events, 'events').map(normalizeEvent)
   const diceHistory = remapList(bundle.diceHistory, 'dice')
 
@@ -244,6 +272,35 @@ function remapCampaignPackage(incoming, sourceCampaign, existingCampaignIds, use
     updatedAt: new Date().toISOString(),
   }
 
+  const trash = (bundle.trash || []).map(entry => ({
+    ...entry,
+    id: remapId(entry.id, usedIds.trash, idMap),
+    campaignId: targetCampaignId,
+    data: entry.data
+      ? { ...entry.data, campaignId: targetCampaignId }
+      : entry.data,
+  }))
+
+  let combatSession = bundle.combatSession
+  if (combatSession) {
+    combatSession = {
+      ...combatSession,
+      campaignId: targetCampaignId,
+      combatGroupId: combatSession.combatGroupId
+        ? (idMap[combatSession.combatGroupId] || combatSession.combatGroupId)
+        : null,
+      activeEnemyId: combatSession.activeEnemyId
+        ? (idMap[combatSession.activeEnemyId] || combatSession.activeEnemyId)
+        : null,
+      rollHistory: (combatSession.rollHistory || []).map(roll => ({
+        ...roll,
+        id: remapId(roll.id, usedIds.dice, idMap),
+        campaignId: targetCampaignId,
+        actorId: roll.actorId ? (idMap[roll.actorId] || roll.actorId) : roll.actorId,
+      })),
+    }
+  }
+
   return {
     campaign,
     campaignId: targetCampaignId,
@@ -251,10 +308,36 @@ function remapCampaignPackage(incoming, sourceCampaign, existingCampaignIds, use
     groups,
     npcs: normalizedNpcs,
     organizations,
-    sessions,
     events,
     diceHistory,
+    skillsCatalog: bundle.skillsCatalog || [],
+    trash,
+    combatSession,
   }
+}
+
+/** Adiciona campanha(s) do arquivo sem sobrescrever saves locais. */
+function mergeImportedSkillsCatalog(incomingSkills) {
+  if (!incomingSkills?.length) return
+  const current = loadCustomSkills()
+  const byId = new Map(current.map(skill => [skill.templateId, skill]))
+  incomingSkills.forEach(skill => {
+    if (skill?.templateId) byId.set(skill.templateId, skill)
+  })
+  saveCustomSkills([...byId.values()])
+  useSkillsCatalogStore.getState().reload()
+}
+
+function mergeImportedTrash(incomingTrash) {
+  if (!incomingTrash?.length) return
+  const current = storage.get(KEYS.trash) || []
+  const known = new Set(current.map(entry => entry.id))
+  const merged = [
+    ...incomingTrash.filter(entry => entry?.id && !known.has(entry.id)),
+    ...current,
+  ]
+  storage.set(KEYS.trash, merged)
+  useTrashStore.setState({ items: merged })
 }
 
 /** Adiciona campanha(s) do arquivo sem sobrescrever saves locais. */
@@ -305,12 +388,6 @@ function appendCampaignPackages(incoming) {
       ...appended.flatMap(a => a.organizations),
     ],
   })
-  useSessionStore.setState({
-    sessions: [
-      ...(useSessionStore.getState().sessions || []),
-      ...appended.flatMap(a => a.sessions),
-    ],
-  })
   useNarrativeStore.setState({
     events: [
       ...(useNarrativeStore.getState().events || []),
@@ -323,6 +400,14 @@ function appendCampaignPackages(incoming) {
       ...appended.flatMap(a => a.diceHistory),
     ],
   })
+
+  mergeImportedSkillsCatalog(appended.flatMap(a => a.skillsCatalog || []))
+  mergeImportedTrash(appended.flatMap(a => a.trash || []))
+
+  const lastCombat = appended[appended.length - 1]?.combatSession
+  if (lastCombat) {
+    useCombatStore.getState().replaceSession(lastCombat)
+  }
 
   const last = appended[appended.length - 1]
   return {
@@ -339,7 +424,6 @@ export function persistWorkspaceFromStores() {
   storage.set(KEYS.groups, useGroupStore.getState().groups || [])
   storage.set(KEYS.npcs, useNPCStore.getState().npcs || [])
   storage.set(KEYS.organizations, useOrganizationStore.getState().organizations || [])
-  storage.set(KEYS.sessions, useSessionStore.getState().sessions || [])
   storage.set(KEYS.narrative, useNarrativeStore.getState().events || [])
   storage.set(KEYS.diceHistory, useDiceStore.getState().history || [])
   storage.set(KEYS.appBootstrapped, true)
@@ -349,6 +433,7 @@ export function activateCampaign(campaignId) {
   const exists = (useCampaignStore.getState().campaigns || []).some(c => c.id === campaignId)
   if (!exists) throw new Error('Campanha não encontrada.')
   useCampaignStore.getState().setActiveCampaign(campaignId)
+  migrateOrphanEntitiesToActiveCampaign()
   persistWorkspaceFromStores()
 }
 
@@ -370,9 +455,7 @@ export function addCampaign(campaignName = 'Nova Campanha') {
 }
 
 export function getCampaignSlotSummary(campaignId, stores = {}) {
-  const campaigns = useCampaignStore.getState().campaigns || []
-  const single = campaigns.length === 1
-  const belongs = item => item?.campaignId === campaignId || (single && !item?.campaignId)
+  const belongs = item => item?.campaignId === campaignId
   const characters = (stores.characters ?? useCharacterStore.getState().characters ?? []).filter(belongs)
   const npcs = (stores.npcs ?? useNPCStore.getState().npcs ?? []).filter(belongs)
   const groups = (stores.groups ?? useGroupStore.getState().groups ?? []).filter(belongs)
@@ -401,9 +484,17 @@ function writeStorageFromSave(data) {
   storage.set(KEYS.groups, data.groups || [])
   storage.set(KEYS.npcs, data.npcs || [])
   storage.set(KEYS.organizations, data.organizations || [])
-  storage.set(KEYS.sessions, data.sessions || [])
   storage.set(KEYS.narrative, data.events || [])
   storage.set(KEYS.diceHistory, data.diceHistory || [])
+  if (Array.isArray(data.skillsCatalog)) {
+    saveCustomSkills(data.skillsCatalog)
+  }
+  if (Array.isArray(data.trash)) {
+    storage.set(KEYS.trash, data.trash)
+  }
+  if (data.combatSession) {
+    storage.set(KEYS.combatSession, data.combatSession)
+  }
   storage.set(KEYS.settings, data.settings || {})
   storage.set(KEYS.uiState, data.uiState || {})
   storage.set(KEYS.autosave, data)
@@ -438,9 +529,13 @@ export function restoreSaveData(data, { silent = false } = {}) {
   useGroupStore.setState({ groups: payload.groups })
   useNPCStore.setState({ npcs: payload.npcs })
   useOrganizationStore.setState({ organizations: payload.organizations })
-  useSessionStore.setState({ sessions: payload.sessions })
   useNarrativeStore.setState({ events: payload.events })
   useDiceStore.setState({ history: payload.diceHistory })
+  useSkillsCatalogStore.getState().reload()
+  useTrashStore.setState({ items: payload.trash || storage.get(KEYS.trash) || [] })
+  if (payload.combatSession) {
+    useCombatStore.getState().replaceSession(payload.combatSession)
+  }
   useSettingsStore.setState({
     settings: { ...useSettingsStore.getState().settings, ...payload.settings },
   })
@@ -466,7 +561,7 @@ export function validateSaveFile(data) {
     warnings.push(`Versão ${data.version} pode não ser totalmente compatível. Suportado: ${SUPPORTED_VERSIONS.join(', ')}`)
   }
 
-  const arrayKeys = ['campaigns', 'characters', 'groups', 'npcs', 'organizations', 'sessions', 'events']
+  const arrayKeys = ['campaigns', 'characters', 'groups', 'npcs', 'organizations', 'events']
   arrayKeys.forEach(key => {
     if (data[key] != null && !Array.isArray(data[key])) {
       errors.push(`Campo "${key}" deve ser uma lista.`)
@@ -488,9 +583,13 @@ export function validateSaveFile(data) {
     groups: Array.isArray(data.groups) ? data.groups : [],
     npcs: Array.isArray(data.npcs) ? data.npcs : [],
     organizations: Array.isArray(data.organizations) ? data.organizations : [],
-    sessions: Array.isArray(data.sessions) ? data.sessions : [],
     events: Array.isArray(data.events) ? data.events : [],
     diceHistory: Array.isArray(data.diceHistory) ? data.diceHistory : [],
+    skillsCatalog: Array.isArray(data.skillsCatalog) ? data.skillsCatalog : [],
+    trash: Array.isArray(data.trash) ? data.trash : [],
+    combatSession: data.combatSession && typeof data.combatSession === 'object'
+      ? data.combatSession
+      : null,
     settings: typeof data.settings === 'object' && data.settings ? data.settings : {},
     uiState: typeof data.uiState === 'object' && data.uiState ? data.uiState : {},
     metadata: data.metadata || {},
@@ -561,6 +660,7 @@ export async function importCampaign(file) {
       throw new Error(validation.errors[0] || 'Save inválido')
     }
     const result = appendCampaignPackages(validation.normalized)
+    migrateOrphanEntitiesToActiveCampaign()
     persistWorkspaceFromStores()
     const label = result.campaignName || 'Campanha'
     useSaveStore.getState().showToast(
@@ -649,9 +749,11 @@ export function createEmptySave(campaignName = 'Nova Campanha') {
     groups: [],
     npcs: [],
     organizations: [],
-    sessions: [],
     events: [],
     diceHistory: [],
+    skillsCatalog: [],
+    trash: [],
+    combatSession: null,
     settings: { autosaveEnabled: true },
     uiState: {},
     metadata: {
@@ -659,7 +761,6 @@ export function createEmptySave(campaignName = 'Nova Campanha') {
       totalNPCs: 0,
       totalOrganizations: 0,
       totalGroups: 0,
-      totalSessions: 0,
       totalEvents: 0,
       totalCampaigns: 1,
     },
@@ -690,13 +791,11 @@ export function resetAllTestData(campaignName = 'Nova Campanha') {
   useTrashStore.setState({ items: [] })
   useSkillsCatalogStore.getState().reload()
   useCombatStore.setState({
-    globalNotes: '',
-    turn: 0,
     campaignId: empty.activeCampaignId,
     combatGroupId: null,
     activeEnemyId: null,
     lastRoll: null,
-    roundActedPlayerIds: [],
+    rollHistory: [],
   })
   useCharacterPanelStore.setState({ selectedCharacterId: null })
 

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { storage, KEYS } from '../services/storage'
 import { genId } from '../utils/id'
 import { archiveEntity, TRASH_TYPES } from '../services/trashService'
+import { resolveCampaignId } from '../services/campaignScopeService'
 
 const normalizeEvent = (e) => ({
   ...e,
@@ -29,11 +30,17 @@ export const useNarrativeStore = create((set, get) => ({
   },
 
   addEvent(data) {
-    const existing = get().events.filter(e => e.campaignId === data.campaignId)
+    let campaignId
+    try {
+      campaignId = resolveCampaignId(data.campaignId)
+    } catch {
+      return null
+    }
+    const existing = get().events.filter(e => e.campaignId === campaignId)
     const isChoice = data.type === 'escolha'
     const event = normalizeEvent({
       id: genId(),
-      campaignId: data.campaignId || null,
+      campaignId,
       type: data.type || 'historia',
       title: data.title || (isChoice ? 'Nova Escolha' : 'Nova Cena'),
       description: data.description || '',

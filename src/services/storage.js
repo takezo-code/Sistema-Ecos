@@ -50,7 +50,6 @@ export const KEYS = {
   npcs: 'npcs',
   organizations: 'organizations',
   characters: 'characters',
-  sessions: 'sessions',
   narrative: 'narrative_events',
   diceHistory: 'dice_history',
   groups: 'groups',

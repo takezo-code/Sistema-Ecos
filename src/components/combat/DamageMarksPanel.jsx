@@ -83,6 +83,7 @@ export function DamageMarksPanel({
   )
   const { current, max, marks } = life
   const types = markTypes || Object.values(DAMAGE_MARK_TYPES)
+  const atZeroLife = max > 0 && current <= 0
 
   const handleApply = (markType) => {
     const result = onApplyMarks?.(markType)
@@ -105,15 +106,18 @@ export function DamageMarksPanel({
                 key={type}
                 type="button"
                 onClick={() => handleApply(type)}
-                title={`${meta.label} (−${meta.value} vida)`}
+                disabled={atZeroLife}
+                title={atZeroLife ? 'Vida zerada' : `${meta.label} (−${meta.value} vida)`}
                 style={{
                   flex: 1,
                   padding: '6px 3px',
-                  background: `linear-gradient(145deg, ${meta.color}22, ${meta.color}0a)`,
-                  border: `1px solid ${meta.color}50`,
+                  background: atZeroLife
+                    ? 'rgba(255,255,255,0.02)'
+                    : `linear-gradient(145deg, ${meta.color}22, ${meta.color}0a)`,
+                  border: `1px solid ${atZeroLife ? 'rgba(255,255,255,0.06)' : `${meta.color}50`}`,
                   borderRadius: 9,
-                  color: meta.color,
-                  cursor: 'pointer',
+                  color: atZeroLife ? '#444' : meta.color,
+                  cursor: atZeroLife ? 'default' : 'pointer',
                   fontSize: '0.55rem',
                   fontFamily: 'monospace',
                   fontWeight: 800,
@@ -173,15 +177,16 @@ export function DamageMarksPanel({
               key={type}
               type="button"
               onClick={() => handleApply(type)}
-              title={`${meta.description} (−${meta.value} vida)`}
+              disabled={atZeroLife}
+              title={atZeroLife ? 'Vida zerada' : `${meta.description} (−${meta.value} vida)`}
               style={{
                 flex: 1,
                 padding: '4px 2px',
-                background: `${meta.color}11`,
-                border: `1px solid ${meta.color}44`,
+                background: atZeroLife ? 'rgba(255,255,255,0.02)' : `${meta.color}11`,
+                border: `1px solid ${atZeroLife ? 'rgba(255,255,255,0.06)' : `${meta.color}44`}`,
                 borderRadius: '4px',
-                color: meta.color,
-                cursor: 'pointer',
+                color: atZeroLife ? '#444' : meta.color,
+                cursor: atZeroLife ? 'default' : 'pointer',
                 fontSize: '0.5rem',
                 fontFamily: 'monospace',
                 fontWeight: 700,

@@ -4,6 +4,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import { registerAutoSaveOnStorage, isAppBootstrapped, autoSave } from './services/saveService'
+import { migrateOrphanEntitiesToActiveCampaign } from './services/campaignScopeService'
 import { storage, KEYS } from './services/storage'
 
 registerAutoSaveOnStorage()
@@ -12,6 +13,7 @@ if (isAppBootstrapped() && !storage.get(KEYS.appBootstrapped)) {
   storage.set(KEYS.appBootstrapped, true)
 }
 if (isAppBootstrapped()) {
+  migrateOrphanEntitiesToActiveCampaign()
   autoSave()
 }
 

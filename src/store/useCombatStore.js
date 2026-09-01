@@ -5,40 +5,28 @@ import { genId } from '../utils/id'
 const load = () => {
   const saved = storage.get(KEYS.combatSession) || {}
   return {
-    globalNotes: '',
-    turn: 0,
     campaignId: null,
     combatGroupId: null,
     activeEnemyId: null,
     rollHistory: [],
-    roundActedPlayerIds: [],
     ...saved,
   }
 }
 
 export const useCombatStore = create((set, get) => ({
-  globalNotes: load().globalNotes ?? '',
-  turn: load().turn ?? 0,
   campaignId: load().campaignId ?? null,
   combatGroupId: load().combatGroupId ?? null,
   activeEnemyId: load().activeEnemyId ?? null,
   rollHistory: load().rollHistory ?? [],
-  roundActedPlayerIds: load().roundActedPlayerIds ?? [],
   lastRoll: null,
 
   persist() {
-    const {
-      globalNotes, turn, campaignId, combatGroupId, activeEnemyId,
-      rollHistory, roundActedPlayerIds,
-    } = get()
+    const { campaignId, combatGroupId, activeEnemyId, rollHistory } = get()
     storage.set(KEYS.combatSession, {
-      globalNotes,
-      turn,
       campaignId,
       combatGroupId,
       activeEnemyId,
       rollHistory,
-      roundActedPlayerIds,
     })
   },
 
@@ -47,10 +35,9 @@ export const useCombatStore = create((set, get) => ({
     if (current.campaignId !== campaignId) {
       set({
         campaignId,
-        globalNotes: '',
-        turn: 0,
         combatGroupId: null,
-        roundActedPlayerIds: [],
+        activeEnemyId: null,
+        rollHistory: [],
       })
     } else {
       set({ campaignId })
@@ -59,38 +46,7 @@ export const useCombatStore = create((set, get) => ({
   },
 
   setCombatGroup(groupId) {
-    set({ combatGroupId: groupId || null, roundActedPlayerIds: [] })
-    get().persist()
-  },
-
-  setGlobalNotes(notes) {
-    set({ globalNotes: notes })
-    get().persist()
-  },
-
-  setTurn(turn) {
-    set({ turn: Math.max(0, Number(turn) || 0) })
-    get().persist()
-  },
-
-  incrementTurn() {
-    set({ turn: get().turn + 1 })
-    get().persist()
-  },
-
-  /** Marca jogador que rolou nesta rodada; retorna a lista atualizada de ids. */
-  markPlayerActedInRound(playerId) {
-    if (!playerId) return get().roundActedPlayerIds
-    const current = get().roundActedPlayerIds
-    if (current.includes(playerId)) return current
-    const next = [...current, playerId]
-    set({ roundActedPlayerIds: next })
-    get().persist()
-    return next
-  },
-
-  resetRoundActs() {
-    set({ roundActedPlayerIds: [] })
+    set({ combatGroupId: groupId || null })
     get().persist()
   },
 
@@ -124,6 +80,16 @@ export const useCombatStore = create((set, get) => ({
       rollHistory: campaignId
         ? get().rollHistory.filter(roll => roll.campaignId !== campaignId)
         : [],
+    })
+    get().persist()
+  },
+
+  replaceSession(session = {}) {
+    set({
+      campaignId: session.campaignId ?? null,
+      combatGroupId: session.combatGroupId ?? null,
+      activeEnemyId: session.activeEnemyId ?? null,
+      rollHistory: Array.isArray(session.rollHistory) ? session.rollHistory : [],
     })
     get().persist()
   },

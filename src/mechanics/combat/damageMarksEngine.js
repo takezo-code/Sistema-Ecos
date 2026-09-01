@@ -89,15 +89,32 @@ export function getMarkPoolMax(entity = {}) {
   return getDefaultMarkPoolMax(entity)
 }
 
-/** Vida atual = máximo − marcas acumuladas. */
+/** Vida atual = máximo − marcas acumuladas (marcas nunca passam do teto). */
 export function getRemainingLife(entity = {}) {
   const max = getMarkPoolMax(entity)
-  const marks = Math.max(0, Number(entity.damageMarks) || 0)
+  const marks = clampMarksToPool(entity)
   return {
     current: Math.max(0, max - marks),
     max,
     marks,
   }
+}
+
+/** Garante que marcas armazenadas não ultrapassem o pool de vida. */
+export function clampMarksToPool(entity = {}) {
+  const max = getMarkPoolMax(entity)
+  return Math.max(0, Math.min(max, Number(entity.damageMarks) || 0))
+}
+
+/** Normaliza marcas e estado físico quando a ficha carrega ou o pool muda. */
+export function normalizeDamageMarks(entity = {}) {
+  const marks = clampMarksToPool(entity)
+  const vitBuffer = getVitalityMarkBuffer(entity)
+  const physicalState = getPhysicalStateFromMarks(marks, vitBuffer)
+  const patch = {}
+  if ((Number(entity.damageMarks) || 0) !== marks) patch.damageMarks = marks
+  if ((entity.physicalState ?? 'bem') !== physicalState) patch.physicalState = physicalState
+  return patch
 }
 
 /** Limiares de um tier com o buffer de VIT aplicado. */
@@ -169,8 +186,22 @@ export function getMarkProgress(marks, vitalityBuffer = 0) {
 export function applyDamageMarks(entity, markType, { forceState = null, extraMarks = 0 } = {}) {
   const meta = DAMAGE_MARK_META[markType] ?? DAMAGE_MARK_META.leve
   const markValue = meta.value + (Number(extraMarks) || 0)
-  const currentMarks = Math.max(0, Number(entity.damageMarks) || 0)
-  const newMarks = currentMarks + markValue
+  const poolMax = getMarkPoolMax(entity)
+  const currentMarks = clampMarksToPool(entity)
+  if (currentMarks >= poolMax) {
+    return {
+      patch: {},
+      markType,
+      markAdded: 0,
+      marksTotal: currentMarks,
+      prevState: entity.physicalState ?? 'bem',
+      newState: entity.physicalState ?? 'bem',
+      stateChanged: false,
+      narratives: [],
+    }
+  }
+  const newMarks = Math.min(poolMax, currentMarks + markValue)
+  const markAdded = newMarks - currentMarks
   const vitBuffer = getVitalityMarkBuffer(entity)
   const derivedState = getPhysicalStateFromMarks(newMarks, vitBuffer)
   const newState = forceState ?? derivedState
@@ -198,8 +229,9 @@ export function applyDamageMarks(entity, markType, { forceState = null, extraMar
  */
 export function applyMarksAmount(entity, amount) {
   const markValue = Math.max(0, Math.floor(Number(amount) || 0))
-  const currentMarks = Math.max(0, Number(entity.damageMarks) || 0)
-  if (markValue <= 0) {
+  const poolMax = getMarkPoolMax(entity)
+  const currentMarks = clampMarksToPool(entity)
+  if (markValue <= 0 || currentMarks >= poolMax) {
     return {
       patch: {},
       markAdded: 0,
@@ -210,7 +242,8 @@ export function applyMarksAmount(entity, amount) {
       narratives: [],
     }
   }
-  const newMarks = currentMarks + markValue
+  const newMarks = Math.min(poolMax, currentMarks + markValue)
+  const markAdded = newMarks - currentMarks
   const vitBuffer = getVitalityMarkBuffer(entity)
   const derivedState = getPhysicalStateFromMarks(newMarks, vitBuffer)
   const prevState = entity.physicalState ?? 'bem'
@@ -257,7 +290,7 @@ export function clearDamageMarks(entity) {
  * Remove N marcas (cura parcial). Estado é recalculado.
  */
 export function healDamageMarks(entity, amount) {
-  const current = Math.max(0, Number(entity.damageMarks) || 0)
+  const current = clampMarksToPool(entity)
   const newMarks = Math.max(0, current - Math.max(1, Number(amount) || 1))
   const vitBuffer = getVitalityMarkBuffer(entity)
   const newState = getPhysicalStateFromMarks(newMarks, vitBuffer)

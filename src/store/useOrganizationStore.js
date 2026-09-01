@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { storage, KEYS } from '../services/storage'
 import { genId } from '../utils/id'
 import { archiveEntity, TRASH_TYPES } from '../services/trashService'
+import { resolveCampaignId } from '../services/campaignScopeService'
 
 const load = () => storage.get(KEYS.organizations) || []
 
@@ -9,9 +10,15 @@ export const useOrganizationStore = create((set, get) => ({
   organizations: load(),
 
   addOrganization(data) {
+    let campaignId
+    try {
+      campaignId = resolveCampaignId(data.campaignId)
+    } catch {
+      return null
+    }
     const org = {
       id: genId(),
-      campaignId: data.campaignId || null,
+      campaignId,
       name: data.name || 'Nova Organização',
       image: data.image || '',
       symbol: data.symbol || '',

@@ -6,7 +6,6 @@ import { useNPCStore } from '../store/useNPCStore'
 import { useOrganizationStore } from '../store/useOrganizationStore'
 import { useGroupStore } from '../store/useGroupStore'
 import { useCampaignStore } from '../store/useCampaignStore'
-import { useSessionStore } from '../store/useSessionStore'
 import { useNarrativeStore } from '../store/useNarrativeStore'
 import { useCombatStore } from '../store/useCombatStore'
 import { loadCustomSkills, saveCustomSkills } from './skillsCatalogService'
@@ -16,7 +15,6 @@ export const TRASH_TYPES = {
   npc: 'npc',
   organization: 'organization',
   campaign: 'campaign',
-  session: 'session',
   group: 'group',
   skill: 'skill',
   flow: 'flow',
@@ -27,7 +25,6 @@ export const TRASH_TYPE_LABELS = {
   npc: 'NPC',
   organization: 'Organização',
   campaign: 'Campanha',
-  session: 'Sessão',
   group: 'Grupo',
   skill: 'Skill',
   flow: 'Fluxo',
@@ -61,7 +58,6 @@ function getEntityId(entityType, entity) {
 }
 
 function getEntityName(entityType, entity) {
-  if (entityType === TRASH_TYPES.session) return entity.title || 'Sessão'
   if (entityType === TRASH_TYPES.narrative) return entity.title || 'Evento'
   return entity.name || 'Sem nome'
 }
@@ -111,13 +107,6 @@ function removeFromActiveLists(entityType, entity) {
     return
   }
 
-  if (entityType === TRASH_TYPES.session) {
-    const sessions = useSessionStore.getState().sessions.filter(s => s.id !== id)
-    storage.set(KEYS.sessions, sessions)
-    useSessionStore.setState({ sessions })
-    return
-  }
-
   if (entityType === TRASH_TYPES.group) {
     const groups = useGroupStore.getState().groups.filter(g => g.id !== id)
     storage.set(KEYS.groups, groups)
@@ -153,9 +142,6 @@ function entityExists(entityType, entityId) {
   }
   if (entityType === TRASH_TYPES.campaign) {
     return useCampaignStore.getState().campaigns.some(c => c.id === entityId)
-  }
-  if (entityType === TRASH_TYPES.session) {
-    return useSessionStore.getState().sessions.some(s => s.id === entityId)
   }
   if (entityType === TRASH_TYPES.group) {
     return useGroupStore.getState().groups.some(g => g.id === entityId)
@@ -203,13 +189,6 @@ function restoreToActiveList(entry) {
       storage.set(KEYS.activeCampaign, entityId)
       useCampaignStore.setState({ activeCampaignId: entityId })
     }
-    return
-  }
-
-  if (entityType === TRASH_TYPES.session) {
-    const sessions = [...useSessionStore.getState().sessions, data]
-    storage.set(KEYS.sessions, sessions)
-    useSessionStore.setState({ sessions })
     return
   }
 

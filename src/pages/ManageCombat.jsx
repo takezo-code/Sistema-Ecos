@@ -260,6 +260,7 @@ export function ManageCombat() {
     activeEnemyId,
     rollHistory,
     setCampaign,
+    setCombatGroup,
     setActiveEnemy,
     addRoll,
     deleteRoll,
@@ -284,6 +285,19 @@ export function ManageCombat() {
     () => resolveCombatRoster(characters, groups, activeCampaignId, combatGroupId),
     [characters, groups, activeCampaignId, combatGroupId]
   )
+
+  const campaignGroup = useMemo(
+    () => filterByActiveCampaign(groups, activeCampaignId)[0] ?? null,
+    [groups, activeCampaignId]
+  )
+
+  useEffect(() => {
+    if (!activeCampaignId) return
+    const expectedId = campaignGroup?.id || null
+    if (combatGroupId !== expectedId) {
+      setCombatGroup(expectedId)
+    }
+  }, [activeCampaignId, campaignGroup, combatGroupId, setCombatGroup])
 
   const combatCharacters = useMemo(
     () => roster.map(c => ({
@@ -310,7 +324,7 @@ export function ManageCombat() {
     [campaignEnemies, activeEnemyId]
   )
 
-  const activeGroup = combatGroupId ? groups.find(g => g.id === combatGroupId) : null
+  const activeGroup = combatGroupId ? groups.find(g => g.id === combatGroupId) : campaignGroup
 
   const skillDetail = useMemo(() => {
     if (!skillDetailRef) return null
@@ -416,16 +430,11 @@ export function ManageCombat() {
   const handleActivateSkill = useCallback((actorId, skillId) => {
     const isEnemy = campaignEnemies.some(n => n.id === actorId)
     if (isEnemy) {
-      const enemy = campaignEnemies.find(n => n.id === actorId)
       const res = activateNPCCombatSkill(actorId, skillId)
-      if (res?.ok) {
-        advanceNPCTurn(actorId)
-        const notice = res.warnings?.length
-          ? res.warnings.join(' · ')
-          : `${enemy?.name || 'Inimigo'} agiu — cooldowns atualizados.`
-        setCombatNotice(notice)
-      } else if (res?.warnings?.length) {
+      if (res?.warnings?.length) {
         setCombatNotice(res.warnings.join(' · '))
+      } else if (res?.ok) {
+        setCombatNotice(null)
       } else if (res?.message) {
         setCombatNotice(res.message)
       } else if (res?.error?.message) {
@@ -434,30 +443,18 @@ export function ManageCombat() {
       return res
     }
 
-    const actor = combatCharacters.find(c => c.id === actorId)
     const res = activateSkill(actorId, skillId, {
       allyIds: combatCharacters.map(c => c.id),
     })
-    if (res?.ok) {
-      advanceTurn(actorId)
-      const notice = res.warnings?.length
-        ? res.warnings.join(' · ')
-        : `${actor?.name || 'Personagem'} agiu — cooldowns atualizados.`
-      setCombatNotice(notice)
-    } else if (res?.warnings?.length) {
+    if (res?.warnings?.length) {
       setCombatNotice(res.warnings.join(' · '))
+    } else if (res?.ok) {
+      setCombatNotice(null)
     } else if (res?.message) {
       setCombatNotice(res.message)
     }
     return res
-  }, [
-    activateSkill,
-    activateNPCCombatSkill,
-    advanceNPCTurn,
-    advanceTurn,
-    campaignEnemies,
-    combatCharacters,
-  ])
+  }, [activateSkill, activateNPCCombatSkill, campaignEnemies, combatCharacters])
 
   if (!activeCampaignId) {
     return <ActiveCampaignBanner />
@@ -480,8 +477,11 @@ export function ManageCombat() {
         justifyContent: 'space-between',
         gap: '0.75rem',
         paddingRight: '1rem',
+        flexWrap: 'wrap',
       }}>
-        <DifficultyBar value={dcPreset} onChange={setDcPreset} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+          <DifficultyBar value={dcPreset} onChange={setDcPreset} />
+        </div>
         <RollHistoryDrawer
           rolls={campaignRolls}
           onDelete={deleteRoll}
