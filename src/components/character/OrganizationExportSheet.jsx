@@ -3,12 +3,13 @@ import { EXPORT_SHEET_WIDTH } from './CharacterExportSheet'
 
 const ACCENT = '#d97706'
 
+const SHEET_BG = '#0c0c10'
+
 const SHEET = {
   width: EXPORT_SHEET_WIDTH,
-  minHeight: 1123,
   boxSizing: 'border-box',
   padding: '28px 32px 24px',
-  background: '#0c0c10',
+  background: SHEET_BG,
   color: '#e8e8e8',
   fontFamily: 'Inter, system-ui, sans-serif',
 }

@@ -1,8 +1,8 @@
-import React, { useRef } from 'react'
-import { Save, Upload, RotateCcw, HardDrive, Home, Dices, Trash2 } from 'lucide-react'
+import React from 'react'
+import { RotateCcw, HardDrive, Home, Dices, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import SpotlightCard from '../components/react-bits/SpotlightCard'
-import { exportCampaign, importCampaign, resetAllTestData } from '../services/saveService'
+import { resetAllTestData } from '../services/saveService'
 import { useSaveStore } from '../store/useSaveStore'
 import { useSettingsStore } from '../store/useSettingsStore'
 
@@ -25,38 +25,14 @@ const ACTION_BTN = {
 }
 
 export function Config({ onBackToWelcome, onNavigate }) {
-  const fileRef = useRef(null)
-  const { showToast, setSaving } = useSaveStore()
+  const { showToast } = useSaveStore()
   const { settings } = useSettingsStore()
-
-  const handleExport = () => {
-    setSaving(true)
-    try {
-      exportCampaign()
-    } catch (e) {
-      showToast(e.message || 'Erro ao exportar.', 'error')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleImport = () => fileRef.current?.click()
-
-  const handleFile = async (e) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-    setSaving(true)
-    await importCampaign(file)
-    setSaving(false)
-  }
 
   const handleReset = () => {
     const ok = window.confirm(
       'Apagar TODOS os dados de teste?\n\n'
-      + 'Remove personagens, NPCs, bosses, organizações, grupos, sessões, lixeira e settings.\n'
-      + 'Cria uma campanha vazia nova.\n\n'
-      + 'Isso não tem volta (salve antes se precisar).',
+      + 'Remove todas as campanhas, personagens, NPCs, bosses, organizações, grupos, sessões e lixeira.\n\n'
+      + 'Isso não tem volta (exporte antes se precisar).',
     )
     if (!ok) return
     const ok2 = window.confirm('Confirma mesmo? Tudo será zerado.')
@@ -90,13 +66,15 @@ export function Config({ onBackToWelcome, onNavigate }) {
               letterSpacing: '0.12em',
               marginBottom: '0.5rem',
             }}>
-              SISTEMA
+              CAMPANHAS
             </div>
             <div style={{ fontSize: '0.85rem', color: '#e5e5e5', fontWeight: 600, marginBottom: '0.35rem' }}>
-              Tela inicial
+              Importar, exportar e carregar
             </div>
             <div style={{ fontSize: '0.75rem', color: '#888', lineHeight: 1.5, marginBottom: '1rem' }}>
-              Volta para a tela de boas-vindas sem apagar a campanha — útil para testar a entrada.
+              Salvar ou trazer campanhas de outro computador só na tela inicial, aba
+              {' '}
+              <strong style={{ color: '#bbb', fontWeight: 600 }}>Carregar campanhas</strong>.
             </div>
             <Button
               type="button"
@@ -114,7 +92,7 @@ export function Config({ onBackToWelcome, onNavigate }) {
               }}
             >
               <Home size={15} />
-              Ir para o início
+              Ir para Carregar campanhas
             </Button>
           </SpotlightCard>
 
@@ -132,7 +110,7 @@ export function Config({ onBackToWelcome, onNavigate }) {
               Dados e lixeira
             </div>
             <div style={{ fontSize: '0.75rem', color: '#888', lineHeight: 1.5, marginBottom: '1rem' }}>
-              Rolagem avulsa e recuperação de entidades arquivadas ficam aqui — fora da sidebar principal.
+              Rolagem avulsa e recuperação de entidades arquivadas ficam aqui.
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
               <Button
@@ -174,68 +152,6 @@ export function Config({ onBackToWelcome, onNavigate }) {
             </div>
           </SpotlightCard>
 
-          <SpotlightCard spotlightColor="rgba(37, 99, 235, 0.14)" style={{ padding: '1.25rem' }}>
-            <div style={{
-              fontSize: '0.65rem',
-              color: '#60a5fa',
-              fontFamily: 'monospace',
-              letterSpacing: '0.12em',
-              marginBottom: '0.5rem',
-            }}>
-              CAMPANHA
-            </div>
-            <div style={{ fontSize: '0.85rem', color: '#e5e5e5', fontWeight: 600, marginBottom: '0.35rem' }}>
-              Salvar campanha
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#555', lineHeight: 1.5, marginBottom: '1rem' }}>
-              Exporta o save atual em JSON para o seu computador.
-            </div>
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleExport}
-              tint="#60a5fa"
-              lineColor="#93c5fd"
-              baseColor="#3b82f6"
-              textColor="#93c5fd"
-              {...ACTION_BTN}
-            >
-              <Save size={15} />
-              Salvar Campanha
-            </Button>
-          </SpotlightCard>
-
-          <SpotlightCard spotlightColor="rgba(212, 212, 216, 0.1)" style={{ padding: '1.25rem' }}>
-            <div style={{
-              fontSize: '0.65rem',
-              color: '#a1a1aa',
-              fontFamily: 'monospace',
-              letterSpacing: '0.12em',
-              marginBottom: '0.5rem',
-            }}>
-              IMPORTAR
-            </div>
-            <div style={{ fontSize: '0.85rem', color: '#e5e5e5', fontWeight: 600, marginBottom: '0.35rem' }}>
-              Importar campanha
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#555', lineHeight: 1.5, marginBottom: '1rem' }}>
-              Carrega um arquivo JSON de campanha salvo anteriormente.
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleImport}
-              tint="#ffffff"
-              lineColor="#d4d4d8"
-              baseColor="#71717a"
-              textColor="#a1a1aa"
-              {...ACTION_BTN}
-            >
-              <Upload size={15} />
-              Importar
-            </Button>
-          </SpotlightCard>
-
           <SpotlightCard spotlightColor="rgba(239, 68, 68, 0.12)" style={{ padding: '1.25rem' }}>
             <div style={{
               fontSize: '0.65rem',
@@ -250,7 +166,7 @@ export function Config({ onBackToWelcome, onNavigate }) {
               Resetar tudo
             </div>
             <div style={{ fontSize: '0.75rem', color: '#555', lineHeight: 1.5, marginBottom: '1rem' }}>
-              Apaga personagens, NPCs, bosses, orgs e demais dados de teste. Não tem volta.
+              Apaga todas as campanhas e dados locais. Não tem volta.
             </div>
             <Button
               type="button"
@@ -278,19 +194,11 @@ export function Config({ onBackToWelcome, onNavigate }) {
               padding: '0.25rem 0.15rem',
             }}>
               <HardDrive size={12} />
-              Último save: {lastLabel}
+              Última exportação: {lastLabel}
             </div>
           )}
         </div>
       </div>
-
-      <input
-        ref={fileRef}
-        type="file"
-        accept=".json,application/json"
-        style={{ display: 'none' }}
-        onChange={handleFile}
-      />
     </div>
   )
 }

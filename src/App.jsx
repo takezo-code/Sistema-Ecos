@@ -86,6 +86,7 @@ function migrateUiState(savedUi) {
 
 export default function App() {
   const [inApp, setInApp] = useState(() => isAppBootstrapped())
+  const [welcomeTab, setWelcomeTab] = useState('load')
   const savedUi = loadUiState()
   const migrated = migrateUiState(savedUi)
 
@@ -164,7 +165,7 @@ export default function App() {
         : activePage === 'campanha'
           ? { initialView: campanhaView, onViewChange: setCampanhaView, onNavigate: handleNavigate }
           : activePage === 'config'
-            ? { onNavigate: handleNavigate, onBackToWelcome: () => setInApp(false) }
+            ? { onNavigate: handleNavigate, onBackToWelcome: () => { setWelcomeTab('load'); setInApp(false) } }
             : { onNavigate: handleNavigate }
 
   const shell = !inApp ? (
@@ -172,6 +173,7 @@ export default function App() {
       <WelcomeScreen
         onEnter={() => setInApp(true)}
         canContinue={isAppBootstrapped()}
+        initialTab={welcomeTab}
       />
       <SaveToast />
     </>

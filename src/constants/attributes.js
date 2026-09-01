@@ -1,6 +1,6 @@
 import { getXpRequiredForLevel } from './progression'
 import { migrateGameEntityExtras, migrateSkills } from '../models/gameEntity'
-import { entityHasEcoPowers, isNpcEntity, sanitizeEntityForEcoFlag } from './entityProgression'
+import { entityHasEcoPowers, sanitizeEntityForEcoFlag } from './entityProgression'
 import { normalizeClassId } from './classes'
 
 export const ATTRIBUTES = [

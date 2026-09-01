@@ -76,6 +76,7 @@ async function captureSheet(entity, kind) {
       backgroundColor: '#0c0c10',
       cacheBust: true,
       width: EXPORT_SHEET_WIDTH,
+      height: mounted.node.scrollHeight,
     })
     return canvas
   } finally {
@@ -100,22 +101,38 @@ async function canvasToPng(canvas, filename) {
 async function canvasToPdf(canvas, filename) {
   const { jsPDF } = await import('jspdf')
   const imgData = canvas.toDataURL('image/png')
-  const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
-  const pageW = pdf.internal.pageSize.getWidth()
-  const pageH = pdf.internal.pageSize.getHeight()
+  const pageW = 210
+  const pageH = 297
   const imgW = pageW
   const imgH = (canvas.height * pageW) / canvas.width
 
-  let heightLeft = imgH
-  let position = 0
-  pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH)
-  heightLeft -= pageH
+  const fillPageBackground = (pdf) => {
+    const [r, g, b] = [12, 12, 16]
+    pdf.setFillColor(r, g, b)
+    pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight(), 'F')
+  }
 
-  while (heightLeft > 0) {
-    position -= pageH
-    pdf.addPage()
+  let pdf
+  if (imgH <= pageH) {
+    pdf = new jsPDF({ unit: 'mm', format: [pageW, imgH], orientation: 'portrait' })
+    fillPageBackground(pdf)
+    pdf.addImage(imgData, 'PNG', 0, 0, imgW, imgH)
+  } else {
+    pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
+    let heightLeft = imgH
+    let position = 0
+
+    fillPageBackground(pdf)
     pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH)
     heightLeft -= pageH
+
+    while (heightLeft > 0) {
+      position -= pageH
+      pdf.addPage()
+      fillPageBackground(pdf)
+      pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH)
+      heightLeft -= pageH
+    }
   }
 
   pdf.save(filename)

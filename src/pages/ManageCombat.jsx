@@ -354,9 +354,14 @@ export function ManageCombat() {
       actorId: character.id,
       actorType: 'player',
     })
+
     advanceTurn(character.id)
-    if (activeEnemyId) advanceNPCTurn(activeEnemyId)
-  }, [advanceTurn, advanceNPCTurn, activeEnemyId, dcPreset, recordRoll])
+    setCombatNotice(`${character.name} agiu — cooldowns atualizados.`)
+  }, [
+    advanceTurn,
+    dcPreset,
+    recordRoll,
+  ])
 
   const handleApplyMarks = useCallback((character, markType) => {
     const result = applyDamageMarks(character.id, markType)
@@ -395,6 +400,7 @@ export function ManageCombat() {
       actorType: 'enemy',
     })
     advanceNPCTurn(enemy.id)
+    setCombatNotice(`${enemy.name} agiu — cooldown do inimigo atualizado.`)
   }, [advanceNPCTurn, dcPreset, recordRoll])
 
   const handleEnemyApplyMarks = useCallback((markType) => {
@@ -410,11 +416,16 @@ export function ManageCombat() {
   const handleActivateSkill = useCallback((actorId, skillId) => {
     const isEnemy = campaignEnemies.some(n => n.id === actorId)
     if (isEnemy) {
+      const enemy = campaignEnemies.find(n => n.id === actorId)
       const res = activateNPCCombatSkill(actorId, skillId)
-      if (res?.warnings?.length) {
+      if (res?.ok) {
+        advanceNPCTurn(actorId)
+        const notice = res.warnings?.length
+          ? res.warnings.join(' · ')
+          : `${enemy?.name || 'Inimigo'} agiu — cooldowns atualizados.`
+        setCombatNotice(notice)
+      } else if (res?.warnings?.length) {
         setCombatNotice(res.warnings.join(' · '))
-      } else if (res?.ok) {
-        setCombatNotice(null)
       } else if (res?.message) {
         setCombatNotice(res.message)
       } else if (res?.error?.message) {
@@ -423,18 +434,30 @@ export function ManageCombat() {
       return res
     }
 
+    const actor = combatCharacters.find(c => c.id === actorId)
     const res = activateSkill(actorId, skillId, {
       allyIds: combatCharacters.map(c => c.id),
     })
-    if (res?.warnings?.length) {
+    if (res?.ok) {
+      advanceTurn(actorId)
+      const notice = res.warnings?.length
+        ? res.warnings.join(' · ')
+        : `${actor?.name || 'Personagem'} agiu — cooldowns atualizados.`
+      setCombatNotice(notice)
+    } else if (res?.warnings?.length) {
       setCombatNotice(res.warnings.join(' · '))
-    } else if (res?.ok) {
-      setCombatNotice(null)
     } else if (res?.message) {
       setCombatNotice(res.message)
     }
     return res
-  }, [activateSkill, activateNPCCombatSkill, campaignEnemies, combatCharacters])
+  }, [
+    activateSkill,
+    activateNPCCombatSkill,
+    advanceNPCTurn,
+    advanceTurn,
+    campaignEnemies,
+    combatCharacters,
+  ])
 
   if (!activeCampaignId) {
     return <ActiveCampaignBanner />
