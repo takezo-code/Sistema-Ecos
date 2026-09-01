@@ -410,3 +410,25 @@ html, body {
 }
 
 .mono { font-family: monospace; }
+
+.welcome-campaign-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+}
+
+.welcome-campaign-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.welcome-campaign-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.welcome-campaign-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 999px;
+}
+
+.welcome-campaign-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.55);
+}

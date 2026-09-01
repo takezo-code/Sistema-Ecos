@@ -1,143 +1,74 @@
 import React, { useState } from 'react'
-import {
-  Download,
-  FolderGit2,
-  Hexagon,
-  Sparkles,
-  Swords,
-} from 'lucide-react'
-import { downloadPlayerManualPdf } from '../services/playerManualPdf'
+import { Hexagon } from 'lucide-react'
+import { downloadManualById } from '../services/manualDownloads'
 import { useSaveStore } from '../store/useSaveStore'
+import { markWelcomeIntroSeen } from '../services/welcomeService'
 import { THEME_ACCENT, THEME_ACCENT_SOFT, THEME_ACCENT_BORDER } from '../constants/theme'
-import { GITHUB_REPO_URL } from '../constants/welcomeIntro'
-import Stepper, { Step } from '../components/react-bits/Stepper'
 import GlassSurface from '../components/react-bits/GlassSurface'
+import { WelcomeIntro } from '../components/welcome/WelcomeIntro'
+import { WelcomeHome } from '../components/welcome/WelcomeHome'
 import { CampaignLoadPanel } from '../components/welcome/CampaignLoadPanel'
+import { WelcomeContentsPanel } from '../components/welcome/WelcomeContentsPanel'
 
-function ResourceLink({ href, icon: Icon, children }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '0.4rem',
-        padding: '0.5rem 0.75rem',
-        borderRadius: 8,
-        border: '1px solid rgba(255,255,255,0.1)',
-        background: 'rgba(255,255,255,0.04)',
-        color: '#c4b5fd',
-        fontSize: '0.72rem',
-        textDecoration: 'none',
-        fontWeight: 600,
-      }}
-    >
-      <Icon size={13} />
-      {children}
-    </a>
-  )
+const PHASE_MAX_WIDTH = {
+  intro: 500,
+  home: 480,
+  load: 540,
+  contents: 480,
 }
 
-function StepCopy({ eyebrow, title, children }) {
-  return (
-    <div style={{ padding: '0.35rem 0 0.75rem', textAlign: 'left' }}>
-      <div style={{
-        fontSize: '0.58rem',
-        fontFamily: 'monospace',
-        letterSpacing: '0.12em',
-        color: THEME_ACCENT,
-        marginBottom: '0.45rem',
-        fontWeight: 700,
-      }}>
-        {eyebrow}
-      </div>
-      <h2 style={{
-        fontSize: '1.15rem',
-        fontWeight: 700,
-        color: '#f0f0f0',
-        marginBottom: '0.55rem',
-        letterSpacing: '-0.02em',
-        lineHeight: 1.25,
-      }}>
-        {title}
-      </h2>
-      <div style={{
-        fontSize: '0.82rem',
-        color: '#9a9a9a',
-        lineHeight: 1.55,
-      }}>
-        {children}
-      </div>
-    </div>
-  )
+const PHASE_SHELL_STYLE = {
+  load: {
+    width: '100%',
+    height: 'min(88vh, 820px)',
+    maxHeight: 'min(92vh, 860px)',
+    minHeight: 'min(72vh, 640px)',
+    display: 'flex',
+    flexDirection: 'column',
+  },
 }
 
-function WelcomeTabs({ tab, onChange }) {
-  const tabs = [
-    { id: 'intro', label: 'Conhecer' },
-    { id: 'load', label: 'Carregar campanhas' },
-  ]
+function ModePill({ children, active = true }) {
   return (
-    <div style={{
-      display: 'flex',
-      gap: 4,
-      marginBottom: '1rem',
-      padding: 4,
+    <span style={{
+      flex: 1,
+      textAlign: 'center',
+      padding: '0.55rem 0.75rem',
       borderRadius: 10,
-      background: 'rgba(255,255,255,0.03)',
-      border: '1px solid rgba(255,255,255,0.06)',
+      fontSize: '0.78rem',
+      fontWeight: 600,
+      letterSpacing: '0.02em',
+      color: active ? '#f5f5f5' : '#666',
+      background: active ? 'rgba(124, 58, 237, 0.35)' : 'transparent',
+      border: active ? '1px solid rgba(167, 139, 250, 0.35)' : '1px solid transparent',
     }}>
-      {tabs.map(item => {
-        const active = tab === item.id
-        return (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => onChange(item.id)}
-            style={{
-              flex: 1,
-              border: 'none',
-              borderRadius: 8,
-              padding: '0.5rem 0.65rem',
-              fontSize: '0.72rem',
-              fontWeight: active ? 700 : 600,
-              fontFamily: 'monospace',
-              letterSpacing: '0.04em',
-              cursor: 'pointer',
-              color: active ? '#f0f0f0' : '#777',
-              background: active ? 'rgba(168,85,247,0.22)' : 'transparent',
-              transition: 'background 0.15s, color 0.15s',
-            }}
-          >
-            {item.label}
-          </button>
-        )
-      })}
-    </div>
+      {children}
+    </span>
   )
 }
 
-export function WelcomeScreen({ onEnter, canContinue = false, initialTab = null }) {
-  const [manualLoading, setManualLoading] = useState(false)
-  const [step, setStep] = useState(1)
-  const [tab, setTab] = useState(initialTab || (canContinue ? 'load' : 'intro'))
+/** intro (3 passos) → home → load | contents */
+export function WelcomeScreen({ onEnter, initialPhase = 'intro' }) {
+  const [phase, setPhase] = useState(initialPhase)
+  const [pdfLoadingId, setPdfLoadingId] = useState(null)
   const { showToast } = useSaveStore()
 
-  const handleManualDownload = async () => {
-    setManualLoading(true)
+  const handleDownloadPdf = async (manualId) => {
+    setPdfLoadingId(manualId)
     try {
-      await downloadPlayerManualPdf()
-      showToast('Manual do jogador baixado em PDF.', 'success')
+      const item = await downloadManualById(manualId)
+      showToast(`${item.label.replace('PDF — ', '')} baixado.`, 'success')
     } catch (e) {
-      showToast(e.message || 'Erro ao gerar o PDF do manual.', 'error')
+      showToast(e.message || 'Erro ao gerar PDF.', 'error')
     } finally {
-      setManualLoading(false)
+      setPdfLoadingId(null)
     }
   }
 
-  const isLastStep = step === 3
+  const finishIntro = () => {
+    markWelcomeIntroSeen()
+    setPhase('home')
+  }
 
   return (
     <div style={{
@@ -153,15 +84,28 @@ export function WelcomeScreen({ onEnter, canContinue = false, initialTab = null 
       <GlassSurface
         borderRadius={18}
         padding="1.5rem 1.35rem 1.35rem"
+        className={phase === 'load' ? 'welcome-shell-tall' : ''}
         style={{
           width: '100%',
-          maxWidth: tab === 'load' ? 520 : 480,
+          maxWidth: PHASE_MAX_WIDTH[phase] || 500,
           background: 'rgba(10, 10, 14, 0.92)',
           border: '1px solid rgba(255,255,255,0.1)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.55)',
+          ...(PHASE_SHELL_STYLE[phase] || {}),
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: phase === 'load' ? '1 1 auto' : undefined,
+          minHeight: phase === 'load' ? 0 : undefined,
+          overflow: phase === 'load' ? 'hidden' : undefined,
+        }}>
+        <header style={{
+          textAlign: 'center',
+          marginBottom: phase === 'intro' ? '0.85rem' : '1rem',
+          flexShrink: 0,
+        }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -181,122 +125,57 @@ export function WelcomeScreen({ onEnter, canContinue = false, initialTab = null 
             letterSpacing: '0.18em',
             color: '#f5f5f5',
             fontFamily: 'monospace',
-            marginBottom: '0.35rem',
+            marginBottom: 0,
           }}>
             ECOS
           </h1>
-          <p style={{
-            fontSize: '0.78rem',
-            color: '#888',
-            lineHeight: 1.45,
-            maxWidth: 340,
-            margin: '0 auto',
+        </header>
+
+        {phase === 'intro' ? (
+          <div style={{
+            display: 'flex',
+            gap: '0.45rem',
+            marginBottom: '1rem',
+            padding: '0.2rem',
+            borderRadius: 12,
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.06)',
           }}>
-            Bem-vindo ao sistema. Organize campanha, fichas, combate e Eco numa mesa só.
-          </p>
+            <ModePill>Conhecer</ModePill>
+          </div>
+        ) : null}
+
+        {phase === 'intro' ? (
+          <WelcomeIntro
+            onComplete={finishIntro}
+            pdfLoadingId={pdfLoadingId}
+            onDownloadPdf={handleDownloadPdf}
+          />
+        ) : null}
+
+        {phase === 'home' ? (
+          <WelcomeHome
+            onNewCampaign={() => onEnter?.()}
+            onOpenLoad={() => setPhase('load')}
+            onOpenContents={() => setPhase('contents')}
+          />
+        ) : null}
+
+        {phase === 'load' ? (
+          <CampaignLoadPanel
+            onBack={() => setPhase('home')}
+            onPlay={() => onEnter?.()}
+          />
+        ) : null}
+
+        {phase === 'contents' ? (
+          <WelcomeContentsPanel
+            onBack={() => setPhase('home')}
+            onDownloadPdf={handleDownloadPdf}
+            pdfLoadingId={pdfLoadingId}
+          />
+        ) : null}
         </div>
-
-        <WelcomeTabs tab={tab} onChange={setTab} />
-
-        {tab === 'load' ? (
-          <CampaignLoadPanel onPlay={() => onEnter?.()} />
-        ) : (
-          <>
-            <Stepper
-              step={step}
-              onStepChange={setStep}
-              hideDefaultNav={isLastStep}
-              nextButtonText="Continuar"
-              backButtonText="Voltar"
-              stepCircleContainerClassName="welcome-stepper-flat"
-              style={{ width: '100%' }}
-            >
-              <Step>
-                <StepCopy eyebrow="01 · BOAS-VINDAS" title="Vocês carregam o Eco">
-                  <p style={{ margin: 0 }}>
-                    Ecos é um RPG temporal. O Eco dobra percepção, tempo e corpo —
-                    não é magia limpa. Cada uso deixa resíduo na narrativa e na ficha.
-                  </p>
-                </StepCopy>
-              </Step>
-
-              <Step>
-                <StepCopy eyebrow="02 · COMBATE" title="Sem HP clássico">
-                  <p style={{ margin: '0 0 0.65rem' }}>
-                    Dano vira marcas (Leve e Grave). Conforme sobem, o corpo piora:
-                    Saudável → Ferido → Grave → Incapacitado.
-                  </p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#a3a3a3', fontSize: '0.75rem' }}>
-                    <Swords size={14} style={{ color: THEME_ACCENT }} />
-                    Vitalidade só atrasa a queda — não é barra de vida infinita.
-                  </div>
-                </StepCopy>
-              </Step>
-
-              <Step>
-                <StepCopy eyebrow="03 · ECO" title="Ruptura e sobrecarga">
-                  <p style={{ margin: '0 0 0.65rem' }}>
-                    Skills gastam usos de Ruptura. No limite ainda é Estável.
-                    Passar disso abala a mente — e continua degradando se insistir.
-                  </p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#a3a3a3', fontSize: '0.75rem' }}>
-                    <Sparkles size={14} style={{ color: '#a855f7' }} />
-                    O app calcula; a mesa decide o drama.
-                  </div>
-                </StepCopy>
-              </Step>
-            </Stepper>
-
-            {isLastStep && (
-              <div style={{ marginTop: '0.75rem' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginBottom: '1rem' }}>
-                  <button
-                    type="button"
-                    onClick={handleManualDownload}
-                    disabled={manualLoading}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                      padding: '0.5rem 0.75rem',
-                      borderRadius: 8,
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      background: 'rgba(255,255,255,0.04)',
-                      color: '#c4b5fd',
-                      fontSize: '0.72rem',
-                      fontWeight: 600,
-                      cursor: manualLoading ? 'wait' : 'pointer',
-                      opacity: manualLoading ? 0.7 : 1,
-                    }}
-                  >
-                    <Download size={13} />
-                    {manualLoading ? 'Gerando PDF…' : 'Manual do jogador (PDF)'}
-                  </button>
-                  <ResourceLink href={GITHUB_REPO_URL} icon={FolderGit2}>
-                    GitHub
-                  </ResourceLink>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setTab('load')}
-                  style={{
-                    width: '100%',
-                    border: '1px solid rgba(168,85,247,0.35)',
-                    borderRadius: 10,
-                    padding: '0.75rem 1rem',
-                    background: 'rgba(168,85,247,0.12)',
-                    color: '#e9d5ff',
-                    fontSize: '0.82rem',
-                    fontWeight: 650,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Ir para Carregar campanhas →
-                </button>
-              </div>
-            )}
-          </>
-        )}
       </GlassSurface>
     </div>
   )

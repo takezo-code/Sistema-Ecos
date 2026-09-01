@@ -58,6 +58,7 @@ export function Button({
         width: block ? '100%' : undefined,
         alignItems: block ? 'center' : undefined,
         justifyContent: block ? 'center' : undefined,
+        gap: block ? '0.55rem' : undefined,
         ...style,
       }}
       disabled={disabled}

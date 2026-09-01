@@ -437,11 +437,12 @@ export function activateCampaign(campaignId) {
   persistWorkspaceFromStores()
 }
 
-export function addCampaign(campaignName = 'Nova Campanha') {
+export function addCampaign(campaignName) {
+  const name = String(campaignName || '').trim() || suggestCampaignName()
   const now = new Date().toISOString()
   const campaign = {
     id: genId(),
-    name: campaignName,
+    name,
     description: '',
     timeline: { past: '', present: '', future: '' },
     status: 'ativa',
@@ -452,6 +453,36 @@ export function addCampaign(campaignName = 'Nova Campanha') {
   useCampaignStore.setState({ campaigns, activeCampaignId: campaign.id })
   persistWorkspaceFromStores()
   return campaign
+}
+
+export function suggestCampaignName(base = 'Campanha') {
+  const campaigns = useCampaignStore.getState().campaigns || []
+  const existing = new Set(campaigns.map(c => String(c.name || '').trim().toLowerCase()))
+  const root = String(base || 'Campanha').trim() || 'Campanha'
+  if (!existing.has(root.toLowerCase())) return root
+  let n = 2
+  while (existing.has(`${root} ${n}`.toLowerCase())) n += 1
+  return `${root} ${n}`
+}
+
+export function renameCampaign(campaignId, campaignName) {
+  const name = String(campaignName || '').trim()
+  if (!name) throw new Error('Informe um nome para a campanha.')
+  const exists = (useCampaignStore.getState().campaigns || []).some(c => c.id === campaignId)
+  if (!exists) throw new Error('Campanha não encontrada.')
+  useCampaignStore.getState().updateCampaign(campaignId, { name })
+  persistWorkspaceFromStores()
+}
+
+export function removeCampaign(campaignId) {
+  const result = useCampaignStore.getState().deleteCampaign(campaignId)
+  if (!result?.ok) throw new Error(result?.message || 'Não foi possível excluir a campanha.')
+  persistWorkspaceFromStores()
+  const { campaigns, activeCampaignId } = useCampaignStore.getState()
+  if (campaigns.length && !activeCampaignId) {
+    activateCampaign(campaigns[campaigns.length - 1].id)
+  }
+  return result
 }
 
 export function getCampaignSlotSummary(campaignId, stores = {}) {

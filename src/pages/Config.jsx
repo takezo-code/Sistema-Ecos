@@ -72,9 +72,9 @@ export function Config({ onBackToWelcome, onNavigate }) {
               Importar, exportar e carregar
             </div>
             <div style={{ fontSize: '0.75rem', color: '#888', lineHeight: 1.5, marginBottom: '1rem' }}>
-              Salvar ou trazer campanhas de outro computador só na tela inicial, aba
+              Salvar ou trazer campanhas de outro computador na tela inicial, em
               {' '}
-              <strong style={{ color: '#bbb', fontWeight: 600 }}>Carregar campanhas</strong>.
+              <strong style={{ color: '#bbb', fontWeight: 600 }}>Carregar campanha</strong>.
             </div>
             <Button
               type="button"
@@ -92,7 +92,7 @@ export function Config({ onBackToWelcome, onNavigate }) {
               }}
             >
               <Home size={15} />
-              Ir para Carregar campanhas
+              Ir para tela inicial
             </Button>
           </SpotlightCard>
 

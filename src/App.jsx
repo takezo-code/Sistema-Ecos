@@ -10,7 +10,8 @@ import { Dice } from './pages/Dice'
 import { Trash } from './pages/Trash'
 import { Creation } from './pages/Creation'
 import { Config } from './pages/Config'
-import { isAppBootstrapped, persistUiState, autoSave } from './services/saveService'
+import { persistUiState, autoSave } from './services/saveService'
+import { isWelcomeIntroSeen } from './services/welcomeService'
 import { storage, KEYS } from './services/storage'
 import { EvilEyeLayer } from './components/react-bits/EvilEyeLayer'
 import ClickSpark from './components/react-bits/ClickSpark'
@@ -84,8 +85,10 @@ function migrateUiState(savedUi) {
 }
 
 export default function App() {
-  const [inApp, setInApp] = useState(() => isAppBootstrapped())
-  const [welcomeTab, setWelcomeTab] = useState('load')
+  const [inApp, setInApp] = useState(false)
+  const [welcomePhase, setWelcomePhase] = useState(() => (
+    isWelcomeIntroSeen() ? 'home' : 'intro'
+  ))
   const savedUi = loadUiState()
   const migrated = migrateUiState(savedUi)
 
@@ -164,15 +167,14 @@ export default function App() {
         : activePage === 'campanha'
           ? { initialView: campanhaView, onViewChange: setCampanhaView, onNavigate: handleNavigate }
           : activePage === 'config'
-            ? { onNavigate: handleNavigate, onBackToWelcome: () => { setWelcomeTab('load'); setInApp(false) } }
+            ? { onNavigate: handleNavigate, onBackToWelcome: () => { setWelcomePhase('home'); setInApp(false) } }
             : { onNavigate: handleNavigate }
 
   const shell = !inApp ? (
     <>
       <WelcomeScreen
         onEnter={() => setInApp(true)}
-        canContinue={isAppBootstrapped()}
-        initialTab={welcomeTab}
+        initialPhase={welcomePhase}
       />
       <SaveToast />
     </>

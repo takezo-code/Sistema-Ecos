@@ -58,6 +58,7 @@ export const KEYS = {
   autosave: 'autosave_campaign',
   autosaveAt: 'autosave_at',
   appBootstrapped: 'app_bootstrapped',
+  welcomeIntroSeen: 'welcome_intro_seen',
   skillsCatalog: 'skills_catalog_custom',
   combatSession: 'combat_session',
   trash: 'trash',

@@ -23,6 +23,17 @@
   width: 100%;
   min-width: 0;
   flex: 1 1 auto;
+  min-height: 0;
+}
+
+.glass-surface.welcome-shell-tall {
+  min-height: 0;
+}
+
+.glass-surface.welcome-shell-tall > .glass-surface-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
 }
 
 .modal-glass-shell {
