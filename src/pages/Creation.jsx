@@ -42,7 +42,7 @@ const ARTEFATO_TYPES = [
   },
   {
     id: 'organizations',
-    label: 'Org',
+    label: 'Organização',
     description: 'Facção, corporação, culto ou grupo organizado da campanha.',
     icon: Building2,
     color: '#d97706',
@@ -161,7 +161,7 @@ export function Creation({
             <div style={{ fontSize: '0.75rem', color: '#444' }}>
               {activeCampaignId
                 ? 'Escolha o tipo de artefato.'
-                : 'Selecione uma campanha ativa para criar artefatos (player, NPC, boss, org).'}
+                : 'Selecione uma campanha ativa para criar artefatos (player, NPC, boss, organização).'}
             </div>
           </div>
 

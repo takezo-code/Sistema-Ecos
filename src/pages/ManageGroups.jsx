@@ -431,237 +431,288 @@ export function ManageGroups() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <div style={{ padding: '1.1rem 1.5rem 0.55rem', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
-          <div style={{
-            fontSize: '1.05rem',
-            fontWeight: 700,
-            color: '#f5f5f5',
-            letterSpacing: '-0.02em',
-            minWidth: 0,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}>
-            {activeGroup.name}
-          </div>
-          <FloatingTooltip.Provider>
-            <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', flexShrink: 0 }}>
-              <FloatingTooltip.Trigger content="Editar grupo">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="xs"
-                  onClick={() => setGroupModal({ mode: 'edit', group: activeGroup })}
-                  style={{ display: 'flex', padding: '6px' }}
-                >
-                  <Pencil size={13} />
-                </Button>
-              </FloatingTooltip.Trigger>
-              <FloatingTooltip.Trigger content="Excluir grupo">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="xs"
-                  onClick={() => setDeleteConfirm(activeGroup)}
-                  style={{ display: 'flex', padding: '6px' }}
-                >
-                  <Trash2 size={13} />
-                </Button>
-              </FloatingTooltip.Trigger>
-            </div>
-          </FloatingTooltip.Provider>
-        </div>
-        {activeGroup.description && (
-          <div style={{ fontSize: '0.75rem', color: '#777', marginTop: 4, lineHeight: 1.4 }}>
-            {activeGroup.description}
-          </div>
-        )}
-      </div>
-
       <div style={{
-        padding: '0 1.5rem 1rem',
-        display: 'flex',
-        gap: '0.5rem',
-        alignItems: 'center',
-        flexWrap: 'wrap',
+        padding: '1rem 1.5rem 0.85rem',
         flexShrink: 0,
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        gap: '1rem',
+        flexWrap: 'wrap',
       }}>
-        <Button
-          onClick={() => setAddMemberOpen(true)}
-          disabled={availableToAdd.length === 0}
-          size="xs"
-          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-          title={availableToAdd.length === 0 ? 'Nenhum personagem em espera nesta campanha' : 'Adicionar personagem ao grupo'}
-        >
-          <UserPlus size={13} /> Adicionar membro
-        </Button>
-        <div style={{ position: 'relative' }}>
-          <Button
-            type="button"
-            variant="secondary"
-            size="xs"
-            disabled={members.length === 0}
-            onClick={() => setUltraXpOpen(o => !o)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-              borderColor: ultraXpOpen ? 'rgba(168,85,247,0.4)' : undefined,
-              color: ultraXpOpen ? '#a855f7' : undefined,
-            }}
-          >
-            <Sparkles size={13} /> Ultra XP
-          </Button>
-          {ultraXpOpen && (
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
             <div style={{
-              position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 20,
-              minWidth: '260px',
-              background: 'rgba(12,12,16,0.96)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 12,
-              boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
+              fontSize: '1.05rem',
+              fontWeight: 700,
+              color: '#f5f5f5',
+              letterSpacing: '-0.02em',
+              minWidth: 0,
               overflow: 'hidden',
-              backdropFilter: 'blur(12px)',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
             }}>
-              <div style={{ padding: '0.65rem 0.85rem' }}>
-                <div style={{ fontSize: '0.6rem', color: '#a855f7', fontFamily: 'monospace', letterSpacing: '0.08em' }}>
-                  BÔNUS DE FIM DE SESSÃO
-                </div>
-                <div style={{ fontSize: '0.65rem', color: '#666', marginTop: 3 }}>
-                  Aplica a todos os membros do grupo
-                </div>
+              {activeGroup.name}
+            </div>
+            <FloatingTooltip.Provider>
+              <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', flexShrink: 0 }}>
+                <FloatingTooltip.Trigger content="Editar grupo">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="xs"
+                    onClick={() => setGroupModal({ mode: 'edit', group: activeGroup })}
+                    style={{ display: 'flex', padding: '6px' }}
+                  >
+                    <Pencil size={13} />
+                  </Button>
+                </FloatingTooltip.Trigger>
+                <FloatingTooltip.Trigger content="Excluir grupo">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="xs"
+                    onClick={() => setDeleteConfirm(activeGroup)}
+                    style={{ display: 'flex', padding: '6px' }}
+                  >
+                    <Trash2 size={13} />
+                  </Button>
+                </FloatingTooltip.Trigger>
               </div>
-              {SESSION_ULTRA_XP_TIERS.map(tier => (
-                <button
-                  key={tier.id}
-                  type="button"
-                  onClick={() => handleUltraXp(tier)}
-                  style={{
-                    width: '100%', textAlign: 'left', padding: '0.65rem 0.85rem',
-                    background: 'transparent', border: 'none',
-                    cursor: 'pointer', transition: 'background 0.15s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: tier.color }}>{tier.label}</span>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#e5e5e5', fontFamily: 'monospace' }}>+{tier.xp}</span>
-                  </div>
-                  <div style={{ fontSize: '0.65rem', color: '#666', marginTop: 2 }}>{tier.hint}</div>
-                </button>
-              ))}
+            </FloatingTooltip.Provider>
+          </div>
+          {activeGroup.description && (
+            <div style={{ fontSize: '0.72rem', color: '#666', marginTop: 4, lineHeight: 1.4 }}>
+              {activeGroup.description}
             </div>
           )}
         </div>
-        {lastUltraXp && (
-          <span style={{ fontSize: '0.65rem', color: '#a855f7', fontFamily: 'monospace' }}>
-            Último: {lastUltraXp.label} · +{lastUltraXp.xp}
-          </span>
-        )}
 
-        <FloatingTooltip.Provider>
-          <FloatingTooltip.Trigger content="Limpa marcas de todos. Eco só zera na Sutura (Void).">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.35rem',
+          flexWrap: 'wrap',
+          justifyContent: 'flex-end',
+          flexShrink: 0,
+        }}>
+          <div style={{ position: 'relative' }}>
             <Button
               type="button"
               variant="secondary"
               size="xs"
               disabled={members.length === 0}
-              onClick={() => {
-                const ids = members.map(m => m.id)
-                const { recovered, missing, ecoReset } = recoverGroupMembers(ids)
-                if (recovered > 0) {
-                  showToast(
-                    `Descanso: ${recovered} personagem${recovered > 1 ? 's' : ''} (marcas limpas${ecoReset > 0 ? ` · Eco da Sutura: ${ecoReset}` : ''}).`,
-                    'success',
-                  )
-                } else if (missing > 0) {
-                  showToast('Alguns membros do grupo não foram encontrados na campanha.', 'error')
-                } else {
-                  showToast('Adicione membros ao grupo para descansar.', 'info')
-                }
+              onClick={() => setUltraXpOpen(o => !o)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.35rem',
+                borderColor: ultraXpOpen ? 'rgba(168,85,247,0.4)' : undefined,
+                color: ultraXpOpen ? '#a855f7' : undefined,
               }}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
             >
-              <RotateCcw size={12} /> Descansar
+              <Sparkles size={12} /> Ultra XP
             </Button>
-          </FloatingTooltip.Trigger>
-          <FloatingTooltip.Trigger content="Fim de sessão: zera Eco de todas as classes do grupo">
-            <Button
-              type="button"
-              variant="secondary"
-              size="xs"
-              disabled={members.length === 0}
-              onClick={() => {
-                const ids = members.map(m => m.id)
-                const { reset } = endSessionRestEco(ids)
-                if (reset > 0) {
-                  showToast(
-                    `Sessão encerrada: Eco resetado em ${reset} personagem${reset > 1 ? 's' : ''}.`,
-                    'success',
-                  )
-                } else {
-                  showToast('Adicione membros ao grupo para encerrar a sessão.', 'info')
-                }
-              }}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-            >
-              Encerrar sessão
-            </Button>
-          </FloatingTooltip.Trigger>
-        </FloatingTooltip.Provider>
+            {ultraXpOpen && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 20,
+                minWidth: '260px',
+                background: 'rgba(12,12,16,0.96)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 12,
+                boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
+                overflow: 'hidden',
+                backdropFilter: 'blur(12px)',
+              }}>
+                <div style={{ padding: '0.65rem 0.85rem' }}>
+                  <div style={{ fontSize: '0.6rem', color: '#a855f7', fontFamily: 'monospace', letterSpacing: '0.08em' }}>
+                    BÔNUS DE FIM DE SESSÃO
+                  </div>
+                  <div style={{ fontSize: '0.65rem', color: '#666', marginTop: 3 }}>
+                    Aplica a todos os membros do grupo
+                  </div>
+                </div>
+                {SESSION_ULTRA_XP_TIERS.map(tier => (
+                  <button
+                    key={tier.id}
+                    type="button"
+                    onClick={() => handleUltraXp(tier)}
+                    style={{
+                      width: '100%', textAlign: 'left', padding: '0.65rem 0.85rem',
+                      background: 'transparent', border: 'none',
+                      cursor: 'pointer', transition: 'background 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 600, color: tier.color }}>{tier.label}</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#e5e5e5', fontFamily: 'monospace' }}>+{tier.xp}</span>
+                    </div>
+                    <div style={{ fontSize: '0.65rem', color: '#666', marginTop: 2 }}>{tier.hint}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <FloatingTooltip.Provider>
+            <FloatingTooltip.Trigger content="Limpa marcas de todos. Eco só zera na Sutura (Void).">
+              <Button
+                type="button"
+                variant="secondary"
+                size="xs"
+                disabled={members.length === 0}
+                onClick={() => {
+                  const ids = members.map(m => m.id)
+                  const { recovered, missing, ecoReset } = recoverGroupMembers(ids)
+                  if (recovered > 0) {
+                    showToast(
+                      `Descanso: ${recovered} personagem${recovered > 1 ? 's' : ''} (marcas limpas${ecoReset > 0 ? ` · Eco da Sutura: ${ecoReset}` : ''}).`,
+                      'success',
+                    )
+                  } else if (missing > 0) {
+                    showToast('Alguns membros do grupo não foram encontrados na campanha.', 'error')
+                  } else {
+                    showToast('Adicione membros ao grupo para descansar.', 'info')
+                  }
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+              >
+                <RotateCcw size={12} /> Descansar
+              </Button>
+            </FloatingTooltip.Trigger>
+            <FloatingTooltip.Trigger content="Fim de sessão: zera Eco de todas as classes do grupo">
+              <Button
+                type="button"
+                variant="secondary"
+                size="xs"
+                disabled={members.length === 0}
+                onClick={() => {
+                  const ids = members.map(m => m.id)
+                  const { reset } = endSessionRestEco(ids)
+                  if (reset > 0) {
+                    showToast(
+                      `Sessão encerrada: Eco resetado em ${reset} personagem${reset > 1 ? 's' : ''}.`,
+                      'success',
+                    )
+                  } else {
+                    showToast('Adicione membros ao grupo para encerrar a sessão.', 'info')
+                  }
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+              >
+                Encerrar sessão
+              </Button>
+            </FloatingTooltip.Trigger>
+          </FloatingTooltip.Provider>
+        </div>
+
+        {lastUltraXp && (
+          <div style={{
+            width: '100%',
+            fontSize: '0.62rem',
+            color: '#a855f7',
+            fontFamily: 'monospace',
+            marginTop: '-0.35rem',
+          }}>
+            Último bônus: {lastUltraXp.label} · +{lastUltraXp.xp} XP
+          </div>
+        )}
       </div>
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
         <div style={{
-          width: 'min(360px, 42%)',
+          width: 'min(340px, 36%)',
           flexShrink: 0,
-          overflowY: 'auto',
-          padding: '0 1.5rem 1.25rem',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}>
-          {members.length === 0 ? (
-            <EmptyState
-              icon={UsersRound}
-              title="Grupo sem membros"
-              description="Adicione personagens jogáveis a este grupo."
-              action={
-                <Button onClick={() => setAddMemberOpen(true)}>
-                  Adicionar membro
-                </Button>
-              }
-            />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
-              {members.map(c => (
-                <MemberRow
-                  key={c.id}
-                  character={c}
-                  selected={selectedMemberId === c.id}
-                  onManage={() => {
-                    setSelectedMemberId(c.id)
-                    selectCharacter(c.id)
-                  }}
-                  onRemove={() => {
-                    removeMember(activeGroup.id, c.id)
-                    if (selectedMemberId === c.id) {
-                      setSelectedMemberId(null)
-                      clearPanelSession()
-                    }
-                  }}
-                />
-              ))}
-            </div>
-          )}
+          <div style={{
+            padding: '0.75rem 1.25rem 0.55rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.5rem',
+            flexShrink: 0,
+          }}>
+            <span style={{
+              fontSize: '0.62rem',
+              fontFamily: 'monospace',
+              letterSpacing: '0.1em',
+              color: '#666',
+              textTransform: 'uppercase',
+            }}>
+              Membros · {members.length}
+            </span>
+            <Button
+              onClick={() => setAddMemberOpen(true)}
+              disabled={availableToAdd.length === 0}
+              size="xs"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.35rem 0.55rem' }}
+              title={availableToAdd.length === 0 ? 'Nenhum personagem em espera nesta campanha' : 'Adicionar personagem ao grupo'}
+            >
+              <UserPlus size={12} />
+            </Button>
+          </div>
+
+          <div style={{ flex: 1, overflowY: 'auto', padding: '0 1.25rem 1.25rem' }}>
+            {members.length === 0 ? (
+              <EmptyState
+                icon={UsersRound}
+                title="Grupo sem membros"
+                description="Adicione personagens jogáveis a este grupo."
+                action={
+                  <Button onClick={() => setAddMemberOpen(true)} size="xs">
+                    Adicionar membro
+                  </Button>
+                }
+              />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {members.map(c => (
+                  <MemberRow
+                    key={c.id}
+                    character={c}
+                    selected={selectedMemberId === c.id}
+                    onManage={() => {
+                      setSelectedMemberId(c.id)
+                      selectCharacter(c.id)
+                    }}
+                    onRemove={() => {
+                      removeMember(activeGroup.id, c.id)
+                      if (selectedMemberId === c.id) {
+                        setSelectedMemberId(null)
+                        clearPanelSession()
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 1.5rem 1.25rem', minWidth: 0 }}>
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '1rem 1.5rem 1.25rem 1rem',
+          minWidth: 0,
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'flex-start',
+        }}>
           {selectedMemberId && selectedChar ? (
-            <CharacterFichaSheet characterId={selectedMemberId} adminMode={false} />
+            <div style={{ width: '100%', maxWidth: 1100 }}>
+              <CharacterFichaSheet characterId={selectedMemberId} adminMode={false} compact />
+            </div>
           ) : (
-            <EmptyState
-              icon={UsersRound}
-              title="Selecione um personagem"
-              description="Clique em um membro do grupo para ver a ficha. Alterações feitas em Personagens aparecem aqui na hora."
-            />
+            <div style={{ width: '100%', maxWidth: 480, margin: 'auto' }}>
+              <EmptyState
+                icon={UsersRound}
+                title="Selecione um personagem"
+                description="Clique em um membro do grupo para ver a ficha. Alterações feitas em Personagens aparecem aqui na hora."
+              />
+            </div>
           )}
         </div>
       </div>

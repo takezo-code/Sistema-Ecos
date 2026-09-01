@@ -9,7 +9,7 @@ import { useCharacterStore } from '../../store/useCharacterStore'
  * Ficha de personagem ligada ao store global.
  * Alterações em Gerenciamento → Personagens refletem aqui automaticamente.
  */
-export function CharacterFichaSheet({ characterId, adminMode = false, onEditProfile }) {
+export function CharacterFichaSheet({ characterId, adminMode = false, onEditProfile, compact = false }) {
   const { entity, panelProps } = useCharacterManagementPanel(characterId, { adminMode })
   const updateCharacter = useCharacterStore(s => s.updateCharacter)
   const setGearItem = useCharacterStore(s => s.setGearItem)
@@ -26,6 +26,7 @@ export function CharacterFichaSheet({ characterId, adminMode = false, onEditProf
       <EntityManagePanel
         entity={entity}
         {...panelProps}
+        compact={compact}
         onEditProfile={handleEditProfile}
         onForgeGear={(category, data) => setGearItem(characterId, category, data)}
         onSetGearPassive={(category, passives) => setGearPassives(characterId, category, passives)}

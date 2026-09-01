@@ -287,7 +287,11 @@ export function CharacterExportSheet({ entity, kind }) {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6, marginTop: 8 }}>
             <Chip color={accent}>{sheet.identity?.label}</Chip>
             <Chip color="#c084fc">NVL {sheet.level}</Chip>
-            {sheet.organization ? <Chip color="#d97706">{sheet.organization}</Chip> : null}
+            {sheet.organization && (sheet.kind === 'npc' || sheet.kind === 'boss') ? (
+              <Chip color="#d97706">Organização · {sheet.organization}</Chip>
+            ) : sheet.organization ? (
+              <Chip color="#d97706">{sheet.organization}</Chip>
+            ) : null}
           </div>
         </div>
       </header>

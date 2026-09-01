@@ -3,7 +3,7 @@ import { ChevronUp, ChevronDown, TrendingUp, AlertTriangle } from 'lucide-react'
 import { Input } from '../ui/Field'
 import { MAX_LEVEL } from '../../constants/progression'
 import { getProgressionSnapshot, validateProgression } from '../../services/progressionBudget'
-import { entityHasEcoPowers, isNpcEntity } from '../../constants/entityProgression'
+import { entityHasEcoPowers } from '../../constants/entityProgression'
 import { isInCreationPhase, STARTING_ATTRIBUTE_POINTS } from '../../constants/attributes'
 import { Button } from '../ui/Button'
 import { PanelSection, SectionLabel, MetaChip } from './PanelSection'
@@ -96,14 +96,12 @@ export function ProgressionSection({
   masterError,
 }) {
   const [levelDraft, setLevelDraft] = useState(String(entity.level ?? 1))
-  const [ecoDraft, setEcoDraft] = useState(entity.ecoPoints ?? 0)
   const [poolDraft, setPoolDraft] = useState(entity.unspentAttributePoints ?? 0)
 
   useEffect(() => {
     setLevelDraft(String(entity.level ?? 1))
-    setEcoDraft(entity.ecoPoints ?? 0)
     setPoolDraft(entity.unspentAttributePoints ?? 0)
-  }, [entity.id, entity.level, entity.ecoPoints, entity.unspentAttributePoints])
+  }, [entity.id, entity.level, entity.unspentAttributePoints])
 
   const level = entity.level ?? 1
   const atMax = level >= MAX_LEVEL
@@ -115,20 +113,17 @@ export function ProgressionSection({
   const hasEco = entityHasEcoPowers(entity)
   const inCreation = isInCreationPhase(entity)
   const showCreationPool = inCreation && (pool > 0 || poolDraft > 0)
-  const isNpc = isNpcEntity(entity)
 
   const parsedLevelDraft = clampLevel(parseInt(levelDraft, 10) || 1)
 
   const isDirty = useMemo(() => {
     if (parsedLevelDraft !== level) return true
-    if (hasEco && ecoDraft !== (entity.ecoPoints ?? 0)) return true
     if (showCreationPool && poolDraft !== (entity.unspentAttributePoints ?? 0)) return true
     return false
-  }, [parsedLevelDraft, level, hasEco, ecoDraft, entity.ecoPoints, showCreationPool, poolDraft, entity.unspentAttributePoints])
+  }, [parsedLevelDraft, level, showCreationPool, poolDraft, entity.unspentAttributePoints])
 
   const resetDrafts = () => {
     setLevelDraft(String(entity.level ?? 1))
-    setEcoDraft(entity.ecoPoints ?? 0)
     setPoolDraft(entity.unspentAttributePoints ?? 0)
   }
 
@@ -136,7 +131,6 @@ export function ProgressionSection({
     if (!isDirty) return
     const nextLevel = parsedLevelDraft
     const patch = { level: nextLevel }
-    if (hasEco) patch.ecoPoints = ecoDraft
     if (showCreationPool) patch.unspentAttributePoints = poolDraft
     onMasterProgression?.(patch)
     if (nextLevel !== level) {
@@ -270,48 +264,21 @@ export function ProgressionSection({
             </div>
           </div>
 
-          {(showCreationPool || (hasEco && snapshot.maxEcoFree > 0)) && (
+          {showCreationPool && (
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
               gap: '0.5rem',
             }}>
-              {showCreationPool && (
-                <Stepper
-                  label="PTS DE CRIAÇÃO"
-                  value={poolDraft}
-                  min={0}
-                  max={Math.max(0, STARTING_ATTRIBUTE_POINTS - snapshot.spent + (entity.unspentAttributePoints ?? 0))}
-                  color="#4ade80"
-                  onChange={setPoolDraft}
-                />
-              )}
-              {hasEco && snapshot.maxEcoFree > 0 && (
-                <Stepper
-                  label={`ECOS (MÁX ${snapshot.maxEcoFree})`}
-                  value={ecoDraft}
-                  min={0}
-                  max={snapshot.maxEcoFree}
-                  color="#c084fc"
-                  onChange={setEcoDraft}
-                />
-              )}
+              <Stepper
+                label="PTS DE CRIAÇÃO"
+                value={poolDraft}
+                min={0}
+                max={Math.max(0, STARTING_ATTRIBUTE_POINTS - snapshot.spent + (entity.unspentAttributePoints ?? 0))}
+                color="#4ade80"
+                onChange={setPoolDraft}
+              />
             </div>
-          )}
-
-          {(pending > 0 || pendingSocial > 0) && !showCreationPool && (
-            <p style={{ fontSize: '0.72rem', color: '#888', margin: 0, lineHeight: 1.5 }}>
-              Use as setas na grade abaixo para gastar
-              {pending > 0 && (
-                <> <strong style={{ color: '#d97706' }}>{pending} de atributo</strong></>
-              )}
-              {pending > 0 && pendingSocial > 0 && ' e'}
-              {pendingSocial > 0 && (
-                <> <strong style={{ color: '#e879f9' }}>{pendingSocial} de cena</strong></>
-              )}
-              .
-              {isNpc && ' Os pontos de criação já foram definidos ao criar o NPC.'}
-            </p>
           )}
 
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>

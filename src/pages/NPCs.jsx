@@ -12,6 +12,7 @@ import { ImageUpload } from '../components/ui/ImageUpload'
 import { StatusTag } from '../components/ui/StatusTag'
 import { EmptyState } from '../components/ui/EmptyState'
 import { AttributePointsEditor } from '../components/creation/AttributePointsEditor'
+import { OrganizationPicker } from '../components/creation/OrganizationPicker'
 import { SkillForm } from '../components/skills/SkillForm'
 import { SKILL_AUDIENCE } from '../constants/skillAudience'
 import { buildInlineSkillInstance } from '../services/ecoSkillRuntimeService'
@@ -234,14 +235,11 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
           </Field>
         )}
         <Field label="Organização">
-          {organizations.length > 0 ? (
-            <Select value={form.organization} onChange={e => set('organization', e.target.value)}>
-              <option value="">Nenhuma</option>
-              {organizations.map(o => <option key={o.id} value={o.name}>{o.name}</option>)}
-            </Select>
-          ) : (
-            <Input value={form.organization} onChange={e => set('organization', e.target.value)} placeholder="Nome da organização..." />
-          )}
+          <OrganizationPicker
+            organizations={organizations}
+            value={form.organization}
+            onChange={name => set('organization', name)}
+          />
         </Field>
       </div>
 

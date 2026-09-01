@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Pencil, Sparkles, BookOpen, Sword } from 'lucide-react'
+import { Pencil, Sparkles, BookOpen, Sword, Building2 } from 'lucide-react'
 import { ExportFichaButton } from '../character/ExportFichaButton'
 import { NarrativeProfileModal } from './NarrativeProfileModal'
 import { EntityThumb } from '../ui/EntityThumb'
@@ -41,6 +41,7 @@ export function EntityManagePanel({
   masterError,
   showProgression = true,
   adminMode = false,
+  compact = false,
 }) {
   const [skillsOpen, setSkillsOpen] = useState(false)
   const [narrativeOpen, setNarrativeOpen] = useState(false)
@@ -48,32 +49,35 @@ export function EntityManagePanel({
   const showGear = typeof onForgeGear === 'function'
   const isCreation = isInCreationPhase(entity)
   const hasEco = entityHasEcoPowers(entity)
+  const isNpc = isNpcEntity(entity)
+  const organization = String(entity.organization || '').trim()
+  const showOrganization = (isNpc || entity.papelCombate === 'boss') && organization
 
   return (
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      gap: '0.75rem',
+      gap: compact ? '0.65rem' : '0.75rem',
       background: 'rgba(10, 10, 14, 0.94)',
       border: '1px solid rgba(255,255,255,0.08)',
-      borderRadius: 14,
-      padding: '1rem 1.05rem',
+      borderRadius: compact ? 12 : 14,
+      padding: compact ? '0.85rem 0.95rem' : '1rem 1.05rem',
       backdropFilter: 'blur(18px)',
       WebkitBackdropFilter: 'blur(18px)',
-      boxShadow: '0 12px 40px rgba(0,0,0,0.45)',
+      boxShadow: compact ? '0 8px 28px rgba(0,0,0,0.35)' : '0 12px 40px rgba(0,0,0,0.45)',
     }}>
       <header style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.85rem',
-        padding: '0.15rem 0 0.85rem',
+        gap: compact ? '0.6rem' : '0.85rem',
+        padding: compact ? '0 0 0.65rem' : '0.15rem 0 0.85rem',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem', minWidth: 0 }}>
-          <EntityThumb src={entity.image} alt={entity.name} size={54} borderRadius="12px" />
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: compact ? '0.65rem' : '0.85rem', minWidth: 0 }}>
+          <EntityThumb src={entity.image} alt={entity.name} size={compact ? 44 : 54} borderRadius={compact ? '10px' : '12px'} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '1.1rem', fontWeight: 750, color: '#f5f5f5', letterSpacing: '-0.02em' }}>
+              <span style={{ fontSize: compact ? '0.95rem' : '1.1rem', fontWeight: 750, color: '#f5f5f5', letterSpacing: '-0.02em' }}>
                 {entity.name}
               </span>
               <span style={{
@@ -88,6 +92,27 @@ export function EntityManagePanel({
               }}>
                 NVL {entity.level || 1}
               </span>
+              {showOrganization && (
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  fontSize: '0.58rem',
+                  fontFamily: 'monospace',
+                  color: '#d97706',
+                  background: 'rgba(217,119,6,0.1)',
+                  border: '1px solid rgba(217,119,6,0.28)',
+                  borderRadius: 999,
+                  padding: '0.18rem 0.5rem',
+                  letterSpacing: '0.04em',
+                  maxWidth: '100%',
+                }}>
+                  <Building2 size={10} style={{ flexShrink: 0 }} />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {organization}
+                  </span>
+                </span>
+              )}
             </div>
           </div>
           {onEditProfile && (
@@ -128,8 +153,8 @@ export function EntityManagePanel({
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(148px, 1fr))',
-          gap: '0.45rem',
+          gridTemplateColumns: compact ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(148px, 1fr))',
+          gap: '0.4rem',
         }}>
           <ExportFichaButton
             entity={entity}
