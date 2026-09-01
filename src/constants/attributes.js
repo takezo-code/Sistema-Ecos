@@ -1,5 +1,5 @@
 import { getXpRequiredForLevel } from './progression'
-import { migrateGameEntityExtras } from '../models/gameEntity'
+import { migrateGameEntityExtras, migrateSkills } from '../models/gameEntity'
 import { entityHasEcoPowers, isNpcEntity, sanitizeEntityForEcoFlag } from './entityProgression'
 import { normalizeClassId } from './classes'
 
@@ -208,6 +208,7 @@ export function normalizeGameEntity(entity) {
   )
 
   const hasEco = entityHasEcoPowers(entity)
+  const migratedSkills = migrateSkills(Array.isArray(entity.skills) ? entity.skills : [])
   const base = {
     ...entity,
     classId: normalizeClassId(entity.classId),
@@ -216,7 +217,7 @@ export function normalizeGameEntity(entity) {
     xpToNextLevel: getXpRequiredForLevel(level),
     ecoPoints: hasEco ? (entity.ecoPoints ?? 0) : 0,
     pendingAttributePoints: entity.pendingAttributePoints ?? 0,
-    skills: hasEco ? (extras.skills ?? []) : [],
+    skills: hasEco ? migratedSkills : [],
     attributes: hasEco ? attributes : { ...attributes, ruptura: 0 },
     unspentAttributePoints: unspent,
     creationAttributeFloors,
@@ -224,7 +225,7 @@ export function normalizeGameEntity(entity) {
     unspentSocialPoints: unspentSocial,
     pendingSocialPoints: entity.pendingSocialPoints ?? 0,
     creationSocialFloors,
-    hasEcoPowers: entity.hasEcoPowers ?? (isNpcEntity(entity) ? false : true),
+    hasEcoPowers: hasEco,
     ...extras,
     inventory: Array.isArray(entity.inventory) ? entity.inventory : [],
     equipped: Array.isArray(entity.equipped) ? entity.equipped : [],

@@ -83,22 +83,26 @@ export function buildNpcPayloadForSave(data, isNewEntity) {
   delete npcData.starterWeapon
   delete npcData.starterArmor
   const isBoss = data.papelCombate === 'boss'
+  const keepsEcoSkills = entityHasEcoPowers(data) || isBoss
   let payload = {
     ...npcData,
+    hasEcoPowers: keepsEcoSkills ? true : (data.hasEcoPowers ?? false),
     ...(isNewEntity
       ? {
           level: 1,
           xp: 0,
           ecoPoints: 0,
-          skills: Array.isArray(data.skills) ? data.skills : [],
+          skills: keepsEcoSkills && Array.isArray(data.skills) ? data.skills : [],
         }
-      : {}),
+      : {
+          skills: keepsEcoSkills ? (Array.isArray(data.skills) ? data.skills : []) : [],
+        }),
     ...finalizeCreationAttributes(data, { isNew: isNewEntity && (data.unspentAttributePoints ?? 0) > 0 }),
   }
   if (isNewEntity) {
     payload.equipped = buildInitialGear({ weapon: starterWeapon, armor: starterArmor })
   }
-  if (!entityHasEcoPowers(data) && !isBoss) {
+  if (!keepsEcoSkills) {
     payload = {
       ...payload,
       skills: [],
@@ -181,26 +185,33 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
     if (editingSkill) {
       const mechanicalEffect = draft.mechanicalEffect || ''
       const narrativeConsequence = draft.narrativeConsequence || ''
-      set('skills', (form.skills || []).map(s => s.id !== editingSkill.id ? s : {
-        ...s,
-        name: draft.name.trim(),
-        cooldownTurns: Math.max(0, Number(draft.cooldownTurns) || 0),
-        overloadCost: Math.max(0, Number(draft.overloadCost) || 1),
-        description: draft.description || '',
-        mechanicalEffect,
-        narrativeConsequence,
-        effect: mechanicalEffect,
-        sideEffect: narrativeConsequence,
-        fromCatalog: false,
+      setForm(p => ({
+        ...p,
+        skills: (p.skills || []).map(s => s.id !== editingSkill.id ? s : {
+          ...s,
+          name: draft.name.trim(),
+          cooldownTurns: Math.max(0, Number(draft.cooldownTurns) || 0),
+          overloadCost: Math.max(0, Number(draft.overloadCost) || 1),
+          description: draft.description || '',
+          mechanicalEffect,
+          narrativeConsequence,
+          effect: mechanicalEffect,
+          sideEffect: narrativeConsequence,
+          fromCatalog: false,
+        }),
       }))
     } else {
-      set('skills', [...(form.skills || []), buildInlineSkillInstance(draft)])
+      setForm(p => ({
+        ...p,
+        skills: [...(p.skills || []), buildInlineSkillInstance(draft)],
+      }))
     }
     setSkillEditorOpen(false)
     setEditingSkill(null)
   }
 
   return (
+    <>
     <form
       onSubmit={e => {
         e.preventDefault()
@@ -415,7 +426,10 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
                     <button
                       type="button"
                       className="btn-ghost"
-                      onClick={() => set('skills', (form.skills || []).filter(s => s.id !== skill.id))}
+                      onClick={() => setForm(p => ({
+                        ...p,
+                        skills: (p.skills || []).filter(s => s.id !== skill.id),
+                      }))}
                       style={{ padding: '0.25rem', color: '#dc2626' }}
                     >
                       <Trash2 size={13} />
@@ -425,23 +439,6 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
               ))}
             </div>
           )}
-
-          <Modal
-            open={skillEditorOpen}
-            onClose={() => { setSkillEditorOpen(false); setEditingSkill(null) }}
-            title={editingSkill ? 'Editar skill' : 'Criar skill'}
-            maxWidth="520px"
-          >
-            <SkillForm
-              key={editingSkill?.id || 'new'}
-              initial={editingSkill || undefined}
-              defaultAudience={isBoss ? SKILL_AUDIENCE.BOSS : SKILL_AUDIENCE.NPC}
-              lockAudience
-              submitLabel={editingSkill ? 'Salvar' : 'Criar'}
-              onCancel={() => { setSkillEditorOpen(false); setEditingSkill(null) }}
-              onSubmit={handleSkillSubmit}
-            />
-          </Modal>
         </>
       )}
 
@@ -450,6 +447,26 @@ export function NPCForm({ initial, onSave, onCancel, campaignId, organizations, 
         <Button type="submit">Salvar</Button>
       </div>
     </form>
+
+    {(isBoss || form.hasEcoPowers) && (
+      <Modal
+        open={skillEditorOpen}
+        onClose={() => { setSkillEditorOpen(false); setEditingSkill(null) }}
+        title={editingSkill ? 'Editar skill' : 'Criar skill'}
+        maxWidth="520px"
+      >
+        <SkillForm
+          key={editingSkill?.id || 'new'}
+          initial={editingSkill || undefined}
+          defaultAudience={isBoss ? SKILL_AUDIENCE.BOSS : SKILL_AUDIENCE.NPC}
+          lockAudience
+          submitLabel={editingSkill ? 'Salvar' : 'Criar'}
+          onCancel={() => { setSkillEditorOpen(false); setEditingSkill(null) }}
+          onSubmit={handleSkillSubmit}
+        />
+      </Modal>
+    )}
+    </>
   )
 }
 

@@ -69,13 +69,17 @@ export function AttributePointsEditor({ form, onFormChange }) {
   const socialAttrs = form.socialAttributes || {}
 
   const setAttr = (key, val) => {
-    const patch = applyInitialAttributeChange(form, key, val)
-    if (patch) onFormChange({ ...form, ...patch })
+    onFormChange(p => {
+      const patch = applyInitialAttributeChange(p, key, val)
+      return patch ? { ...p, ...patch } : p
+    })
   }
 
   const setSocialAttr = (key, val) => {
-    const patch = applyInitialSocialChange(form, key, val)
-    if (patch) onFormChange({ ...form, ...patch })
+    onFormChange(p => {
+      const patch = applyInitialSocialChange(p, key, val)
+      return patch ? { ...p, ...patch } : p
+    })
   }
 
   return (

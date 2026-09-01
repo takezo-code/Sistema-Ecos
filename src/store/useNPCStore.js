@@ -21,7 +21,7 @@ import {
 } from '../services/progressionService'
 import { unlockRandomSkill } from '../services/skillService'
 import { useEcoSkill as runEcoSkillUse, restEcoOverload, masterSetEcoOverload } from '../services/ecoOverloadService'
-import { buildSkillInstanceFromCatalog, buildInlineSkillInstance } from '../services/ecoSkillRuntimeService'
+import { buildSkillInstanceFromCatalog, buildInlineSkillInstance, activateCharacterSkill, advanceCharacterTurn } from '../services/ecoSkillRuntimeService'
 import { catalogSkillAllowedForEntity, getCatalogSkill } from '../services/skillsCatalogService'
 import { enforceProgressionCaps } from '../services/progressionBudget'
 import {
@@ -111,7 +111,7 @@ export const useNPCStore = create((set, get) => ({
       pendingAttributePoints: data.pendingAttributePoints ?? 0,
       pendingSocialPoints: data.pendingSocialPoints ?? 0,
       skills: data.skills ?? [],
-      hasEcoPowers: data.hasEcoPowers ?? false,
+      hasEcoPowers: data.hasEcoPowers ?? (data.papelCombate === 'boss'),
       attributes: { ...defaultAttributes(), ...(data.attributes || {}) },
       unspentAttributePoints: data.unspentAttributePoints ?? 0,
       creationAttributeFloors: data.creationAttributeFloors,
@@ -341,6 +341,29 @@ export const useNPCStore = create((set, get) => ({
     }
     if (result.events?.length) set({ lastOverloadEvents: result.events })
     return result
+  },
+
+  activateSkill(npcId, skillId) {
+    const n = get().npcs.find(npc => npc.id === npcId)
+    if (!n) return { ok: false, message: 'Inimigo não encontrado' }
+    const result = activateCharacterSkill(n, skillId)
+    if (!result.ok) {
+      return { ok: false, message: result.error?.message || 'Não foi possível ativar a habilidade.' }
+    }
+    patchNPC(get, set, npcId, npc => ({ ...npc, ...result.patch }))
+    if (result.events?.length) set({ lastOverloadEvents: result.events })
+    return {
+      ok: true,
+      warnings: result.warnings || [],
+    }
+  },
+
+  advanceTurn(npcId) {
+    const n = get().npcs.find(npc => npc.id === npcId)
+    if (!n) return { ok: false }
+    const result = advanceCharacterTurn(n)
+    patchNPC(get, set, npcId, npc => ({ ...npc, ...result.patch }))
+    return { ok: true, warnings: result.warnings }
   },
 
   restEcoOverload(npcId) {

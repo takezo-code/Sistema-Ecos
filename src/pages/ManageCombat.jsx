@@ -8,7 +8,7 @@ import { useGroupStore } from '../store/useGroupStore'
 import { filterByActiveCampaign } from '../utils/campaignScope'
 import { canEnterCombat } from '../utils/npcScope'
 import { resolveCombatRoster } from '../utils/combatRoster'
-import { listCharacterSkillsRuntime } from '../services/ecoSkillRuntimeService'
+import { listCombatSkillsRuntime } from '../services/ecoSkillRuntimeService'
 import { CombatCharacterColumn } from '../components/combat/CombatCharacterColumn'
 import { CombatEnemyCard } from '../components/combat/CombatEnemyCard'
 import { CombatSkillDetailModal } from '../components/combat/CombatSkillDetailModal'
@@ -250,6 +250,8 @@ export function ManageCombat() {
     npcs,
     applyDamageMarks: applyNPCDamageMarks,
     healDamageMarks: healNPCMarks, clearDamageMarks: clearNPCMarks,
+    activateSkill: activateNPCCombatSkill,
+    advanceTurn: advanceNPCTurn,
   } = useNPCStore()
   const { groups } = useGroupStore()
   const activeCampaignId = useCampaignStore(s => s.activeCampaignId)
@@ -286,7 +288,7 @@ export function ManageCombat() {
   const combatCharacters = useMemo(
     () => roster.map(c => ({
       ...c,
-      _skillRuntimes: listCharacterSkillsRuntime(c),
+      _skillRuntimes: listCombatSkillsRuntime(c),
     })),
     [roster]
   )
@@ -312,11 +314,17 @@ export function ManageCombat() {
 
   const skillDetail = useMemo(() => {
     if (!skillDetailRef) return null
-    const character = combatCharacters.find(c => c.id === skillDetailRef.characterId)
-    if (!character) return null
-    const runtime = character._skillRuntimes?.find(r => r.instance.id === skillDetailRef.skillId)
-    return runtime ? { character, runtime } : null
-  }, [skillDetailRef, combatCharacters])
+    const player = combatCharacters.find(c => c.id === skillDetailRef.characterId)
+    if (player) {
+      const runtime = player._skillRuntimes?.find(r => r.instance.id === skillDetailRef.skillId)
+      return runtime ? { character: player, runtime } : null
+    }
+    if (activeEnemy?.id === skillDetailRef.characterId) {
+      const runtime = listCombatSkillsRuntime(activeEnemy).find(r => r.instance.id === skillDetailRef.skillId)
+      return runtime ? { character: activeEnemy, runtime } : null
+    }
+    return null
+  }, [skillDetailRef, combatCharacters, activeEnemy])
 
   const handleSelectSkill = useCallback((character, runtime) => {
     setSkillDetailRef({ characterId: character.id, skillId: runtime.instance.id })
@@ -347,7 +355,8 @@ export function ManageCombat() {
       actorType: 'player',
     })
     advanceTurn(character.id)
-  }, [advanceTurn, dcPreset, recordRoll])
+    if (activeEnemyId) advanceNPCTurn(activeEnemyId)
+  }, [advanceTurn, advanceNPCTurn, activeEnemyId, dcPreset, recordRoll])
 
   const handleApplyMarks = useCallback((character, markType) => {
     const result = applyDamageMarks(character.id, markType)
@@ -385,7 +394,8 @@ export function ManageCombat() {
       actorId: enemy.id,
       actorType: 'enemy',
     })
-  }, [dcPreset, recordRoll])
+    advanceNPCTurn(enemy.id)
+  }, [advanceNPCTurn, dcPreset, recordRoll])
 
   const handleEnemyApplyMarks = useCallback((markType) => {
     if (!activeEnemyId) return
@@ -397,8 +407,23 @@ export function ManageCombat() {
     }
   }, [activeEnemyId, activeEnemy, applyNPCDamageMarks])
 
-  const handleActivateSkill = useCallback((characterId, skillId) => {
-    const res = activateSkill(characterId, skillId, {
+  const handleActivateSkill = useCallback((actorId, skillId) => {
+    const isEnemy = campaignEnemies.some(n => n.id === actorId)
+    if (isEnemy) {
+      const res = activateNPCCombatSkill(actorId, skillId)
+      if (res?.warnings?.length) {
+        setCombatNotice(res.warnings.join(' · '))
+      } else if (res?.ok) {
+        setCombatNotice(null)
+      } else if (res?.message) {
+        setCombatNotice(res.message)
+      } else if (res?.error?.message) {
+        setCombatNotice(res.error.message)
+      }
+      return res
+    }
+
+    const res = activateSkill(actorId, skillId, {
       allyIds: combatCharacters.map(c => c.id),
     })
     if (res?.warnings?.length) {
@@ -409,7 +434,7 @@ export function ManageCombat() {
       setCombatNotice(res.message)
     }
     return res
-  }, [activateSkill, combatCharacters])
+  }, [activateSkill, activateNPCCombatSkill, campaignEnemies, combatCharacters])
 
   if (!activeCampaignId) {
     return <ActiveCampaignBanner />
@@ -562,6 +587,8 @@ export function ManageCombat() {
                 onClearMarks={() => { clearNPCMarks(activeEnemy.id); setCombatNotice(`${activeEnemy.name}: marcas limpas.`) }}
                 onNotice={msg => setCombatNotice(msg)}
                 onRollAttribute={handleEnemyRollAttribute}
+                onSelectSkill={handleSelectSkill}
+                onActivateSkill={handleActivateSkill}
               />
             ) : (
               <div style={{

@@ -51,6 +51,12 @@ export function buildInlineSkillInstance(data = {}) {
   }
 }
 
+/** Skills gravadas na ficha (inline ou catálogo). */
+export function getEntityOwnedSkills(entity) {
+  if (!entity) return []
+  return Array.isArray(entity.skills) ? entity.skills.filter(Boolean) : []
+}
+
 /** Catálogo efetivo: entrada global ou definição embutida na instância. */
 export function resolveSkillCatalog(skillInstance) {
   if (!skillInstance) return null
@@ -59,21 +65,33 @@ export function resolveSkillCatalog(skillInstance) {
   }
   const fromCat = getCatalogSkill(skillInstance.templateId)
   if (fromCat) return fromCat
-  if (skillInstance.fromCatalog === false || skillInstance.name) {
-    return {
-      templateId: skillInstance.templateId || skillInstance.id,
-      name: skillInstance.name || 'Skill',
-      skillType: skillInstance.skillType || ECO_SKILL_TYPES.ATIVA,
-      cooldownTurns: Number(skillInstance.cooldownTurns) || 0,
-      overloadCost: Number(skillInstance.overloadCost) || 1,
-      description: skillInstance.description || '',
-      mechanicalEffect: skillInstance.mechanicalEffect || skillInstance.effect || '',
-      narrativeConsequence: skillInstance.narrativeConsequence || skillInstance.sideEffect || '',
-      effect: skillInstance.effect || skillInstance.mechanicalEffect || '',
-      sideEffect: skillInstance.sideEffect || skillInstance.narrativeConsequence || '',
-    }
+
+  const name = String(skillInstance.name || '').trim()
+  const mechanicalEffect = skillInstance.mechanicalEffect || skillInstance.effect || ''
+  const narrativeConsequence = skillInstance.narrativeConsequence || skillInstance.sideEffect || ''
+  const description = String(skillInstance.description || '').trim()
+  const hasInlineData = skillInstance.fromCatalog === false
+    || name
+    || mechanicalEffect
+    || narrativeConsequence
+    || description
+    || skillInstance.id
+    || skillInstance.templateId
+
+  if (!hasInlineData) return null
+
+  return {
+    templateId: skillInstance.templateId || skillInstance.id,
+    name: name || 'Skill',
+    skillType: skillInstance.skillType || ECO_SKILL_TYPES.ATIVA,
+    cooldownTurns: Number(skillInstance.cooldownTurns) || 0,
+    overloadCost: Number(skillInstance.overloadCost) || 1,
+    description,
+    mechanicalEffect,
+    narrativeConsequence,
+    effect: mechanicalEffect,
+    sideEffect: narrativeConsequence,
   }
-  return null
 }
 
 function buildWeaponSkillCatalog(weaponSkill) {
@@ -183,12 +201,30 @@ export function resolveWeaponSkillRuntime(entity) {
 }
 
 export function listCharacterSkillsRuntime(entity) {
-  const classSkills = (entity.skills || [])
+  const classSkills = getEntityOwnedSkills(entity)
     .map(s => resolveSkillRuntime(entity, s))
     .filter(r => r.catalog)
 
   const weaponRuntime = resolveWeaponSkillRuntime(entity)
   if (weaponRuntime) classSkills.push(weaponRuntime)
+  return classSkills
+}
+
+function shouldShowSkillInCombat(skill) {
+  if (!skill || typeof skill !== 'object') return false
+  if (skill.templateId === WEAPON_SKILL_TEMPLATE_ID || skill.isWeaponSkill) return false
+  return Boolean(skill.id || skill.templateId || skill.name || skill.mechanicalEffect || skill.effect || skill.description)
+}
+
+/** Skills visíveis no combate — inclui inline de NPC/boss e skills aprendidas. */
+export function listCombatSkillsRuntime(entity) {
+  const classSkills = getEntityOwnedSkills(entity)
+    .filter(shouldShowSkillInCombat)
+    .map(s => resolveSkillRuntime(entity, s))
+    .filter(r => r.catalog)
+
+  const weaponRuntime = resolveWeaponSkillRuntime(entity)
+  if (weaponRuntime?.catalog) classSkills.push(weaponRuntime)
   return classSkills
 }
 

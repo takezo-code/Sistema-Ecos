@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Zap, Play, ChevronDown, ChevronUp, Star, Info, Sword, Shield as ShieldIcon,
   Sparkles, Brain,
@@ -19,6 +19,7 @@ import { getCharacterWeapon, getCharacterArmor } from '../../mechanics/equipment
 import { getArmorTier } from '../../mechanics/equipment/armorProgressionEngine'
 import { GearDetailModal } from '../equipment/GearDetailModal'
 import ElectricBorder from '../react-bits/ElectricBorder'
+import { listCombatSkillsRuntime } from '../../services/ecoSkillRuntimeService'
 import { Button } from '../ui/Button'
 
 function socialAttrShort(attr) {
@@ -206,7 +207,19 @@ export function CombatCharacterColumn({
   const overload = rupturaPool.spent
   const mental = mergeMentalStateWithOverload(character.mentalState, overload, safeLimit)
   const mentalOpt = getMentalStateOption(mental)
-  const skills = character._skillRuntimes || []
+  const skills = useMemo(
+    () => listCombatSkillsRuntime(character),
+    [
+      character,
+      character.id,
+      character.skills,
+      character.equipped,
+      character.ecoOverload,
+      character.mentalState,
+      character.skillCooldowns,
+      character.attributes?.ruptura,
+    ],
+  )
   const characterClass = getCharacterClass(character)
   const armorDexPenalty = getArmorDestrezaPenalty(character)
   const overloadPct = Math.min(overload / Math.max(safeLimit, 1), 1)

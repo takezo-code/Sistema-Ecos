@@ -48,15 +48,16 @@ export function migrateSkills(skills = []) {
     return {
       ...skill,
       skillType: normalizeSkillType(skill.skillType || source?.skillType),
-      fromCatalog: !!catalog || skill.fromCatalog,
+      fromCatalog: skill.fromCatalog === false ? false : Boolean(catalog),
     }
   })
 }
 
 export function migrateGameEntityExtras(entity = {}) {
-  return {
+  const { skills: _skills, ...rest } = {
     ...migrateEntityStates(entity),
     ...migrateEcoOverloadFields(entity),
     skills: migrateSkills(entity.skills),
   }
+  return rest
 }

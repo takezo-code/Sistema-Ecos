@@ -12,7 +12,7 @@ import { useCampaignStore } from '../store/useCampaignStore'
 const ARTEFATO_TYPES = [
   {
     id: 'characters',
-    label: 'Player',
+    label: 'Personagem',
     description: 'Personagem jogável com atributos, progressão e habilidades de Eco.',
     icon: Sword,
     color: '#9ca3af',
@@ -32,7 +32,7 @@ const ARTEFATO_TYPES = [
   },
   {
     id: 'boss',
-    label: 'Boss',
+    label: 'Chefe',
     description: 'Inimigo de combate com vida e atributos.',
     icon: ShieldAlert,
     color: '#dc2626',
@@ -161,7 +161,7 @@ export function Creation({
             <div style={{ fontSize: '0.75rem', color: '#444' }}>
               {activeCampaignId
                 ? 'Escolha o tipo de artefato.'
-                : 'Selecione uma campanha ativa para criar artefatos (player, NPC, boss, organização).'}
+                : 'Selecione uma campanha ativa para criar artefatos (personagem, NPC, chefe, organização).'}
             </div>
           </div>
 
