@@ -9,6 +9,7 @@ export function CreationChoiceGrid({ types, disabled, onClick, selectedId, colum
     title: type.label,
     description: type.description,
     icon: type.icon,
+    iconSrc: type.iconSrc,
     accent: type.color,
     color: '#120f17',
     disabled: typeof disabled === 'function' ? disabled(type) : Boolean(disabled),

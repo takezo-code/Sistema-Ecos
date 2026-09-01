@@ -24,6 +24,7 @@ export function CombatEnemyCard({
   onRollAttribute,
   onSelectSkill,
   onActivateSkill,
+  onRemove,
 }) {
   const liveEnemy = useNPCStore(s => (
     enemy?.id ? s.npcs.find(n => n.id === enemy.id) ?? null : null
@@ -49,6 +50,7 @@ export function CombatEnemyCard({
       maxMarks={maxMarks}
       defeated={isDefeated}
       badge={papel}
+      onRemove={onRemove}
       onRollAttribute={onRollAttribute}
       onSelectSkill={onSelectSkill}
       onActivateSkill={onActivateSkill}

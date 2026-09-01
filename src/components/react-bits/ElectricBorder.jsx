@@ -10,7 +10,7 @@ const ElectricBorder = ({
   displacement = 16,
   borderOffset = 14,
   className,
-  style
+  style,
 }) => {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -166,7 +166,7 @@ const ElectricBorder = ({
       canvas.height = height * dpr;
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
-      ctx.scale(dpr, dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       return { width, height };
     };
@@ -283,7 +283,11 @@ const ElectricBorder = ({
   };
 
   return (
-    <div ref={containerRef} className={`electric-border ${className ?? ''}`} style={{ ...vars, ...style }}>
+    <div
+      ref={containerRef}
+      className={`electric-border ${className ?? ''}`}
+      style={{ ...vars, ...style }}
+    >
       <div className="eb-canvas-container">
         <canvas ref={canvasRef} className="eb-canvas" />
       </div>

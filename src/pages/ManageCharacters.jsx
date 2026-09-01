@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Sword, Package } from 'lucide-react'
 import { EntityThumb } from '../components/ui/EntityThumb'
+import { ClassIcon } from '../components/ui/ClassIcon'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useCampaignStore } from '../store/useCampaignStore'
 import { Modal } from '../components/ui/Modal'
@@ -36,12 +37,19 @@ function CharacterManageCard({ character, onManage }) {
         padding: '1.1rem 1.2rem 0.85rem',
       }}>
         <div style={{ display: 'flex', gap: '0.9rem', flex: 1, minWidth: 0 }}>
-          <EntityThumb
-            src={character.image}
-            alt={character.name}
-            size={64}
-            borderRadius="12px"
-          />
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <EntityThumb
+              src={character.image}
+              alt={character.name}
+              size={64}
+              borderRadius="12px"
+            />
+            {charClass && (
+              <div style={{ position: 'absolute', right: -4, bottom: -4 }}>
+                <ClassIcon classIdOrEntity={character} size={22} />
+              </div>
+            )}
+          </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
               fontSize: '1.05rem',

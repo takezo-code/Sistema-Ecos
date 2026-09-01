@@ -1,6 +1,7 @@
 import React from 'react'
 import { Modal } from '../ui/Modal'
 import { EntityThumb } from '../ui/EntityThumb'
+import { ClassIcon } from '../ui/ClassIcon'
 import { NarrativeProfileView } from './NarrativeProfileView'
 import { Button } from '../ui/Button'
 import { resolveCharacterNarrative, resolveNpcNarrative } from '../../utils/entityNarrative'
@@ -80,11 +81,15 @@ export function NarrativeProfileModal({ open, onClose, entity }) {
             </span>
             {charClass && (
               <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
                 fontSize: '0.55rem',
                 fontFamily: 'monospace',
                 color: accent,
               }}>
-                · {charClass.label}
+                <ClassIcon classIdOrEntity={entity} size={16} />
+                {charClass.label}
               </span>
             )}
           </div>

@@ -265,6 +265,7 @@ export default function MagicBento({
         {cards.map(card => {
           const rgb = card.accent ? hexToRgb(card.accent) : glowColor
           const Icon = card.icon
+          const iconSrc = card.iconSrc
           const className = [
             'magic-bento-card',
             compact ? 'magic-bento-card--compact' : '',
@@ -282,7 +283,11 @@ export default function MagicBento({
           const body = (
             <>
               <div className="magic-bento-card__header">
-                {Icon ? (
+                {iconSrc ? (
+                  <div className="magic-bento-card__icon magic-bento-card__icon--image">
+                    <img src={iconSrc} alt="" draggable={false} />
+                  </div>
+                ) : Icon ? (
                   <div className="magic-bento-card__icon">
                     <Icon size={16} color={`rgb(${rgb})`} />
                   </div>

@@ -289,9 +289,11 @@ function remapCampaignPackage(incoming, sourceCampaign, existingCampaignIds, use
       combatGroupId: combatSession.combatGroupId
         ? (idMap[combatSession.combatGroupId] || combatSession.combatGroupId)
         : null,
-      activeEnemyId: combatSession.activeEnemyId
-        ? (idMap[combatSession.activeEnemyId] || combatSession.activeEnemyId)
-        : null,
+      activeEnemyIds: Array.isArray(combatSession.activeEnemyIds)
+        ? combatSession.activeEnemyIds.map(id => idMap[id] || id).filter(Boolean)
+        : combatSession.activeEnemyId
+          ? [idMap[combatSession.activeEnemyId] || combatSession.activeEnemyId]
+          : [],
       rollHistory: (combatSession.rollHistory || []).map(roll => ({
         ...roll,
         id: remapId(roll.id, usedIds.dice, idMap),
@@ -824,7 +826,7 @@ export function resetAllTestData(campaignName = 'Nova Campanha') {
   useCombatStore.setState({
     campaignId: empty.activeCampaignId,
     combatGroupId: null,
-    activeEnemyId: null,
+    activeEnemyIds: [],
     lastRoll: null,
     rollHistory: [],
   })

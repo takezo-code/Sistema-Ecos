@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
-import { Swords, Skull, X, AlertTriangle, Target } from 'lucide-react'
+import { Swords, X, AlertTriangle, Target, Plus } from 'lucide-react'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useNPCStore } from '../store/useNPCStore'
 import { useCampaignStore } from '../store/useCampaignStore'
@@ -11,9 +11,11 @@ import { resolveCombatRoster } from '../utils/combatRoster'
 import { listCombatSkillsRuntime } from '../services/ecoSkillRuntimeService'
 import { CombatCharacterColumn } from '../components/combat/CombatCharacterColumn'
 import { CombatEnemyCard } from '../components/combat/CombatEnemyCard'
+import { CombatEnemyPickerModal } from '../components/combat/CombatEnemyPickerModal'
 import { CombatSkillDetailModal } from '../components/combat/CombatSkillDetailModal'
 import { RollHistoryDrawer } from '../components/combat/RollHistoryDrawer'
 import { EmptyState } from '../components/ui/EmptyState'
+import { Button } from '../components/ui/Button'
 import { ActiveCampaignBanner } from '../components/ui/ActiveCampaignBanner'
 import { getRollOutcome, DIFFICULTY_PRESETS, getDefaultDc, getDcForPreset } from '../mechanics/combat/rollOutcome'
 
@@ -257,11 +259,13 @@ export function ManageCombat() {
   const activeCampaignId = useCampaignStore(s => s.activeCampaignId)
   const {
     combatGroupId,
-    activeEnemyId,
+    activeEnemyIds,
     rollHistory,
     setCampaign,
     setCombatGroup,
-    setActiveEnemy,
+    addCombatEnemy,
+    removeCombatEnemy,
+    setActiveEnemyIds,
     addRoll,
     deleteRoll,
     clearRollHistory,
@@ -271,6 +275,7 @@ export function ManageCombat() {
   const [combatNotice, setCombatNotice] = useState(null)
   const [skillDetailRef, setSkillDetailRef] = useState(null)
   const [dcPreset, setDcPreset] = useState('medium')
+  const [addEnemyOpen, setAddEnemyOpen] = useState(false)
 
   const campaignRolls = useMemo(
     () => rollHistory.filter(roll => roll.campaignId === activeCampaignId),
@@ -319,10 +324,18 @@ export function ManageCombat() {
     [npcs, activeCampaignId]
   )
 
-  const activeEnemy = useMemo(
-    () => activeEnemyId ? campaignEnemies.find(n => n.id === activeEnemyId) ?? null : null,
-    [campaignEnemies, activeEnemyId]
-  )
+  const activeEnemies = useMemo(() => {
+    const byId = new Map(campaignEnemies.map(n => [n.id, n]))
+    return activeEnemyIds.map(id => byId.get(id)).filter(Boolean)
+  }, [campaignEnemies, activeEnemyIds])
+
+  useEffect(() => {
+    const valid = new Set(campaignEnemies.map(n => n.id))
+    const pruned = activeEnemyIds.filter(id => valid.has(id))
+    if (pruned.length !== activeEnemyIds.length) {
+      setActiveEnemyIds(pruned)
+    }
+  }, [campaignEnemies, activeEnemyIds, setActiveEnemyIds])
 
   const activeGroup = combatGroupId ? groups.find(g => g.id === combatGroupId) : campaignGroup
 
@@ -333,12 +346,13 @@ export function ManageCombat() {
       const runtime = player._skillRuntimes?.find(r => r.instance.id === skillDetailRef.skillId)
       return runtime ? { character: player, runtime } : null
     }
-    if (activeEnemy?.id === skillDetailRef.characterId) {
-      const runtime = listCombatSkillsRuntime(activeEnemy).find(r => r.instance.id === skillDetailRef.skillId)
-      return runtime ? { character: activeEnemy, runtime } : null
+    const enemy = campaignEnemies.find(n => n.id === skillDetailRef.characterId)
+    if (enemy) {
+      const runtime = listCombatSkillsRuntime(enemy).find(r => r.instance.id === skillDetailRef.skillId)
+      return runtime ? { character: enemy, runtime } : null
     }
     return null
-  }, [skillDetailRef, combatCharacters, activeEnemy])
+  }, [skillDetailRef, combatCharacters, campaignEnemies])
 
   const handleSelectSkill = useCallback((character, runtime) => {
     setSkillDetailRef({ characterId: character.id, skillId: runtime.instance.id })
@@ -417,15 +431,21 @@ export function ManageCombat() {
     setCombatNotice(`${enemy.name} agiu — cooldown do inimigo atualizado.`)
   }, [advanceNPCTurn, dcPreset, recordRoll])
 
-  const handleEnemyApplyMarks = useCallback((markType) => {
-    if (!activeEnemyId) return
-    const result = applyNPCDamageMarks(activeEnemyId, markType)
+  const handleEnemyApplyMarks = useCallback((enemyId, markType) => {
+    if (!enemyId) return
+    const enemy = campaignEnemies.find(n => n.id === enemyId)
+    const result = applyNPCDamageMarks(enemyId, markType)
     if (result?.stateChanged) {
-      setCombatNotice(`${activeEnemy?.name}: ${result.narratives?.join(' · ') || 'Estado alterado.'}`)
-    } else if (result) {
-      setCombatNotice(`${activeEnemy?.name}: +${result.markAdded} marca(s)`)
+      setCombatNotice(`${enemy?.name}: ${result.narratives?.join(' · ') || 'Estado alterado.'}`)
+    } else if (result && enemy) {
+      setCombatNotice(`${enemy.name}: +${result.markAdded} marca(s)`)
     }
-  }, [activeEnemyId, activeEnemy, applyNPCDamageMarks])
+  }, [campaignEnemies, applyNPCDamageMarks])
+
+  const handleAddEnemyFromPicker = useCallback((npcId) => {
+    addCombatEnemy(npcId)
+    setCombatNotice(null)
+  }, [addCombatEnemy])
 
   const handleActivateSkill = useCallback((actorId, skillId) => {
     const isEnemy = campaignEnemies.some(n => n.id === actorId)
@@ -561,16 +581,17 @@ export function ManageCombat() {
             ))}
           </div>
 
-          {/* Painel do inimigo / boss — largura só do conteúdo, sem coluna no meio */}
+          {/* Inimigos / bosses */}
           <div style={{
             flexShrink: 0,
             padding: '0.875rem',
             overflowY: 'auto',
             display: 'flex',
             flexDirection: 'row',
+            flexWrap: 'wrap',
             justifyContent: 'flex-end',
             alignItems: 'flex-start',
-            gap: '0.5rem',
+            gap: '0.75rem',
           }}>
             <div style={{
               display: 'flex',
@@ -579,41 +600,45 @@ export function ManageCombat() {
               paddingTop: '0.55rem',
               flexShrink: 0,
             }}>
-              <Skull size={13} style={{ color: '#dc2626', flexShrink: 0 }} />
-              <select
-                className="input-base"
-                value={activeEnemyId || ''}
-                onChange={e => setActiveEnemy(e.target.value || null)}
-                style={{
-                  fontSize: '0.65rem',
-                  padding: '3px 6px',
-                  width: '150px',
-                  borderColor: activeEnemyId ? 'rgba(220,38,38,0.4)' : undefined,
-                }}
-                title="Inimigo ativo neste combate"
+              <Button
+                size="xs"
+                onClick={() => setAddEnemyOpen(true)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
-                <option value="">Sem inimigo</option>
-                {campaignEnemies.map(n => (
-                  <option key={n.id} value={n.id}>
-                    {n.papelCombate === 'boss' ? '★ BOSS · ' : n.papelCombate === 'elite' ? 'Elite · ' : ''}
-                    {n.name}
-                  </option>
-                ))}
-              </select>
+                <Plus size={13} />
+                Adicionar inimigo
+              </Button>
+              {activeEnemies.length > 0 && (
+                <span style={{
+                  fontSize: '0.58rem',
+                  fontFamily: 'monospace',
+                  color: '#666',
+                  letterSpacing: '0.06em',
+                }}>
+                  {activeEnemies.length} no combate
+                </span>
+              )}
             </div>
 
-            {activeEnemy ? (
+            {activeEnemies.map(enemy => (
               <CombatEnemyCard
-                enemy={activeEnemy}
-                onApplyMarks={handleEnemyApplyMarks}
-                onHealMarks={(amount) => healNPCMarks(activeEnemy.id, amount)}
-                onClearMarks={() => { clearNPCMarks(activeEnemy.id); setCombatNotice(`${activeEnemy.name}: marcas limpas.`) }}
+                key={enemy.id}
+                enemy={enemy}
+                onRemove={() => removeCombatEnemy(enemy.id)}
+                onApplyMarks={(markType) => handleEnemyApplyMarks(enemy.id, markType)}
+                onHealMarks={(amount) => healNPCMarks(enemy.id, amount)}
+                onClearMarks={() => {
+                  clearNPCMarks(enemy.id)
+                  setCombatNotice(`${enemy.name}: marcas limpas.`)
+                }}
                 onNotice={msg => setCombatNotice(msg)}
                 onRollAttribute={handleEnemyRollAttribute}
                 onSelectSkill={handleSelectSkill}
                 onActivateSkill={handleActivateSkill}
               />
-            ) : (
+            ))}
+
+            {activeEnemies.length === 0 && (
               <div style={{
                 width: '220px',
                 flexShrink: 0,
@@ -625,7 +650,7 @@ export function ManageCombat() {
                 border: '1px dashed #1e1e1e',
                 borderRadius: '8px',
               }}>
-                Escolha um inimigo ou boss
+                Adicione inimigos ou bosses ao combate
               </div>
             )}
           </div>
@@ -638,6 +663,14 @@ export function ManageCombat() {
         runtime={skillDetail?.runtime}
         onClose={() => setSkillDetailRef(null)}
         onActivate={handleActivateSkill}
+      />
+
+      <CombatEnemyPickerModal
+        open={addEnemyOpen}
+        onClose={() => setAddEnemyOpen(false)}
+        enemies={campaignEnemies}
+        activeEnemyIds={activeEnemyIds}
+        onAdd={handleAddEnemyFromPicker}
       />
     </div>
   )

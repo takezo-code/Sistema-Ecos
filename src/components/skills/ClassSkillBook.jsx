@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { Gem } from 'lucide-react'
 import { getCharacterClass } from '../../constants/classes'
+import { ClassIcon } from '../ui/ClassIcon'
 import { getClassPassive } from '../../mechanics/classes/classPassiveEngine'
 import {
   ECO_SKILL_POINT_COST,
@@ -219,6 +220,26 @@ export function ClassSkillBook({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.65rem',
+        padding: '0.55rem 0.65rem',
+        borderRadius: 12,
+        border: `1px solid rgba(${rgb}, 0.22)`,
+        background: `rgba(${rgb}, 0.08)`,
+      }}>
+        <ClassIcon classIdOrEntity={entity} size={36} />
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: '0.55rem', color: '#888', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+            CLASSE
+          </div>
+          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: classColor, letterSpacing: '-0.02em' }}>
+            {classMeta.label}
+          </div>
+        </div>
+      </div>
+
       <div style={{
         display: 'flex',
         alignItems: 'center',

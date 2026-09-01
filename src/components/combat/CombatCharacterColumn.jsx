@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import {
   Zap, Play, ChevronDown, ChevronUp, Star, Info, Sword, Shield as ShieldIcon,
-  Sparkles, Brain,
+  Sparkles, Brain, X,
 } from 'lucide-react'
 import { COMBAT_HIGHLIGHT_XP } from '../../constants/progression'
 import { DamageMarksPanel, PLAYER_MARK_TYPES } from './DamageMarksPanel'
 import { EntityThumb } from '../ui/EntityThumb'
+import { ClassIcon } from '../ui/ClassIcon'
 import { mergeMentalStateWithOverload, getMentalStateOption } from '../../constants/states'
 import { ATTRIBUTES, SOCIAL_ATTRIBUTES } from '../../constants/attributes'
 import { getRupturaPool, getOverloadPhase, ECO_OVERLOAD_PHASES } from '../../constants/ecoOverload'
@@ -193,6 +194,7 @@ export function CombatCharacterColumn({
   defeated = false,
   badge = null,
   extraBeforeMarks = null,
+  onRemove = null,
 }) {
   const [skillsOpen, setSkillsOpen] = useState(false)
   const [xpFlash, setXpFlash] = useState(false)
@@ -243,23 +245,17 @@ export function CombatCharacterColumn({
   const badgeLabel = badge?.label || characterClass?.label
   const badgeColor = badge?.color || characterClass?.color || '#a855f7'
 
-  return (
-    <ElectricBorder
-      color={electric.color}
-      speed={electric.speed}
-      chaos={electric.chaos}
-      borderRadius={12}
-      displacement={12}
-      borderOffset={12}
-      style={{
-        width: '220px',
-        flexShrink: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        zIndex: infoOpen ? 20 : 1,
-        opacity: defeated ? 0.65 : 1,
-      }}
-    >
+  const shellStyle = {
+    width: '220px',
+    flexShrink: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    zIndex: infoOpen ? 20 : 1,
+    opacity: defeated ? 0.65 : 1,
+  }
+
+  const cardBody = (
+    <>
     <article style={{
       width: '100%',
       flexShrink: 0,
@@ -277,6 +273,34 @@ export function CombatCharacterColumn({
         padding: '0.55rem 0.65rem 0.5rem',
         position: 'relative',
       }}>
+        {onRemove && (
+          <button
+            type="button"
+            onClick={onRemove}
+            title="Remover do combate"
+            style={{
+              position: 'absolute',
+              top: '0.4rem',
+              right: '2.55rem',
+              zIndex: 3,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 22,
+              height: 22,
+              padding: 0,
+              borderRadius: 7,
+              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'rgba(0,0,0,0.45)',
+              color: '#888',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#f5f5f5' }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#888' }}
+          >
+            <X size={11} strokeWidth={2.4} />
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setInfoOpen(v => !v)}
@@ -436,7 +460,8 @@ export function CombatCharacterColumn({
             }}>
               <span>Nv.{character.level ?? 1}</span>
               {badgeLabel && (
-                <span style={{ color: badgeColor, opacity: 0.9 }}>
+                <span style={{ color: badgeColor, opacity: 0.9, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {characterClass && <ClassIcon classIdOrEntity={character} size={14} />}
                   {badgeLabel}
                 </span>
               )}
@@ -770,6 +795,7 @@ export function CombatCharacterColumn({
           </div>
         )}
       </section>
+    </article>
 
       <GearDetailModal
         open={!!gearView}
@@ -779,7 +805,20 @@ export function CombatCharacterColumn({
         weapon={weapon}
         armor={armor}
       />
-    </article>
+    </>
+  )
+
+  return (
+    <ElectricBorder
+      color={electric.color}
+      speed={electric.speed}
+      chaos={electric.chaos}
+      borderRadius={12}
+      displacement={12}
+      borderOffset={12}
+      style={shellStyle}
+    >
+      {cardBody}
     </ElectricBorder>
   )
 }

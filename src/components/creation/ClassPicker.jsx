@@ -1,15 +1,7 @@
 import React from 'react'
-import { Crosshair, Shield, Axe, Sparkles, HeartPulse } from 'lucide-react'
 import { CHARACTER_CLASSES, getAttributeLabel } from '../../constants/classes'
+import { CLASS_FALLBACK_ICONS } from '../../constants/classIcons'
 import MagicBento from '../react-bits/MagicBento'
-
-const CLASS_ICONS = {
-  atirador: Crosshair,
-  tank: Shield,
-  porradeiro: Axe,
-  magica: Sparkles,
-  suporte: HeartPulse,
-}
 
 export function ClassPicker({ value, onChange }) {
   const cards = CHARACTER_CLASSES.map(cls => ({
@@ -17,7 +9,8 @@ export function ClassPicker({ value, onChange }) {
     title: cls.label,
     label: cls.attributes.map(getAttributeLabel).join(' · '),
     description: cls.description,
-    icon: CLASS_ICONS[cls.id],
+    icon: CLASS_FALLBACK_ICONS[cls.id],
+    iconSrc: cls.iconSrc,
     accent: cls.color,
     color: '#120f17',
     selected: value === cls.id,

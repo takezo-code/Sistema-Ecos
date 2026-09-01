@@ -10,6 +10,7 @@ export const CHARACTER_CLASSES = [
   {
     id: 'atirador',
     label: 'Traçado',
+    iconSrc: '/icons/classes/atirador.png',
     description: 'Desenha a trajetória no Eco. A precisão vem cedo; o olhar já mede o campo quando os outros ainda se posicionam.',
     color: '#06b6d4',
     attributes: ['destreza', 'carisma'],
@@ -23,6 +24,7 @@ export const CHARACTER_CLASSES = [
   {
     id: 'tank',
     label: 'Baluarte',
+    iconSrc: '/icons/classes/tank.png',
     description: 'Segura a linha no Eco. O corpo entra na frente; o impacto encontra ele antes de encontrar o grupo.',
     color: '#16a34a',
     attributes: ['vitalidade', 'vontade'],
@@ -36,6 +38,7 @@ export const CHARACTER_CLASSES = [
   {
     id: 'porradeiro',
     label: 'Fratura',
+    iconSrc: '/icons/classes/porradeiro.png',
     description: 'Força bruta que parte o corpo e o instante. Quando a vida aperta, o golpe pesa mais.',
     color: '#dc2626',
     attributes: ['forca', 'vontade'],
@@ -49,6 +52,7 @@ export const CHARACTER_CLASSES = [
   {
     id: 'magica',
     label: 'Fenda',
+    iconSrc: '/icons/classes/magica.png',
     description: 'Abre rachaduras no Eco. Dobra o que se vê, prende a mente e amplia o canal da Ruptura.',
     color: '#a855f7',
     attributes: ['ruptura', 'sabedoria'],
@@ -62,6 +66,7 @@ export const CHARACTER_CLASSES = [
   {
     id: 'suporte',
     label: 'Sutura',
+    iconSrc: '/icons/classes/suporte.png',
     description: 'Cose o Eco no corpo e na mente. A Sutura lê o que está partido e puxa de volta ao lugar.',
     color: '#fbbf24',
     attributes: ['inteligencia', 'sabedoria'],

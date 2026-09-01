@@ -9,6 +9,7 @@ import { Modal } from '../components/ui/Modal'
 import { Field, Input } from '../components/ui/Field'
 import { ImageUpload } from '../components/ui/ImageUpload'
 import { EntityThumb } from '../components/ui/EntityThumb'
+import { ClassIcon } from '../components/ui/ClassIcon'
 import { EmptyState } from '../components/ui/EmptyState'
 import {
   ATTRIBUTES,
@@ -642,11 +643,14 @@ function CharCard({ character, onEdit, onDelete, onInventory }) {
           <EntityThumb src={character.image} alt={character.name} size={52} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#e5e5e5', marginBottom: '2px' }}>{character.name}</div>
-            <div style={{ fontSize: '0.65rem', color: '#a855f7', fontFamily: 'monospace', marginBottom: '4px' }}>
-              NVL {character.level || 1} · {character.ecoPoints ?? 0} Ecos
-              {charClass && (
-                <span style={{ color: charClass.color }}> · {charClass.label.toUpperCase()}</span>
-              )}
+            <div style={{ fontSize: '0.65rem', color: '#a855f7', fontFamily: 'monospace', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              {charClass && <ClassIcon classIdOrEntity={character} size={18} />}
+              <span>
+                NVL {character.level || 1} · {character.ecoPoints ?? 0} Ecos
+                {charClass && (
+                  <span style={{ color: charClass.color }}> · {charClass.label.toUpperCase()}</span>
+                )}
+              </span>
             </div>
             {(character.personality || character.motivation || character.history) && (
               <div style={{ fontSize: '0.7rem', color: '#444', lineHeight: 1.5,

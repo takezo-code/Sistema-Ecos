@@ -15,7 +15,9 @@ import {
   AceternitySidebar,
   SidebarBody,
   SidebarLink,
+  useSidebar,
 } from './ui/aceternity-sidebar'
+import { EcosLogo } from './ui/EcosLogo'
 import { cn } from '../lib/utils'
 
 const ICON_CLASS = 'h-6 w-6 shrink-0'
@@ -107,6 +109,25 @@ function ConfigFooterLink({ active, onOpen }) {
   )
 }
 
+function SidebarBrand() {
+  const { open } = useSidebar()
+
+  return (
+    <div className={cn(
+      'mb-3 flex items-center gap-2.5 overflow-hidden px-0.5',
+      open ? 'justify-start' : 'justify-center',
+    )}
+    >
+      <EcosLogo size={34} className="shrink-0" />
+      {open ? (
+        <span className="truncate font-mono text-xs font-bold tracking-[0.2em] text-neutral-200">
+          ECOS
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
 export function Sidebar({
   activePage,
   managementView = MANAGEMENT_VIEWS.CHARACTERS,
@@ -127,6 +148,7 @@ export function Sidebar({
     <AceternitySidebar open={open} setOpen={setOpen}>
       <SidebarBody className="h-full min-h-0 justify-between gap-8">
         <nav className="flex flex-col gap-4 overflow-y-auto py-2">
+          <SidebarBrand />
           {SIDEBAR_LINKS.map((item, idx) => (
             <SidebarLink
               key={item.id}

@@ -1,10 +1,9 @@
 import React, { useState } from 'react'
-import { Hexagon } from 'lucide-react'
 import { downloadManualById } from '../services/manualDownloads'
 import { useSaveStore } from '../store/useSaveStore'
 import { markWelcomeIntroSeen } from '../services/welcomeService'
-import { THEME_ACCENT, THEME_ACCENT_SOFT, THEME_ACCENT_BORDER } from '../constants/theme'
 import GlassSurface from '../components/react-bits/GlassSurface'
+import { EcosLogo } from '../components/ui/EcosLogo'
 import { WelcomeIntro } from '../components/welcome/WelcomeIntro'
 import { WelcomeHome } from '../components/welcome/WelcomeHome'
 import { CampaignLoadPanel } from '../components/welcome/CampaignLoadPanel'
@@ -108,19 +107,13 @@ export function WelcomeScreen({ onEnter, initialPhase = 'intro' }) {
           marginBottom: phase === 'intro' ? '0.85rem' : '1rem',
           flexShrink: 0,
         }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 44,
-            height: 44,
-            borderRadius: 12,
-            border: `1px solid ${THEME_ACCENT_BORDER}`,
-            background: THEME_ACCENT_SOFT,
-            marginBottom: '0.85rem',
-          }}>
-            <Hexagon size={22} style={{ color: THEME_ACCENT }} strokeWidth={1.6} />
-          </div>
+          <EcosLogo
+            size={64}
+            style={{
+              margin: '0 auto 0.85rem',
+              boxShadow: '0 0 28px rgba(37, 99, 235, 0.35)',
+            }}
+          />
           <h1 style={{
             fontSize: 'clamp(1.6rem, 4vw, 2rem)',
             fontWeight: 800,

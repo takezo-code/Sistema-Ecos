@@ -4,6 +4,7 @@ import {
 } from 'lucide-react'
 import { SESSION_ULTRA_XP_TIERS } from '../constants/progression'
 import { EntityThumb } from '../components/ui/EntityThumb'
+import { ClassIcon } from '../components/ui/ClassIcon'
 import { useGroupStore } from '../store/useGroupStore'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useCampaignStore } from '../store/useCampaignStore'
@@ -176,9 +177,17 @@ function MemberRow({ character, selected, onManage, onRemove }) {
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.3rem',
           }}>
-            Nv.{character.level || 1}
-            {charClass && <span style={{ color: classColor }}> · {charClass.label}</span>}
+            <span>Nv.{character.level || 1}</span>
+            {charClass && (
+              <>
+                <ClassIcon classIdOrEntity={character} size={16} />
+                <span style={{ color: classColor }}>{charClass.label}</span>
+              </>
+            )}
           </div>
         </div>
 

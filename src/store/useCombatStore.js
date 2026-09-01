@@ -2,30 +2,38 @@ import { create } from 'zustand'
 import { storage, KEYS } from '../services/storage'
 import { genId } from '../utils/id'
 
-const load = () => {
-  const saved = storage.get(KEYS.combatSession) || {}
-  return {
-    campaignId: null,
-    combatGroupId: null,
-    activeEnemyId: null,
-    rollHistory: [],
-    ...saved,
+function normalizeEnemyIds(session = {}) {
+  if (Array.isArray(session.activeEnemyIds)) {
+    return [...new Set(session.activeEnemyIds.filter(Boolean))]
   }
+  if (session.activeEnemyId) return [session.activeEnemyId]
+  return []
 }
+
+const saved = storage.get(KEYS.combatSession) || {}
+
+const load = () => ({
+  campaignId: null,
+  combatGroupId: null,
+  activeEnemyIds: [],
+  rollHistory: [],
+  ...saved,
+  activeEnemyIds: normalizeEnemyIds(saved),
+})
 
 export const useCombatStore = create((set, get) => ({
   campaignId: load().campaignId ?? null,
   combatGroupId: load().combatGroupId ?? null,
-  activeEnemyId: load().activeEnemyId ?? null,
+  activeEnemyIds: load().activeEnemyIds ?? [],
   rollHistory: load().rollHistory ?? [],
   lastRoll: null,
 
   persist() {
-    const { campaignId, combatGroupId, activeEnemyId, rollHistory } = get()
+    const { campaignId, combatGroupId, activeEnemyIds, rollHistory } = get()
     storage.set(KEYS.combatSession, {
       campaignId,
       combatGroupId,
-      activeEnemyId,
+      activeEnemyIds,
       rollHistory,
     })
   },
@@ -36,7 +44,7 @@ export const useCombatStore = create((set, get) => ({
       set({
         campaignId,
         combatGroupId: null,
-        activeEnemyId: null,
+        activeEnemyIds: [],
         rollHistory: [],
       })
     } else {
@@ -50,8 +58,29 @@ export const useCombatStore = create((set, get) => ({
     get().persist()
   },
 
+  setActiveEnemyIds(npcIds) {
+    const ids = [...new Set((npcIds || []).filter(Boolean))]
+    set({ activeEnemyIds: ids })
+    get().persist()
+  },
+
+  /** @deprecated use addCombatEnemy / setActiveEnemyIds */
   setActiveEnemy(npcId) {
-    set({ activeEnemyId: npcId || null })
+    set({ activeEnemyIds: npcId ? [npcId] : [] })
+    get().persist()
+  },
+
+  addCombatEnemy(npcId) {
+    if (!npcId) return
+    const ids = get().activeEnemyIds
+    if (ids.includes(npcId)) return
+    set({ activeEnemyIds: [...ids, npcId] })
+    get().persist()
+  },
+
+  removeCombatEnemy(npcId) {
+    if (!npcId) return
+    set({ activeEnemyIds: get().activeEnemyIds.filter(id => id !== npcId) })
     get().persist()
   },
 
@@ -88,7 +117,7 @@ export const useCombatStore = create((set, get) => ({
     set({
       campaignId: session.campaignId ?? null,
       combatGroupId: session.combatGroupId ?? null,
-      activeEnemyId: session.activeEnemyId ?? null,
+      activeEnemyIds: normalizeEnemyIds(session),
       rollHistory: Array.isArray(session.rollHistory) ? session.rollHistory : [],
     })
     get().persist()
