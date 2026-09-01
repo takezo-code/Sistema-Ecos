@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { FolderOpen, Library, Plus } from 'lucide-react'
+import { FolderOpen, Library, Plus, Users } from 'lucide-react'
 import { addCampaign, suggestCampaignName } from '../../services/saveService'
 import { useSaveStore } from '../../store/useSaveStore'
 import { THEME_ACCENT } from '../../constants/theme'
@@ -59,7 +59,7 @@ function HomeOption({ icon: Icon, title, description, onClick, accent = THEME_AC
   )
 }
 
-export function WelcomeHome({ onNewCampaign, onOpenLoad, onOpenContents }) {
+export function WelcomeHome({ onNewCampaign, onOpenLoad, onOpenContents, onOpenCommunity }) {
   const { showToast } = useSaveStore()
   const [createOpen, setCreateOpen] = useState(false)
   const [suggestedName, setSuggestedName] = useState('')
@@ -123,6 +123,13 @@ export function WelcomeHome({ onNewCampaign, onOpenLoad, onOpenContents }) {
           description="Manuais em PDF para consultar na mesa."
           onClick={onOpenContents}
           accent="#c4b5fd"
+        />
+        <HomeOption
+          icon={Users}
+          title="Comunidade"
+          description="GitHub, e-mail, sugestões e contato com o projeto."
+          onClick={onOpenCommunity}
+          accent="#34d399"
         />
       </div>
 

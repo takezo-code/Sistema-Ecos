@@ -581,25 +581,53 @@ export function CampaignFlows({ campaign, onBack }) {
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'flex-end',
-        gap: '0.5rem',
+        justifyContent: 'space-between',
+        gap: '0.75rem',
         padding: '0.85rem 1.5rem',
       }}>
-        <button
-          type="button"
-          className="btn-ghost"
-          onClick={onBack}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem' }}
-        >
-          <ArrowLeft size={13} /> Voltar
-        </button>
-        <Button
-          onClick={() => setAddModalOpen(true)}
-          size="xs"
-          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-        >
-          Adicionar Fluxo
-        </Button>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{
+            fontSize: '0.58rem',
+            fontFamily: 'monospace',
+            letterSpacing: '0.12em',
+            color: '#555',
+            marginBottom: '0.2rem',
+          }}>
+            CAMPANHA
+          </div>
+          <h2 style={{
+            margin: 0,
+            fontSize: '1rem',
+            fontWeight: 700,
+            color: '#f0f0f0',
+            letterSpacing: '-0.02em',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>
+            {campaign.name}
+          </h2>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+          {onBack ? (
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={onBack}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem' }}
+            >
+              <ArrowLeft size={13} />
+              Voltar
+            </button>
+          ) : null}
+          <Button
+            onClick={() => setAddModalOpen(true)}
+            size="xs"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            Adicionar Fluxo
+          </Button>
+        </div>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 1.5rem 1.25rem' }}>

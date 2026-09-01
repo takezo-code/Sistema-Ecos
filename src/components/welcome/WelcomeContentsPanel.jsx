@@ -46,13 +46,10 @@ export function WelcomeContentsPanel({
             fontSize: '1.1rem',
             fontWeight: 700,
             color: '#f0f0f0',
-            marginBottom: '0.35rem',
+            marginBottom: 0,
           }}>
             Manuais em PDF
           </h2>
-          <p style={{ margin: 0, fontSize: '0.78rem', color: '#888', lineHeight: 1.5 }}>
-            Jogador, mestre, classes e história do mundo.
-          </p>
         </div>
       </div>
 

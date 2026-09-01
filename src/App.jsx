@@ -114,6 +114,17 @@ export default function App() {
     if (inApp) autoSave()
   }, [inApp])
 
+  const enterApp = () => {
+    setActivePage('campanha')
+    setCampanhaView('historia')
+    setInApp(true)
+  }
+
+  const backToWelcome = () => {
+    setWelcomePhase('home')
+    setInApp(false)
+  }
+
   const handleNavigate = (page, subView, type) => {
     // Compat: links antigos Gerenciamento/Equipamentos/Skills → Criação
     if (subView === 'creation') {
@@ -165,15 +176,20 @@ export default function App() {
       : activePage === 'emjogo'
         ? { initialView: emjogoView, onViewChange: setEmjogoView, onNavigate: handleNavigate }
         : activePage === 'campanha'
-          ? { initialView: campanhaView, onViewChange: setCampanhaView, onNavigate: handleNavigate }
+          ? {
+              initialView: campanhaView,
+              onViewChange: setCampanhaView,
+              onNavigate: handleNavigate,
+              onBackToWelcome: backToWelcome,
+            }
           : activePage === 'config'
-            ? { onNavigate: handleNavigate, onBackToWelcome: () => { setWelcomePhase('home'); setInApp(false) } }
+            ? { onNavigate: handleNavigate, onBackToWelcome: backToWelcome }
             : { onNavigate: handleNavigate }
 
   const shell = !inApp ? (
     <>
       <WelcomeScreen
-        onEnter={() => setInApp(true)}
+        onEnter={enterApp}
         initialPhase={welcomePhase}
       />
       <SaveToast />

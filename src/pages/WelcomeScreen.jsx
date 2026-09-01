@@ -9,12 +9,14 @@ import { WelcomeIntro } from '../components/welcome/WelcomeIntro'
 import { WelcomeHome } from '../components/welcome/WelcomeHome'
 import { CampaignLoadPanel } from '../components/welcome/CampaignLoadPanel'
 import { WelcomeContentsPanel } from '../components/welcome/WelcomeContentsPanel'
+import { WelcomeCommunityPanel } from '../components/welcome/WelcomeCommunityPanel'
 
 const PHASE_MAX_WIDTH = {
   intro: 500,
   home: 480,
   load: 540,
   contents: 480,
+  community: 480,
 }
 
 const PHASE_SHELL_STYLE = {
@@ -47,7 +49,7 @@ function ModePill({ children, active = true }) {
   )
 }
 
-/** intro (3 passos) → home → load | contents */
+/** intro (3 passos) → home → load | contents | community */
 export function WelcomeScreen({ onEnter, initialPhase = 'intro' }) {
   const [phase, setPhase] = useState(initialPhase)
   const [pdfLoadingId, setPdfLoadingId] = useState(null)
@@ -158,6 +160,7 @@ export function WelcomeScreen({ onEnter, initialPhase = 'intro' }) {
             onNewCampaign={() => onEnter?.()}
             onOpenLoad={() => setPhase('load')}
             onOpenContents={() => setPhase('contents')}
+            onOpenCommunity={() => setPhase('community')}
           />
         ) : null}
 
@@ -174,6 +177,10 @@ export function WelcomeScreen({ onEnter, initialPhase = 'intro' }) {
             onDownloadPdf={handleDownloadPdf}
             pdfLoadingId={pdfLoadingId}
           />
+        ) : null}
+
+        {phase === 'community' ? (
+          <WelcomeCommunityPanel onBack={() => setPhase('home')} />
         ) : null}
         </div>
       </GlassSurface>

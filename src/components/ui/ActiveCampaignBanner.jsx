@@ -39,10 +39,10 @@ export function ActiveCampaignBanner({ onNavigate }) {
       {onNavigate && (
         <button
           type="button"
-          onClick={() => onNavigate('campanha', 'historia')}
+          onClick={() => onNavigate('config')}
           style={{ background: 'none', border: 'none', color: THEME_ACCENT, cursor: 'pointer', textDecoration: 'underline', fontSize: 'inherit' }}
         >
-          Selecione uma em Campanhas
+          Vá à tela inicial em Config
         </button>
       )}
     </div>
