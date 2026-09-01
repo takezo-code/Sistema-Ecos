@@ -27,7 +27,7 @@ O sistema usa **marcas de vida** em vez de HP tradicional, **Eco** como recurso 
 Projeto pessoal / portfólio, em evolução contínua.
 
 <p align="center">
-  <img src="docs/screenshots/11-combate.jpg" alt="Painel de combate ECOS" width="100%" />
+  <img src="docs/screenshots/11-combate.png" alt="Painel de combate ECOS" width="100%" />
   <br />
   <em>Combate com múltiplos jogadores e inimigos, skills, marcas de vida e rolagens.</em>
 </p>
@@ -41,7 +41,7 @@ Projeto pessoal / portfólio, em evolução contínua.
 Fluxo narrativo da campanha com cenas, objetivos e escolhas com consequência.
 
 <p align="center">
-  <img src="docs/screenshots/02-campanha-historia.jpg" alt="Fluxo narrativo da campanha" width="100%" />
+  <img src="docs/screenshots/02-campanha-historia.png" alt="Fluxo narrativo da campanha" width="100%" />
 </p>
 
 ### Criação de entidades
@@ -49,21 +49,21 @@ Fluxo narrativo da campanha com cenas, objetivos e escolhas com consequência.
 Personagens, NPCs, chefes e organizações no mesmo fluxo.
 
 <p align="center">
-  <img src="docs/screenshots/04-criacao.jpg" alt="Tela de criação" width="85%" />
+  <img src="docs/screenshots/04-criacao.png" alt="Tela de criação" width="85%" />
 </p>
 
 ### Gestão e ficha
 
 | Lista de personagens | Ficha — Traçado |
 |:---:|:---:|
-| <img src="docs/screenshots/05-personagens.jpg" alt="Lista de personagens" width="100%" /> | <img src="docs/screenshots/08-ficha-tracado.jpg" alt="Ficha do personagem" width="100%" /> |
+| <img src="docs/screenshots/05-personagens.png" alt="Lista de personagens" width="100%" /> | <img src="docs/screenshots/08-ficha-tracado.png" alt="Ficha do personagem" width="100%" /> |
 
 ### Organizações
 
 Facções com ideologia, aliados e inimigos para o mestre consultar na mesa.
 
 <p align="center">
-  <img src="docs/screenshots/07-organizacao.jpg" alt="Organização da campanha" width="70%" />
+  <img src="docs/screenshots/07-organizacao.png" alt="Organização da campanha" width="70%" />
 </p>
 
 > Screenshots da campanha demo **As Fraturas de Aethel**. Para reproduzir: `Config` → **Carregar campanha demo (README)** ou importe `public/demo/ecos-demo-screenshots.json`.

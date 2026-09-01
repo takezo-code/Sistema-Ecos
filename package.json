@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "demo:export": "npx vite-node scripts/export-demo-campaign.mjs",
+    "screenshots:readme": "npm run demo:export && npx vite-node scripts/capture-readme-screenshots.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
