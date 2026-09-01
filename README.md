@@ -185,20 +185,10 @@ src/
 ├── services/       # storage, save/import, PDFs, demo seed
 └── store/          # Zustand (campanha, personagens, combate…)
 
-docs/
-├── MANUAL_JOGADOR.md
-├── README-SCREENSHOTS.md
-└── screenshots/    # imagens deste README
+docs/screenshots/    # imagens deste README
 
 public/demo/        # campanha demo exportável (JSON)
 ```
-
----
-
-## Documentação
-
-- [Manual do Jogador](docs/MANUAL_JOGADOR.md) — criação, vida, Eco, descanso e rolagem
-- [Guia de screenshots](docs/README-SCREENSHOTS.md) — como reproduzir as capturas da demo
 
 ---
 
