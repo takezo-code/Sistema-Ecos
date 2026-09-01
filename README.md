@@ -66,8 +66,6 @@ Facções com ideologia, aliados e inimigos para o mestre consultar na mesa.
   <img src="docs/screenshots/07-organizacao.png" alt="Organização da campanha" width="70%" />
 </p>
 
-> Screenshots da campanha demo **As Fraturas de Aethel**. Para reproduzir: `Config` → **Carregar campanha demo (README)** ou importe `public/demo/ecos-demo-screenshots.json`.
-
 ---
 
 ## Funcionalidades
@@ -156,15 +154,6 @@ npm run build
 npm run preview
 ```
 
-### Campanha demo (screenshots / testes)
-
-```bash
-# Gera o JSON em public/demo/
-npm run demo:export
-```
-
-No app: **Config** → **Carregar campanha demo (README)**.
-
 ### Lint
 
 ```bash
@@ -182,12 +171,10 @@ src/
 ├── data/           # catálogo de skills por classe
 ├── mechanics/      # combate, eco, buffs, passivas, progressão
 ├── pages/          # telas principais
-├── services/       # storage, save/import, PDFs, demo seed
+├── services/       # storage, save/import, PDFs
 └── store/          # Zustand (campanha, personagens, combate…)
 
 docs/screenshots/    # imagens deste README
-
-public/demo/        # campanha demo exportável (JSON)
 ```
 
 ---
