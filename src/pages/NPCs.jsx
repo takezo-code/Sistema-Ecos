@@ -64,8 +64,8 @@ const EMPTY_FORM = {
   resistenciaMental: 0,
   marcasMaximas: 0,
   skills: [],
-  starterWeapon: { name: '', kind: '', description: '', image: '', passives: [] },
-  starterArmor: { name: '', type: getForgeableArmorTypes()[0].id, image: '', passives: [] },
+  starterWeapon: { name: '', image: '', passives: [], rollCount: 0 },
+  starterArmor: { type: getForgeableArmorTypes()[0].id, passives: [], rollCount: 0 },
 }
 
 const PAPEL_OPTIONS = [

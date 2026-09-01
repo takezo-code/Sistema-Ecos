@@ -10,7 +10,7 @@ import { EntitySkillsPanel } from './EntitySkillsPanel'
 import { CharacterGearPanel } from '../equipment/CharacterGearPanel'
 import { isInCreationPhase } from '../../constants/attributes'
 import { entityHasEcoPowers, isNpcEntity } from '../../constants/entityProgression'
-import { Button } from '../ui/Button'
+import { EntityQuickActionTile } from './EntityQuickActionTile'
 
 export function EntityManagePanel({
   entity,
@@ -64,92 +64,99 @@ export function EntityManagePanel({
     }}>
       <header style={{
         display: 'flex',
-        alignItems: 'center',
+        flexDirection: 'column',
         gap: '0.85rem',
-        flexWrap: 'wrap',
         padding: '0.15rem 0 0.85rem',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
-        <EntityThumb src={entity.image} alt={entity.name} size={54} borderRadius="12px" />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '1.1rem', fontWeight: 750, color: '#f5f5f5', letterSpacing: '-0.02em' }}>
-              {entity.name}
-            </span>
-            <span style={{
-              fontSize: '0.58rem',
-              fontFamily: 'monospace',
-              color: '#c084fc',
-              background: 'rgba(168,85,247,0.12)',
-              border: '1px solid rgba(168,85,247,0.28)',
-              borderRadius: 999,
-              padding: '0.18rem 0.5rem',
-              letterSpacing: '0.06em',
-            }}>
-              NVL {entity.level || 1}
-            </span>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem', minWidth: 0 }}>
+          <EntityThumb src={entity.image} alt={entity.name} size={54} borderRadius="12px" />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '1.1rem', fontWeight: 750, color: '#f5f5f5', letterSpacing: '-0.02em' }}>
+                {entity.name}
+              </span>
+              <span style={{
+                fontSize: '0.58rem',
+                fontFamily: 'monospace',
+                color: '#c084fc',
+                background: 'rgba(168,85,247,0.12)',
+                border: '1px solid rgba(168,85,247,0.28)',
+                borderRadius: 999,
+                padding: '0.18rem 0.5rem',
+                letterSpacing: '0.06em',
+              }}>
+                NVL {entity.level || 1}
+              </span>
+            </div>
           </div>
           {onEditProfile && (
             <button
               type="button"
               onClick={onEditProfile}
               style={{
-                marginTop: 6,
+                flexShrink: 0,
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.3rem',
-                fontSize: '0.65rem',
-                background: 'transparent',
-                border: 'none',
-                padding: 0,
-                color: '#777',
+                gap: '0.35rem',
+                fontSize: '0.68rem',
+                fontWeight: 600,
+                color: '#aaa',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 8,
+                padding: '0.4rem 0.65rem',
                 cursor: 'pointer',
+                transition: 'color 0.15s, border-color 0.15s, background 0.15s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#c9c9c9' }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#777' }}
+              onMouseEnter={e => {
+                e.currentTarget.style.color = '#f0f0f0'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.16)'
+                e.currentTarget.style.background = 'rgba(255,255,255,0.07)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = '#aaa'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+                e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
+              }}
             >
-              <Pencil size={11} /> Editar ficha
+              <Pencil size={12} />
+              Editar ficha
             </button>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(148px, 1fr))',
+          gap: '0.45rem',
+        }}>
           <ExportFichaButton
             entity={entity}
             kind={entity.papelCombate === 'boss' ? 'boss' : isNpcEntity(entity) ? 'npc' : 'character'}
+            variant="tile"
           />
-          <Button
-            type="button"
-            variant="secondary"
-            size="xs"
+          <EntityQuickActionTile
+            icon={BookOpen}
+            label="Perfil narrativo"
+            color="#06b6d4"
             onClick={() => setNarrativeOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-          >
-            <BookOpen size={12} style={{ color: '#06b6d4' }} />
-            Perfil narrativo
-          </Button>
+          />
           {hasEco && (
-            <Button
-              type="button"
-              variant="secondary"
-              size="xs"
+            <EntityQuickActionTile
+              icon={Sparkles}
+              label="Skills"
+              color="#a855f7"
               onClick={() => setSkillsOpen(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-            >
-              <Sparkles size={12} style={{ color: '#a855f7' }} />
-              Skills
-            </Button>
+            />
           )}
           {showGear && (
-            <Button
-              type="button"
-              variant="secondary"
-              size="xs"
+            <EntityQuickActionTile
+              icon={Sword}
+              label="Equipamento"
+              color="#f97316"
               onClick={() => setGearOpen(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-            >
-              <Sword size={12} style={{ color: '#f97316' }} />
-              Equipamento
-            </Button>
+            />
           )}
         </div>
       </header>
@@ -211,7 +218,7 @@ export function EntityManagePanel({
           onForge={onForgeGear}
           onSetPassive={onSetGearPassive}
           onSetWeaponSkill={onSetWeaponSkill}
-          manualValues={isNpcEntity(entity)}
+          manualValues
         />
       </Modal>
     </div>

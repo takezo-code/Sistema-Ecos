@@ -60,8 +60,8 @@ const EMPTY_FORM = {
   unspentSocialPoints: STARTING_SOCIAL_POINTS,
   ecoPoints: 1,
   skills: [],
-  starterWeapon: { name: '', kind: '', description: '', image: '', passives: [] },
-  starterArmor: { name: '', type: getForgeableArmorTypes()[0].id, image: '', passives: [] },
+  starterWeapon: { name: '', image: '', passives: [], rollCount: 0 },
+  starterArmor: { type: getForgeableArmorTypes()[0].id, passives: [], rollCount: 0 },
 }
 
 function AttributeInput({ attr, value, onChange, canIncrease, classBonus = 0, isClassAttr = false }) {
@@ -208,33 +208,28 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
     return { ok: true }
   }
 
-  const canEnterStep = (target) => {
-    if (target <= step) return { ok: true }
-    for (let s = 1; s < target; s += 1) {
-      const check = getStepCheck(s)
-      if (!check.ok) return check
-    }
-    return { ok: true }
-  }
-
-  const handleStepChange = (next) => {
-    const check = canEnterStep(next)
-    if (!check.ok) {
-      setAttrError(check.message)
+  const advanceWizardStep = (targetStep) => {
+    const target = Math.max(1, Math.min(totalSteps, targetStep))
+    if (target <= step) {
+      setAttrError(null)
+      setStep(target)
       return
     }
-    setAttrError(null)
-    setStep(next)
-  }
-
-  const handleContinue = () => {
     const check = getStepCheck(step)
     if (!check.ok) {
       setAttrError(check.message)
       return
     }
     setAttrError(null)
-    setStep(s => Math.min(totalSteps, s + 1))
+    setStep(Math.min(target, step + 1))
+  }
+
+  const handleStepChange = (next) => {
+    advanceWizardStep(next)
+  }
+
+  const handleContinue = () => {
+    advanceWizardStep(step + 1)
   }
 
   const currentStepCheck = getStepCheck(step)
@@ -242,6 +237,10 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
 
   const handleSubmit = e => {
     e.preventDefault()
+    if (useWizard && step < totalSteps) {
+      advanceWizardStep(step + 1)
+      return
+    }
     if (profileOnly) {
       if (!nameCheck.ok) {
         setAttrError(nameCheck.message)
@@ -290,10 +289,26 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
     }
   }
 
+  const handleNameKeyDown = (e) => {
+    if (e.key !== 'Enter' || !useWizard || step !== 1) return
+    e.preventDefault()
+    e.stopPropagation()
+    advanceWizardStep(2)
+  }
+
   const profileBlock = (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
       <Field label="Nome" required>
-        <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Nome do personagem" autoFocus={step === 1 || !useWizard} />
+        <Input
+          value={form.name}
+          onChange={e => {
+            set('name', e.target.value)
+            if (attrError) setAttrError(null)
+          }}
+          onKeyDown={handleNameKeyDown}
+          placeholder="Nome do personagem"
+          autoFocus={step === 1 || !useWizard}
+        />
       </Field>
       <ImageUpload
         value={form.image}
@@ -362,7 +377,7 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
           armor={form.starterArmor}
           onChangeWeapon={v => set('starterWeapon', v)}
           onChangeArmor={v => set('starterArmor', v)}
-          subtitle="Esta arma e esta armadura acompanham o personagem pela campanha toda."
+          subtitle="Nome da arma, tipo de armadura e até 5 rolagens de atributos. Depois, ajuste na ficha."
         />
       )}
 
@@ -465,7 +480,6 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
                 type="button"
                 onClick={handleContinue}
                 disabled={!canContinue}
-                title={!canContinue ? currentStepCheck.message : undefined}
               >
                 Continuar
               </Button>
@@ -494,7 +508,7 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
                     armor={form.starterArmor}
                     onChangeWeapon={v => set('starterWeapon', v)}
                     onChangeArmor={v => set('starterArmor', v)}
-                    subtitle="Esta arma e esta armadura acompanham o personagem pela campanha toda."
+                    subtitle="Nome da arma, tipo de armadura e até 5 rolagens de atributos. Depois, ajuste na ficha."
                   />
                 </>
               )}

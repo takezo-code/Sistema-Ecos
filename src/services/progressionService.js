@@ -193,15 +193,14 @@ export function validateStartingEcoSkillSelected(entity) {
   return { ok: true }
 }
 
-/** Criação: exige nome na arma e na armadura iniciais. */
+/** Criação: exige nome da arma e tipo de armadura iniciais. */
 export function validateStartingStarterGear(entity) {
   const weaponName = String(entity?.starterWeapon?.name || '').trim()
-  const armorName = String(entity?.starterArmor?.name || '').trim()
   if (!weaponName) {
     return { ok: false, message: 'Dê um nome à arma inicial para continuar.' }
   }
-  if (!armorName) {
-    return { ok: false, message: 'Dê um nome à armadura inicial para continuar.' }
+  if (!entity?.starterArmor?.type) {
+    return { ok: false, message: 'Escolha o tipo de armadura para continuar.' }
   }
   return { ok: true }
 }

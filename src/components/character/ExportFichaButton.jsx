@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Download, FileImage, FileText, Loader2 } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Modal } from '../ui/Modal'
+import { EntityQuickActionTile } from '../management/EntityQuickActionTile'
 import { downloadEntitySheet } from '../../services/characterSheetExport'
 import { useSaveStore } from '../../store/useSaveStore'
 import { isNpcEntity } from '../../constants/entityProgression'
@@ -20,7 +21,7 @@ function resolveExportKind(entity, kind) {
   return 'character'
 }
 
-export function ExportFichaButton({ entity, kind, compact = false }) {
+export function ExportFichaButton({ entity, kind, compact = false, variant = 'button' }) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(null)
   const showToast = useSaveStore(s => s.showToast)
@@ -43,7 +44,14 @@ export function ExportFichaButton({ entity, kind, compact = false }) {
 
   return (
     <>
-      {compact ? (
+      {variant === 'tile' ? (
+        <EntityQuickActionTile
+          icon={Download}
+          label="Exportar ficha"
+          color="#94a3b8"
+          onClick={() => setOpen(true)}
+        />
+      ) : compact ? (
         <button
           type="button"
           onClick={() => setOpen(true)}

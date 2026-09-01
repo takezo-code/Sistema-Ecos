@@ -21,6 +21,9 @@ export const GEAR_CATEGORIES = Object.freeze({
   ARMOR: 'armadura',
 })
 
+/** Máximo de rolagens de atributos de item durante a criação do personagem. */
+export const STARTER_GEAR_MAX_ROLLS = 5
+
 /** Slots do paper-doll: só arma e armadura. */
 export const GEAR_SLOTS = [
   { id: 'arma',     label: 'Arma',     category: GEAR_CATEGORIES.WEAPON },

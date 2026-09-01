@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
 import { Dices } from 'lucide-react'
-import { Field, Input, Textarea, Select } from '../ui/Field'
+import { Field, Input, Select } from '../ui/Field'
 import { ImageUpload } from '../ui/ImageUpload'
 import {
   GEAR_CATEGORIES,
   getForgeableArmorTypes,
+  STARTER_GEAR_MAX_ROLLS,
 } from '../../mechanics/equipment/characterGear'
 import {
   formatPassive,
@@ -14,19 +15,24 @@ import {
 } from '../../mechanics/equipment/gearPassiveEngine'
 import { Button } from '../ui/Button'
 
-function StarterPassivesRoller({ category, item, color, onChange }) {
+function StarterPassivesRoller({ category, item, color, onChange, maxRolls = STARTER_GEAR_MAX_ROLLS }) {
   const slots = getPassiveSlotsForCategory(category)
   const aligned = getItemPassivesAligned(category, item)
   const [drafts, setDrafts] = useState(null)
   const hasDrafts = drafts != null
+  const rollCount = item?.rollCount ?? 0
+  const rollsLeft = Math.max(0, maxRolls - rollCount)
+  const canRoll = rollsLeft > 0
 
   const handleRollAll = () => {
+    if (!canRoll) return
     const next = {}
     for (const def of slots) {
       const rolled = rollPassive(category, def.slot)
       if (rolled) next[def.slot] = rolled
     }
     setDrafts(next)
+    onChange?.({ ...item, rollCount: rollCount + 1 })
   }
 
   const handleKeepAll = () => {
@@ -44,11 +50,12 @@ function StarterPassivesRoller({ category, item, color, onChange }) {
           variant="secondary"
           size="xs"
           onClick={handleRollAll}
-          title="Rola todos os slots de uma vez"
+          disabled={!canRoll}
+          title={canRoll ? 'Rola todos os atributos de uma vez' : 'Limite de rolagens na criação'}
           style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '4px 10px' }}
         >
           <Dices size={12} />
-          Rolagem
+          Rolagem ({rollCount}/{maxRolls})
         </Button>
         {hasDrafts && (
           <Button
@@ -57,10 +64,16 @@ function StarterPassivesRoller({ category, item, color, onChange }) {
             onClick={handleKeepAll}
             style={{ padding: '4px 10px' }}
           >
-            Manter tudo
+            Manter
           </Button>
         )}
       </div>
+
+      {!canRoll && !hasDrafts && (
+        <p style={{ fontSize: '0.65rem', color: '#666', margin: 0, lineHeight: 1.45 }}>
+          Limite de rolagens atingido. Ajuste os atributos na ficha depois.
+        </p>
+      )}
 
       {slots.map((def, i) => {
         const kept = aligned[i]
@@ -89,9 +102,27 @@ function StarterPassivesRoller({ category, item, color, onChange }) {
   )
 }
 
+function GearCard({ label, color, children }) {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.65rem',
+      padding: '0.75rem',
+      background: '#0d0d0d',
+      border: '1px solid #1a1a1a',
+      borderRadius: '3px',
+    }}>
+      <div style={{ fontSize: '0.55rem', color, fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+        {label}
+      </div>
+      {children}
+    </div>
+  )
+}
+
 /**
- * Forja inicial: arma livre (nome, o que é, descrição, arte) e armadura com tipo mecânico.
- * Na criação dá para rolar os atributos de item antes de salvar.
+ * Equipamento inicial na criação: arma (nome + foto + rolagem) e armadura (tipo + rolagem).
  */
 export function StarterGearSection({
   weapon,
@@ -103,62 +134,32 @@ export function StarterGearSection({
   const armorTypes = getForgeableArmorTypes()
   const weaponDraft = {
     name: '',
-    kind: '',
-    description: '',
     image: '',
     passives: [],
+    rollCount: 0,
     ...(weapon || {}),
   }
   const armorDraft = {
-    name: '',
     type: armorTypes[0]?.id ?? 'leve',
-    image: '',
     passives: [],
+    rollCount: 0,
     ...(armor || {}),
   }
-  const armorType = armorTypes.find(t => t.id === armorDraft.type) ?? armorTypes[0]
 
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
       {subtitle && (
-        <p style={{ fontSize: '0.72rem', color: '#666', margin: '0 0 0.75rem', lineHeight: 1.45 }}>
+        <p style={{ fontSize: '0.72rem', color: '#666', margin: 0, lineHeight: 1.45 }}>
           {subtitle}
         </p>
       )}
 
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.65rem',
-        padding: '0.75rem',
-        background: '#0d0d0d',
-        border: '1px solid #1a1a1a',
-        borderRadius: '3px',
-        marginBottom: '0.75rem',
-      }}>
-        <div style={{ fontSize: '0.55rem', color: '#f97316', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-          ARMA
-        </div>
+      <GearCard label="ARMA" color="#f97316">
         <Field label="Nome" required>
           <Input
             value={weaponDraft.name}
             onChange={e => onChangeWeapon({ ...weaponDraft, name: e.target.value })}
             placeholder="Ex.: Lâmina do Eco"
-          />
-        </Field>
-        <Field label="O que é a arma">
-          <Input
-            value={weaponDraft.kind || ''}
-            onChange={e => onChangeWeapon({ ...weaponDraft, kind: e.target.value })}
-            placeholder="Ex.: rifle de precisão, katana quebrada, orbe de vidro…"
-          />
-        </Field>
-        <Field label="Descrição">
-          <Textarea
-            rows={3}
-            value={weaponDraft.description || ''}
-            onChange={e => onChangeWeapon({ ...weaponDraft, description: e.target.value })}
-            placeholder="Como parece, de onde veio, como é usada…"
           />
         </Field>
         <ImageUpload
@@ -173,36 +174,12 @@ export function StarterGearSection({
           color="#f97316"
           onChange={onChangeWeapon}
         />
-      </div>
+      </GearCard>
 
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.65rem',
-        padding: '0.75rem',
-        background: '#0d0d0d',
-        border: '1px solid #1a1a1a',
-        borderRadius: '3px',
-      }}>
-        <div style={{ fontSize: '0.55rem', color: '#94a3b8', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-          ARMADURA
-        </div>
-        <Field label="Nome" required>
-          <Input
-            value={armorDraft.name}
-            onChange={e => onChangeArmor({ ...armorDraft, name: e.target.value })}
-            placeholder={armorType ? armorType.label : 'Nome da armadura'}
-          />
-        </Field>
-        <ImageUpload
-          value={armorDraft.image || ''}
-          onChange={img => onChangeArmor({ ...armorDraft, image: img })}
-          label="Foto da armadura"
-          outputSize={256}
-        />
-        <Field label="Tipo">
+      <GearCard label="ARMADURA" color="#94a3b8">
+        <Field label="Tipo" required>
           <Select
-            value={armorType?.id ?? ''}
+            value={armorDraft.type ?? armorTypes[0]?.id ?? ''}
             onChange={e => onChangeArmor({ ...armorDraft, type: e.target.value })}
           >
             {armorTypes.map(t => (
@@ -216,7 +193,7 @@ export function StarterGearSection({
           color="#16a34a"
           onChange={onChangeArmor}
         />
-      </div>
-    </>
+      </GearCard>
+    </div>
   )
 }

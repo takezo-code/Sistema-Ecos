@@ -95,6 +95,11 @@ function AttributeInput({ attr, value, effectiveValue, max, showMax, onChange, c
   )
 }
 
+function attributeGridColumns(count) {
+  if (count === 4) return 'repeat(2, minmax(0, 1fr))'
+  return 'repeat(auto-fill, minmax(132px, 1fr))'
+}
+
 export function AttributeGrid({
   entity,
   onChange,
@@ -228,6 +233,48 @@ export function AttributeGrid({
     <MetaChip color="#e879f9" tone="solid">{pendingSocial} pend.</MetaChip>
   ) : null
 
+  const renderPhysicalAttribute = (attr) => {
+    const value = entity.attributes?.[attr.key] || 0
+    const max = isCreation ? getInitialAttributeMax() : getAttributeMax(attr.key)
+    const baseVal = entity.attributes?.[attr.key] || 0
+    const effectiveValue = effectiveAttrs[attr.key] !== baseVal ? effectiveAttrs[attr.key] : null
+    return (
+      <AttributeInput
+        key={attr.key}
+        attr={attr}
+        value={value}
+        effectiveValue={effectiveValue}
+        max={max}
+        showMax={!isCreation}
+        canIncrease={canIncreaseAttr(attr.key, value)}
+        canDecrease={getCanDecrease(attr.key, value)}
+        onChange={v => {
+          const floor = isCreation ? 0 : getCreationAttributeFloor(entity, attr.key)
+          handleChange(attr.key, Math.max(floor, Math.min(max, v)))
+        }}
+      />
+    )
+  }
+
+  const physicalAttributesGrid = attrList.length === 5 ? (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.45rem' }}>
+        {attrList.slice(0, 3).map(renderPhysicalAttribute)}
+      </div>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+        gap: '0.45rem',
+      }}>
+        {attrList.slice(3).map(renderPhysicalAttribute)}
+      </div>
+    </div>
+  ) : (
+    <div style={{ display: 'grid', gridTemplateColumns: attributeGridColumns(attrList.length), gap: '0.45rem' }}>
+      {attrList.map(renderPhysicalAttribute)}
+    </div>
+  )
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
       <PanelSection icon={Dumbbell} title="Atributos físicos" accent="#dc2626" meta={physicalMeta}>
@@ -243,34 +290,11 @@ export function AttributeGrid({
             {validation.errors[0]?.message}
           </div>
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(132px, 1fr))', gap: '0.45rem' }}>
-          {attrList.map(attr => {
-            const value = entity.attributes?.[attr.key] || 0
-            const max = isCreation ? getInitialAttributeMax() : getAttributeMax(attr.key)
-            const baseVal = entity.attributes?.[attr.key] || 0
-            const effectiveValue = effectiveAttrs[attr.key] !== baseVal ? effectiveAttrs[attr.key] : null
-            return (
-              <AttributeInput
-                key={attr.key}
-                attr={attr}
-                value={value}
-                effectiveValue={effectiveValue}
-                max={max}
-                showMax={!isCreation}
-                canIncrease={canIncreaseAttr(attr.key, value)}
-                canDecrease={getCanDecrease(attr.key, value)}
-                onChange={v => {
-                  const floor = isCreation ? 0 : getCreationAttributeFloor(entity, attr.key)
-                  handleChange(attr.key, Math.max(floor, Math.min(max, v)))
-                }}
-              />
-            )
-          })}
-        </div>
+        {physicalAttributesGrid}
       </PanelSection>
 
       <PanelSection icon={Users} title="Atributos de cena" accent="#e879f9" meta={socialMeta}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(132px, 1fr))', gap: '0.45rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: attributeGridColumns(SOCIAL_ATTRIBUTES.length), gap: '0.45rem' }}>
           {SOCIAL_ATTRIBUTES.map(attr => {
             const value = entity.socialAttributes?.[attr.key] || 0
             const max = isCreation ? getInitialSocialMax() : getSocialAttributeMax(attr.key)
