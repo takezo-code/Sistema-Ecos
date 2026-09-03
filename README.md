@@ -18,6 +18,10 @@
 </p>
 
 <p align="center">
+  <a href="https://sistema-ecos.vercel.app"><strong>Testar online → sistema-ecos.vercel.app</strong></a>
+</p>
+
+<p align="center">
   <a href="#-sobre">Sobre</a> ·
   <a href="#-capturas-de-tela">Screenshots</a> ·
   <a href="#-o-que-o-sistema-faz">Funcionalidades</a> ·
@@ -148,6 +152,14 @@ Aplicação **SPA** moderna, sem backend obrigatório.
 
 ## Como rodar
 
+### Demo online
+
+Para testar sem clonar o repositório:
+
+**https://sistema-ecos.vercel.app**
+
+Os dados ficam salvos no navegador (localStorage).
+
 ### Pré-requisitos
 
 - Node.js 18+ (LTS recomendado)
@@ -156,8 +168,8 @@ Aplicação **SPA** moderna, sem backend obrigatório.
 ### Instalação
 
 ```bash
-git clone https://github.com/takezo-code/sistema-rpg.git
-cd sistema-rpg
+git clone https://github.com/takezo-code/Sistema-Ecos.git
+cd Sistema-Ecos
 npm install
 ```
 

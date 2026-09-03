@@ -1,6 +1,6 @@
 export const CONTACT_EMAIL = 'thales.gcr05@gmail.com'
 
-export const GITHUB_REPO_URL = 'https://github.com/takezo-code/sistema-rpg'
+export const GITHUB_REPO_URL = 'https://github.com/takezo-code/Sistema-Ecos'
 
 export const GITHUB_ISSUES_URL = `${GITHUB_REPO_URL}/issues`
 
