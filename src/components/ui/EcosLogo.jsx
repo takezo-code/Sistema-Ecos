@@ -19,9 +19,10 @@ export function EcosLogo({
       style={{
         width: size,
         height: size,
-        objectFit: 'cover',
+        objectFit: 'contain',
         display: 'block',
         borderRadius: rounded ? Math.round(size * 0.22) : 0,
+        background: 'transparent',
         ...style,
       }}
     />

@@ -58,7 +58,7 @@ export function WelcomeScreen({ onEnter, initialPhase = 'intro' }) {
     setPdfLoadingId(manualId)
     try {
       const item = await downloadManualById(manualId)
-      showToast(`${item.label.replace('PDF — ', '')} baixado.`, 'success')
+      showToast(`${item.label} baixado.`, 'success')
     } catch (e) {
       showToast(e.message || 'Erro ao baixar PDF.', 'error')
     } finally {

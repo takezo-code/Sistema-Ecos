@@ -71,7 +71,7 @@ function StarterPassivesRoller({ category, item, color, onChange, maxRolls = STA
 
       {!canRoll && !hasDrafts && (
         <p style={{ fontSize: '0.65rem', color: '#666', margin: 0, lineHeight: 1.45 }}>
-          Limite de rolagens atingido. Ajuste os atributos na ficha depois.
+          Limite de rolagens atingido. Novas rolagens ficam na ficha.
         </p>
       )}
 

@@ -243,7 +243,7 @@ export function EntityManagePanel({
           onForge={onForgeGear}
           onSetPassive={onSetGearPassive}
           onSetWeaponSkill={onSetWeaponSkill}
-          manualValues
+          manualValues={isNpc || entity.papelCombate === 'boss'}
         />
       </Modal>
     </div>

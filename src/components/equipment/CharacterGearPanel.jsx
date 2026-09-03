@@ -308,7 +308,7 @@ function WeaponSkillEditor({ skill, onSave }) {
   )
 }
 
-function WeaponDetails({ character: _character, weapon, onSetPassive, onSetWeaponSkill, manualValues = true }) {
+function WeaponDetails({ character: _character, weapon, onSetPassive, onSetWeaponSkill, manualValues = false }) {
   const kindLabel = getWeaponKindLabel(weapon)
   const weaponSkill = getWeaponSkill(weapon)
   const [editingSkill, setEditingSkill] = useState(false)
@@ -391,7 +391,7 @@ function WeaponDetails({ character: _character, weapon, onSetPassive, onSetWeapo
   )
 }
 
-function ArmorDetails({ character, armor, onSetPassive, manualValues = true }) {
+function ArmorDetails({ character, armor, onSetPassive, manualValues = false }) {
   const typeMeta = getArmorType(armor.type)
   const tier = getArmorTier(character)
   const displayName = typeMeta?.label || armor.name || 'Armadura'
@@ -434,7 +434,7 @@ function ArmorDetails({ character, armor, onSetPassive, manualValues = true }) {
 /**
  * Equipamento pessoal: arma (3 atributos de item + skill) e armadura (4 atributos; raridade por nível).
  */
-export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeaponSkill, manualValues = true }) {
+export function CharacterGearPanel({ character, onForge, onSetPassive, onSetWeaponSkill, manualValues = false }) {
   const [forging, setForging] = useState(null)
 
   if (!character) return null

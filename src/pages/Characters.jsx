@@ -378,7 +378,7 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
           armor={form.starterArmor}
           onChangeWeapon={v => set('starterWeapon', v)}
           onChangeArmor={v => set('starterArmor', v)}
-          subtitle="Nome da arma, tipo de armadura e até 5 rolagens de atributos. Depois, ajuste na ficha."
+          subtitle="Nome da arma, tipo de armadura e até 5 rolagens de atributos. Depois, novas rolagens na ficha."
         />
       )}
 
@@ -509,7 +509,7 @@ export function CharacterForm({ initial, onSave, onCancel, profileOnly = false }
                     armor={form.starterArmor}
                     onChangeWeapon={v => set('starterWeapon', v)}
                     onChangeArmor={v => set('starterArmor', v)}
-                    subtitle="Nome da arma, tipo de armadura e até 5 rolagens de atributos. Depois, ajuste na ficha."
+                    subtitle="Nome da arma, tipo de armadura e até 5 rolagens de atributos. Depois, novas rolagens na ficha."
                   />
                 </>
               )}
