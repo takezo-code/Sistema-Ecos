@@ -120,8 +120,8 @@ export function WelcomeHome({ onNewCampaign, onOpenLoad, onOpenContents, onOpenC
         <HomeOption
           icon={Library}
           title="Conteúdos"
-          description="Manuais em PDF para consultar na mesa."
-          onClick={onOpenContents}
+          description="Baixe os manuais em PDF: classes, regras, como usar e história."
+          onClick={() => onOpenContents?.()}
           accent="#c4b5fd"
         />
         <HomeOption

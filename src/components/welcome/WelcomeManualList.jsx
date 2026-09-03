@@ -23,7 +23,7 @@ export function WelcomeManualList({
             disabled={unavailable}
             onClick={loading || unavailable ? undefined : () => onDownload?.(manual.id)}
           >
-            {loading ? 'Gerando PDF…' : manual.label}
+            {loading ? 'Baixando PDF…' : manual.label}
             {unavailable ? (
               <span style={{
                 marginLeft: '0.35rem',

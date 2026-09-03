@@ -452,10 +452,6 @@ function StatusButtons({ status, onStatusChange }) {
             type="button"
             size="xs"
             variant={variantFor(s)}
-            autoAnimate={selected}
-            tintOpacity={selected ? 0.12 : 0}
-            blur={0}
-            radius={10}
             onClick={() => onStatusChange(s)}
             style={{
               fontSize: '0.58rem',

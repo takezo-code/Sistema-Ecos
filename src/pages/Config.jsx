@@ -8,11 +8,6 @@ import { useSettingsStore } from '../store/useSettingsStore'
 
 const ACTION_BTN = {
   size: 'md',
-  autoAnimate: true,
-  tintOpacity: 0,
-  blur: 0,
-  radius: 14,
-  intensity: 1.25,
   style: {
     fontFamily: 'ui-monospace, monospace',
     letterSpacing: '0.06em',
@@ -172,10 +167,6 @@ export function Config({ onBackToWelcome, onNavigate }) {
               type="button"
               variant="danger"
               onClick={handleReset}
-              tint="#f87171"
-              lineColor="#fecaca"
-              baseColor="#ef4444"
-              textColor="#f87171"
               {...ACTION_BTN}
             >
               <RotateCcw size={15} />

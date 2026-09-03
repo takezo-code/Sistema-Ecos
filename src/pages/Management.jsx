@@ -8,8 +8,6 @@ import {
   normalizeManagementView,
 } from '../constants/managementViews'
 
-export { MANAGEMENT_VIEWS, skillAudienceToManagementView } from '../constants/managementViews'
-
 export function Management({
   initialView = MANAGEMENT_VIEWS.CHARACTERS,
   onViewChange: _onViewChange,

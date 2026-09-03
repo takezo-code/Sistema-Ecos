@@ -1,33 +1,72 @@
-import { downloadPlayerManualPdf } from './playerManualPdf'
-import { downloadMasterManualPdf } from './masterManualPdf'
-import { downloadClassesManualPdf } from './classesManualPdf'
+function downloadStaticPdf(url, filename) {
+  return new Promise((resolve, reject) => {
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.rel = 'noopener'
+    document.body.appendChild(link)
 
+    fetch(url, { method: 'HEAD' })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`PDF ainda não está no projeto (${filename}).`)
+        }
+        link.click()
+        resolve()
+      })
+      .catch((err) => {
+        reject(err instanceof Error ? err : new Error('Não foi possível baixar o PDF.'))
+      })
+      .finally(() => {
+        link.remove()
+      })
+  })
+}
+
+function makeStaticDownload(path, filename) {
+  return () => downloadStaticPdf(path, filename)
+}
+
+/**
+ * PDFs finais ficam em public/manuals/.
+ * Enquanto o arquivo não existir no disco, deixe available: false.
+ */
 export const MANUAL_DOWNLOADS = [
-  {
-    id: 'player',
-    label: 'PDF — manual do jogador',
-    hint: 'Como jogar: regras, vida, Eco e rolagens.',
-    download: downloadPlayerManualPdf,
-  },
-  {
-    id: 'master',
-    label: 'PDF — manual do mestre',
-    hint: 'Como usar o sistema e conduzir a mesa.',
-    download: downloadMasterManualPdf,
-  },
   {
     id: 'classes',
     label: 'PDF — classes',
-    hint: 'Classes disponíveis, passivas e skills.',
-    download: downloadClassesManualPdf,
+    filename: 'Manual-ECOS-Classes.pdf',
+    path: '/manuals/Manual-ECOS-Classes.pdf',
+    available: true,
   },
   {
-    id: 'lore',
+    id: 'sistema',
+    label: 'PDF — como funciona',
+    filename: 'Manual-ECOS-Como-Funciona.pdf',
+    path: '/manuals/Manual-ECOS-Como-Funciona.pdf',
+    available: true,
+  },
+  {
+    id: 'uso',
+    label: 'PDF — como usar',
+    filename: 'Manual-ECOS-Como-Usar.pdf',
+    path: '/manuals/Manual-ECOS-Como-Usar.pdf',
+    available: true,
+  },
+  {
+    id: 'historia',
     label: 'PDF — história do mundo',
-    hint: 'Lore, cronologia e contexto do universo ECOS.',
-    available: false,
+    filename: 'Manual-ECOS-Historia.pdf',
+    path: '/manuals/Manual-ECOS-Historia.pdf',
+    available: true,
   },
 ]
+
+MANUAL_DOWNLOADS.forEach((item) => {
+  if (item.path && item.filename) {
+    item.download = makeStaticDownload(item.path, item.filename)
+  }
+})
 
 export async function downloadManualById(id) {
   const item = MANUAL_DOWNLOADS.find(m => m.id === id)

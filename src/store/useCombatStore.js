@@ -12,14 +12,18 @@ function normalizeEnemyIds(session = {}) {
 
 const saved = storage.get(KEYS.combatSession) || {}
 
-const load = () => ({
-  campaignId: null,
-  combatGroupId: null,
-  activeEnemyIds: [],
-  rollHistory: [],
-  ...saved,
-  activeEnemyIds: normalizeEnemyIds(saved),
-})
+const load = () => {
+  const base = {
+    campaignId: null,
+    combatGroupId: null,
+    rollHistory: [],
+    ...saved,
+  }
+  return {
+    ...base,
+    activeEnemyIds: normalizeEnemyIds(saved),
+  }
+}
 
 export const useCombatStore = create((set, get) => ({
   campaignId: load().campaignId ?? null,
@@ -61,12 +65,6 @@ export const useCombatStore = create((set, get) => ({
   setActiveEnemyIds(npcIds) {
     const ids = [...new Set((npcIds || []).filter(Boolean))]
     set({ activeEnemyIds: ids })
-    get().persist()
-  },
-
-  /** @deprecated use addCombatEnemy / setActiveEnemyIds */
-  setActiveEnemy(npcId) {
-    set({ activeEnemyIds: npcId ? [npcId] : [] })
     get().persist()
   },
 

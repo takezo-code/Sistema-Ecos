@@ -25,16 +25,3 @@ export function CreationChoiceGrid({ types, disabled, onClick, selectedId, colum
     />
   )
 }
-
-/** @deprecated use CreationChoiceGrid */
-export function CreationChoiceCard({ type, disabled, onClick }) {
-  return (
-    <CreationChoiceGrid
-      types={[type]}
-      disabled={() => disabled}
-      onClick={onClick}
-      columns={1}
-      compact
-    />
-  )
-}

@@ -1,6 +1,5 @@
 /**
  * Botão padrão do sistema (CSS — sem WebGL).
- * SpecularButton WebGL conflita com fundos como Evil Eye e vira “quadrado branco”.
  * variant: primary | secondary | danger | ghost
  */
 export function Button({
@@ -13,11 +12,6 @@ export function Button({
   disabled = false,
   onClick,
   block = false,
-  autoAnimate: _autoAnimate,
-  tintOpacity: _tintOpacity,
-  blur: _blur,
-  radius: _radius,
-  intensity: _intensity,
   ...rest
 }) {
   if (variant === 'ghost') {
