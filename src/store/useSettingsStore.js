@@ -5,6 +5,8 @@ const DEFAULT = {
   autosaveEnabled: true,
   lastManualSaveAt: null,
   lastAutoSaveAt: null,
+  clickEffectsEnabled: true,
+  backgroundEffectsEnabled: true,
 }
 
 const load = () => ({ ...DEFAULT, ...(storage.get(KEYS.settings) || {}) })

@@ -817,8 +817,14 @@ export function initializeNewCampaign(campaignName = 'Nova Campanha') {
  * Mantém uma campanha vazia pronta para testes.
  */
 export function resetAllTestData(campaignName = 'Nova Campanha') {
+  const previousSettings = useSettingsStore.getState().settings || {}
   storage.clear()
   const empty = createEmptySave(campaignName)
+  empty.settings = {
+    ...empty.settings,
+    clickEffectsEnabled: previousSettings.clickEffectsEnabled !== false,
+    backgroundEffectsEnabled: previousSettings.backgroundEffectsEnabled !== false,
+  }
   restoreSaveData(empty, { silent: true })
 
   useTrashStore.setState({ items: [] })

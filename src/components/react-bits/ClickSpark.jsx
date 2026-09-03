@@ -8,6 +8,7 @@ export default function ClickSpark({
   duration = 420,
   easing = 'ease-out',
   extraScale = 1,
+  enabled = true,
   children,
 }) {
   const canvasRef = useRef(null)
@@ -15,6 +16,7 @@ export default function ClickSpark({
   const startTimeRef = useRef(null)
 
   useEffect(() => {
+    if (!enabled) return
     const canvas = canvasRef.current
     if (!canvas) return
     const parent = canvas.parentElement
@@ -42,7 +44,7 @@ export default function ClickSpark({
       ro.disconnect()
       clearTimeout(resizeTimeout)
     }
-  }, [])
+  }, [enabled])
 
   const easeFunc = useCallback(t => {
     switch (easing) {
@@ -58,6 +60,10 @@ export default function ClickSpark({
   }, [easing])
 
   useEffect(() => {
+    if (!enabled) {
+      sparksRef.current = []
+      return
+    }
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
@@ -95,9 +101,10 @@ export default function ClickSpark({
 
     animationId = requestAnimationFrame(draw)
     return () => cancelAnimationFrame(animationId)
-  }, [sparkColor, sparkSize, sparkRadius, sparkCount, duration, easeFunc, extraScale])
+  }, [enabled, sparkColor, sparkSize, sparkRadius, sparkCount, duration, easeFunc, extraScale])
 
   const handleClick = e => {
+    if (!enabled) return
     const canvas = canvasRef.current
     if (!canvas) return
     const rect = canvas.getBoundingClientRect()
@@ -112,6 +119,10 @@ export default function ClickSpark({
         startTime: now,
       })),
     )
+  }
+
+  if (!enabled) {
+    return children
   }
 
   return (

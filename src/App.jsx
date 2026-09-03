@@ -16,6 +16,7 @@ import { storage, KEYS } from './services/storage'
 import { EvilEyeLayer } from './components/react-bits/EvilEyeLayer'
 import ClickSpark from './components/react-bits/ClickSpark'
 import { ConfigNavButton } from './components/ConfigNavButton'
+import { useSettingsStore } from './store/useSettingsStore'
 
 const PAGES = {
   campanha: Campanha,
@@ -85,6 +86,7 @@ function migrateUiState(savedUi) {
 }
 
 export default function App() {
+  const clickEffectsEnabled = useSettingsStore(s => s.settings.clickEffectsEnabled !== false)
   const [inApp, setInApp] = useState(false)
   const [welcomePhase, setWelcomePhase] = useState(() => (
     isWelcomeIntroSeen() ? 'home' : 'intro'
@@ -219,7 +221,14 @@ export default function App() {
   )
 
   return (
-    <ClickSpark sparkColor="#c4b5fd" sparkCount={9} sparkRadius={18} sparkSize={11} duration={420}>
+    <ClickSpark
+      enabled={clickEffectsEnabled}
+      sparkColor="#c4b5fd"
+      sparkCount={9}
+      sparkRadius={18}
+      sparkSize={11}
+      duration={420}
+    >
       <EvilEyeLayer />
       {shell}
     </ClickSpark>
